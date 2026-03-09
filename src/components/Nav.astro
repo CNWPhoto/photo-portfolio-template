@@ -1,0 +1,87 @@
+---
+---
+
+<header class="nav">
+	<div class="nav__inner">
+		{/* TODO:NICHE — studio name/logo */}
+		<a href="/" class="nav__logo">Pet Photography</a>
+		<nav aria-label="Main navigation">
+			<ul class="nav__links">
+				<li><a href="#how-it-works">Experience</a></li>
+				<li><a href="#featured">Portfolio</a></li>
+				<li><a href="#about">About</a></li>
+				<li><a href="#blog">Blog</a></li>
+				<li><a href="#contact" class="nav__inquire">Inquire</a></li>
+			</ul>
+		</nav>
+	</div>
+</header>
+
+<style>
+	.nav {
+		position: sticky;
+		top: 0;
+		z-index: 100;
+		background: var(--bg);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.nav__inner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 3rem;
+		height: 68px;
+		max-width: 1400px;
+		margin: 0 auto;
+	}
+
+	.nav__logo {
+		font-family: var(--font-serif);
+		font-variant: small-caps;
+		font-style: normal;
+		font-size: 1.125rem;
+		letter-spacing: 0.06em;
+		color: var(--text);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.nav__links {
+		display: flex;
+		align-items: center;
+		gap: 2.75rem;
+	}
+
+	.nav__links a {
+		font-family: var(--font-serif);
+		font-style: normal;
+		font-size: 0.9375rem;
+		color: var(--text);
+		text-decoration: none;
+		letter-spacing: 0.02em;
+		transition: color 0.2s;
+	}
+
+	.nav__links a:hover {
+		color: var(--accent);
+	}
+
+	.nav__inquire {
+		color: var(--accent) !important;
+	}
+
+	@media (max-width: 768px) {
+		.nav__inner {
+			padding: 0 1.5rem;
+		}
+
+		.nav__links {
+			gap: 1.5rem;
+		}
+
+		.nav__links li:nth-child(-n + 2) {
+			display: none;
+		}
+	}
+</style>

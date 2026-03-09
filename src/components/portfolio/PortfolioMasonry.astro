@@ -1,0 +1,135 @@
+---
+const { galleryImages, urlFor, theme = 'classic-cream' } = Astro.props;
+
+// TODO:NICHE — fallback images are dog photos; swap for your niche
+// Mixed dimensions give the masonry its varied heights
+const fallbackImages = [
+	{ src: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=700&h=1050&fit=crop', alt: 'Dog portrait in warm natural light' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=700&h=560&fit=crop', alt: 'Dog exploring in golden afternoon light' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=700&h=900&fit=crop', alt: 'Golden retriever running through a field' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=700&h=620&fit=crop', alt: 'Playful dog outdoors in soft light' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=700&h=980&fit=crop', alt: 'Dog looking curiously at camera' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=700&h=700&fit=crop', alt: 'Dog portrait close-up' }, // TODO:NICHE
+];
+
+const displayImages =
+	galleryImages?.length && urlFor
+		? galleryImages.slice(0, 6).map((img: any) => ({
+				src: urlFor(img.photo).width(700).auto('format').url(),
+				alt: img.photo?.alt ?? img.title ?? '',
+		  }))
+		: fallbackImages;
+---
+
+<section class="pmasonry" id="portfolio" data-theme={theme}>
+	<hr />
+	<div class="pmasonry__header">
+		<p class="pmasonry__eyebrow">Portfolio</p>
+		<h2 class="pmasonry__heading">Recent Work</h2>{/* TODO:NICHE */}
+	</div>
+
+	<div class="pmasonry__grid">
+		{displayImages.map((img) => (
+			<div class="pmasonry__item">
+				<img src={img.src} alt={img.alt} loading="lazy" />
+			</div>
+		))}
+	</div>
+
+	<div class="pmasonry__footer">
+		<a href="/portfolio" class="pmasonry__cta">View Full Portfolio</a>
+	</div>
+</section>
+
+<style>
+	.pmasonry { padding: 6rem 0 7rem; }
+
+	.pmasonry__header {
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 0 3rem 3.5rem;
+		border-top: 1px solid var(--border);
+		padding-top: 5rem;
+	}
+
+	.pmasonry__eyebrow {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 1rem;
+	}
+
+	.pmasonry__heading {
+		font-size: clamp(2rem, 4vw, 3.25rem);
+		color: var(--text);
+		letter-spacing: -0.01em;
+	}
+
+	/* CSS columns for true masonry — no JS required */
+	.pmasonry__grid {
+		columns: 3;
+		column-gap: 0.75rem;
+		padding: 0 3rem;
+		max-width: 1400px;
+		margin: 0 auto;
+	}
+
+	.pmasonry__item {
+		break-inside: avoid;
+		margin-bottom: 0.75rem;
+		overflow: hidden;
+	}
+
+	.pmasonry__item img {
+		width: 100%;
+		display: block;
+		transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+			opacity 0.3s ease;
+	}
+
+	.pmasonry__item:hover img {
+		transform: scale(1.03);
+		opacity: 0.9;
+	}
+
+	.pmasonry__footer {
+		max-width: 1400px;
+		margin: 2.5rem auto 0;
+		padding: 2rem 3rem 0;
+		border-top: 1px solid var(--border);
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	.pmasonry__cta {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text);
+		text-decoration: none;
+		border: 1px solid var(--text);
+		padding: 0.7rem 1.5rem;
+		display: inline-block;
+		transition: background 0.2s, color 0.2s;
+	}
+
+	.pmasonry__cta:hover {
+		background: var(--text);
+		color: var(--bg);
+	}
+
+	@media (max-width: 900px) {
+		.pmasonry__grid { columns: 2; padding: 0 1.5rem; }
+		.pmasonry__header { padding-left: 1.5rem; padding-right: 1.5rem; }
+		.pmasonry__footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+	}
+
+	@media (max-width: 480px) {
+		.pmasonry__grid { columns: 1; }
+	}
+</style>

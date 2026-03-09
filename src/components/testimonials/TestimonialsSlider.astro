@@ -1,0 +1,219 @@
+---
+const { testimonials: sanityTestimonials, urlFor, theme = 'classic-cream' } = Astro.props;
+
+// TODO:NICHE — fallback testimonials reference dogs/breeds; update for your niche
+const fallback = [
+	{
+		photoUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=700&h=950&fit=crop',
+		photoAlt: 'Golden retriever in warm afternoon light', // TODO:NICHE
+		quote: "Hazel captured something in Biscuit that we'd been trying to capture ourselves for years. Every single image is breathtaking. We have them printed throughout our home and can't stop looking at them.", // TODO:NICHE
+		name: 'Sarah & Tom K.',
+		pet: 'Biscuit, Golden Retriever', // TODO:NICHE
+	},
+	{
+		photoUrl: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=700&h=950&fit=crop',
+		photoAlt: 'Dog exploring outdoors with a stick', // TODO:NICHE
+		quote: "I was skeptical that Penny would cooperate for even five minutes. Hazel had her completely at ease within seconds. The patience and genuine love for dogs she brings to every session is unlike anything I've experienced.", // TODO:NICHE
+		name: 'Marcus R.',
+		pet: 'Penny, Rescue Mix', // TODO:NICHE
+	},
+	{
+		photoUrl: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=700&h=950&fit=crop',
+		photoAlt: 'Dog portrait in natural light', // TODO:NICHE
+		quote: "Three sessions in and each gallery is more beautiful than the last. Hazel has a gift for capturing the soul of a dog — not just their face, but everything that makes them who they are.", // TODO:NICHE
+		name: 'Jess & Olivia M.',
+		pet: 'Chester, Labrador', // TODO:NICHE
+	},
+];
+
+const testimonials =
+	sanityTestimonials?.length && urlFor
+		? sanityTestimonials.map((t: any) => ({
+				photoUrl: t.photo
+					? urlFor(t.photo).width(700).height(950).fit('crop').auto('format').url()
+					: '',
+				photoAlt: t.photo?.alt ?? '',
+				quote: t.quote ?? '',
+				name: t.clientName ?? '',
+				pet: t.clientSubjectName ?? '',
+		  }))
+		: fallback;
+---
+
+<section class="tslider" id="testimonials" data-theme={theme}>
+	<hr />
+	<div class="tslider__inner">
+		<div class="tslider__image-col">
+			<img
+				id="tsliderImg"
+				src={testimonials[0].photoUrl}
+				alt={testimonials[0].photoAlt}
+				loading="lazy"
+			/>
+		</div>
+
+		<div class="tslider__content">
+			<p class="tslider__label">Kind Words from Kind Clients</p>
+			<hr class="tslider__rule" />
+
+			<blockquote class="tslider__quote" id="tsliderQuote">
+				&ldquo;{testimonials[0].quote}&rdquo;
+			</blockquote>
+			<p class="tslider__attribution">
+				<span id="tsliderName">{testimonials[0].name}</span>
+				<span class="tslider__sep">&mdash;</span>
+				<span id="tsliderPet">{testimonials[0].pet}</span>
+			</p>
+
+			<div class="tslider__nav">
+				<span class="tslider__count">
+					<span id="tsliderIdx">1</span> / {testimonials.length}
+				</span>
+				<button class="tslider__arrow" id="tsliderPrev" aria-label="Previous testimonial">&#8592;</button>
+				<button class="tslider__arrow" id="tsliderNext" aria-label="Next testimonial">&#8594;</button>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script type="application/json" id="tsliderData" set:text={JSON.stringify(testimonials)}></script>
+
+<style>
+	.tslider { border-top: none; }
+
+	.tslider__inner {
+		display: grid;
+		grid-template-columns: 5fr 6fr;
+		min-height: 78vh;
+	}
+
+	.tslider__image-col { overflow: hidden; }
+
+	.tslider__image-col img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center top;
+		display: block;
+		transition: opacity 0.4s ease;
+	}
+
+	.tslider__content {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		padding: 6rem 6rem 6rem 5.5rem;
+		background: var(--bg-alt);
+	}
+
+	.tslider__label {
+		font-style: italic;
+		font-size: 1.875rem;
+		line-height: 1.25;
+		color: var(--text);
+		margin-bottom: 2rem;
+	}
+
+	.tslider__rule { margin-bottom: 2.5rem; }
+
+	.tslider__quote {
+		font-style: italic;
+		font-size: 1.125rem;
+		line-height: 1.8;
+		color: var(--text);
+		margin: 0 0 2rem;
+		transition: opacity 0.3s ease;
+	}
+
+	.tslider__attribution {
+		font-style: normal;
+		font-family: var(--font-sans);
+		font-size: 0.8125rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+	}
+
+	.tslider__sep { color: var(--border); }
+
+	.tslider__nav {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-top: 3rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.tslider__count {
+		font-family: var(--font-sans);
+		font-size: 0.8125rem;
+		letter-spacing: 0.08em;
+		color: var(--muted-light);
+		margin-right: auto;
+	}
+
+	.tslider__arrow {
+		background: none;
+		border: 1px solid var(--border);
+		color: var(--text);
+		font-family: var(--font-sans);
+		font-size: 1rem;
+		width: 42px;
+		height: 42px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: border-color 0.2s, color 0.2s;
+	}
+
+	.tslider__arrow:hover { border-color: var(--text); }
+	.tslider__arrow:disabled { opacity: 0.3; cursor: default; }
+
+	@media (max-width: 900px) {
+		.tslider__inner { grid-template-columns: 1fr; }
+		.tslider__image-col img { height: 55vw; min-height: 300px; }
+		.tslider__content { padding: 4rem 2rem; }
+	}
+</style>
+
+<script>
+	const data: Array<{ photoUrl: string; photoAlt: string; quote: string; name: string; pet: string }> =
+		JSON.parse(document.getElementById('tsliderData')!.textContent!);
+
+	const img      = document.getElementById('tsliderImg') as HTMLImageElement;
+	const quote    = document.getElementById('tsliderQuote')!;
+	const name     = document.getElementById('tsliderName')!;
+	const pet      = document.getElementById('tsliderPet')!;
+	const idxEl    = document.getElementById('tsliderIdx')!;
+	const prevBtn  = document.getElementById('tsliderPrev') as HTMLButtonElement;
+	const nextBtn  = document.getElementById('tsliderNext') as HTMLButtonElement;
+
+	let idx = 0;
+
+	function render(i: number) {
+		const t = data[i];
+		quote.style.opacity = '0';
+		img.style.opacity = '0';
+		setTimeout(() => {
+			img.src = t.photoUrl;
+			img.alt = t.photoAlt;
+			quote.textContent = `\u201C${t.quote}\u201D`;
+			name.textContent = t.name;
+			pet.textContent = t.pet;
+			idxEl.textContent = String(i + 1);
+			quote.style.opacity = '1';
+			img.style.opacity = '1';
+		}, 280);
+		prevBtn.disabled = i === 0;
+		nextBtn.disabled = i === data.length - 1;
+	}
+
+	prevBtn.addEventListener('click', () => { if (idx > 0) render(--idx); });
+	nextBtn.addEventListener('click', () => { if (idx < data.length - 1) render(++idx); });
+	prevBtn.disabled = true;
+</script>

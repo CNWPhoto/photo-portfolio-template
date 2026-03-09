@@ -1,0 +1,149 @@
+---
+const { galleryImages, urlFor, theme = 'classic-cream' } = Astro.props;
+
+// TODO:NICHE — fallback images are dog photos; swap for your niche
+const fallbackImages = [
+	{ src: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=800&h=1050&fit=crop', alt: 'Dog portrait in warm natural light' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=800&h=1050&fit=crop', alt: 'Dog exploring in golden afternoon light' }, // TODO:NICHE
+];
+
+const displayImages =
+	galleryImages?.length && urlFor
+		? galleryImages.slice(0, 2).map((img: any) => ({
+				src: urlFor(img.photo).width(800).height(1050).fit('crop').auto('format').url(),
+				alt: img.photo?.alt ?? img.title ?? '',
+		  }))
+		: fallbackImages;
+---
+
+<section class="featured" id="featured" data-theme={theme}>
+	<hr />
+	<div class="featured__inner">
+		<div class="featured__label-col" aria-hidden="true">
+			{/* TODO:NICHE — "Featured Dogs" label */}
+			<span class="featured__label">Featured Dogs</span>
+		</div>
+
+		<div class="featured__content">
+			<div class="featured__images">
+				{displayImages.map((img: any) => (
+					<div class="featured__img-wrap">
+						<img
+							src={img.src}
+							alt={img.alt}
+							loading="lazy"
+						/>
+					</div>
+				))}
+			</div>
+
+			<div class="featured__footer">
+				<a href="#" class="featured__cta">View Full Portfolio</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.featured {
+		padding: 5rem 0 5rem 0;
+	}
+
+	.featured hr {
+		margin-bottom: 4rem;
+	}
+
+	.featured__inner {
+		display: grid;
+		grid-template-columns: 100px 1fr;
+		padding: 0 3rem;
+		max-width: 1400px;
+		margin: 0 auto;
+		gap: 2rem;
+	}
+
+	/* Rotated label */
+	.featured__label-col {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.featured__label {
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+		letter-spacing: 0.12em;
+		color: var(--border);
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		white-space: nowrap;
+		user-select: none;
+	}
+
+	/* Images */
+	.featured__images {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+
+	.featured__img-wrap {
+		overflow: hidden;
+	}
+
+	.featured__img-wrap img {
+		width: 100%;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+		display: block;
+		transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	}
+
+	.featured__img-wrap:hover img {
+		transform: scale(1.04);
+	}
+
+	/* Footer row */
+	.featured__footer {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 2rem;
+	}
+
+	.featured__cta {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text);
+		text-decoration: none;
+		border: 1px solid var(--text);
+		padding: 0.7rem 1.5rem;
+		transition:
+			background 0.2s,
+			color 0.2s;
+		display: inline-block;
+	}
+
+	.featured__cta:hover {
+		background: var(--text);
+		color: var(--bg);
+	}
+
+	@media (max-width: 768px) {
+		.featured__inner {
+			grid-template-columns: 1fr;
+			padding: 0 1.5rem;
+		}
+
+		.featured__label-col {
+			display: none;
+		}
+
+		.featured__images {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

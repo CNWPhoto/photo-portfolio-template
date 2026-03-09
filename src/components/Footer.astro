@@ -1,0 +1,308 @@
+---
+const { theme = 'classic-cream' } = Astro.props;
+const year = new Date().getFullYear();
+const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253275'];
+---
+
+<footer class="footer" id="contact" data-theme={theme}>
+	<!-- Top: "Pet Photography" wordmark -->
+	<div class="footer__wordmark-row">
+		{/* TODO:NICHE — studio name wordmark */}
+		<span class="footer__wordmark">Pet Photography</span>
+	</div>
+
+	<hr />
+
+	<!-- Three-column body -->
+	<div class="footer__cols">
+		<div class="footer__col">
+			<p class="footer__col-label">Social</p>
+			<ul class="footer__list">
+				<li><a href="#">Facebook</a></li>
+				<li><a href="#">Pinterest</a></li>
+				<li><a href="#">TikTok</a></li>
+			</ul>
+		</div>
+
+		<div class="footer__col">
+			<p class="footer__col-label">Menu</p>
+			<ul class="footer__list">
+				<li><a href="/">Home</a></li>
+				<li><a href="#about">About</a></li>
+				<li><a href="#how-it-works">Experience</a></li>
+				<li><a href="#featured">Portfolio</a></li>
+				<li><a href="#blog">Blog</a></li>
+				<li><a href="#contact">Contact</a></li>
+			</ul>
+		</div>
+
+		<div class="footer__col">
+			<p class="footer__col-label">Newsletter</p>
+			<p class="footer__newsletter-desc">
+				Join for session tips, behind-the-scenes moments, and early access to booking dates.
+			</p>
+			<form class="footer__form" onsubmit="return false">
+				<input type="email" placeholder="Your email address" class="footer__input" />
+				<button type="submit" class="footer__submit">Join Today</button>
+			</form>
+		</div>
+	</div>
+
+	<hr />
+
+	<!-- Copyright -->
+	<div class="footer__legal">
+		{/* TODO:NICHE — studio name in copyright */}
+		<p>&copy; {year} Pet Photography. All rights reserved.</p>
+		<p>
+			<a href="#">Privacy Policy</a> &middot; <a href="#">Terms</a>
+		</p>
+	</div>
+
+	<!-- Instagram strip -->
+	<div class="footer__instagram">
+		<div class="footer__insta-header">
+			<p class="footer__insta-handle">@YourHandleHere</p>
+		</div>
+		<div class="footer__insta-grid">
+			{
+				instagramIds.map((id) => (
+					<a href="#" class="footer__insta-item" aria-label="View on Instagram">
+						<img
+							src={`https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop`}
+							alt=""
+							loading="lazy"
+						/>
+					</a>
+				))
+			}
+		</div>
+	</div>
+</footer>
+
+<style>
+	.footer {
+		background: var(--bg);
+		color: var(--text);
+	}
+
+	/* Wordmark row */
+	.footer__wordmark-row {
+		padding: 4rem 3rem 3rem;
+		text-align: right;
+	}
+
+	.footer__wordmark {
+		font-family: var(--font-serif);
+		font-variant: small-caps;
+		font-style: normal;
+		font-size: clamp(2rem, 5vw, 3.5rem);
+		letter-spacing: 0.05em;
+		color: var(--text);
+	}
+
+	/* Three columns */
+	.footer__cols {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+		padding: 3.5rem 3rem;
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	.footer__col {
+		padding: 0 3rem;
+	}
+
+	.footer__col:first-child {
+		padding-left: 0;
+	}
+
+	.footer__col:last-child {
+		padding-right: 0;
+	}
+
+	.footer__col + .footer__col {
+		border-left: 1px solid var(--border);
+	}
+
+	.footer__col-label {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--muted-light);
+		margin-bottom: 1.5rem;
+	}
+
+	.footer__list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.footer__list a {
+		font-style: italic;
+		font-size: 1rem;
+		color: var(--text);
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+
+	.footer__list a:hover {
+		color: var(--accent);
+	}
+
+	/* Newsletter */
+	.footer__newsletter-desc {
+		font-size: 0.9375rem;
+		line-height: 1.72;
+		color: var(--muted);
+		margin-bottom: 1.5rem;
+		font-style: italic;
+	}
+
+	.footer__form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem;
+	}
+
+	.footer__input {
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-size: 0.9375rem;
+		color: var(--text);
+		background: transparent;
+		border: 1px solid var(--border);
+		padding: 0.7rem 1rem;
+		outline: none;
+		transition: border-color 0.2s;
+	}
+
+	.footer__input::placeholder {
+		color: var(--muted-light);
+	}
+
+	.footer__input:focus {
+		border-color: var(--text);
+	}
+
+	.footer__submit {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--bg);
+		background: var(--text);
+		border: 1px solid var(--text);
+		padding: 0.7rem 1.5rem;
+		cursor: pointer;
+		transition: background 0.2s;
+		align-self: flex-start;
+	}
+
+	.footer__submit:hover {
+		background: var(--accent);
+		border-color: var(--accent);
+	}
+
+	/* Legal row */
+	.footer__legal {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1.5rem 3rem;
+		font-family: var(--font-sans);
+		font-size: 0.8125rem;
+		font-style: normal;
+		color: var(--muted-light);
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.footer__legal a {
+		color: var(--muted-light);
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+
+	.footer__legal a:hover {
+		color: var(--accent);
+	}
+
+	/* Instagram strip */
+	.footer__instagram {
+		margin-top: 0;
+		border-top: 1px solid var(--border);
+	}
+
+	.footer__insta-header {
+		padding: 2rem 3rem 1.25rem;
+		text-align: center;
+	}
+
+	.footer__insta-handle {
+		font-style: italic;
+		font-size: 0.9375rem;
+		color: var(--muted);
+		letter-spacing: 0.04em;
+	}
+
+	.footer__insta-grid {
+		display: grid;
+		grid-template-columns: repeat(6, 1fr);
+		gap: 0;
+	}
+
+	.footer__insta-item {
+		overflow: hidden;
+		display: block;
+	}
+
+	.footer__insta-item img {
+		width: 100%;
+		aspect-ratio: 1;
+		object-fit: cover;
+		display: block;
+		transition:
+			opacity 0.3s,
+			transform 0.5s ease;
+		filter: saturate(0.85);
+	}
+
+	.footer__insta-item:hover img {
+		opacity: 0.85;
+		transform: scale(1.04);
+		filter: saturate(1.1);
+	}
+
+	@media (max-width: 900px) {
+		.footer__cols {
+			grid-template-columns: 1fr;
+			padding: 2.5rem 1.5rem;
+		}
+
+		.footer__col {
+			padding: 2rem 0;
+			border-left: none !important;
+			border-top: 1px solid var(--border);
+		}
+
+		.footer__col:first-child {
+			border-top: none;
+		}
+
+		.footer__wordmark-row,
+		.footer__legal {
+			padding-left: 1.5rem;
+			padding-right: 1.5rem;
+		}
+
+		.footer__insta-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+</style>

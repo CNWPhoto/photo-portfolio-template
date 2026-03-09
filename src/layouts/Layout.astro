@@ -1,3 +1,6 @@
+---
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
@@ -6,18 +9,220 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>Pet Photography — Natural, Stress-Free Dog Portraits</title>
+		<!-- Google Fonts preconnect -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<!-- All font theme families loaded upfront; only the active theme's fonts render -->
+		<link
+			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,400;1,300;1,400&family=Nunito+Sans:ital,wght@0,300;0,400;0,600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500&family=Tenor+Sans&family=Raleway:wght@300;400;500&display=swap"
+			rel="stylesheet"
+		/>
 	</head>
-	<body>
+	<body data-font-theme="classic-editorial">
 		<slot />
 	</body>
 </html>
 
-<style>
-	html,
+<style is:global>
+	/* ══════════════════════════════════════════════════
+	   FONT THEMES
+	   Applied via data-font-theme on <body>.
+	   Components reference --font-heading and --font-body.
+	   Legacy aliases --font-serif / --font-sans resolve
+	   through var() substitution at compute time.
+	══════════════════════════════════════════════════ */
+
+	/* Font Theme 1: Classic Editorial */
+	[data-font-theme='classic-editorial'] {
+		--font-heading: 'Cormorant Garamond', Georgia, serif;
+		--font-body: 'Jost', system-ui, sans-serif;
+	}
+
+	/* Font Theme 2: Romantic Script */
+	[data-font-theme='romantic-script'] {
+		--font-heading: 'Playfair Display', Georgia, serif;
+		--font-body: 'Lato', system-ui, sans-serif;
+	}
+
+	/* Font Theme 3: Modern Luxury */
+	[data-font-theme='modern-luxury'] {
+		--font-heading: 'DM Serif Display', Georgia, serif;
+		--font-body: 'DM Sans', system-ui, sans-serif;
+	}
+
+	/* Font Theme 4: Soft Contemporary */
+	[data-font-theme='soft-contemporary'] {
+		--font-heading: 'Fraunces', Georgia, serif;
+		--font-body: 'Nunito Sans', system-ui, sans-serif;
+	}
+
+	/* Font Theme 5: Bold Editorial */
+	[data-font-theme='bold-editorial'] {
+		--font-heading: 'Libre Baskerville', Georgia, serif;
+		--font-body: 'Libre Franklin', system-ui, sans-serif;
+	}
+
+	/* Font Theme 6: Airy Minimal */
+	[data-font-theme='airy-minimal'] {
+		--font-heading: 'Tenor Sans', Georgia, serif;
+		--font-body: 'Raleway', system-ui, sans-serif;
+	}
+
+	/* ══════════════════════════════════════════════════
+	   COLOUR THEMES
+	   Applied via data-theme on section elements.
+	   All components consume: --bg, --bg-alt, --text,
+	   --accent, --accent-dark, --muted, --muted-light, --border.
+	   --surface aliases --bg-alt within a themed section.
+	══════════════════════════════════════════════════ */
+
+	/* Theme 1: Classic Cream (site default) */
+	:root,
+	[data-theme='classic-cream'] {
+		--bg: #f5f3ef;
+		--text: #1a2744;
+		--accent: #8b2635;
+		--surface: #edeae4;
+		--bg-alt: #edeae4;
+		--accent-dark: #6b1c28;
+		--muted: #4a5568;
+		--muted-light: #8a94a6;
+		--border: #d4cfc6;
+	}
+
+	/* Theme 2: Warm Studio */
+	[data-theme='warm-studio'] {
+		--bg: #fdf6ee;
+		--text: #2c1810;
+		--accent: #c9702a;
+		--surface: #f5ead9;
+		--bg-alt: #f5ead9;
+		--accent-dark: #a85a20;
+		--muted: #6b4c3b;
+		--muted-light: #a88070;
+		--border: #e8d5c0;
+	}
+
+	/* Theme 3: Dark Editorial */
+	[data-theme='dark-editorial'] {
+		--bg: #1a1a1a;
+		--text: #f0ede8;
+		--accent: #c9a96e;
+		--surface: #252525;
+		--bg-alt: #252525;
+		--accent-dark: #a8895a;
+		--muted: #a0998e;
+		--muted-light: #6b645c;
+		--border: #3a3a3a;
+	}
+
+	/* Theme 4: Cool Minimal */
+	[data-theme='cool-minimal'] {
+		--bg: #f8f9fa;
+		--text: #1c2b3a;
+		--accent: #4a7c9e;
+		--surface: #eef1f4;
+		--bg-alt: #eef1f4;
+		--accent-dark: #3a6480;
+		--muted: #4a5e6e;
+		--muted-light: #8a99a6;
+		--border: #d0d8de;
+	}
+
+	/* Theme 5: Forest Sage */
+	[data-theme='forest-sage'] {
+		--bg: #f2f4f0;
+		--text: #1e2d1f;
+		--accent: #5a7a4e;
+		--surface: #e4ebe0;
+		--bg-alt: #e4ebe0;
+		--accent-dark: #456040;
+		--muted: #4a5e4b;
+		--muted-light: #8a9e8b;
+		--border: #ccd6c8;
+	}
+
+	/* Any themed section gets its own background/color scope */
+	[data-theme] {
+		background: var(--bg);
+		color: var(--text);
+	}
+
+	/* ══════════════════════════════════════════════════
+	   GLOBAL TOKENS & BASE RESET
+	══════════════════════════════════════════════════ */
+
+	:root {
+		--white: #ffffff;
+		/*
+		 * Legacy aliases — resolve through var() substitution at compute time.
+		 * Component scoped styles that reference --font-serif / --font-sans
+		 * will pick up whatever --font-heading / --font-body the active
+		 * font theme has set on <body>.
+		 */
+		--font-serif: var(--font-heading);
+		--font-sans: var(--font-body);
+	}
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
+	html {
+		scroll-behavior: smooth;
+	}
+
 	body {
 		margin: 0;
-		width: 100%;
-		height: 100%;
+		padding: 0;
+		background: var(--bg);
+		color: var(--text);
+		font-family: var(--font-body);
+		font-size: 1.0625rem;
+		line-height: 1.8;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	img {
+		display: block;
+		max-width: 100%;
+	}
+
+	a {
+		color: inherit;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4 {
+		font-family: var(--font-heading);
+		font-weight: normal;
+		font-style: italic;
+		line-height: 1.2;
+		margin: 0;
+	}
+
+	p {
+		margin: 0;
+	}
+
+	ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	hr {
+		border: none;
+		border-top: 1px solid var(--border);
+		margin: 0;
+	}
+
+	button {
+		font-family: var(--font-body);
 	}
 </style>

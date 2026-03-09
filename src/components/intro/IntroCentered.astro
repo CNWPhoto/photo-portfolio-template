@@ -1,0 +1,105 @@
+---
+const { bio, approachText, profilePhoto, urlFor, theme = 'classic-cream' } = Astro.props;
+
+// TODO:NICHE — fallback photo, bio, and approachText are dog/pet-specific; replace for your niche
+const photoSrc =
+	profilePhoto && urlFor
+		? urlFor(profilePhoto).width(1600).height(800).fit('crop').auto('format').url()
+		: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1600&h=800&fit=crop';
+const photoAlt = profilePhoto?.alt ?? 'Dog in a field in warm afternoon light'; // TODO:NICHE
+
+const bodyText = bio ?? "Every session is crafted entirely around your dog's unique personality. We find the light, the location, and the moments that tell their story — the tilt of a head, a full-speed sprint, a quiet glance."; // TODO:NICHE
+const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. Just you, your dog, and the kind of photography that makes people stop and say "that\'s exactly them."'; // TODO:NICHE
+---
+
+<section class="icentered" id="about" data-theme={theme}>
+	<div class="icentered__text">
+		<p class="icentered__eyebrow">Welcome</p>
+		<div class="icentered__body-wrap">
+			<p class="icentered__body">{bodyText}</p>
+			<p class="icentered__body">{approachBodyText}</p>
+		</div>
+		<a href="#how-it-works" class="icentered__link">Learn about the experience &rarr;</a>
+	</div>
+
+	<div class="icentered__image">
+		<img src={photoSrc} alt={photoAlt} loading="lazy" />
+	</div>
+</section>
+
+<style>
+	.icentered {
+		border-top: 1px solid var(--border);
+	}
+
+	/* ── Centered text block ── */
+	.icentered__text {
+		max-width: 760px;
+		margin: 0 auto;
+		padding: 7rem 3rem 5rem;
+		text-align: center;
+	}
+
+	.icentered__eyebrow {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.725rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 2.5rem;
+	}
+
+	.icentered__body-wrap {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		margin-bottom: 2.5rem;
+	}
+
+	.icentered__body {
+		font-style: italic;
+		font-size: clamp(1.125rem, 2vw, 1.3125rem);
+		line-height: 1.78;
+		color: var(--text);
+	}
+
+	.icentered__body em {
+		font-style: normal;
+		color: var(--accent);
+	}
+
+	.icentered__link {
+		display: inline-block;
+		font-style: normal;
+		font-size: 0.875rem;
+		letter-spacing: 0.05em;
+		color: var(--accent);
+		text-decoration: none;
+		border-bottom: 1px solid var(--accent);
+		padding-bottom: 1px;
+		transition: opacity 0.2s;
+	}
+
+	.icentered__link:hover { opacity: 0.7; }
+
+	/* ── Full-width image below ── */
+	.icentered__image {
+		width: 100%;
+		overflow: hidden;
+	}
+
+	.icentered__image img {
+		width: 100%;
+		height: 55vw;
+		max-height: 700px;
+		min-height: 340px;
+		object-fit: cover;
+		object-position: center 40%;
+		display: block;
+	}
+
+	@media (max-width: 768px) {
+		.icentered__text { padding: 5rem 1.5rem 4rem; }
+	}
+</style>

@@ -1,11 +1,75 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import WhyChoose from '../components/WhyChoose.astro';
+import FAQs from '../components/FAQs.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// Section variants — all imported statically; conditional rendering selects the active one
+import TestimonialsSlider from '../components/testimonials/TestimonialsSlider.astro';
+import TestimonialsGrid from '../components/testimonials/TestimonialsGrid.astro';
+import IntroSplit from '../components/intro/IntroSplit.astro';
+import IntroCentered from '../components/intro/IntroCentered.astro';
+import PortfolioGrid from '../components/portfolio/PortfolioGrid.astro';
+import PortfolioMasonry from '../components/portfolio/PortfolioMasonry.astro';
+import HowItWorksColumns from '../components/howitworks/HowItWorksColumns.astro';
+import HowItWorksStacked from '../components/howitworks/HowItWorksStacked.astro';
+
+import { sanityClient, urlFor } from '../lib/sanity.js';
+
+const [photographer, testimonials, galleryImages, faqs, pageSections] = await Promise.all([
+	sanityClient.fetch(`*[_type == "photographer"][0]`),
+	sanityClient.fetch(`*[_type == "testimonial"] | order(order asc)`),
+	sanityClient.fetch(`*[_type == "galleryImage"] | order(order asc)[0..5]`),
+	sanityClient.fetch(`*[_type == "faq"] | order(order asc)`),
+	sanityClient.fetch(`*[_type == "pageSection"]`),
+]);
+
+// Build a lookup: sectionType → { variant, colorTheme }
+const sectionCfg = (type: string, defaultVariant: string, defaultTheme = 'classic-cream') => {
+	const s = pageSections?.find((p: any) => p.sectionType === type);
+	return {
+		variant: s?.variant ?? defaultVariant,
+		theme:   s?.colorTheme ?? defaultTheme,
+	};
+};
+
+const introCfg         = sectionCfg('intro',        'split');
+const testimonialsCfg  = sectionCfg('testimonials', 'slider');
+const portfolioCfg     = sectionCfg('portfolio',    'grid');
+const howItWorksCfg    = sectionCfg('howItWorks',   'columns', 'warm-studio');
 ---
 
 <Layout>
-	<Welcome />
+	<Nav />
+	<main>
+		<!-- Intro -->
+		{introCfg.variant === 'centered'
+			? <IntroCentered bio={photographer?.bio} approachText={photographer?.approachText} profilePhoto={photographer?.profilePhoto} {urlFor} theme={introCfg.theme} />
+			: <IntroSplit    bio={photographer?.bio} approachText={photographer?.approachText} profilePhoto={photographer?.profilePhoto} {urlFor} theme={introCfg.theme} />
+		}
+
+		<!-- Testimonials -->
+		{testimonialsCfg.variant === 'grid'
+			? <TestimonialsGrid   testimonials={testimonials} {urlFor} theme={testimonialsCfg.theme} />
+			: <TestimonialsSlider testimonials={testimonials} {urlFor} theme={testimonialsCfg.theme} />
+		}
+
+		<!-- Portfolio preview -->
+		{portfolioCfg.variant === 'masonry'
+			? <PortfolioMasonry galleryImages={galleryImages} {urlFor} theme={portfolioCfg.theme} />
+			: <PortfolioGrid    galleryImages={galleryImages} {urlFor} theme={portfolioCfg.theme} />
+		}
+
+		<!-- How It Works -->
+		{howItWorksCfg.variant === 'stacked'
+			? <HowItWorksStacked  theme={howItWorksCfg.theme} />
+			: <HowItWorksColumns  theme={howItWorksCfg.theme} />
+		}
+
+		<WhyChoose theme="dark-editorial" />
+		<FAQs faqs={faqs} />
+	</main>
+	<Footer theme="classic-cream" />
 </Layout>

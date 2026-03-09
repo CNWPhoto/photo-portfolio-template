@@ -1,0 +1,130 @@
+---
+const { theme = 'classic-cream' } = Astro.props;
+---
+
+<section class="why" id="why-choose" data-theme={theme}>
+	<!-- Full-bleed image -->
+	<div class="why__image-full">
+		<img
+			src="https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop"
+			alt="Dog running freely in an open field"
+			loading="lazy"
+		/>
+	</div>
+
+	<!-- Two-column content below -->
+	<hr />
+	<div class="why__inner">
+		<div class="why__heading-col">
+			{/* TODO:NICHE — heading references "Pet Photography" */}
+			<h2 class="why__heading">Why Choose<br />Pet Photography?</h2>
+		</div>
+
+		<div class="why__content-col">
+			{/* TODO:NICHE — body copy references dogs throughout */}
+			<p class="why__body">
+				Working with a photographer who genuinely loves dogs makes all the difference. I understand
+				how dogs move, what makes them light up, and how to draw out the personality that makes
+				yours irreplaceable.
+			</p>
+			<p class="why__body">
+				Sessions are always unhurried, never stressful, and filled with play. My clients return
+				session after session — not just for the images, but for the experience of watching their
+				dog be completely, joyfully themselves.
+			</p>
+			<a href="#contact" class="why__cta">Get in Touch</a>
+			{/* TODO:NICHE — location copy */}
+			<p class="why__caption">Serving Denver, Boulder, and surrounding areas.</p>
+		</div>
+	</div>
+</section>
+
+<style>
+	.why {
+		overflow: hidden;
+	}
+
+	/* Full-bleed tall image */
+	.why__image-full {
+		width: 100%;
+		overflow: hidden;
+	}
+
+	.why__image-full img {
+		width: 100%;
+		height: 65vh;
+		min-height: 420px;
+		object-fit: cover;
+		object-position: center 35%;
+		display: block;
+	}
+
+	/* Two-column text section */
+	.why__inner {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 5rem;
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 6rem 3rem 7rem;
+		align-items: start;
+	}
+
+	.why__heading {
+		font-size: clamp(2rem, 4vw, 3.25rem);
+		color: var(--text);
+		line-height: 1.18;
+		letter-spacing: -0.01em;
+	}
+
+	.why__content-col {
+		padding-top: 0.5rem;
+	}
+
+	.why__body {
+		font-style: normal;
+		font-size: 1.0625rem;
+		line-height: 1.8;
+		color: var(--muted);
+		margin-bottom: 1.5rem;
+	}
+
+	.why__cta {
+		display: inline-block;
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text);
+		text-decoration: none;
+		border: 1px solid var(--text);
+		padding: 0.8rem 1.75rem;
+		margin-top: 1.5rem;
+		margin-bottom: 1.75rem;
+		transition:
+			background 0.2s,
+			color 0.2s;
+	}
+
+	.why__cta:hover {
+		background: var(--text);
+		color: var(--bg);
+	}
+
+	.why__caption {
+		font-family: var(--font-sans);
+		font-size: 0.8125rem;
+		letter-spacing: 0.04em;
+		color: var(--muted-light);
+		font-style: normal;
+	}
+
+	@media (max-width: 900px) {
+		.why__inner {
+			grid-template-columns: 1fr;
+			gap: 2.5rem;
+			padding: 4rem 1.5rem 5rem;
+		}
+	}
+</style>

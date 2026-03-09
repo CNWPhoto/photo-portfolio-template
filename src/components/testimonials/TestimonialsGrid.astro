@@ -1,0 +1,153 @@
+---
+const { testimonials: sanityTestimonials, urlFor, theme = 'classic-cream' } = Astro.props;
+
+// TODO:NICHE — fallback testimonials reference dogs/breeds; update for your niche
+const fallback = [
+	{
+		photoUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
+		photoAlt: 'Golden retriever in warm afternoon light', // TODO:NICHE
+		quote: "Hazel captured something in Biscuit that we'd been trying to capture ourselves for years. Every single image is breathtaking.", // TODO:NICHE
+		name: 'Sarah & Tom K.',
+		pet: 'Biscuit, Golden Retriever', // TODO:NICHE
+	},
+	{
+		photoUrl: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
+		photoAlt: 'Dog exploring outdoors with a stick', // TODO:NICHE
+		quote: "Hazel had Penny completely at ease within seconds. The patience and genuine love for dogs she brings is unlike anything I've experienced.", // TODO:NICHE
+		name: 'Marcus R.',
+		pet: 'Penny, Rescue Mix', // TODO:NICHE
+	},
+	{
+		photoUrl: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
+		photoAlt: 'Dog portrait in natural light', // TODO:NICHE
+		quote: "Hazel has a gift for capturing the soul of a dog — not just their face, but everything that makes them who they are.", // TODO:NICHE
+		name: 'Jess & Olivia M.',
+		pet: 'Chester, Labrador', // TODO:NICHE
+	},
+];
+
+const testimonials =
+	sanityTestimonials?.length && urlFor
+		? sanityTestimonials.slice(0, 3).map((t: any) => ({
+				photoUrl: t.photo
+					? urlFor(t.photo).width(200).height(200).fit('crop').auto('format').url()
+					: '',
+				photoAlt: t.photo?.alt ?? '',
+				quote: t.quote ?? '',
+				name: t.clientName ?? '',
+				pet: t.clientSubjectName ?? '',
+		  }))
+		: fallback;
+---
+
+<section class="tgrid" id="testimonials" data-theme={theme}>
+	<hr />
+	<div class="tgrid__inner">
+		<p class="tgrid__label">Kind Words from Kind Clients</p>
+		<div class="tgrid__cards">
+			{testimonials.map((t) => (
+				<div class="tgrid__card">
+					{t.photoUrl && (
+						<div class="tgrid__photo-wrap">
+							<img src={t.photoUrl} alt={t.photoAlt} loading="lazy" class="tgrid__photo" />
+						</div>
+					)}
+					<blockquote class="tgrid__quote">&ldquo;{t.quote}&rdquo;</blockquote>
+					<p class="tgrid__attribution">
+						<span class="tgrid__name">{t.name}</span>
+						{t.pet && (
+							<>
+								<span class="tgrid__sep">&mdash;</span>
+								<span class="tgrid__pet">{t.pet}</span>
+							</>
+						)}
+					</p>
+				</div>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.tgrid {
+		padding: 6rem 0 7rem;
+	}
+
+	.tgrid__inner {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 3rem;
+	}
+
+	.tgrid__label {
+		font-style: italic;
+		font-size: clamp(1.5rem, 3vw, 2.25rem);
+		line-height: 1.25;
+		color: var(--text);
+		text-align: center;
+		margin-bottom: 4rem;
+	}
+
+	.tgrid__cards {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 2rem;
+	}
+
+	.tgrid__card {
+		background: var(--bg-alt);
+		padding: 2.5rem 2rem;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.tgrid__photo-wrap {
+		width: 72px;
+		height: 72px;
+		border-radius: 50%;
+		overflow: hidden;
+		margin-bottom: 1.75rem;
+		flex-shrink: 0;
+	}
+
+	.tgrid__photo {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	.tgrid__quote {
+		font-style: italic;
+		font-size: 1rem;
+		line-height: 1.8;
+		color: var(--text);
+		margin: 0 0 1.5rem;
+		flex: 1;
+	}
+
+	.tgrid__attribution {
+		font-style: normal;
+		font-family: var(--font-sans);
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.tgrid__sep { color: var(--border); }
+
+	@media (max-width: 900px) {
+		.tgrid__cards { grid-template-columns: 1fr; }
+		.tgrid__inner { padding: 0 1.5rem; }
+	}
+
+	@media (min-width: 601px) and (max-width: 900px) {
+		.tgrid__cards { grid-template-columns: repeat(2, 1fr); }
+	}
+</style>

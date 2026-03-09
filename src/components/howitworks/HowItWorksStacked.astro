@@ -1,0 +1,190 @@
+---
+const { theme = 'classic-cream' } = Astro.props;
+
+// TODO:NICHE — step body copy references dogs/treats; update for your niche
+const steps = [
+	{
+		label: 'Reach Out',
+		body: "Tell me about your dog — their personality, their quirks, what makes them uniquely them. We'll talk through location options, timing, and everything that will make your session perfect.", // TODO:NICHE
+	},
+	{
+		label: 'Your Session',
+		body: 'Sessions are completely play-based and led by your dog. There are no forced poses, no stiff backdrops — just natural moments, beautiful light, and a whole lot of treats.', // TODO:NICHE
+	},
+	{
+		label: 'The Images',
+		body: 'Within three weeks, your private online gallery arrives. Choose your favorites for fine art prints, heirloom albums, and high-resolution digital downloads.',
+	},
+];
+---
+
+<section class="hstack" id="how-it-works" data-theme={theme}>
+	<hr />
+	<div class="hstack__inner">
+		<div class="hstack__header">
+			{/* TODO:NICHE — heading and subheading reference dogs */}
+			<h2 class="hstack__heading">Dog Photography Sessions</h2>
+			<p class="hstack__sub">
+				Simple and relaxed sessions you and your dog will <em>love.</em>
+			</p>
+		</div>
+
+		<div class="hstack__timeline">
+			{steps.map((step, i) => (
+				<div class="hstack__step">
+					<div class="hstack__step-left">
+						<div class="hstack__num-wrap">
+							<span class="hstack__num">{String(i + 1).padStart(2, '0')}</span>
+						</div>
+						{i < steps.length - 1 && <div class="hstack__connector" />}
+					</div>
+					<div class="hstack__step-right">
+						<h3 class="hstack__step-label">{step.label}</h3>
+						<p class="hstack__step-body">{step.body}</p>
+					</div>
+				</div>
+			))}
+		</div>
+
+		<div class="hstack__footer">
+			<a href="#" class="hstack__link">Learn How it Works &rarr;</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.hstack { padding-bottom: 7rem; }
+
+	.hstack__inner {
+		max-width: 860px;
+		margin: 0 auto;
+		padding: 0 3rem;
+	}
+
+	.hstack__header {
+		padding: 5.5rem 0 5rem;
+		text-align: center;
+	}
+
+	.hstack__heading {
+		font-size: clamp(2rem, 4vw, 3.25rem);
+		color: var(--text);
+		margin-bottom: 1.25rem;
+		letter-spacing: -0.01em;
+	}
+
+	.hstack__sub {
+		font-size: 1.0625rem;
+		color: var(--muted);
+		font-style: italic;
+		line-height: 1.6;
+	}
+
+	.hstack__sub em {
+		font-style: normal;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-size: 0.95em;
+		color: var(--accent);
+	}
+
+	/* ── Timeline ── */
+	.hstack__timeline {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.hstack__step {
+		display: grid;
+		grid-template-columns: 56px 1fr;
+		gap: 0 2.5rem;
+	}
+
+	/* Left column: number circle + connector line */
+	.hstack__step-left {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.hstack__num-wrap {
+		width: 56px;
+		height: 56px;
+		border: 1px solid var(--border);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		background: var(--bg);
+	}
+
+	.hstack__num {
+		font-family: var(--font-sans);
+		font-size: 0.7rem;
+		letter-spacing: 0.16em;
+		color: var(--accent);
+	}
+
+	.hstack__connector {
+		width: 1px;
+		flex: 1;
+		min-height: 3rem;
+		background: var(--border);
+		margin: 0.5rem 0;
+	}
+
+	/* Right column: label + body */
+	.hstack__step-right {
+		padding-bottom: 3.5rem;
+		padding-top: 0.875rem; /* vertically align with number center */
+	}
+
+	.hstack__step:last-child .hstack__step-right {
+		padding-bottom: 0;
+	}
+
+	.hstack__step-label {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text);
+		margin-bottom: 1rem;
+		font-weight: 600;
+	}
+
+	.hstack__step-body {
+		font-style: normal;
+		font-size: 0.9375rem;
+		line-height: 1.78;
+		color: var(--muted);
+	}
+
+	/* Footer */
+	.hstack__footer {
+		margin-top: 3rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+		text-align: right;
+	}
+
+	.hstack__link {
+		font-style: italic;
+		font-size: 1rem;
+		color: var(--accent);
+		text-decoration: none;
+		letter-spacing: 0.01em;
+		transition: opacity 0.2s;
+	}
+
+	.hstack__link:hover { opacity: 0.7; }
+
+	@media (max-width: 768px) {
+		.hstack__inner { padding: 0 1.5rem; }
+		.hstack__step { grid-template-columns: 44px 1fr; gap: 0 1.5rem; }
+		.hstack__num-wrap { width: 44px; height: 44px; }
+		.hstack__footer { text-align: center; }
+	}
+</style>

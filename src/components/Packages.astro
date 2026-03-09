@@ -1,0 +1,274 @@
+---
+const packages = [
+	{
+		name: 'Essential',
+		price: '350',
+		desc: 'A focused session — ideal for a single-pet portrait or a quick refresh.',
+		features: [
+			'1-hour outdoor session',
+			'1 pet',
+			'15 edited digital images',
+			'Private online gallery',
+			'30-day download access',
+		],
+		featured: false,
+	},
+	{
+		name: 'Signature',
+		price: '595',
+		desc: 'Our most popular package — ideal for families with pets.',
+		features: [
+			'2-hour outdoor session',
+			'Up to 2 pets + family',
+			'30 edited digital images',
+			'Private online gallery',
+			'60-day download access',
+			'One 8×10 print included',
+		],
+		featured: true,
+	},
+	{
+		name: 'Premium',
+		price: '950',
+		desc: 'The full experience — for those who want an expansive, complete gallery.',
+		features: [
+			'3-hour session (any location)',
+			'Multiple pets + full family',
+			'60 edited digital images',
+			'Private online gallery',
+			'1-year download access',
+			'$150 print credit',
+			'Same-day preview images',
+		],
+		featured: false,
+	},
+];
+---
+
+<section class="packages" id="packages">
+	<div class="packages__inner">
+		<div class="packages__header">
+			<p class="packages__eyebrow">Pricing</p>
+			<h2 class="packages__heading">Session Packages</h2>
+			<p class="packages__sub">
+				Transparent pricing, no hidden fees. Travel within 25 miles of Portland is always included.
+			</p>
+		</div>
+
+		<div class="packages__grid">
+			{
+				packages.map((pkg) => (
+					<div class={`packages__card${pkg.featured ? ' packages__card--featured' : ''}`}>
+						{pkg.featured && <span class="packages__badge">Most Popular</span>}
+						<h3 class="packages__name">{pkg.name}</h3>
+						<div class="packages__price-row">
+							<span class="packages__currency">$</span>
+							<span class="packages__amount">{pkg.price}</span>
+						</div>
+						<p class="packages__desc">{pkg.desc}</p>
+						<ul class="packages__features">
+							{pkg.features.map((f) => (
+								<li>
+									<svg
+										width="14"
+										height="14"
+										viewBox="0 0 14 14"
+										fill="none"
+										aria-hidden="true"
+									>
+										<path
+											d="M2 7L5.5 10.5L12 3.5"
+											stroke="currentColor"
+											stroke-width="1.5"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+									</svg>
+									{f}
+								</li>
+							))}
+						</ul>
+						<a
+							href="#contact"
+							class={`packages__cta${pkg.featured ? ' packages__cta--featured' : ''}`}
+						>
+							Book This Package
+						</a>
+					</div>
+				))
+			}
+		</div>
+	</div>
+</section>
+
+<style>
+	.packages {
+		padding: 6rem 2rem;
+	}
+
+	.packages__inner {
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	.packages__header {
+		text-align: center;
+		margin-bottom: 3.5rem;
+	}
+
+	.packages__eyebrow {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 1rem;
+	}
+
+	.packages__heading {
+		font-size: clamp(2rem, 3.5vw, 2.75rem);
+		color: var(--text);
+		margin-bottom: 1rem;
+	}
+
+	.packages__sub {
+		font-size: 1.0625rem;
+		color: var(--muted);
+		max-width: 440px;
+		margin: 0 auto;
+		line-height: 1.7;
+	}
+
+	.packages__grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1.5rem;
+		align-items: start;
+	}
+
+	.packages__card {
+		background: var(--white);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		padding: 2.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+		position: relative;
+	}
+
+	.packages__card--featured {
+		border-color: var(--accent);
+		box-shadow: 0 4px 40px rgba(201, 169, 110, 0.18);
+	}
+
+	.packages__badge {
+		position: absolute;
+		top: -1px;
+		left: 2rem;
+		background: var(--accent);
+		color: var(--white);
+		font-size: 0.6875rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		padding: 0.3rem 0.875rem;
+		border-radius: 0 0 4px 4px;
+	}
+
+	.packages__name {
+		font-size: 1.5rem;
+		color: var(--text);
+		padding-top: 0.5rem;
+	}
+
+	.packages__price-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.2rem;
+		padding: 1rem 0;
+		border-top: 1px solid var(--border);
+		border-bottom: 1px solid var(--border);
+		line-height: 1;
+	}
+
+	.packages__currency {
+		font-size: 1.25rem;
+		color: var(--muted);
+		margin-top: 0.5rem;
+	}
+
+	.packages__amount {
+		font-family: var(--font-serif);
+		font-size: 3.25rem;
+		color: var(--text);
+		line-height: 1;
+	}
+
+	.packages__desc {
+		font-size: 0.9375rem;
+		color: var(--muted);
+		line-height: 1.65;
+	}
+
+	.packages__features {
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem;
+		flex: 1;
+	}
+
+	.packages__features li {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		font-size: 0.9375rem;
+		color: var(--text);
+	}
+
+	.packages__features li svg {
+		flex-shrink: 0;
+		color: var(--accent);
+	}
+
+	.packages__cta {
+		display: block;
+		text-align: center;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
+		text-decoration: none;
+		padding: 0.9rem;
+		border: 1.5px solid var(--border);
+		border-radius: 2px;
+		color: var(--text);
+		transition: all 0.2s;
+		margin-top: 0.5rem;
+	}
+
+	.packages__cta:hover {
+		background: var(--text);
+		color: var(--bg);
+		border-color: var(--text);
+	}
+
+	.packages__cta--featured {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--white);
+	}
+
+	.packages__cta--featured:hover {
+		background: var(--accent-dark);
+		border-color: var(--accent-dark);
+	}
+
+	@media (max-width: 900px) {
+		.packages__grid {
+			grid-template-columns: 1fr;
+			max-width: 420px;
+			margin: 0 auto;
+		}
+	}
+</style>

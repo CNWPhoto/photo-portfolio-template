@@ -1,0 +1,128 @@
+---
+---
+
+<section class="cta" id="contact">
+	<div class="cta__bg">
+		<img
+			src="https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1260"
+			alt=""
+			aria-hidden="true"
+			loading="lazy"
+		/>
+		<div class="cta__overlay"></div>
+	</div>
+
+	<div class="cta__content">
+		<p class="cta__eyebrow">Let's Work Together</p>
+		<h2 class="cta__heading">Ready to book<br />your session?</h2>
+		<p class="cta__sub">
+			Sessions fill quickly — especially in spring and autumn. Reach out early to secure your
+			preferred date and location.
+		</p>
+		<div class="cta__actions">
+			<a href="mailto:hello@hazelandco.com" class="cta__btn cta__btn--primary">Get in Touch</a>
+			<a href="#packages" class="cta__btn cta__btn--secondary">View Packages</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.cta {
+		position: relative;
+		padding: 9rem 2rem;
+		overflow: hidden;
+		text-align: center;
+	}
+
+	.cta__bg {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+	}
+
+	.cta__bg img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 40%;
+	}
+
+	.cta__overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(32, 28, 24, 0.7);
+	}
+
+	.cta__content {
+		position: relative;
+		z-index: 1;
+		max-width: 640px;
+		margin: 0 auto;
+	}
+
+	.cta__eyebrow {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 1.25rem;
+	}
+
+	.cta__heading {
+		font-size: clamp(2.25rem, 4.5vw, 3.5rem);
+		color: var(--white);
+		margin-bottom: 1.5rem;
+		line-height: 1.12;
+	}
+
+	.cta__sub {
+		font-size: 1.0625rem;
+		color: rgba(250, 249, 247, 0.72);
+		line-height: 1.75;
+		margin-bottom: 2.75rem;
+		max-width: 480px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.cta__actions {
+		display: flex;
+		justify-content: center;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.cta__btn {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-decoration: none;
+		padding: 0.9rem 2.25rem;
+		border-radius: 2px;
+		transition: all 0.2s;
+		border: 1.5px solid transparent;
+	}
+
+	.cta__btn--primary {
+		background: var(--accent);
+		color: var(--white);
+		border-color: var(--accent);
+	}
+
+	.cta__btn--primary:hover {
+		background: var(--accent-dark);
+		border-color: var(--accent-dark);
+	}
+
+	.cta__btn--secondary {
+		background: transparent;
+		color: var(--white);
+		border-color: rgba(250, 249, 247, 0.4);
+	}
+
+	.cta__btn--secondary:hover {
+		border-color: var(--white);
+	}
+</style>

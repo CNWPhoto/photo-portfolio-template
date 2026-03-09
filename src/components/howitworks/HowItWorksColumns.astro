@@ -1,0 +1,149 @@
+---
+const { theme = 'classic-cream' } = Astro.props;
+
+// TODO:NICHE — step body copy references dogs/treats; update for your niche
+const steps = [
+	{
+		label: 'Reach Out',
+		body: "Tell me about your dog — their personality, their quirks, what makes them uniquely them. We'll talk through location options, timing, and everything that will make your session perfect.", // TODO:NICHE
+	},
+	{
+		label: 'Your Session',
+		body: 'Sessions are completely play-based and led by your dog. There are no forced poses, no stiff backdrops — just natural moments, beautiful light, and a whole lot of treats.', // TODO:NICHE
+	},
+	{
+		label: 'The Images',
+		body: 'Within three weeks, your private online gallery arrives. Choose your favorites for fine art prints, heirloom albums, and high-resolution digital downloads.',
+	},
+];
+---
+
+<section class="hcols" id="how-it-works" data-theme={theme}>
+	<hr />
+	<div class="hcols__inner">
+		<div class="hcols__header">
+			{/* TODO:NICHE — heading and subheading reference dogs */}
+			<h2 class="hcols__heading">Dog Photography Sessions</h2>
+			<p class="hcols__sub">
+				Simple and relaxed sessions you and your dog will <em>love.</em>
+			</p>
+		</div>
+
+		<div class="hcols__steps">
+			{steps.map((step, i) => (
+				<div class="hcols__step">
+					<div class="hcols__step-rule" />
+					<p class="hcols__step-num">{String(i + 1).padStart(2, '0')}</p>
+					<h3 class="hcols__step-label">{step.label}</h3>
+					<p class="hcols__step-body">{step.body}</p>
+				</div>
+			))}
+		</div>
+
+		<div class="hcols__footer">
+			<a href="#" class="hcols__link">Learn How it Works &rarr;</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.hcols { padding-bottom: 7rem; }
+
+	.hcols__inner {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 3rem;
+		text-align: center;
+	}
+
+	.hcols__header { padding: 5.5rem 0 4.5rem; }
+
+	.hcols__heading {
+		font-size: clamp(2rem, 4vw, 3.25rem);
+		color: var(--text);
+		margin-bottom: 1.25rem;
+		letter-spacing: -0.01em;
+	}
+
+	.hcols__sub {
+		font-size: 1.0625rem;
+		color: var(--muted);
+		font-style: italic;
+		line-height: 1.6;
+	}
+
+	.hcols__sub em {
+		font-style: normal;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-size: 0.95em;
+		color: var(--accent);
+	}
+
+	.hcols__steps {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 3rem;
+		text-align: left;
+	}
+
+	.hcols__step { padding-top: 2rem; }
+
+	.hcols__step-rule {
+		width: 100%;
+		height: 1px;
+		background: var(--border);
+		margin-bottom: 1.75rem;
+	}
+
+	.hcols__step-num {
+		font-family: var(--font-sans);
+		font-size: 0.7rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 0.75rem;
+	}
+
+	.hcols__step-label {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text);
+		margin-bottom: 1.25rem;
+		font-weight: 600;
+	}
+
+	.hcols__step-body {
+		font-style: normal;
+		font-size: 0.9375rem;
+		line-height: 1.78;
+		color: var(--muted);
+	}
+
+	.hcols__footer {
+		margin-top: 4rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+		text-align: right;
+	}
+
+	.hcols__link {
+		font-style: italic;
+		font-size: 1rem;
+		color: var(--accent);
+		text-decoration: none;
+		letter-spacing: 0.01em;
+		transition: opacity 0.2s;
+	}
+
+	.hcols__link:hover { opacity: 0.7; }
+
+	@media (max-width: 768px) {
+		.hcols__inner { padding: 0 1.5rem; }
+		.hcols__steps { grid-template-columns: 1fr; gap: 2rem; }
+		.hcols__footer { text-align: center; }
+	}
+</style>

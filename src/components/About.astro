@@ -1,0 +1,195 @@
+---
+---
+
+<section class="about" id="about">
+	<div class="about__inner">
+		<div class="about__image-col">
+			<div class="about__image-wrap">
+				<img
+					src="https://images.pexels.com/photos/356378/pexels-photo-356378.jpeg?auto=compress&cs=tinysrgb&w=700"
+					alt="Dog portrait in warm afternoon light"
+					loading="lazy"
+				/>
+			</div>
+			<div class="about__badge">
+				<span class="about__badge-num">8+</span>
+				<span class="about__badge-text">Years of<br />experience</span>
+			</div>
+		</div>
+
+		<div class="about__content">
+			<p class="about__eyebrow">About</p>
+			<h2 class="about__heading">Hello, I'm Hazel.<br />A photographer who<br />loves dogs.</h2>
+			<p class="about__body">
+				I started photographing pets in 2016 after realizing how fleeting these irreplaceable
+				moments really are. Every wagging tail, every curious glance — these are the frames
+				families treasure forever.
+			</p>
+			<p class="about__body">
+				My sessions are relaxed, unhurried, and full of play. I work entirely on your pet's terms,
+				letting their personality shine through naturally without forced poses or rushed timelines.
+			</p>
+
+			<div class="about__stats">
+				<div class="about__stat">
+					<span class="about__stat-num">600+</span>
+					<span class="about__stat-label">Sessions</span>
+				</div>
+				<div class="about__stat">
+					<span class="about__stat-num">12</span>
+					<span class="about__stat-label">Awards</span>
+				</div>
+				<div class="about__stat">
+					<span class="about__stat-num">98%</span>
+					<span class="about__stat-label">5-star reviews</span>
+				</div>
+			</div>
+
+			<a href="#contact" class="about__cta">Work with me &rarr;</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.about {
+		padding: 6rem 2rem;
+		background: var(--bg-warm);
+	}
+
+	.about__inner {
+		max-width: 1200px;
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 6rem;
+		align-items: center;
+	}
+
+	.about__image-col {
+		position: relative;
+	}
+
+	.about__image-wrap {
+		overflow: hidden;
+		border-radius: 3px;
+	}
+
+	.about__image-wrap img {
+		width: 100%;
+		height: 580px;
+		object-fit: cover;
+		object-position: center 20%;
+		display: block;
+	}
+
+	.about__badge {
+		position: absolute;
+		bottom: -1.75rem;
+		right: -1.75rem;
+		background: var(--accent);
+		color: var(--white);
+		padding: 1.5rem 1.75rem;
+		border-radius: 3px;
+		text-align: center;
+		min-width: 120px;
+	}
+
+	.about__badge-num {
+		display: block;
+		font-family: var(--font-serif);
+		font-size: 2.25rem;
+		line-height: 1;
+		margin-bottom: 0.4rem;
+	}
+
+	.about__badge-text {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		line-height: 1.5;
+	}
+
+	.about__eyebrow {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 1.25rem;
+	}
+
+	.about__heading {
+		font-size: clamp(1.875rem, 3vw, 2.625rem);
+		color: var(--text);
+		margin-bottom: 1.75rem;
+		line-height: 1.2;
+	}
+
+	.about__body {
+		font-size: 1.0625rem;
+		color: var(--muted);
+		line-height: 1.75;
+		margin-bottom: 1.25rem;
+	}
+
+	.about__stats {
+		display: flex;
+		gap: 3rem;
+		margin: 2.25rem 0;
+		padding: 2rem 0;
+		border-top: 1px solid var(--border);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.about__stat {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.about__stat-num {
+		font-family: var(--font-serif);
+		font-size: 2rem;
+		color: var(--text);
+		line-height: 1;
+	}
+
+	.about__stat-label {
+		font-size: 0.75rem;
+		color: var(--muted);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.about__cta {
+		font-size: 0.9375rem;
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		color: var(--text);
+		text-decoration: none;
+		border-bottom: 1.5px solid var(--accent);
+		padding-bottom: 2px;
+		transition: color 0.2s;
+	}
+
+	.about__cta:hover {
+		color: var(--accent);
+	}
+
+	@media (max-width: 900px) {
+		.about__inner {
+			grid-template-columns: 1fr;
+			gap: 3.5rem;
+		}
+
+		.about__image-wrap img {
+			height: 420px;
+		}
+
+		.about__badge {
+			right: 1rem;
+			bottom: 1rem;
+		}
+	}
+</style>

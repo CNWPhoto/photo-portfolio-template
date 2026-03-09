@@ -1,0 +1,223 @@
+---
+const services = [
+	{
+		icon: '◈',
+		title: 'Outdoor Portraits',
+		description:
+			'Natural light sessions at parks, beaches, and trails — the places your pet loves most. Relaxed, candid, and full of character.',
+		features: ['2–3 hour session', 'Up to 2 pets', '30 edited images'],
+		featured: false,
+	},
+	{
+		icon: '✦',
+		title: 'Studio Sessions',
+		description:
+			"Clean, timeless portraits in a controlled environment. Perfect for showcasing your pet's distinctive features with quiet elegance.",
+		features: ['1–2 hour session', 'Multiple lighting setups', '20 edited images'],
+		featured: true,
+	},
+	{
+		icon: '◉',
+		title: 'Family & Pet',
+		description:
+			'Bring the whole family. These sessions capture the bond between pets and their people — genuine moments of connection.',
+		features: ['3 hour session', 'Up to 6 people + pets', '40 edited images'],
+		featured: false,
+	},
+];
+---
+
+<section class="services" id="services">
+	<div class="services__inner">
+		<div class="services__header">
+			<p class="services__eyebrow">Services</p>
+			<h2 class="services__heading">What I Offer</h2>
+			<p class="services__sub">
+				Every session is tailored to your pet's personality and your family's style.
+			</p>
+		</div>
+
+		<div class="services__grid">
+			{
+				services.map((service) => (
+					<div class={`services__card${service.featured ? ' services__card--featured' : ''}`}>
+						<span class="services__icon" aria-hidden="true">
+							{service.icon}
+						</span>
+						<h3 class="services__title">{service.title}</h3>
+						<p class="services__desc">{service.description}</p>
+						<ul class="services__features">
+							{service.features.map((f) => (
+								<li>{f}</li>
+							))}
+						</ul>
+						<a
+							href="#contact"
+							class={`services__link${service.featured ? ' services__link--featured' : ''}`}
+						>
+							{service.featured ? 'Book Now' : 'Learn More'}
+						</a>
+					</div>
+				))
+			}
+		</div>
+	</div>
+</section>
+
+<style>
+	.services {
+		padding: 6rem 2rem;
+	}
+
+	.services__inner {
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	.services__header {
+		text-align: center;
+		margin-bottom: 3.5rem;
+	}
+
+	.services__eyebrow {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 1rem;
+	}
+
+	.services__heading {
+		font-size: clamp(2rem, 3.5vw, 2.75rem);
+		color: var(--text);
+		margin-bottom: 1rem;
+	}
+
+	.services__sub {
+		font-size: 1.0625rem;
+		color: var(--muted);
+		max-width: 440px;
+		margin: 0 auto;
+		line-height: 1.7;
+	}
+
+	.services__grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1.5rem;
+	}
+
+	.services__card {
+		background: var(--white);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		padding: 2.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1.125rem;
+		transition:
+			box-shadow 0.25s,
+			transform 0.25s;
+	}
+
+	.services__card:hover {
+		box-shadow: 0 8px 36px rgba(44, 44, 44, 0.07);
+		transform: translateY(-3px);
+	}
+
+	.services__card--featured {
+		background: var(--text);
+		border-color: var(--text);
+	}
+
+	.services__icon {
+		font-size: 1.25rem;
+		color: var(--accent);
+		line-height: 1;
+	}
+
+	.services__title {
+		font-size: 1.375rem;
+		color: var(--text);
+	}
+
+	.services__card--featured .services__title {
+		color: var(--white);
+	}
+
+	.services__desc {
+		font-size: 0.9375rem;
+		line-height: 1.72;
+		color: var(--muted);
+		flex: 1;
+	}
+
+	.services__card--featured .services__desc {
+		color: rgba(250, 249, 247, 0.65);
+	}
+
+	.services__features {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.services__card--featured .services__features {
+		border-color: rgba(250, 249, 247, 0.12);
+	}
+
+	.services__features li {
+		font-size: 0.875rem;
+		color: var(--muted);
+		padding-left: 1.375rem;
+		position: relative;
+	}
+
+	.services__features li::before {
+		content: '—';
+		position: absolute;
+		left: 0;
+		color: var(--accent);
+	}
+
+	.services__card--featured .services__features li {
+		color: rgba(250, 249, 247, 0.65);
+	}
+
+	.services__link {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
+		text-decoration: none;
+		color: var(--text);
+		border-bottom: 1.5px solid var(--accent);
+		padding-bottom: 2px;
+		align-self: flex-start;
+		transition: color 0.2s;
+		margin-top: 0.5rem;
+	}
+
+	.services__link--featured {
+		color: var(--white);
+	}
+
+	.services__link:hover {
+		color: var(--accent);
+	}
+
+	.services__link--featured:hover {
+		color: var(--accent);
+	}
+
+	@media (max-width: 900px) {
+		.services__grid {
+			grid-template-columns: 1fr;
+			max-width: 480px;
+			margin: 0 auto;
+		}
+	}
+</style>

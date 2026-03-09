@@ -1,0 +1,147 @@
+---
+const steps = [
+	{
+		num: '01',
+		title: 'Get in Touch',
+		desc: "Send me a message with your vision — your pet, preferred location, and what you'd love to capture. No detail is too small.",
+	},
+	{
+		num: '02',
+		title: 'Plan Your Session',
+		desc: "We'll chat through the details, choose a location, and discuss your pet's personality so the session fits perfectly.",
+	},
+	{
+		num: '03',
+		title: 'The Session',
+		desc: 'A relaxed, playful shoot on your terms. No rigid poses — just genuine moments, good light, and plenty of treats.',
+	},
+	{
+		num: '04',
+		title: 'Receive Your Gallery',
+		desc: 'Within two weeks, your beautifully edited images arrive in a private online gallery — ready to download and print.',
+	},
+];
+---
+
+<section class="process" id="process">
+	<div class="process__inner">
+		<div class="process__header">
+			<p class="process__eyebrow">How It Works</p>
+			<h2 class="process__heading">Simple from<br />start to finish.</h2>
+		</div>
+
+		<div class="process__steps">
+			{
+				steps.map((step) => (
+					<div class="process__step">
+						<span class="process__num" aria-hidden="true">
+							{step.num}
+						</span>
+						<div class="process__rule">
+							<span class="process__dot" aria-hidden="true" />
+						</div>
+						<h3 class="process__title">{step.title}</h3>
+						<p class="process__desc">{step.desc}</p>
+					</div>
+				))
+			}
+		</div>
+	</div>
+</section>
+
+<style>
+	.process {
+		padding: 6rem 2rem;
+		background: var(--bg);
+	}
+
+	.process__inner {
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	.process__header {
+		margin-bottom: 4rem;
+	}
+
+	.process__eyebrow {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 1rem;
+	}
+
+	.process__heading {
+		font-size: clamp(2rem, 3.5vw, 2.75rem);
+		color: var(--text);
+		line-height: 1.15;
+	}
+
+	.process__steps {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 2rem;
+	}
+
+	.process__step {
+		position: relative;
+		padding-top: 3.5rem;
+	}
+
+	.process__num {
+		font-family: var(--font-serif);
+		font-size: 4rem;
+		color: var(--accent-faint);
+		line-height: 1;
+		position: absolute;
+		top: 0;
+		left: -0.25rem;
+		user-select: none;
+		pointer-events: none;
+	}
+
+	.process__rule {
+		width: 100%;
+		height: 1px;
+		background: var(--border);
+		margin-bottom: 1.5rem;
+		position: relative;
+	}
+
+	.process__dot {
+		position: absolute;
+		left: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 8px;
+		height: 8px;
+		background: var(--accent);
+		border-radius: 50%;
+	}
+
+	.process__title {
+		font-size: 1.1875rem;
+		color: var(--text);
+		margin-bottom: 0.75rem;
+	}
+
+	.process__desc {
+		font-size: 0.9375rem;
+		color: var(--muted);
+		line-height: 1.72;
+	}
+
+	@media (max-width: 900px) {
+		.process__steps {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 580px) {
+		.process__steps {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

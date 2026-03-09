@@ -1,0 +1,123 @@
+---
+const { galleryImages, urlFor, theme = 'classic-cream' } = Astro.props;
+
+// TODO:NICHE — fallback images are dog photos; swap for your niche
+const fallbackImages = [
+	{ src: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=800&h=1000&fit=crop', alt: 'Dog portrait in warm natural light' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=800&h=1000&fit=crop', alt: 'Dog exploring in golden afternoon light' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=800&h=1000&fit=crop', alt: 'Golden retriever in sunlit field' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=800&h=1000&fit=crop', alt: 'Playful dog in soft afternoon light' }, // TODO:NICHE
+];
+
+const displayImages =
+	galleryImages?.length && urlFor
+		? galleryImages.slice(0, 4).map((img: any) => ({
+				src: urlFor(img.photo).width(800).height(1000).fit('crop').auto('format').url(),
+				alt: img.photo?.alt ?? img.title ?? '',
+		  }))
+		: fallbackImages;
+---
+
+<section class="pgrid" id="portfolio" data-theme={theme}>
+	<hr />
+	<div class="pgrid__inner">
+		<div class="pgrid__label-col" aria-hidden="true">
+			{/* TODO:NICHE — "Featured" label */}
+			<span class="pgrid__label">Featured</span>
+		</div>
+
+		<div class="pgrid__content">
+			<div class="pgrid__images">
+				{displayImages.map((img) => (
+					<div class="pgrid__img-wrap">
+						<img src={img.src} alt={img.alt} loading="lazy" />
+					</div>
+				))}
+			</div>
+
+			<div class="pgrid__footer">
+				<a href="/portfolio" class="pgrid__cta">View Full Portfolio</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.pgrid { padding: 5rem 0; }
+
+	.pgrid__inner {
+		display: grid;
+		grid-template-columns: 100px 1fr;
+		padding: 0 3rem;
+		max-width: 1400px;
+		margin: 0 auto;
+		gap: 2rem;
+	}
+
+	.pgrid__label-col {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.pgrid__label {
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+		letter-spacing: 0.12em;
+		color: var(--border);
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		white-space: nowrap;
+		user-select: none;
+	}
+
+	.pgrid__images {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.75rem;
+	}
+
+	.pgrid__img-wrap { overflow: hidden; }
+
+	.pgrid__img-wrap img {
+		width: 100%;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+		display: block;
+		transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	}
+
+	.pgrid__img-wrap:hover img { transform: scale(1.04); }
+
+	.pgrid__footer {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 2rem;
+	}
+
+	.pgrid__cta {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text);
+		text-decoration: none;
+		border: 1px solid var(--text);
+		padding: 0.7rem 1.5rem;
+		display: inline-block;
+		transition: background 0.2s, color 0.2s;
+	}
+
+	.pgrid__cta:hover {
+		background: var(--text);
+		color: var(--bg);
+	}
+
+	@media (max-width: 900px) {
+		.pgrid__inner { grid-template-columns: 1fr; padding: 0 1.5rem; }
+		.pgrid__label-col { display: none; }
+		.pgrid__images { grid-template-columns: repeat(2, 1fr); }
+	}
+</style>
