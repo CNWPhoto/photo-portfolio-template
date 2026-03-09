@@ -85,6 +85,8 @@
   - `pageSection.variant` field added to Sanity schema (single list covering all section types)
   - `index.astro` fetches `pageSection` docs and uses `sectionCfg()` helper to select variant + theme per section
   - Gallery GROQ query extended to 6 images (`[0..5]`) for masonry support
+- [x] Fix: Hero missing from homepage — dropped from index.astro during section variants refactor; import and placement restored (first element after Nav, outside <main>)
+- [x] Fix: Nav invisible after theme system refactor — added explicit fallback values to all `var()` usages in Nav.astro (`var(--bg, #f5f3ef)`, `var(--text, #1a2744)`, `var(--accent, #8b2635)`, `var(--border, #d4cfc6)`, `var(--font-serif, Georgia, serif)`). Root cause: nav lives outside `data-theme` sections and relied purely on `:root` cascade from the combined `:root, [data-theme='classic-cream']` selector.
 - [ ] Add GROQ queries with TypeScript types
 
 ### Pages

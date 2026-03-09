@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
 import Footer from '../components/Footer.astro';
 import HowItWorks from '../components/HowItWorks.astro';
 import WhyChoose from '../components/WhyChoose.astro';
@@ -43,6 +44,7 @@ const howItWorksCfg    = sectionCfg('howItWorks',   'columns', 'warm-studio');
 
 <Layout>
 	<Nav />
+	<Hero heroImages={photographer?.heroImages} {urlFor} />
 	<main>
 		<!-- Intro -->
 		{introCfg.variant === 'centered'
