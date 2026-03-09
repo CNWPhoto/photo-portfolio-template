@@ -77,7 +77,7 @@
   - **`pageSection`** schema updated: `colorTheme` + `fontTheme` fields for per-section overrides
   - Demo: HowItWorks → `warm-studio`, WhyChoose → `dark-editorial`, Footer → `classic-cream`
 - [x] Section layout variants — 2 variants per key section, swappable via Sanity `pageSection.variant`
-  - **Testimonials**: `TestimonialsSlider` (image + quote + arrows) · `TestimonialsGrid` (3 cards, circular photos, static)
+  - **Testimonials**: `Testimonials.astro` (original — image + quote + arrows) · `TestimonialsGrid.astro` (3 cards, circular photos, small-caps name, no arrows) ✓ created
   - **Portfolio**: `PortfolioGrid` (4 images, 4-col grid, rotated label) · `PortfolioMasonry` (6 images, CSS columns masonry)
   - **Intro**: `IntroSplit` (image left / text right) · `IntroCentered` (centered text, full-width image below)
   - **HowItWorks**: `HowItWorksColumns` (3-column) · `HowItWorksStacked` (vertical timeline with number circles + connector line)
