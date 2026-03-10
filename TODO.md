@@ -94,7 +94,7 @@
 - [x] `/about` — 5-section page: intro split, "What to Expect" 3-col with rotated label, personal split (text/image), pull quote, stacked-image CTA
 - [x] `/experience` — 6-section page: full-bleed hero image with overlay text, centered intro, sessions (image+content), artwork (content+image), next-steps full-bleed background with content box, FAQ accordion (7 questions, vanilla JS)
 - [x] `/blog` — hero image (no overlay, serif title in accent color), alternating post list (odd: image left / even: image right), 4 placeholder posts, warm-studio theme
-- [ ] `/contact` / `/inquire` — contact form (Formspree or Netlify Forms)
+- [x] `/contact` — hero image with overlay, two-column layout (serif accent heading + email/Instagram links left, minimal bottom-border form right), method POST action="#"
 
 ### Nav
 - [ ] Mobile hamburger menu (currently hides links on < 768px with no toggle)

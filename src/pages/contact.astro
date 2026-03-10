@@ -1,0 +1,272 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+---
+
+<Layout>
+	<Nav />
+	<main>
+
+		<!-- ══ SECTION 1: Hero Image ══ -->
+		<section class="hero">
+			<img
+				class="hero__img"
+				src="https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=1600"
+				alt="Dog portrait in soft natural light"
+				loading="eager"
+			/>
+			<div class="hero__overlay" aria-hidden="true"></div>
+			<div class="hero__content">
+				<h1 class="hero__heading">Inquire</h1>
+				<p class="hero__sub">I'd love to hear about your subject and what you're hoping to capture — just fill out the form below and I'll get back to you within 24–48 hours.</p>{/* TODO:NICHE */}
+			</div>
+		</section>
+
+		<!-- ══ SECTION 2: Contact Form ══ -->
+		<section class="contact" data-theme="classic-cream">
+			<hr />
+			<div class="contact__inner">
+
+				<div class="contact__info">
+					<h2 class="contact__heading">I can't wait to meet you and your pup(s)!</h2>{/* TODO:NICHE */}
+					<p class="contact__body">
+						If you'd rather email directly, you can reach me at{' '}
+						<a href="mailto:yourname@domain.com" class="contact__link">yourname@domain.com</a>{/* TODO:NICHE */}
+						{' '}or find me on Instagram{' '}
+						<a href="https://instagram.com" class="contact__link" target="_blank" rel="noopener">@YourHandle</a>.{/* TODO:NICHE */}
+					</p>
+				</div>
+
+				<form class="contact__form" method="POST" action="#">
+					<div class="contact__field">
+						<label class="contact__label" for="name">Full Name</label>
+						<input
+							class="contact__input"
+							type="text"
+							id="name"
+							name="name"
+							placeholder="Your name"
+							required
+						/>
+					</div>
+					<div class="contact__field">
+						<label class="contact__label" for="email">Email</label>
+						<input
+							class="contact__input"
+							type="email"
+							id="email"
+							name="email"
+							placeholder="your@email.com"
+							required
+						/>
+					</div>
+					<div class="contact__field">
+						<label class="contact__label" for="message">Message</label>
+						<textarea
+							class="contact__textarea"
+							id="message"
+							name="message"
+							placeholder="Tell me a little about your subject and what you're hoping to capture…"
+							rows="6"
+							required
+						></textarea>
+					</div>
+					<button class="contact__submit" type="submit">Send Message &rarr;</button>
+				</form>
+
+			</div>
+		</section>
+
+	</main>
+</Layout>
+
+<style>
+	/* ══ SECTION 1: Hero ══ */
+	.hero {
+		position: relative;
+		height: 55vh;
+		min-height: 360px;
+		overflow: hidden;
+		display: flex;
+		align-items: flex-end;
+		justify-content: flex-end;
+	}
+
+	.hero__img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 30%;
+		display: block;
+	}
+
+	.hero__overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.42);
+	}
+
+	.hero__content {
+		position: relative;
+		z-index: 1;
+		max-width: 560px;
+		padding: 3.5rem 4rem;
+		text-align: right;
+	}
+
+	.hero__heading {
+		font-size: clamp(2.5rem, 6vw, 5rem);
+		color: #ffffff;
+		letter-spacing: -0.01em;
+		margin-bottom: 1rem;
+		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+	}
+
+	.hero__sub {
+		font-family: var(--font-sans, system-ui, sans-serif);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.88);
+		line-height: 1.75;
+	}
+
+	/* ══ SECTION 2: Contact ══ */
+	.contact {
+		padding-bottom: 7rem;
+	}
+
+	.contact__inner {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 6rem;
+		align-items: start;
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 5.5rem 3rem 0;
+	}
+
+	/* Left: info */
+	.contact__heading {
+		font-family: var(--font-serif);
+		font-style: normal;
+		font-size: clamp(1.75rem, 3vw, 2.75rem);
+		color: var(--accent);
+		line-height: 1.25;
+		margin-bottom: 1.75rem;
+		letter-spacing: -0.01em;
+	}
+
+	.contact__body {
+		font-size: 0.9375rem;
+		line-height: 1.78;
+		color: var(--muted);
+	}
+
+	.contact__link {
+		color: var(--accent);
+		text-decoration: none;
+		border-bottom: 1px solid transparent;
+		transition: border-color 0.2s;
+	}
+
+	.contact__link:hover {
+		border-bottom-color: var(--accent);
+	}
+
+	/* Right: form */
+	.contact__form {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+	}
+
+	.contact__field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.contact__label {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--text);
+	}
+
+	.contact__input,
+	.contact__textarea {
+		background: transparent;
+		border: none;
+		border-bottom: 1px solid var(--border);
+		padding: 0.625rem 0;
+		font-family: var(--font-sans);
+		font-size: 0.9375rem;
+		color: var(--text);
+		outline: none;
+		width: 100%;
+		transition: border-color 0.2s;
+		resize: none;
+	}
+
+	.contact__input::placeholder,
+	.contact__textarea::placeholder {
+		color: var(--muted-light);
+	}
+
+	.contact__input:focus,
+	.contact__textarea:focus {
+		border-bottom-color: var(--accent);
+	}
+
+	.contact__textarea {
+		min-height: 150px;
+		line-height: 1.7;
+	}
+
+	.contact__submit {
+		width: 100%;
+		background: none;
+		border: 1px solid var(--text);
+		padding: 0.9rem 1.75rem;
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text);
+		cursor: pointer;
+		transition: background 0.2s, color 0.2s;
+		margin-top: 0.5rem;
+	}
+
+	.contact__submit:hover {
+		background: var(--text);
+		color: var(--bg);
+	}
+
+	/* ══ Responsive ══ */
+	@media (max-width: 900px) {
+		.hero__content {
+			max-width: none;
+			padding: 2rem 1.5rem;
+			text-align: left;
+		}
+
+		.hero__overlay {
+			background: rgba(0, 0, 0, 0.48);
+		}
+
+		.contact__inner {
+			grid-template-columns: 1fr;
+			gap: 3rem;
+			padding-left: 1.5rem;
+			padding-right: 1.5rem;
+		}
+	}
+</style>
