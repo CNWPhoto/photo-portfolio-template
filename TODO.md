@@ -96,7 +96,10 @@
 - [x] `/blog` — hero image (no overlay, serif title in accent color), alternating post list (odd: image left / even: image right), 4 placeholder posts, warm-studio theme
 - [x] `/contact` — hero image with overlay, two-column layout (serif accent heading + email/Instagram links left, minimal bottom-border form right), method POST action="#"
 
-### Nav
+### Nav & Internal Links
+- [x] Nav links updated to real page URLs (`/experience`, `/portfolio`, `/about`, `/blog`, `/contact`)
+- [x] Footer menu links updated to real page URLs
+- [x] All `#about`, `#blog`, `#contact`, `#featured`, `#how-it-works` anchor hrefs replaced across all components
 - [ ] Mobile hamburger menu (currently hides links on < 768px with no toggle)
 
 ### Polish
