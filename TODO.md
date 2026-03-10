@@ -78,7 +78,7 @@
   - Demo: HowItWorks → `warm-studio`, WhyChoose → `dark-editorial`, Footer → `classic-cream`
 - [x] Section layout variants — 2 variants per key section, swappable via Sanity `pageSection.variant`
   - **Testimonials**: `Testimonials.astro` (original — image + quote + arrows) · `TestimonialsGrid.astro` (3 cards, circular photos, small-caps name, no arrows) ✓ created
-  - **Portfolio**: `PortfolioGrid` (4 images, 4-col grid, rotated label) · `PortfolioMasonry` (6 images, CSS columns masonry)
+  - **Portfolio**: `FeaturedDogs.astro` (original — 2 images, rotated label) · `PortfolioMasonry.astro` (6 images, CSS columns masonry, 15px gap, centered CTA) ✓ created
   - **Intro**: `IntroSplit` (image left / text right) · `IntroCentered` (centered text, full-width image below)
   - **HowItWorks**: `HowItWorksColumns` (3-column) · `HowItWorksStacked` (vertical timeline with number circles + connector line)
   - All variants accept identical props; all support `theme` prop
