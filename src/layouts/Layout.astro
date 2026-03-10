@@ -1,9 +1,21 @@
 ---
 import Footer from '../components/Footer.astro';
+import Nav from '../components/Nav.astro';
+import { sanityClient } from '../lib/sanity.js';
+
+const settings = await sanityClient.fetch(
+  `*[_type == "siteSettings"][0]{ colorTheme, fontTheme, siteName }`,
+  {},
+  { cache: 'no-store' }
+);
+
+const colorTheme = settings?.colorTheme || 'classic-cream';
+const fontTheme  = settings?.fontTheme  || 'classic-editorial';
+const siteName   = settings?.siteName   || 'Pet Photography';
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme={colorTheme} data-font={fontTheme}>
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -20,7 +32,8 @@ import Footer from '../components/Footer.astro';
 			rel="stylesheet"
 		/>
 	</head>
-	<body data-font-theme="classic-editorial">
+	<body>
+		<Nav siteName={siteName} />
 		<slot />
 		<Footer />
 	</body>
@@ -29,58 +42,64 @@ import Footer from '../components/Footer.astro';
 <style is:global>
 	/* ══════════════════════════════════════════════════
 	   FONT THEMES
-	   Applied via data-font-theme on <body>.
+	   Applied via data-font on <html>.
 	   Components reference --font-heading and --font-body.
 	   Legacy aliases --font-serif / --font-sans resolve
 	   through var() substitution at compute time.
 	══════════════════════════════════════════════════ */
 
 	/* Font Theme 1: Classic Editorial */
-	[data-font-theme='classic-editorial'] {
+	html[data-font='classic-editorial'] {
 		--font-heading: 'Cormorant Garamond', Georgia, serif;
 		--font-body: 'Jost', system-ui, sans-serif;
 	}
 
 	/* Font Theme 2: Romantic Script */
-	[data-font-theme='romantic-script'] {
+	html[data-font='romantic-script'] {
 		--font-heading: 'Playfair Display', Georgia, serif;
 		--font-body: 'Lato', system-ui, sans-serif;
 	}
 
 	/* Font Theme 3: Modern Luxury */
-	[data-font-theme='modern-luxury'] {
+	html[data-font='modern-luxury'] {
 		--font-heading: 'DM Serif Display', Georgia, serif;
 		--font-body: 'DM Sans', system-ui, sans-serif;
 	}
 
 	/* Font Theme 4: Soft Contemporary */
-	[data-font-theme='soft-contemporary'] {
+	html[data-font='soft-contemporary'] {
 		--font-heading: 'Fraunces', Georgia, serif;
 		--font-body: 'Nunito Sans', system-ui, sans-serif;
 	}
 
 	/* Font Theme 5: Bold Editorial */
-	[data-font-theme='bold-editorial'] {
+	html[data-font='bold-editorial'] {
 		--font-heading: 'Libre Baskerville', Georgia, serif;
 		--font-body: 'Libre Franklin', system-ui, sans-serif;
 	}
 
 	/* Font Theme 6: Airy Minimal */
-	[data-font-theme='airy-minimal'] {
+	html[data-font='airy-minimal'] {
 		--font-heading: 'Tenor Sans', Georgia, serif;
 		--font-body: 'Raleway', system-ui, sans-serif;
 	}
 
 	/* ══════════════════════════════════════════════════
 	   COLOUR THEMES
-	   Applied via data-theme on section elements.
+	   Default applied via data-theme on <html>.
+	   Individual sections can override with their own data-theme.
 	   All components consume: --bg, --bg-alt, --text,
 	   --accent, --accent-dark, --muted, --muted-light, --border.
 	   --surface aliases --bg-alt within a themed section.
 	══════════════════════════════════════════════════ */
 
-	/* Theme 1: Classic Cream (site default) */
+	/* Theme 1: Classic Cream (site default)
+	   html[data-theme] specificity (0,1,1) beats :root (0,1,0) so the
+	   active theme always wins regardless of stylesheet order. Plain
+	   [data-theme] selectors are kept alongside so section-level
+	   overrides (e.g. <section data-theme="warm-studio">) still work. */
 	:root,
+	html[data-theme='classic-cream'],
 	[data-theme='classic-cream'] {
 		--bg: #f5f3ef;
 		--text: #1a2744;
@@ -94,6 +113,7 @@ import Footer from '../components/Footer.astro';
 	}
 
 	/* Theme 2: Warm Studio */
+	html[data-theme='warm-studio'],
 	[data-theme='warm-studio'] {
 		--bg: #fdf6ee;
 		--text: #2c1810;
@@ -107,6 +127,7 @@ import Footer from '../components/Footer.astro';
 	}
 
 	/* Theme 3: Dark Editorial */
+	html[data-theme='dark-editorial'],
 	[data-theme='dark-editorial'] {
 		--bg: #1a1a1a;
 		--text: #f0ede8;
@@ -120,6 +141,7 @@ import Footer from '../components/Footer.astro';
 	}
 
 	/* Theme 4: Cool Minimal */
+	html[data-theme='cool-minimal'],
 	[data-theme='cool-minimal'] {
 		--bg: #f8f9fa;
 		--text: #1c2b3a;
@@ -133,6 +155,7 @@ import Footer from '../components/Footer.astro';
 	}
 
 	/* Theme 5: Forest Sage */
+	html[data-theme='forest-sage'],
 	[data-theme='forest-sage'] {
 		--bg: #f2f4f0;
 		--text: #1e2d1f;
@@ -145,7 +168,7 @@ import Footer from '../components/Footer.astro';
 		--border: #ccd6c8;
 	}
 
-	/* Any themed section gets its own background/color scope */
+	/* Any themed element gets its own background/color scope */
 	[data-theme] {
 		background: var(--bg);
 		color: var(--text);
@@ -161,7 +184,7 @@ import Footer from '../components/Footer.astro';
 		 * Legacy aliases — resolve through var() substitution at compute time.
 		 * Component scoped styles that reference --font-serif / --font-sans
 		 * will pick up whatever --font-heading / --font-body the active
-		 * font theme has set on <body>.
+		 * font theme has set on <html>.
 		 */
 		--font-serif: var(--font-heading);
 		--font-sans: var(--font-body);

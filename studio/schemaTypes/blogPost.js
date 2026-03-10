@@ -5,13 +5,15 @@ export default {
   fields: [
     {
       name: 'title',
-      title: 'Title',
+      title: 'Post Title',
       type: 'string',
+      description: 'The headline for this blog post. Keep it clear and compelling — it appears on the blog listing page and at the top of the post.',
     },
     {
       name: 'slug',
-      title: 'Slug',
+      title: 'URL Slug',
       type: 'slug',
+      description: 'The URL for this post (e.g. "morning-in-the-studio" → /blog/morning-in-the-studio). Click "Generate" to create from the title.',
       options: {
         source: 'title',
         maxLength: 96,
@@ -21,17 +23,20 @@ export default {
       name: 'publishDate',
       title: 'Publish Date',
       type: 'date',
+      description: 'The date shown on the post. Posts are sorted newest-first on the blog page.',
     },
     {
       name: 'excerpt',
       title: 'Excerpt',
       type: 'text',
       rows: 3,
+      description: 'A 1–2 sentence summary shown on the blog listing page below the post title. Write something that makes readers want to click.',
     },
     {
       name: 'coverImage',
       title: 'Cover Image',
       type: 'image',
+      description: 'The main image for this post. Shown at the top of the post page and on the blog listing. Landscape images work best.',
       options: {
         hotspot: true,
         crop: true,
@@ -41,6 +46,7 @@ export default {
           name: 'alt',
           title: 'Alt Text',
           type: 'string',
+          description: 'Describe the image for accessibility and SEO (e.g. "Two dogs playing fetch at Wash Park in Denver").',
         },
       ],
     },
@@ -48,6 +54,7 @@ export default {
       name: 'category',
       title: 'Category',
       type: 'string',
+      description: 'Choose the category that best fits this post. Shown as a label above the title.',
       options: {
         list: [
           {title: 'On Location', value: 'On Location'},
@@ -60,8 +67,9 @@ export default {
     },
     {
       name: 'body',
-      title: 'Body',
+      title: 'Post Body',
       type: 'array',
+      description: 'The full content of your post. Use H2/H3 for section headings, Quote for pull quotes, and the image button to insert photos inline.',
       of: [
         {
           type: 'block',

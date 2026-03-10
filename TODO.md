@@ -91,6 +91,10 @@ Run `./start.sh` from the project root to start all three dev services at once (
   - Gallery GROQ query extended to 6 images (`[0..5]`) for masonry support
 - [x] Fix: Hero missing from homepage — dropped from index.astro during section variants refactor; import and placement restored (first element after Nav, outside <main>)
 - [x] Fix: Nav invisible after theme system refactor — added explicit fallback values to all `var()` usages in Nav.astro (`var(--bg, #f5f3ef)`, `var(--text, #1a2744)`, `var(--accent, #8b2635)`, `var(--border, #d4cfc6)`, `var(--font-serif, Georgia, serif)`). Root cause: nav lives outside `data-theme` sections and relied purely on `:root` cascade from the combined `:root, [data-theme='classic-cream']` selector.
+- [x] Custom Sanity Studio structure — content organized by page (🎨 Website Theme / 🏠 Homepage / 📄 About / 💼 Experience / 📝 Blog / 🖼️ Portfolio) with dividers; singletons open directly (no list view); `structureTool` structure callback in `sanity.config.js`
+- [x] Descriptive field titles and descriptions across all 5 schema types (`photographer`, `testimonial`, `faq`, `blogPost`, `galleryImage`) so clients understand every field
+- [x] `siteSettings` singleton wired to site — `Layout.astro` fetches `colorTheme`, `fontTheme`, `siteName` at build time; `data-theme` + `data-font` applied to `<html>`; `siteName` passed to `Nav` as prop; font theme CSS updated from `data-font-theme` → `data-font`; Nav moved into `Layout.astro` (alongside Footer) and removed from all individual page files
+- [x] Fix theme CSS specificity — all theme selectors prefixed with `html[data-theme='...']` / `html[data-font='...']` (specificity 0,1,1) so they beat `:root` (0,1,0) regardless of stylesheet injection order; plain `[data-theme='...']` kept alongside via comma for section-level overrides; removed duplicate `:root` color/font variable declarations that were shadowing theme blocks (`:root` now only owns `--white`, `--font-serif`, `--font-sans`)
 - [ ] Add GROQ queries with TypeScript types
 
 ### Pages
@@ -120,6 +124,7 @@ Run `./start.sh` from the project root to start all three dev services at once (
 
 ### Deploy
 - [ ] Connect GitHub repo to Cloudflare Pages (build: `npm run build`, output: `dist`, Node 18+)
+- [x] Fix Sanity build caching — `useCdn: false` in `src/lib/sanity.js`; all `sanityClient.fetch` calls in `Layout.astro`, `index.astro`, `blog/index.astro`, `blog/[slug].astro` updated with `{ cache: 'no-store' }` as third argument to bypass Vercel/CDN response caching on every build
 - [ ] Set environment variables for Sanity project ID / dataset
 - [ ] Connect custom domain via Cloudflare Pages settings
 - [ ] Set up Web3Forms API key in `contact.astro`

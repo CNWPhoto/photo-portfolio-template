@@ -1,12 +1,13 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Nav from '../../components/Nav.astro';
 import { sanityClient, urlFor } from '../../lib/sanity.js';
 import { toHTML } from '@portabletext/to-html';
 
 export async function getStaticPaths() {
   const posts = await sanityClient.fetch(
-    `*[_type == "blogPost"]{ "slug": slug.current }`
+    `*[_type == "blogPost"]{ "slug": slug.current }`,
+    {},
+    { cache: 'no-store' }
   );
   return posts.map((post) => ({ params: { slug: post.slug } }));
 }
@@ -22,7 +23,8 @@ const post = await sanityClient.fetch(
     body,
     category
   }`,
-  { slug }
+  { slug },
+  { cache: 'no-store' }
 );
 
 if (!post) {
@@ -67,7 +69,6 @@ const bodyHTML = post.body
 ---
 
 <Layout>
-  <Nav />
   <main>
     <article class="post">
       <div class="post__header">

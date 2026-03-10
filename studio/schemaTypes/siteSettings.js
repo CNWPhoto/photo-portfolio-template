@@ -44,10 +44,10 @@ export default {
       description: 'Applies site-wide — sets heading and body typefaces',
     },
     {
-      name: 'accentColor',
+      name: 'accentColorOverride',
       title: 'Custom Accent Colour',
       type: 'string',
-      description: 'Optional hex override (e.g. #8b2635) — overrides the theme accent if set',
+      description: 'Optional hex color to override the theme accent color e.g. #8b2635',
       validation: (Rule) =>
         Rule.regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
           name: 'hex color',

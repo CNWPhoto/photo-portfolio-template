@@ -1,10 +1,10 @@
 ---
+const { siteName = 'Pet Photography' } = Astro.props;
 ---
 
 <header class="nav">
 	<div class="nav__inner">
-		{/* TODO:NICHE — studio name/logo */}
-		<a href="/" class="nav__logo">Pet Photography</a>
+		<a href="/" class="nav__logo">{siteName}</a>
 		<nav aria-label="Main navigation">
 			<ul class="nav__links">
 				<li><a href="/experience">Experience</a></li>

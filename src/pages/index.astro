@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
 import HowItWorks from '../components/HowItWorks.astro';
 import WhyChoose from '../components/WhyChoose.astro';
@@ -19,11 +18,11 @@ import HowItWorksStacked from '../components/howitworks/HowItWorksStacked.astro'
 import { sanityClient, urlFor } from '../lib/sanity.js';
 
 const [photographer, testimonials, galleryImages, faqs, pageSections] = await Promise.all([
-	sanityClient.fetch(`*[_type == "photographer"][0]`),
-	sanityClient.fetch(`*[_type == "testimonial"] | order(order asc)`),
-	sanityClient.fetch(`*[_type == "galleryImage"] | order(order asc)[0..5]`),
-	sanityClient.fetch(`*[_type == "faq"] | order(order asc)`),
-	sanityClient.fetch(`*[_type == "pageSection"]`),
+	sanityClient.fetch(`*[_type == "photographer"][0]`, {}, { cache: 'no-store' }),
+	sanityClient.fetch(`*[_type == "testimonial"] | order(order asc)`, {}, { cache: 'no-store' }),
+	sanityClient.fetch(`*[_type == "galleryImage"] | order(order asc)[0..5]`, {}, { cache: 'no-store' }),
+	sanityClient.fetch(`*[_type == "faq"] | order(order asc)`, {}, { cache: 'no-store' }),
+	sanityClient.fetch(`*[_type == "pageSection"]`, {}, { cache: 'no-store' }),
 ]);
 
 // Build a lookup: sectionType → { variant, colorTheme }
@@ -42,7 +41,6 @@ const howItWorksCfg    = sectionCfg('howItWorks',   'columns', 'warm-studio');
 ---
 
 <Layout>
-	<Nav />
 	<Hero heroImages={photographer?.heroImages} {urlFor} />
 	<main>
 		<!-- Intro -->
