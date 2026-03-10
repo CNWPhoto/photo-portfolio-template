@@ -91,7 +91,7 @@
 
 ### Pages
 - [x] `/portfolio` — CSS masonry grid, 3-col desktop / 2 tablet / 1 mobile, 12 Pexels placeholder images, 12px gap, natural heights
-- [ ] `/about` — extended bio, awards, press mentions
+- [x] `/about` — two-column split (portrait image / content), bio paragraphs, full-width italic pull quote, "Get In Touch" CTA
 - [ ] `/experience` — full How It Works detail page
 - [ ] `/blog` — post listing + individual post pages
 - [ ] `/contact` / `/inquire` — contact form (Formspree or Netlify Forms)
@@ -100,6 +100,7 @@
 - [ ] Mobile hamburger menu (currently hides links on < 768px with no toggle)
 
 ### Polish
+- [x] Footer moved into `Layout.astro` — renders automatically on every page; removed individual import from `index.astro`
 - [ ] Page `<title>` and `<meta description>` per page
 - [ ] Open Graph image tags
 - [ ] Sitemap (`@astrojs/sitemap`)

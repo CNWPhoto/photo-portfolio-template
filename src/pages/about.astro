@@ -1,0 +1,170 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+---
+
+<Layout>
+	<Nav />
+	<main data-theme="classic-cream">
+
+		<div class="about__split">
+			<div class="about__image-col">
+				<img
+					src="https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=900"
+					alt="Golden retriever in warm afternoon light"
+					loading="eager"
+				/>
+			</div>
+
+			<div class="about__content-col">
+				<p class="about__eyebrow">Your Photographer</p>
+				<h1 class="about__heading">About</h1>
+
+				<p class="about__body">
+					{/* TODO:NICHE — replace with real photographer bio */}
+					I've been photographing dogs and the people who love them for over a decade. What started as a personal project — bringing my own camera to the dog park — became a calling. There is something quietly extraordinary about the bond between a person and their dog, and I consider it a privilege to document it.
+				</p>
+				<p class="about__body">
+					{/* TODO:NICHE — replace with real approach copy */}
+					Every session is unhurried. I work entirely on your dog's terms: their pace, their comfort, their personality. I chase the light, stay low to the ground, and wait for the moments that reveal who they really are. The result is a gallery that feels less like a photo shoot and more like a memory — one you'll return to for years.
+				</p>
+
+				<a href="/contact" class="about__cta">Get In Touch</a>
+			</div>
+		</div>
+
+		<div class="about__pullquote-wrap">
+			<hr />
+			<blockquote class="about__pullquote">
+				{/* TODO:NICHE — replace with real philosophy quote */}
+				&ldquo;A great photograph doesn't capture what something looked like. It captures what it felt like to be there.&rdquo;
+			</blockquote>
+		</div>
+
+	</main>
+</Layout>
+
+<style>
+	main {
+		min-height: 100vh;
+	}
+
+	/* ── Two-column split ── */
+	.about__split {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		min-height: 90vh;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.about__image-col {
+		overflow: hidden;
+	}
+
+	.about__image-col img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center top;
+		display: block;
+	}
+
+	.about__content-col {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		padding: 6rem 6rem 6rem 5rem;
+		background: var(--bg);
+	}
+
+	.about__eyebrow {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.725rem;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 1.25rem;
+	}
+
+	.about__heading {
+		font-size: clamp(3rem, 6vw, 5.5rem);
+		color: var(--text);
+		letter-spacing: -0.02em;
+		margin-bottom: 2.5rem;
+	}
+
+	.about__body {
+		font-style: italic;
+		font-size: 1.0625rem;
+		line-height: 1.82;
+		color: var(--text);
+		margin-bottom: 1.5rem;
+		max-width: 480px;
+	}
+
+	.about__cta {
+		display: inline-block;
+		margin-top: 1.5rem;
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text);
+		text-decoration: none;
+		border: 1px solid var(--text);
+		padding: 0.7rem 1.75rem;
+		align-self: flex-start;
+		transition: background 0.2s, color 0.2s;
+	}
+
+	.about__cta:hover {
+		background: var(--text);
+		color: var(--bg);
+	}
+
+	/* ── Pull quote ── */
+	.about__pullquote-wrap {
+		max-width: 860px;
+		margin: 0 auto;
+		padding: 5rem 3rem 7rem;
+		text-align: center;
+	}
+
+	.about__pullquote-wrap hr {
+		margin-bottom: 4rem;
+	}
+
+	.about__pullquote {
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-size: clamp(1.375rem, 2.5vw, 2rem);
+		line-height: 1.55;
+		color: var(--text);
+	}
+
+	/* ── Responsive ── */
+	@media (max-width: 900px) {
+		.about__split {
+			grid-template-columns: 1fr;
+		}
+
+		.about__image-col img {
+			height: 60vw;
+			min-height: 300px;
+		}
+
+		.about__content-col {
+			padding: 4rem 2rem;
+		}
+
+		.about__body {
+			max-width: none;
+		}
+
+		.about__pullquote-wrap {
+			padding: 4rem 1.5rem 5rem;
+		}
+	}
+</style>
