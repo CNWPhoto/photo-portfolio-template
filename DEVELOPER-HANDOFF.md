@@ -169,16 +169,58 @@ Every push to `main` triggers a full build and deploy automatically. No action n
 1. In the Cloudflare Pages project, go to **Custom domains** and add the client's domain.
 2. Update the domain's DNS records as instructed (Cloudflare manages DNS if the domain is registered or transferred there, making this one-click).
 
-### Sanity content changes
-Content changes in Sanity require a new build to appear on the live site. Options:
-- Push a trivial commit to trigger a deploy, or
-- Set up a [Sanity deploy webhook](https://www.sanity.io/docs/webhooks) pointing at the Cloudflare Pages deploy hook URL (found under Settings → Builds & deployments).
-
 ### Environment variables
 Set in the Cloudflare Pages project dashboard under **Settings → Environment variables**.
 
 ### Contact form
 Form submissions on `/contact` are handled by **Web3Forms** (free, no monthly fee). The API key is set directly in `src/pages/contact.astro` — update it per client.
+
+---
+
+## Sanity Webhook Setup (Required for Live Content Updates)
+
+Without this, content changes in Sanity will NOT appear on the live site until a manual redeploy. This must be set up for every client site.
+
+### For Client Sites (Cloudflare Pages)
+
+Step 1 — Get Cloudflare deploy hook URL:
+1. Go to dash.cloudflare.com → Pages → select client project
+2. Settings → Builds & Deployments → Deploy Hooks
+3. Click "Add deploy hook"
+4. Name: "Sanity Content Update" — Branch: main
+5. Copy the webhook URL
+
+Step 2 — Add webhook in Sanity:
+1. Go to sanity.io → client's project → API → Webhooks
+2. Click "Create webhook"
+3. Name: "Cloudflare Deploy"
+4. URL: paste Cloudflare deploy hook URL
+5. Dataset: production
+6. Trigger on: Create, Update, Delete
+7. Save
+
+Step 3 — Test:
+- Publish any content change in Sanity
+- Check Cloudflare Pages dashboard — new build should trigger within seconds
+- Build takes approximately 60 seconds
+- Content appears on live site automatically after build
+
+### For Your Own Preview Site (Vercel)
+
+Step 1 — Get Vercel deploy hook URL:
+1. Go to vercel.com → your project → Settings → Git → Deploy Hooks
+2. Create hook named "Sanity Update" on branch "main"
+3. Copy the webhook URL
+
+Step 2 — Add webhook in Sanity:
+1. Go to sanity.io → your project → API → Webhooks
+2. Same steps as above but paste Vercel URL instead
+
+### Important Notes
+- Each client gets their own Sanity project with their own webhook
+- Each client gets their own Cloudflare Pages site with their own deploy hook
+- Never share Sanity projects between clients
+- Webhook setup takes about 5 minutes per client site — add it to your client onboarding checklist
 
 ---
 

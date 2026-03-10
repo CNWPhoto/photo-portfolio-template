@@ -1,5 +1,9 @@
 # TODO
 
+## Dev Setup
+
+Run `./start.sh` from the project root to start all three dev services at once (Astro, Sanity Studio, and Claude Code) — each opens in its own Terminal window.
+
 ## ✅ Completed
 
 ### Homepage Layout & Components
@@ -47,7 +51,7 @@
   - `photographer` — singleton: name, location, tagline, bio, specialty, approachText ("Your Approach"), heroImages (array), profilePhoto
   - `testimonial` — quote, clientName, clientSubjectName ("Subject's Name"), photo, order
   - `galleryImage` — title, photo, category (portrait/lifestyle/detail/family/other), order
-  - `blogPost` — title, slug (auto from title), publishDate, excerpt, coverImage, body (portable text)
+  - `blogPost` — title, slug (auto from title), publishDate, excerpt, coverImage, category (list: On Location / Portraits / Behind the Scenes / Tips & Advice / Client Stories), body (portable text: normal/h2/h3/blockquote styles, bold/italic/link marks, inline images with alt + caption)
   - `faq` — question, answer, order
   - All registered in `studio/schemaTypes/index.js`
 - [x] Initialize Sanity client in `src/lib/sanity.js`
@@ -93,7 +97,8 @@
 - [x] `/portfolio` — CSS masonry grid, 3-col desktop / 2 tablet / 1 mobile, 12 Pexels placeholder images, 12px gap, natural heights
 - [x] `/about` — 5-section page: intro split, "What to Expect" 3-col with rotated label, personal split (text/image), pull quote, stacked-image CTA
 - [x] `/experience` — 6-section page: full-bleed hero image with overlay text, centered intro, sessions (image+content), artwork (content+image), next-steps full-bleed background with content box, FAQ accordion (7 questions, vanilla JS)
-- [x] `/blog` — hero image (no overlay, serif title in accent color), alternating post list (odd: image left / even: image right), 4 placeholder posts, warm-studio theme
+- [x] `/blog` — hero image (no overlay, serif title in accent color), alternating post list (odd: image left / even: image right), Sanity-fetched posts, warm-studio theme; falls back to "No posts yet" empty state
+- [x] `/blog/[slug]` — dynamic blog post page: category label, large italic h1, publish date, cover image (max 1100px, no caption), portable text body rendered via `@portabletext/to-html`; styled paragraphs, h2/h3, blockquotes, inline images (caption-only, not alt), lists, links
 - [x] `/contact` — hero image with overlay, two-column layout (serif accent heading + email/Instagram links left, minimal bottom-border form right), method POST action="#"
 
 ### Nav & Internal Links
@@ -104,7 +109,7 @@
 
 ### Documentation
 - [x] `CLIENT-GUIDE.md` — non-technical guide: Sanity Studio login, editing bio/testimonials/gallery/blog, hosting costs ($0/month), important links, developer contact
-- [x] `DEVELOPER-HANDOFF.md` — technical guide: stack summary, local dev setup, project structure, Sanity schema/client, theme system, Cloudflare Pages deploy (build command, output dir, Node version, custom domain, Web3Forms note), common change recipes
+- [x] `DEVELOPER-HANDOFF.md` — technical guide: stack summary, local dev setup, project structure, Sanity schema/client, theme system, Cloudflare Pages deploy (build command, output dir, Node version, custom domain, Web3Forms note), Sanity webhook setup (client sites via Cloudflare; preview sites via Vercel; per-client isolation notes), common change recipes
 
 ### Polish
 - [x] Footer moved into `Layout.astro` — renders automatically on every page; removed individual import from `index.astro`

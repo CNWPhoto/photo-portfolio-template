@@ -1,34 +1,18 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Nav from '../components/Nav.astro';
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import { sanityClient, urlFor } from '../../lib/sanity.js';
 
-// TODO:NICHE — replace with real blog posts (or Sanity fetch)
-const posts = [
-	{
-		category: 'On Location',
-		title: 'Captured High in the Mountains',
-		excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.',
-		pexelsId: '3726314',
-	},
-	{
-		category: 'Portraits',
-		title: 'Swimming with Spot',
-		excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.',
-		pexelsId: '2253275',
-	},
-	{
-		category: 'On Location',
-		title: 'Rocky on the Ridgetop',
-		excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.',
-		pexelsId: '825949',
-	},
-	{
-		category: 'Behind the Scenes',
-		title: 'A Morning in the Studio',
-		excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.',
-		pexelsId: '1805164',
-	},
-];
+const posts = await sanityClient.fetch(
+  `*[_type == "blogPost"] | order(publishDate desc){
+    title,
+    "slug": slug.current,
+    publishDate,
+    excerpt,
+    coverImage,
+    category
+  }`
+);
 ---
 
 <Layout>
@@ -52,25 +36,33 @@ const posts = [
 		<!-- ══ SECTION 2: Post List ══ -->
 		<section class="posts" data-theme="warm-studio">
 			<div class="posts__list">
-				{posts.map((post, i) => (
-					<article class={`posts__item ${i % 2 === 1 ? 'posts__item--reversed' : ''}`}>
-						<div class="posts__item-inner">
-							<div class="posts__img-col">
-								<img
-									src={`https://images.pexels.com/photos/${post.pexelsId}/pexels-photo-${post.pexelsId}.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop`}
-									alt={post.title}
-									loading="lazy"
-								/>
-							</div>
-							<div class="posts__content">
-								<p class="posts__category">{post.category}</p>
-								<h2 class="posts__title">{post.title}</h2>
-								<p class="posts__excerpt">{post.excerpt}</p>
-							</div>
-						</div>
-						{i < posts.length - 1 && <hr class="posts__divider" />}
-					</article>
-				))}
+				{posts.length === 0 ? (
+					<p class="posts__empty">No posts yet — check back soon.</p>
+				) : (
+					posts.map((post, i) => (
+						<article class={`posts__item ${i % 2 === 1 ? 'posts__item--reversed' : ''}`}>
+							<a href={`/blog/${post.slug}`} class="posts__item-inner">
+								<div class="posts__img-col">
+									{post.coverImage ? (
+										<img
+											src={urlFor(post.coverImage).width(900).height(700).fit('crop').auto('format').url()}
+											alt={post.coverImage.alt || post.title}
+											loading="lazy"
+										/>
+									) : (
+										<div class="posts__img-placeholder" />
+									)}
+								</div>
+								<div class="posts__content">
+									{post.category && <p class="posts__category">{post.category}</p>}
+									<h2 class="posts__title">{post.title}</h2>
+									{post.excerpt && <p class="posts__excerpt">{post.excerpt}</p>}
+								</div>
+							</a>
+							{i < posts.length - 1 && <hr class="posts__divider" />}
+						</article>
+					))
+				)}
 			</div>
 		</section>
 
@@ -137,6 +129,15 @@ const posts = [
 		padding: 0 3rem;
 	}
 
+	.posts__empty {
+		text-align: center;
+		padding: 6rem 0;
+		font-family: var(--font-sans, system-ui, sans-serif);
+		font-size: 0.95rem;
+		letter-spacing: 0.05em;
+		color: var(--muted, #7a7670);
+	}
+
 	.posts__item {
 		padding: 4rem 0;
 	}
@@ -145,6 +146,8 @@ const posts = [
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		min-height: 400px;
+		text-decoration: none;
+		color: inherit;
 	}
 
 	/* Reversed layout for even posts */
@@ -168,7 +171,13 @@ const posts = [
 		transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	}
 
-	.posts__img-col:hover img {
+	.posts__img-placeholder {
+		width: 100%;
+		height: 100%;
+		background: var(--border, #d4cfc6);
+	}
+
+	.posts__item-inner:hover .posts__img-col img {
 		transform: scale(1.03);
 	}
 
