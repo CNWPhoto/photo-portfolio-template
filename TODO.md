@@ -91,7 +91,7 @@
 
 ### Pages
 - [x] `/portfolio` — CSS masonry grid, 3-col desktop / 2 tablet / 1 mobile, 12 Pexels placeholder images, 12px gap, natural heights
-- [x] `/about` — two-column split (portrait image / content), bio paragraphs, full-width italic pull quote, "Get In Touch" CTA
+- [x] `/about` — 5-section page: intro split, "What to Expect" 3-col with rotated label, personal split (text/image), pull quote, stacked-image CTA
 - [ ] `/experience` — full How It Works detail page
 - [ ] `/blog` — post listing + individual post pages
 - [ ] `/contact` / `/inquire` — contact form (Formspree or Netlify Forms)
