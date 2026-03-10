@@ -102,6 +102,10 @@
 - [x] All `#about`, `#blog`, `#contact`, `#featured`, `#how-it-works` anchor hrefs replaced across all components
 - [ ] Mobile hamburger menu (currently hides links on < 768px with no toggle)
 
+### Documentation
+- [x] `CLIENT-GUIDE.md` — non-technical guide: Sanity Studio login, editing bio/testimonials/gallery/blog, important links, developer contact
+- [x] `DEVELOPER-HANDOFF.md` — technical guide: stack summary, local dev setup, project structure, Sanity schema/client, theme system, Vercel deploy, common change recipes
+
 ### Polish
 - [x] Footer moved into `Layout.astro` — renders automatically on every page; removed individual import from `index.astro`
 - [ ] Page `<title>` and `<meta description>` per page
