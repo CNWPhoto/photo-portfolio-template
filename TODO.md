@@ -90,7 +90,7 @@
 - [ ] Add GROQ queries with TypeScript types
 
 ### Pages
-- [ ] `/portfolio` — full photo grid, filterable by tag
+- [x] `/portfolio` — CSS masonry grid, 3-col desktop / 2 tablet / 1 mobile, 12 Pexels placeholder images, 12px gap, natural heights
 - [ ] `/about` — extended bio, awards, press mentions
 - [ ] `/experience` — full How It Works detail page
 - [ ] `/blog` — post listing + individual post pages

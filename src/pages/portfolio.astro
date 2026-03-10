@@ -1,0 +1,102 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+
+// TODO:NICHE — swap these for your niche's gallery images
+const images = [
+	{ id: '1108099',  alt: 'Golden retriever in warm afternoon light' },
+	{ id: '2253275',  alt: 'Dog exploring in golden afternoon light' },
+	{ id: '825949',   alt: 'Dog portrait in natural light' },
+	{ id: '1805164',  alt: 'Playful dog in soft afternoon light' },
+	{ id: '3726314',  alt: 'Dog looking curiously at the camera' },
+	{ id: '1254140',  alt: 'Dog running through an open field' },
+	{ id: '2607544',  alt: 'Dog portrait with soft bokeh background' },
+	{ id: '4587991',  alt: 'Dog at rest in warm natural light' },
+	{ id: '4587998',  alt: 'Close-up dog portrait outdoors' },
+	{ id: '1633794',  alt: 'Dog in dappled forest light' },
+	{ id: '3196887',  alt: 'Happy dog outdoors in sunshine' },
+	{ id: '2607546',  alt: 'Dog portrait, candid expression' },
+].map(({ id, alt }) => ({
+	src: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800`,
+	alt,
+}));
+---
+
+<Layout>
+	<Nav />
+	<main data-theme="classic-cream">
+		<div class="portfolio__header">
+			<h1 class="portfolio__title">Portfolio</h1>
+		</div>
+		<div class="portfolio__grid">
+			{images.map((img) => (
+				<div class="portfolio__item">
+					<img src={img.src} alt={img.alt} loading="lazy" />
+				</div>
+			))}
+		</div>
+	</main>
+</Layout>
+
+<style>
+	main {
+		min-height: 100vh;
+	}
+
+	.portfolio__header {
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 6rem 3rem 4rem;
+		text-align: center;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.portfolio__title {
+		font-size: clamp(2.5rem, 6vw, 5rem);
+		color: var(--text);
+		letter-spacing: -0.01em;
+	}
+
+	.portfolio__grid {
+		columns: 3;
+		column-gap: 12px;
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 3rem 3rem 7rem;
+	}
+
+	.portfolio__item {
+		break-inside: avoid;
+		margin-bottom: 12px;
+		overflow: hidden;
+	}
+
+	.portfolio__item img {
+		width: 100%;
+		display: block;
+		transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	}
+
+	.portfolio__item:hover img {
+		transform: scale(1.03);
+	}
+
+	@media (max-width: 900px) {
+		.portfolio__grid {
+			columns: 2;
+			padding-left: 1.5rem;
+			padding-right: 1.5rem;
+		}
+
+		.portfolio__header {
+			padding-left: 1.5rem;
+			padding-right: 1.5rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.portfolio__grid {
+			columns: 1;
+		}
+	}
+</style>
