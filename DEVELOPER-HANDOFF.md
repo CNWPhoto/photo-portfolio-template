@@ -6,11 +6,11 @@
 |---|---|
 | Frontend | Astro 5 (static site generator) |
 | CMS | Sanity Studio v5 (headless, hosted) |
-| Hosting | Vercel (auto-deploy from GitHub) |
+| Hosting | Cloudflare Pages (auto-deploy from GitHub) |
 | Styling | Scoped CSS in `.astro` files + global CSS custom properties |
 | Images | Pexels (placeholders) + Sanity image pipeline (`@sanity/image-url`) |
 
-The Astro frontend fetches content from Sanity at **build time**. There is no runtime API call — the site is fully static HTML after build. Redeployment is required for content changes to go live (Vercel handles this automatically via a Sanity webhook or on every GitHub push).
+The Astro frontend fetches content from Sanity at **build time**. There is no runtime API call — the site is fully static HTML after build. Redeployment is required for content changes to go live (Cloudflare Pages handles this automatically on every GitHub push).
 
 ---
 
@@ -152,13 +152,33 @@ To change the site-wide font: update `data-font-theme` on `<body>` in `Layout.as
 
 ## Deployment
 
-The site deploys to **Vercel** from the GitHub `main` branch.
+The site deploys to **Cloudflare Pages** from the GitHub `main` branch.
 
-- Every push to `main` triggers a full Vercel build and deploy.
-- Sanity content changes require a new build to go live. Options:
-  - Push a trivial commit to trigger a deploy, or
-  - Set up a [Sanity deploy webhook](https://www.sanity.io/docs/webhooks) pointing at the Vercel deploy hook URL.
-- Environment variables (if needed): set in the Vercel project dashboard under Settings → Environment Variables.
+### Initial setup
+1. Go to [pages.cloudflare.com](https://pages.cloudflare.com) and connect your GitHub account.
+2. Select the repository and configure the build:
+   - **Build command:** `npm run build`
+   - **Output directory:** `dist`
+   - **Node version:** 18 or higher (set via environment variable `NODE_VERSION = 18`)
+3. Click **Save and Deploy**.
+
+### Ongoing deploys
+Every push to `main` triggers a full build and deploy automatically. No action needed.
+
+### Custom domain
+1. In the Cloudflare Pages project, go to **Custom domains** and add the client's domain.
+2. Update the domain's DNS records as instructed (Cloudflare manages DNS if the domain is registered or transferred there, making this one-click).
+
+### Sanity content changes
+Content changes in Sanity require a new build to appear on the live site. Options:
+- Push a trivial commit to trigger a deploy, or
+- Set up a [Sanity deploy webhook](https://www.sanity.io/docs/webhooks) pointing at the Cloudflare Pages deploy hook URL (found under Settings → Builds & deployments).
+
+### Environment variables
+Set in the Cloudflare Pages project dashboard under **Settings → Environment variables**.
+
+### Contact form
+Form submissions on `/contact` are handled by **Web3Forms** (free, no monthly fee). The API key is set directly in `src/pages/contact.astro` — update it per client.
 
 ---
 

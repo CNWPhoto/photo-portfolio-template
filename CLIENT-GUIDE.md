@@ -36,7 +36,7 @@ Go to `https://your-domain.com/studio` and sign in with your Sanity account. If 
 2. Click **+ New Gallery Image**, give it a title, choose a category, upload your photo, and set an **Order** number.
 3. Click **Publish**.
 
-Photos added to the gallery will appear in the Portfolio section of your site after the next deployment (usually within a few minutes on Vercel).
+Photos added to the gallery will appear in the Portfolio section of your site after the next deployment (usually within a few minutes on Cloudflare Pages).
 
 ### Writing a New Blog Post
 
@@ -44,6 +44,14 @@ Photos added to the gallery will appear in the Portfolio section of your site af
 2. Click **+ New Blog Post**.
 3. Fill in the **Title** (the URL slug auto-generates from this), **Publish Date**, **Excerpt**, **Cover Image**, and **Body** (rich text editor).
 4. Click **Publish** when ready to go live.
+
+---
+
+## Hosting & Costs
+
+Your site is hosted on **Cloudflare Pages** — free forever with no commercial use restrictions. Your custom domain is also connected through Cloudflare at no cost. Contact form submissions are handled by **Web3Forms**, which is free with no monthly fee.
+
+**Your site costs $0/month to host — you only pay for your domain (~$10/year).**
 
 ---
 
@@ -67,6 +75,6 @@ Any web developer familiar with Astro and Sanity can maintain this site. It uses
 | Live site | `https://your-domain.com` |
 | Sanity Studio | `https://your-domain.com/studio` |
 | GitHub repository | `https://github.com/your-username/your-repo` |
-| Vercel dashboard | `https://vercel.com/your-username/your-project` |
+| Cloudflare Pages dashboard | `https://pages.cloudflare.com` |
 
 > Replace the placeholders above with your real URLs once your site is live.

@@ -103,8 +103,8 @@
 - [ ] Mobile hamburger menu (currently hides links on < 768px with no toggle)
 
 ### Documentation
-- [x] `CLIENT-GUIDE.md` — non-technical guide: Sanity Studio login, editing bio/testimonials/gallery/blog, important links, developer contact
-- [x] `DEVELOPER-HANDOFF.md` — technical guide: stack summary, local dev setup, project structure, Sanity schema/client, theme system, Vercel deploy, common change recipes
+- [x] `CLIENT-GUIDE.md` — non-technical guide: Sanity Studio login, editing bio/testimonials/gallery/blog, hosting costs ($0/month), important links, developer contact
+- [x] `DEVELOPER-HANDOFF.md` — technical guide: stack summary, local dev setup, project structure, Sanity schema/client, theme system, Cloudflare Pages deploy (build command, output dir, Node version, custom domain, Web3Forms note), common change recipes
 
 ### Polish
 - [x] Footer moved into `Layout.astro` — renders automatically on every page; removed individual import from `index.astro`
@@ -114,6 +114,8 @@
 - [ ] Favicon swap (replace Astro default)
 
 ### Deploy
-- [ ] Choose host (Netlify / Vercel / Cloudflare Pages)
+- [ ] Connect GitHub repo to Cloudflare Pages (build: `npm run build`, output: `dist`, Node 18+)
 - [ ] Set environment variables for Sanity project ID / dataset
-- [ ] Connect custom domain
+- [ ] Connect custom domain via Cloudflare Pages settings
+- [ ] Set up Web3Forms API key in `contact.astro`
+- [ ] (Optional) Configure Sanity deploy webhook → Cloudflare Pages deploy hook
