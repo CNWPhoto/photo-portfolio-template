@@ -93,7 +93,7 @@
 - [x] `/portfolio` — CSS masonry grid, 3-col desktop / 2 tablet / 1 mobile, 12 Pexels placeholder images, 12px gap, natural heights
 - [x] `/about` — 5-section page: intro split, "What to Expect" 3-col with rotated label, personal split (text/image), pull quote, stacked-image CTA
 - [x] `/experience` — 6-section page: full-bleed hero image with overlay text, centered intro, sessions (image+content), artwork (content+image), next-steps full-bleed background with content box, FAQ accordion (7 questions, vanilla JS)
-- [ ] `/blog` — post listing + individual post pages
+- [x] `/blog` — hero image (no overlay, serif title in accent color), alternating post list (odd: image left / even: image right), 4 placeholder posts, warm-studio theme
 - [ ] `/contact` / `/inquire` — contact form (Formspree or Netlify Forms)
 
 ### Nav
