@@ -80,7 +80,7 @@
   - **Testimonials**: `Testimonials.astro` (original — image + quote + arrows) · `TestimonialsGrid.astro` (3 cards, circular photos, small-caps name, no arrows) ✓ created
   - **Portfolio**: `FeaturedDogs.astro` (original — 2 images, rotated label) · `PortfolioMasonry.astro` (6 images, CSS columns masonry, 15px gap, centered CTA) ✓ created
   - **Intro**: `Intro.astro` (original — image left / text right) · `IntroCentered.astro` (centered text block, full-width image below) ✓ created
-  - **HowItWorks**: `HowItWorksColumns` (3-column) · `HowItWorksStacked` (vertical timeline with number circles + connector line)
+  - **HowItWorks**: `HowItWorks.astro` (original — 3-column grid) · `HowItWorksStacked.astro` (vertical timeline, large italic serif numbers, connector line) ✓ created
   - All variants accept identical props; all support `theme` prop
   - `pageSection.variant` field added to Sanity schema (single list covering all section types)
   - `index.astro` fetches `pageSection` docs and uses `sectionCfg()` helper to select variant + theme per section
