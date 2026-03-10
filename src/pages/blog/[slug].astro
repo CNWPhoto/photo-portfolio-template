@@ -6,6 +6,7 @@ import { toHTML } from '@portabletext/to-html';
 const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production'
 
 export async function getStaticPaths() {
+  const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production'
   const query = encodeURIComponent(`*[_type == "blogPost"]{ "slug": slug.current }`)
   const res = await fetch(`${SANITY_API}?query=${query}`, { cache: 'no-store' })
   const { result: posts } = await res.json()

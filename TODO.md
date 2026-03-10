@@ -124,7 +124,7 @@ Run `./start.sh` from the project root to start all three dev services at once (
 
 ### Deploy
 - [ ] Connect GitHub repo to Cloudflare Pages (build: `npm run build`, output: `dist`, Node 18+)
-- [x] Fix Sanity build caching — `useCdn: false` + `token: undefined` + `ignoreBrowserTokenWarning: true` in `src/lib/sanity.js`; `Layout.astro`, `blog/index.astro`, `blog/[slug].astro` converted from `sanityClient.fetch()` to direct `fetch()` calls to `hx5xgigp.api.sanity.io` HTTP API with `{ cache: 'no-store' }`; parameterized queries use `JSON.stringify` + `encodeURIComponent` for `$slug` URL param
+- [x] Fix Sanity build caching — `useCdn: false` + `token: undefined` + `ignoreBrowserTokenWarning: true` in `src/lib/sanity.js`; `Layout.astro`, `blog/index.astro`, `blog/[slug].astro` converted from `sanityClient.fetch()` to direct `fetch()` calls to `hx5xgigp.api.sanity.io` HTTP API with `{ cache: 'no-store' }`; parameterized queries use `JSON.stringify` + `encodeURIComponent` for `$slug` URL param; `SANITY_API` constant redefined inside `getStaticPaths` in `[slug].astro` to fix Astro isolated-scope build error
 - [ ] Set environment variables for Sanity project ID / dataset
 - [ ] Connect custom domain via Cloudflare Pages settings
 - [ ] Set up Web3Forms API key in `contact.astro`
