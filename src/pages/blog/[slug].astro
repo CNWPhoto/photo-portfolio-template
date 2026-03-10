@@ -1,31 +1,28 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { sanityClient, urlFor } from '../../lib/sanity.js';
+import { urlFor } from '../../lib/sanity.js';
 import { toHTML } from '@portabletext/to-html';
 
+const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production'
+
 export async function getStaticPaths() {
-  const posts = await sanityClient.fetch(
-    `*[_type == "blogPost"]{ "slug": slug.current }`,
-    {},
-    { cache: 'no-store' }
-  );
+  const query = encodeURIComponent(`*[_type == "blogPost"]{ "slug": slug.current }`)
+  const res = await fetch(`${SANITY_API}?query=${query}`, { cache: 'no-store' })
+  const { result: posts } = await res.json()
   return posts.map((post) => ({ params: { slug: post.slug } }));
 }
 
 const { slug } = Astro.params;
 
-const post = await sanityClient.fetch(
-  `*[_type == "blogPost" && slug.current == $slug][0]{
-    title,
-    publishDate,
-    excerpt,
-    coverImage,
-    body,
-    category
-  }`,
-  { slug },
+const postQuery = encodeURIComponent(
+  `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, excerpt, coverImage, body, category }`
+)
+const slugParam = encodeURIComponent(JSON.stringify(slug))
+const postRes = await fetch(
+  `${SANITY_API}?query=${postQuery}&$slug=${slugParam}`,
   { cache: 'no-store' }
-);
+)
+const { result: post } = await postRes.json()
 
 if (!post) {
   return Astro.redirect('/blog');

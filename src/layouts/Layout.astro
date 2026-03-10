@@ -1,13 +1,12 @@
 ---
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
-import { sanityClient } from '../lib/sanity.js';
-
-const settings = await sanityClient.fetch(
-  `*[_type == "siteSettings"][0]{ colorTheme, fontTheme, siteName }`,
-  {},
+const _settingsQuery = encodeURIComponent(`*[_type == "siteSettings"][0]{ colorTheme, fontTheme, siteName }`)
+const _settingsRes = await fetch(
+  `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${_settingsQuery}`,
   { cache: 'no-store' }
-);
+)
+const { result: settings } = await _settingsRes.json()
 
 const colorTheme = settings?.colorTheme || 'classic-cream';
 const fontTheme  = settings?.fontTheme  || 'classic-editorial';

@@ -1,19 +1,15 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { sanityClient, urlFor } from '../../lib/sanity.js';
+import { urlFor } from '../../lib/sanity.js';
 
-const posts = await sanityClient.fetch(
-  `*[_type == "blogPost"] | order(publishDate desc){
-    title,
-    "slug": slug.current,
-    publishDate,
-    excerpt,
-    coverImage,
-    category
-  }`,
-  {},
+const _postsQuery = encodeURIComponent(
+  `*[_type == "blogPost"] | order(publishDate desc){ title, "slug": slug.current, publishDate, excerpt, coverImage, category }`
+)
+const _postsRes = await fetch(
+  `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${_postsQuery}`,
   { cache: 'no-store' }
-);
+)
+const { result: posts } = await _postsRes.json()
 ---
 
 <Layout>
