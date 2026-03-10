@@ -1,0 +1,554 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+
+// TODO:NICHE — update all FAQ answers, pricing, and copy for your niche
+const faqs = [
+	{
+		q: 'How do I book a session?',
+		a: 'Reach out via the contact form or email and we\'ll set up a quick call to chat through your vision, location options, and timing. Once we\'ve confirmed the details, a deposit and signed agreement will secure your date.',
+	},
+	{
+		q: 'Do you work with shy, reactive, or senior subjects?',
+		a: 'Absolutely. Sessions are led entirely by the subject\'s comfort level. There\'s no pressure to perform, and we move at whatever pace feels right. Some of the most beautiful sessions have come from the quietest moments.',
+	},
+	{
+		q: 'When will I receive my images?',
+		a: 'Your private online gallery will be delivered within three weeks of your session. You\'ll have time to review everything before choosing your favorites for prints, albums, or digital downloads.',
+	},
+	{
+		q: 'Can I be in the photos too?',
+		a: 'Yes — and I encourage it. The relationship and connection between you and your subject is often the most meaningful thing to document. Just let me know when you book and we\'ll plan for it.',
+	},
+	{
+		q: 'Where do sessions take place?',
+		a: 'Sessions can take place anywhere that feels meaningful to you — a favourite park, your home, a special location. I\'m happy to suggest spots with beautiful light if you\'d prefer a recommendation.',
+	},
+	{
+		q: 'How long does a session last?',
+		a: 'Most sessions run between 60 and 90 minutes. This gives us enough time to warm up, explore the space, and capture a range of natural moments without anyone feeling rushed or tired.',
+	},
+	{
+		q: 'What if my subject isn\'t trained or doesn\'t sit still?',
+		a: 'That\'s completely fine — and very normal. I don\'t work with rigid shot lists or expect perfect behaviour. Movement, chaos, and personality make for the best photographs. We\'ll work with whatever the session gives us.',
+	},
+];
+---
+
+<Layout>
+	<Nav />
+	<main>
+
+		<!-- ══ SECTION 1: Hero Text Block ══ -->
+		<section class="hero" data-theme="classic-cream">
+			<div class="hero__inner">
+				<p class="hero__eyebrow">Experience</p>
+				<h1 class="hero__heading">The Experience &amp; Investment</h1>
+				<p class="hero__sub">What working together looks like, from your session to finished artwork.</p>
+				<hr class="hero__rule" />
+				<p class="hero__body">Every session is designed to feel relaxed, subject-led, and pressure-free. From planning your session to choosing your final images, you'll be guided through each step so the experience feels easy and enjoyable. There's no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.</p>
+				<p class="hero__includes-label"><em>This includes:</em></p>
+				<ul class="hero__list">
+					<li>Pre-session guidance to help you feel prepared</li>
+					<li>A relaxed, unhurried photo session</li>
+					<li>A curated online gallery to view and select your images</li>
+				</ul>
+				<p class="hero__price"><strong>Session fee begins at $XXX</strong></p>{/* TODO:NICHE — update pricing */}
+				<p class="hero__caption"><em>(Artwork and images purchased separately.)</em></p>
+				<p class="hero__body">The session fee covers the time, care, and preparation that go into creating your subject's photography experience.</p>{/* TODO:NICHE */}
+			</div>
+		</section>
+
+		<!-- ══ SECTION 2: Sessions ══ -->
+		<section class="sessions" data-theme="warm-studio">
+			<hr />
+			<div class="sessions__inner">
+				<h2 class="sessions__heading">Sessions</h2>
+				<div class="sessions__layout">
+					<div class="sessions__images">
+						<div class="sessions__img-wrap">
+							<img
+								src="https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=700&h=900&fit=crop"
+								alt="Session photograph in golden afternoon light"
+								loading="lazy"
+							/>
+						</div>
+						<div class="sessions__img-wrap">
+							<img
+								src="https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=700&h=900&fit=crop"
+								alt="Portrait session in natural light"
+								loading="lazy"
+							/>
+						</div>
+					</div>
+					<div class="sessions__content">
+						<p class="sessions__body">After your gallery is delivered, you'll choose the images you'd like to keep — whether that's a small digital collection or a fully curated set of wall artwork. There's no pressure to decide on the day; you'll have time to sit with your gallery and choose what feels right.</p>{/* TODO:NICHE */}
+						<p class="sessions__includes-label"><em>Options may include:</em></p>
+						<ul class="sessions__list">
+							<li>Digital image collections</li>
+							<li>Fine art prints</li>
+							<li>Wall artwork</li>
+							<li>Albums or keepsake pieces</li>
+						</ul>
+						<p class="sessions__statement"><strong>You're never locked into a one-size-fits-all package</strong></p>
+						<h3 class="sessions__subheading">Artwork / Images</h3>
+						<p class="sessions__body">All artwork is produced using professional-grade materials and printing partners. Pricing is provided in your gallery, and I'm always available to help you decide what will work best in your space.</p>{/* TODO:NICHE */}
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- ══ SECTION 3: Next Steps ══ -->
+		<section class="next" data-theme="classic-cream">
+			<hr />
+			<div class="next__inner">
+				<div class="next__content">
+					<h2 class="next__heading">Next Steps</h2>
+					<p class="next__body">Ready to get started? Reach out and tell me a little about yourself and what you're hoping to create. I'll be in touch within 48 hours to arrange a quick call, answer any questions, and start planning your session.</p>{/* TODO:NICHE */}
+					<a href="/contact" class="next__btn">Get In Touch</a>
+				</div>
+				<div class="next__image">
+					<img
+						src="https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=700&h=900&fit=crop"
+						alt="A warm, candid portrait session"
+						loading="lazy"
+					/>
+				</div>
+			</div>
+		</section>
+
+		<!-- ══ SECTION 4: FAQs ══ -->
+		<section class="faqs" data-theme="warm-studio">
+			<hr />
+			<div class="faqs__inner">
+				<div class="faqs__label-col" aria-hidden="true">
+					<span class="faqs__label">FAQs</span>
+				</div>
+				<div class="faqs__list">
+					{faqs.map((faq, i) => (
+						<div class="faqs__item" id={`faq-${i}`}>
+							<button class="faqs__question" aria-expanded="false" aria-controls={`faq-answer-${i}`}>
+								{faq.q}
+								<span class="faqs__icon" aria-hidden="true">+</span>
+							</button>
+							<div class="faqs__answer" id={`faq-answer-${i}`} role="region">
+								<blockquote class="faqs__answer-text">{faq.a}</blockquote>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+		</section>
+
+	</main>
+</Layout>
+
+<script>
+	document.querySelectorAll<HTMLButtonElement>('.faqs__question').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const isOpen = btn.getAttribute('aria-expanded') === 'true';
+			// Close all
+			document.querySelectorAll<HTMLButtonElement>('.faqs__question').forEach((b) => {
+				b.setAttribute('aria-expanded', 'false');
+				b.closest('.faqs__item')?.classList.remove('faqs__item--open');
+			});
+			// Open clicked if it was closed
+			if (!isOpen) {
+				btn.setAttribute('aria-expanded', 'true');
+				btn.closest('.faqs__item')?.classList.add('faqs__item--open');
+			}
+		});
+	});
+</script>
+
+<style>
+	/* ══ SECTION 1: Hero ══ */
+	.hero {
+		border-bottom: 1px solid var(--border);
+	}
+
+	.hero__inner {
+		max-width: 780px;
+		margin: 0 auto;
+		padding: 7rem 3rem 6rem;
+		text-align: center;
+	}
+
+	.hero__eyebrow {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.725rem;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 1.5rem;
+	}
+
+	.hero__heading {
+		font-size: clamp(2.25rem, 5vw, 4rem);
+		color: var(--text);
+		margin-bottom: 1.5rem;
+		letter-spacing: -0.01em;
+	}
+
+	.hero__sub {
+		font-style: italic;
+		font-size: 1.125rem;
+		color: var(--muted);
+		margin-bottom: 2.5rem;
+		line-height: 1.6;
+	}
+
+	.hero__rule {
+		margin-bottom: 2.5rem;
+	}
+
+	.hero__body {
+		font-style: italic;
+		font-size: 1.0625rem;
+		line-height: 1.82;
+		color: var(--text);
+		margin-bottom: 1.75rem;
+		text-align: left;
+	}
+
+	.hero__includes-label {
+		text-align: left;
+		font-size: 1.0625rem;
+		color: var(--text);
+		margin-bottom: 0.75rem;
+	}
+
+	.hero__list {
+		list-style: none;
+		text-align: left;
+		margin-bottom: 2rem;
+	}
+
+	.hero__list li {
+		font-size: 0.9375rem;
+		color: var(--muted);
+		padding: 0.45rem 0 0.45rem 1.25rem;
+		position: relative;
+		border-bottom: 1px solid var(--border);
+		line-height: 1.6;
+	}
+
+	.hero__list li::before {
+		content: '—';
+		position: absolute;
+		left: 0;
+		color: var(--accent);
+		font-size: 0.75rem;
+	}
+
+	.hero__price {
+		font-size: 1.125rem;
+		color: var(--text);
+		margin-bottom: 0.5rem;
+		text-align: left;
+	}
+
+	.hero__caption {
+		font-size: 0.875rem;
+		color: var(--muted);
+		margin-bottom: 2rem;
+		text-align: left;
+	}
+
+	/* ══ SECTION 2: Sessions ══ */
+	.sessions {
+		padding-bottom: 6rem;
+	}
+
+	.sessions__inner {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 5rem 3rem 0;
+	}
+
+	.sessions__heading {
+		font-size: clamp(2rem, 4vw, 3.5rem);
+		color: var(--text);
+		margin-bottom: 3rem;
+		letter-spacing: -0.01em;
+	}
+
+	.sessions__layout {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 4rem;
+		align-items: start;
+	}
+
+	.sessions__images {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+
+	.sessions__img-wrap {
+		overflow: hidden;
+	}
+
+	.sessions__img-wrap img {
+		width: 100%;
+		aspect-ratio: 7 / 9;
+		object-fit: cover;
+		display: block;
+		transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	}
+
+	.sessions__img-wrap:hover img {
+		transform: scale(1.04);
+	}
+
+	.sessions__body {
+		font-style: italic;
+		font-size: 1.0625rem;
+		line-height: 1.82;
+		color: var(--text);
+		margin-bottom: 1.5rem;
+	}
+
+	.sessions__includes-label {
+		font-size: 1.0625rem;
+		color: var(--text);
+		margin-bottom: 0.75rem;
+	}
+
+	.sessions__list {
+		list-style: none;
+		margin-bottom: 2rem;
+	}
+
+	.sessions__list li {
+		font-size: 0.9375rem;
+		color: var(--muted);
+		padding: 0.45rem 0 0.45rem 1.25rem;
+		position: relative;
+		border-bottom: 1px solid var(--border);
+		line-height: 1.6;
+	}
+
+	.sessions__list li::before {
+		content: '—';
+		position: absolute;
+		left: 0;
+		color: var(--accent);
+		font-size: 0.75rem;
+	}
+
+	.sessions__statement {
+		font-size: 1.0625rem;
+		color: var(--text);
+		margin-bottom: 2.5rem;
+		padding-top: 0.5rem;
+	}
+
+	.sessions__subheading {
+		font-size: clamp(1.5rem, 2.5vw, 2rem);
+		color: var(--text);
+		margin-bottom: 1.25rem;
+	}
+
+	/* ══ SECTION 3: Next Steps ══ */
+	.next {
+		padding-bottom: 6rem;
+	}
+
+	.next__inner {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 5rem;
+		align-items: center;
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 5rem 3rem 0;
+	}
+
+	.next__heading {
+		font-size: clamp(2rem, 4vw, 3.5rem);
+		color: var(--text);
+		margin-bottom: 1.5rem;
+		letter-spacing: -0.01em;
+	}
+
+	.next__body {
+		font-style: italic;
+		font-size: 1.0625rem;
+		line-height: 1.82;
+		color: var(--text);
+		margin-bottom: 2.5rem;
+	}
+
+	.next__btn {
+		display: inline-block;
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text);
+		text-decoration: none;
+		border: 1px solid var(--text);
+		padding: 0.7rem 1.75rem;
+		transition: background 0.2s, color 0.2s;
+	}
+
+	.next__btn:hover {
+		background: var(--text);
+		color: var(--bg);
+	}
+
+	.next__image {
+		overflow: hidden;
+	}
+
+	.next__image img {
+		width: 100%;
+		aspect-ratio: 7 / 9;
+		object-fit: cover;
+		display: block;
+	}
+
+	/* ══ SECTION 4: FAQs ══ */
+	.faqs {
+		padding-bottom: 7rem;
+	}
+
+	.faqs__inner {
+		display: grid;
+		grid-template-columns: 100px 1fr;
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 5rem 3rem 0;
+		gap: 2rem;
+	}
+
+	.faqs__label-col {
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		padding-top: 0.5rem;
+	}
+
+	.faqs__label {
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+		letter-spacing: 0.12em;
+		color: var(--border);
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		white-space: nowrap;
+		user-select: none;
+	}
+
+	.faqs__list {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.faqs__item {
+		border-top: 1px solid var(--border);
+	}
+
+	.faqs__item:last-child {
+		border-bottom: 1px solid var(--border);
+	}
+
+	.faqs__question {
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 1.5rem 0;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		cursor: pointer;
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-size: 1.125rem;
+		color: var(--text);
+		text-align: left;
+		line-height: 1.4;
+		transition: color 0.2s;
+	}
+
+	.faqs__question:hover {
+		color: var(--accent);
+	}
+
+	.faqs__icon {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 1.25rem;
+		font-weight: 300;
+		color: var(--accent);
+		flex-shrink: 0;
+		transition: transform 0.25s ease;
+		line-height: 1;
+	}
+
+	.faqs__item--open .faqs__icon {
+		transform: rotate(45deg);
+	}
+
+	.faqs__answer {
+		display: none;
+		padding-bottom: 1.75rem;
+	}
+
+	.faqs__item--open .faqs__answer {
+		display: block;
+	}
+
+	.faqs__answer-text {
+		font-size: 0.9375rem;
+		line-height: 1.78;
+		color: var(--muted);
+		border-left: 2px solid var(--accent);
+		padding-left: 1.25rem;
+		margin: 0;
+	}
+
+	/* ══ Responsive ══ */
+	@media (max-width: 900px) {
+		.hero__inner {
+			padding: 5rem 1.5rem 4rem;
+		}
+
+		.sessions__inner {
+			padding-left: 1.5rem;
+			padding-right: 1.5rem;
+		}
+
+		.sessions__layout {
+			grid-template-columns: 1fr;
+			gap: 2.5rem;
+		}
+
+		.next__inner {
+			grid-template-columns: 1fr;
+			gap: 2.5rem;
+			padding-left: 1.5rem;
+			padding-right: 1.5rem;
+		}
+
+		.next__image img {
+			aspect-ratio: 3 / 2;
+		}
+
+		.faqs__inner {
+			grid-template-columns: 1fr;
+			padding-left: 1.5rem;
+			padding-right: 1.5rem;
+		}
+
+		.faqs__label-col {
+			display: none;
+		}
+	}
+</style>
