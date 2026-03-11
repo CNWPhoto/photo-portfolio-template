@@ -28,6 +28,16 @@ export default {
   },
   fields: [
     {
+      name: 'rebuildNote',
+      title: '⏱ After saving changes',
+      type: 'string',
+      readOnly: true,
+      initialValue:
+        'Wait 1-2 minutes for your site to rebuild, then do a hard refresh of your site in the browser (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows) to see your updates.',
+      description:
+        'Wait 1-2 minutes for your site to rebuild, then do a hard refresh of your site in the browser (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows) to see your updates.',
+    },
+    {
       name: 'siteName',
       title: 'Site Name',
       type: 'string',
