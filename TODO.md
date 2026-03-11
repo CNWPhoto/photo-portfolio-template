@@ -8,6 +8,7 @@ Run `./start.sh` from the project root to start all three dev services at once (
 
 - [ ] Add `.nvmrc` to project root with contents `20` — ensures the correct Node version is used automatically in every terminal session (`nvm use` picks it up on `cd`)
 - [ ] Pin Sanity versions in `studio/package.json`: change `"sanity": "^5.14.0"` → `"sanity": "5.14.0"` and `"@sanity/vision": "^5.14.0"` → `"@sanity/vision": "5.14.0"` — removes `^` to prevent auto-upgrades that can break the Studio
+- [x] **Root cause resolved**: `sanity-plugin-note-field` was incompatible with Sanity v5 — it pulled in `@sanity/incompatible-plugin` which corrupted the Vite dep tree and caused `sanity.js` to build as 0 bytes. Removed plugin, deleted `vite.config.js` (bad fix attempt), set `autoUpdates: false`. Studio confirmed loading cleanly at `localhost:3333`.
 
 ## ✅ Completed
 
