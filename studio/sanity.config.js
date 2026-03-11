@@ -54,6 +54,15 @@ export default defineConfig({
                           .documentId('photographer')
                           .title('Hero Images')
                       ),
+                    S.listItem()
+                      .title('Section Layouts')
+                      .schemaType('homepageSettings')
+                      .child(
+                        S.document()
+                          .schemaType('homepageSettings')
+                          .documentId('homepageSettings')
+                          .title('Section Layouts')
+                      ),
                     S.documentTypeListItem('testimonial').title('Testimonials'),
                     S.documentTypeListItem('galleryImage').title('Portfolio Preview Images'),
                   ])

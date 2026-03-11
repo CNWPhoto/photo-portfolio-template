@@ -5,5 +5,6 @@ import blogPost from './blogPost'
 import faq from './faq'
 import pageSection from './pageSection'
 import siteSettings from './siteSettings'
+import homepageSettings from './homepageSettings'
 
-export const schemaTypes = [siteSettings, photographer, testimonial, galleryImage, blogPost, faq, pageSection]
+export const schemaTypes = [siteSettings, homepageSettings, photographer, testimonial, galleryImage, blogPost, faq, pageSection]

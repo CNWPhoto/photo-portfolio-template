@@ -22,10 +22,8 @@ const { siteName = 'Pet Photography' } = Astro.props;
 		position: sticky;
 		top: 0;
 		z-index: 100;
-		/* Explicit fallbacks: nav lives outside data-theme sections and must
-		   always render correctly regardless of theme system cascade state. */
-		background: var(--bg, #f5f3ef);
-		border-bottom: 1px solid var(--border, #d4cfc6);
+		background: var(--bg);
+		border-bottom: 1px solid var(--border);
 	}
 
 	.nav__inner {
@@ -44,7 +42,7 @@ const { siteName = 'Pet Photography' } = Astro.props;
 		font-style: normal;
 		font-size: 1.125rem;
 		letter-spacing: 0.06em;
-		color: var(--text, #1a2744);
+		color: var(--text);
 		text-decoration: none;
 		white-space: nowrap;
 	}
@@ -59,18 +57,18 @@ const { siteName = 'Pet Photography' } = Astro.props;
 		font-family: var(--font-serif, Georgia, serif);
 		font-style: normal;
 		font-size: 0.9375rem;
-		color: var(--text, #1a2744);
+		color: var(--text);
 		text-decoration: none;
 		letter-spacing: 0.02em;
 		transition: color 0.2s;
 	}
 
 	.nav__links a:hover {
-		color: var(--accent, #8b2635);
+		color: var(--accent);
 	}
 
 	.nav__inquire {
-		color: var(--accent, #8b2635) !important;
+		color: var(--accent) !important;
 	}
 
 	@media (max-width: 768px) {
