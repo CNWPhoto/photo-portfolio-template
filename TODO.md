@@ -4,6 +4,11 @@
 
 Run `./start.sh` from the project root to start all three dev services at once (Astro, Sanity Studio, and Claude Code) — each opens in its own Terminal window.
 
+## Developer Environment
+
+- [ ] Add `.nvmrc` to project root with contents `20` — ensures the correct Node version is used automatically in every terminal session (`nvm use` picks it up on `cd`)
+- [ ] Pin Sanity versions in `studio/package.json`: change `"sanity": "^5.14.0"` → `"sanity": "5.14.0"` and `"@sanity/vision": "^5.14.0"` → `"@sanity/vision": "5.14.0"` — removes `^` to prevent auto-upgrades that can break the Studio
+
 ## ✅ Completed
 
 ### Homepage Layout & Components
