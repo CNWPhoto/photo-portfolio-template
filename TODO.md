@@ -125,6 +125,7 @@ Run `./start.sh` from the project root to start all three dev services at once (
 ### Deploy
 - [ ] Connect GitHub repo to Cloudflare Pages (build: `npm run build`, output: `dist`, Node 18+)
 - [x] Fix Sanity build caching — `useCdn: false` + `token: undefined` + `ignoreBrowserTokenWarning: true` in `src/lib/sanity.js`; `Layout.astro`, `blog/index.astro`, `blog/[slug].astro` converted from `sanityClient.fetch()` to direct `fetch()` calls to `hx5xgigp.api.sanity.io` HTTP API with `{ cache: 'no-store' }`; parameterized queries use `JSON.stringify` + `encodeURIComponent` for `$slug` URL param; `SANITY_API` constant redefined inside `getStaticPaths` in `[slug].astro` to fix Astro isolated-scope build error
+- [x] Fix siteSettings singleton query — `Layout.astro` GROQ updated to `_id == "siteSettings"` to target correct singleton and ignore duplicate document `a9538e94-c914-4195-b8b0-440efcf939f8`; duplicate must be deleted manually via `cd studio && npx sanity documents delete a9538e94-c914-4195-b8b0-440efcf939f8`
 - [ ] Set environment variables for Sanity project ID / dataset
 - [ ] Connect custom domain via Cloudflare Pages settings
 - [ ] Set up Web3Forms API key in `contact.astro`

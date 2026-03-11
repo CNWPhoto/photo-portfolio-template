@@ -1,7 +1,7 @@
 ---
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
-const _settingsQuery = encodeURIComponent(`*[_type == "siteSettings"][0]{ colorTheme, fontTheme, siteName }`)
+const _settingsQuery = encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName }`)
 const _settingsRes = await fetch(
   `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${_settingsQuery}`,
   { cache: 'no-store' }
