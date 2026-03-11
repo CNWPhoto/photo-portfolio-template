@@ -19,7 +19,7 @@ export default {
   name: 'siteSettings',
   title: 'Site Settings',
   type: 'document',
-  description: '⏱ After saving changes, wait 1-2 minutes for the site to rebuild, then do a hard refresh (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows) to see your changes.',
+  description: '⏱ After saving changes, wait 1-2 minutes for the site to rebuild, then do a hard refresh of your site in the browser (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows) to see your updates.',
   __experimental_actions: ['update', 'publish'], // singleton — no create/delete
   preview: {
     prepare() {
