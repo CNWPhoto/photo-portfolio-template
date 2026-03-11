@@ -17,54 +17,58 @@ import HowItWorksStacked from '../components/howitworks/HowItWorksStacked.astro'
 
 import { sanityClient, urlFor } from '../lib/sanity.js';
 
-const [photographer, testimonials, galleryImages, faqs, pageSections] = await Promise.all([
+const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production';
+const _layoutQuery = encodeURIComponent(
+	`*[_type == "homepageSettings"][0]{introVariant, testimonialsVariant, portfolioPreviewVariant, howItWorksVariant}`
+);
+
+const [photographer, testimonials, galleryImages, faqs, pageSections, layoutSettings] = await Promise.all([
 	sanityClient.fetch(`*[_type == "photographer"][0]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "testimonial"] | order(order asc)`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "galleryImage"] | order(order asc)[0..5]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "faq"] | order(order asc)`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "pageSection"]`, {}, { cache: 'no-store' }),
+	fetch(`${SANITY_API}?query=${_layoutQuery}`, { cache: 'no-store' }).then(r => r.json()).then(d => d.result),
 ]);
 
-// Build a lookup: sectionType → { variant, colorTheme }
-const sectionCfg = (type: string, defaultVariant: string, defaultTheme?: string) => {
+// Section theme from pageSection documents (per-section colour overrides)
+const sectionTheme = (type: string, defaultTheme?: string) => {
 	const s = pageSections?.find((p: any) => p.sectionType === type);
-	return {
-		variant: s?.variant ?? defaultVariant,
-		theme:   s?.colorTheme ?? defaultTheme,
-	};
+	return s?.colorTheme ?? defaultTheme;
 };
 
-const introCfg         = sectionCfg('intro',        'classic');
-const testimonialsCfg  = sectionCfg('testimonials', 'slider');
-const portfolioCfg     = sectionCfg('portfolio',    'grid');
-const howItWorksCfg    = sectionCfg('howItWorks',   'columns', 'warm-studio');
+// Layout variants from homepageSettings singleton (fallback to defaults)
+const introVariant        = layoutSettings?.introVariant           || 'classic';
+const testimonialsVariant = layoutSettings?.testimonialsVariant    || 'slider';
+const portfolioVariant    = layoutSettings?.portfolioPreviewVariant || 'grid';
+const howItWorksVariant   = layoutSettings?.howItWorksVariant      || 'columns';
 ---
 
 <Layout>
 	<Hero heroImages={photographer?.heroImages} {urlFor} />
 	<main>
 		<!-- Intro -->
-		{introCfg.variant === 'centered'
-			? <IntroCentered bio={photographer?.bio} approachText={photographer?.approachText} profilePhoto={photographer?.profilePhoto} {urlFor} theme={introCfg.theme} />
-			: <IntroSplit    bio={photographer?.bio} approachText={photographer?.approachText} profilePhoto={photographer?.profilePhoto} {urlFor} theme={introCfg.theme} />
+		{introVariant === 'centered'
+			? <IntroCentered bio={photographer?.bio} approachText={photographer?.approachText} profilePhoto={photographer?.profilePhoto} {urlFor} theme={sectionTheme('intro')} />
+			: <IntroSplit    bio={photographer?.bio} approachText={photographer?.approachText} profilePhoto={photographer?.profilePhoto} {urlFor} theme={sectionTheme('intro')} />
 		}
 
 		<!-- Testimonials -->
-		{testimonialsCfg.variant === 'grid'
-			? <TestimonialsGrid   testimonials={testimonials} {urlFor} theme={testimonialsCfg.theme} />
-			: <TestimonialsSlider testimonials={testimonials} {urlFor} theme={testimonialsCfg.theme} />
+		{testimonialsVariant === 'grid'
+			? <TestimonialsGrid   testimonials={testimonials} {urlFor} theme={sectionTheme('testimonials')} />
+			: <TestimonialsSlider testimonials={testimonials} {urlFor} theme={sectionTheme('testimonials')} />
 		}
 
 		<!-- Portfolio preview -->
-		{portfolioCfg.variant === 'masonry'
-			? <PortfolioMasonry galleryImages={galleryImages} {urlFor} theme={portfolioCfg.theme} />
-			: <PortfolioGrid    galleryImages={galleryImages} {urlFor} theme={portfolioCfg.theme} />
+		{portfolioVariant === 'masonry'
+			? <PortfolioMasonry galleryImages={galleryImages} {urlFor} theme={sectionTheme('portfolio')} />
+			: <PortfolioGrid    galleryImages={galleryImages} {urlFor} theme={sectionTheme('portfolio')} />
 		}
 
 		<!-- How It Works -->
-		{howItWorksCfg.variant === 'stacked'
-			? <HowItWorksStacked  theme={howItWorksCfg.theme} />
-			: <HowItWorksColumns  theme={howItWorksCfg.theme} />
+		{howItWorksVariant === 'stacked'
+			? <HowItWorksStacked theme={sectionTheme('howItWorks', 'warm-studio')} />
+			: <HowItWorksColumns theme={sectionTheme('howItWorks', 'warm-studio')} />
 		}
 
 		<WhyChoose theme="dark-editorial" />

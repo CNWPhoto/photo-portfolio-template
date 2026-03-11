@@ -98,7 +98,7 @@ Run `./start.sh` from the project root to start all three dev services at once (
 - [x] Theme system CSS audit — all components confirmed using `var()` for colors; `rgba` overlays in `experience.astro` left as-is (intentional image contrast); `--section-alt`, `--section-dark`, `--section-dark-text` added to all 5 theme blocks in `Layout.astro`
 - [x] `homepageSettings` singleton schema — `introVariant`, `testimonialsVariant`, `portfolioPreviewVariant`, `howItWorksVariant` (each with labeled options); registered in `index.js`; added to 🏠 Homepage section in Studio structure; reusable variant option arrays extracted to `pageLayouts.js`
 - [x] Fix theme cascade — removed `theme = 'classic-cream'` default from all section components; changed `data-theme={theme}` → `data-theme={theme || undefined}` so sections without explicit overrides inherit from `html[data-theme]` rather than locking to classic-cream; updated `sectionCfg` to use `defaultTheme?: string` (no fallback)
-- [ ] Wire `homepageSettings` variants to `index.astro` (replace hardcoded `sectionCfg` defaults with Sanity fetch)
+- [x] Wire `homepageSettings` variants to `index.astro` — direct HTTP fetch to Sanity API for `homepageSettings` singleton; variant values (`introVariant`, `testimonialsVariant`, `portfolioPreviewVariant`, `howItWorksVariant`) drive component selection; `sectionCfg` replaced with `sectionTheme()` (theme-only); fetched in parallel via `Promise.all`; fallback to defaults if null
 - [ ] Add GROQ queries with TypeScript types
 
 ### Pages
