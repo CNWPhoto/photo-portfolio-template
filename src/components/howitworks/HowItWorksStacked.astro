@@ -1,5 +1,5 @@
 ---
-const { theme = 'classic-cream' } = Astro.props;
+const { theme } = Astro.props;
 
 // TODO:NICHE — step body copy references dogs/treats; update for your niche
 const steps = [
@@ -18,7 +18,7 @@ const steps = [
 ];
 ---
 
-<section class="hstack" id="how-it-works" data-theme={theme}>
+<section class="hstack" id="how-it-works" data-theme={theme || undefined}>
 	<hr />
 	<div class="hstack__inner">
 		<div class="hstack__header">

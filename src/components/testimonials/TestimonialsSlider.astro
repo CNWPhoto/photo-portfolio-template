@@ -1,5 +1,5 @@
 ---
-const { testimonials: sanityTestimonials, urlFor, theme = 'classic-cream' } = Astro.props;
+const { testimonials: sanityTestimonials, urlFor, theme } = Astro.props;
 
 // TODO:NICHE — fallback testimonials reference dogs/breeds; update for your niche
 const fallback = [
@@ -40,7 +40,7 @@ const testimonials =
 		: fallback;
 ---
 
-<section class="tslider" id="testimonials" data-theme={theme}>
+<section class="tslider" id="testimonials" data-theme={theme || undefined}>
 	<hr />
 	<div class="tslider__inner">
 		<div class="tslider__image-col">

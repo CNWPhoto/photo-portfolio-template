@@ -1,8 +1,8 @@
 ---
-const { theme = 'classic-cream' } = Astro.props;
+const { theme } = Astro.props;
 ---
 
-<section class="why" id="why-choose" data-theme={theme}>
+<section class="why" id="why-choose" data-theme={theme || undefined}>
 	<!-- Full-bleed image -->
 	<div class="why__image-full">
 		<img

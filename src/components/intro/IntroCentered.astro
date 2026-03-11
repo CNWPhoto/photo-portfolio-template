@@ -1,5 +1,5 @@
 ---
-const { bio, approachText, profilePhoto, urlFor, theme = 'classic-cream' } = Astro.props;
+const { bio, approachText, profilePhoto, urlFor, theme } = Astro.props;
 
 // TODO:NICHE — fallback photo, bio, and approachText are dog/pet-specific; replace for your niche
 const photoSrc =
@@ -12,7 +12,7 @@ const bodyText = bio ?? "Every session is crafted entirely around your dog's uni
 const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. Just you, your dog, and the kind of photography that makes people stop and say "that\'s exactly them."'; // TODO:NICHE
 ---
 
-<section class="icentered" id="about" data-theme={theme}>
+<section class="icentered" id="about" data-theme={theme || undefined}>
 	<div class="icentered__text">
 		<p class="icentered__eyebrow">Welcome</p>
 		<div class="icentered__body-wrap">

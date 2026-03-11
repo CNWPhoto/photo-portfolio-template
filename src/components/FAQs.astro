@@ -1,5 +1,5 @@
 ---
-const { faqs: sanityFaqs, theme = 'classic-cream' } = Astro.props;
+const { faqs: sanityFaqs, theme } = Astro.props;
 
 // TODO:NICHE — fallback FAQs reference dogs/breeds/treats; update for your niche
 const fallbackFaqs = [
@@ -15,7 +15,7 @@ const faqs =
 		: fallbackFaqs;
 ---
 
-<section class="faqs" id="faqs" data-theme={theme}>
+<section class="faqs" id="faqs" data-theme={theme || undefined}>
 	<hr />
 	<div class="faqs__inner">
 		<div class="faqs__label-col" aria-hidden="true">

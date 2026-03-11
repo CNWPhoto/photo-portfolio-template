@@ -1,5 +1,5 @@
 ---
-const { galleryImages, urlFor, theme = 'classic-cream' } = Astro.props;
+const { galleryImages, urlFor, theme } = Astro.props;
 
 // TODO:NICHE — fallback images are dog photos; swap for your niche
 const fallbackImages = [
@@ -18,7 +18,7 @@ const displayImages =
 		: fallbackImages;
 ---
 
-<section class="pgrid" id="portfolio" data-theme={theme}>
+<section class="pgrid" id="portfolio" data-theme={theme || undefined}>
 	<hr />
 	<div class="pgrid__inner">
 		<div class="pgrid__label-col" aria-hidden="true">

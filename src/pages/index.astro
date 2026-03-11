@@ -26,7 +26,7 @@ const [photographer, testimonials, galleryImages, faqs, pageSections] = await Pr
 ]);
 
 // Build a lookup: sectionType → { variant, colorTheme }
-const sectionCfg = (type: string, defaultVariant: string, defaultTheme = 'classic-cream') => {
+const sectionCfg = (type: string, defaultVariant: string, defaultTheme?: string) => {
 	const s = pageSections?.find((p: any) => p.sectionType === type);
 	return {
 		variant: s?.variant ?? defaultVariant,

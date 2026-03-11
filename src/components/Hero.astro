@@ -1,5 +1,5 @@
 ---
-const { heroImages, urlFor, theme = 'classic-cream' } = Astro.props;
+const { heroImages, urlFor, theme } = Astro.props;
 
 // TODO:NICHE — fallback hero images are dog photos; swap Pexels IDs and alt text for your niche
 const fallbackImages = [
@@ -19,7 +19,7 @@ const images =
 		: fallbackImages;
 ---
 
-<section class="hero" data-theme={theme}>
+<section class="hero" data-theme={theme || undefined}>
 	<div class="hero__viewport">
 		<div class="hero__track" id="heroTrack">
 			{images.map((img) => (

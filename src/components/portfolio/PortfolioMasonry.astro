@@ -1,5 +1,5 @@
 ---
-const { galleryImages, urlFor, theme = 'classic-cream' } = Astro.props;
+const { galleryImages, urlFor, theme } = Astro.props;
 
 // TODO:NICHE — fallback images are dog photos; swap for your niche
 // Mixed dimensions give the masonry its varied heights
@@ -21,7 +21,7 @@ const displayImages =
 		: fallbackImages;
 ---
 
-<section class="pmasonry" id="portfolio" data-theme={theme}>
+<section class="pmasonry" id="portfolio" data-theme={theme || undefined}>
 	<hr />
 	<div class="pmasonry__header">
 		<p class="pmasonry__eyebrow">Portfolio</p>
