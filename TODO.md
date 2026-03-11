@@ -95,6 +95,9 @@ Run `./start.sh` from the project root to start all three dev services at once (
 - [x] Descriptive field titles and descriptions across all 5 schema types (`photographer`, `testimonial`, `faq`, `blogPost`, `galleryImage`) so clients understand every field
 - [x] `siteSettings` singleton wired to site — `Layout.astro` fetches `colorTheme`, `fontTheme`, `siteName` at build time; `data-theme` + `data-font` applied to `<html>`; `siteName` passed to `Nav` as prop; font theme CSS updated from `data-font-theme` → `data-font`; Nav moved into `Layout.astro` (alongside Footer) and removed from all individual page files
 - [x] Fix theme CSS specificity — all theme selectors prefixed with `html[data-theme='...']` / `html[data-font='...']` (specificity 0,1,1) so they beat `:root` (0,1,0) regardless of stylesheet injection order; plain `[data-theme='...']` kept alongside via comma for section-level overrides; removed duplicate `:root` color/font variable declarations that were shadowing theme blocks (`:root` now only owns `--white`, `--font-serif`, `--font-sans`)
+- [x] Theme system CSS audit — all components confirmed using `var()` for colors; `rgba` overlays in `experience.astro` left as-is (intentional image contrast); `--section-alt`, `--section-dark`, `--section-dark-text` added to all 5 theme blocks in `Layout.astro`
+- [x] `homepageSettings` singleton schema — `introVariant`, `testimonialsVariant`, `portfolioPreviewVariant`, `howItWorksVariant` (each with labeled options); registered in `index.js`; added to 🏠 Homepage section in Studio structure; reusable variant option arrays extracted to `pageLayouts.js`
+- [ ] Wire `homepageSettings` variants to `index.astro` (replace hardcoded `sectionCfg` defaults with Sanity fetch)
 - [ ] Add GROQ queries with TypeScript types
 
 ### Pages
