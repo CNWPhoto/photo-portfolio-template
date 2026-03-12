@@ -1,69 +1,59 @@
 ---
 const { testimonials: sanityTestimonials, urlFor, theme } = Astro.props;
 
-// TODO:NICHE — fallback testimonials reference dogs/breeds; update for your niche
+// TODO:NICHE — fallback testimonials reference dogs; update for your niche
 const fallback = [
 	{
-		photoUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=700&h=950&fit=crop',
+		photoUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=400&h=600&fit=crop',
 		photoAlt: 'Golden retriever in warm afternoon light', // TODO:NICHE
 		quote: "Hazel captured something in Biscuit that we'd been trying to capture ourselves for years. Every single image is breathtaking. We have them printed throughout our home and can't stop looking at them.", // TODO:NICHE
-		name: 'Sarah & Tom K.',
-		pet: 'Biscuit, Golden Retriever', // TODO:NICHE
+		client: 'Sarah & Tom K.',
 	},
 	{
-		photoUrl: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=700&h=950&fit=crop',
+		photoUrl: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=400&h=600&fit=crop',
 		photoAlt: 'Dog exploring outdoors with a stick', // TODO:NICHE
 		quote: "I was skeptical that Penny would cooperate for even five minutes. Hazel had her completely at ease within seconds. The patience and genuine love for dogs she brings to every session is unlike anything I've experienced.", // TODO:NICHE
-		name: 'Marcus R.',
-		pet: 'Penny, Rescue Mix', // TODO:NICHE
+		client: 'Marcus R.',
 	},
 	{
-		photoUrl: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=700&h=950&fit=crop',
+		photoUrl: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=400&h=600&fit=crop',
 		photoAlt: 'Dog portrait in natural light', // TODO:NICHE
 		quote: "Three sessions in and each gallery is more beautiful than the last. Hazel has a gift for capturing the soul of a dog — not just their face, but everything that makes them who they are.", // TODO:NICHE
-		name: 'Jess & Olivia M.',
-		pet: 'Chester, Labrador', // TODO:NICHE
+		client: 'Jess & Olivia M.',
 	},
 ];
 
 const testimonials =
 	sanityTestimonials?.length && urlFor
 		? sanityTestimonials.map((t: any) => ({
-				photoUrl: t.photo
-					? urlFor(t.photo).width(700).height(950).fit('crop').auto('format').url()
+				photoUrl: t.image
+					? urlFor(t.image).width(400).height(600).fit('crop').auto('format').url()
 					: '',
-				photoAlt: t.photo?.alt ?? '',
-				quote: t.quote ?? '',
-				name: t.clientName ?? '',
-				pet: t.clientSubjectName ?? '',
+				photoAlt: t.image?.alt ?? '',
+				quote: t.testimonial ?? '',
+				client: t.client ?? '',
 		  }))
 		: fallback;
 ---
 
 <section class="tslider" id="testimonials" data-theme={theme || undefined}>
-	<hr />
 	<div class="tslider__inner">
 		<div class="tslider__image-col">
-			<img
-				id="tsliderImg"
-				src={testimonials[0].photoUrl}
-				alt={testimonials[0].photoAlt}
-				loading="lazy"
-			/>
+			<div class="tslider__image-wrap">
+				<img
+					id="tsliderImg"
+					src={testimonials[0].photoUrl}
+					alt={testimonials[0].photoAlt}
+					loading="lazy"
+				/>
+			</div>
 		</div>
 
 		<div class="tslider__content">
-			<p class="tslider__label">Kind Words from Kind Clients</p>
-			<hr class="tslider__rule" />
-
 			<blockquote class="tslider__quote" id="tsliderQuote">
 				&ldquo;{testimonials[0].quote}&rdquo;
 			</blockquote>
-			<p class="tslider__attribution">
-				<span id="tsliderName">{testimonials[0].name}</span>
-				<span class="tslider__sep">&mdash;</span>
-				<span id="tsliderPet">{testimonials[0].pet}</span>
-			</p>
+			<p class="tslider__attribution" id="tsliderClient">{testimonials[0].client}</p>
 
 			<div class="tslider__nav">
 				<span class="tslider__count">
@@ -79,17 +69,34 @@ const testimonials =
 <script type="application/json" id="tsliderData" set:text={JSON.stringify(testimonials)}></script>
 
 <style>
-	.tslider { border-top: none; }
-
-	.tslider__inner {
-		display: grid;
-		grid-template-columns: 5fr 6fr;
-		min-height: 78vh;
+	.tslider {
+		padding: 0;
+		margin: 100px 0;
 	}
 
-	.tslider__image-col { overflow: hidden; }
+	.tslider__inner {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 0 3rem;
+		display: grid;
+		grid-template-columns: 1fr 2fr;
+		align-items: center;
+		gap: 4rem;
+	}
 
-	.tslider__image-col img {
+	.tslider__image-col {
+		display: flex;
+		justify-content: center;
+	}
+
+	.tslider__image-wrap {
+		width: 300px;
+		height: 450px;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.tslider__image-wrap img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
@@ -99,26 +106,12 @@ const testimonials =
 	}
 
 	.tslider__content {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		padding: 6rem 6rem 6rem 5.5rem;
-		background: var(--bg-alt);
+		max-width: 480px;
 	}
-
-	.tslider__label {
-		font-style: italic;
-		font-size: 1.875rem;
-		line-height: 1.25;
-		color: var(--text);
-		margin-bottom: 2rem;
-	}
-
-	.tslider__rule { margin-bottom: 2.5rem; }
 
 	.tslider__quote {
 		font-style: italic;
-		font-size: 1.125rem;
+		font-size: 1.25rem;
 		line-height: 1.8;
 		color: var(--text);
 		margin: 0 0 2rem;
@@ -129,21 +122,16 @@ const testimonials =
 		font-style: normal;
 		font-family: var(--font-sans);
 		font-size: 0.8125rem;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--muted);
-		display: flex;
-		align-items: center;
-		gap: 0.625rem;
 	}
-
-	.tslider__sep { color: var(--border); }
 
 	.tslider__nav {
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-		margin-top: 3rem;
+		margin-top: 2.5rem;
 		padding-top: 2rem;
 		border-top: 1px solid var(--border);
 	}
@@ -175,20 +163,23 @@ const testimonials =
 	.tslider__arrow:disabled { opacity: 0.3; cursor: default; }
 
 	@media (max-width: 900px) {
-		.tslider__inner { grid-template-columns: 1fr; }
-		.tslider__image-col img { height: 55vw; min-height: 300px; }
-		.tslider__content { padding: 4rem 2rem; }
+		.tslider__inner {
+			grid-template-columns: 1fr;
+			gap: 2.5rem;
+			padding: 0 1.5rem;
+		}
+		.tslider__image-col img { height: 70vw; max-height: 400px; }
+		.tslider__content { max-width: none; }
 	}
 </style>
 
 <script>
-	const data: Array<{ photoUrl: string; photoAlt: string; quote: string; name: string; pet: string }> =
+	const data: Array<{ photoUrl: string; photoAlt: string; quote: string; client: string }> =
 		JSON.parse(document.getElementById('tsliderData')!.textContent!);
 
 	const img      = document.getElementById('tsliderImg') as HTMLImageElement;
 	const quote    = document.getElementById('tsliderQuote')!;
-	const name     = document.getElementById('tsliderName')!;
-	const pet      = document.getElementById('tsliderPet')!;
+	const client   = document.getElementById('tsliderClient')!;
 	const idxEl    = document.getElementById('tsliderIdx')!;
 	const prevBtn  = document.getElementById('tsliderPrev') as HTMLButtonElement;
 	const nextBtn  = document.getElementById('tsliderNext') as HTMLButtonElement;
@@ -203,8 +194,7 @@ const testimonials =
 			img.src = t.photoUrl;
 			img.alt = t.photoAlt;
 			quote.textContent = `\u201C${t.quote}\u201D`;
-			name.textContent = t.name;
-			pet.textContent = t.pet;
+			client.textContent = t.client;
 			idxEl.textContent = String(i + 1);
 			quote.style.opacity = '1';
 			img.style.opacity = '1';

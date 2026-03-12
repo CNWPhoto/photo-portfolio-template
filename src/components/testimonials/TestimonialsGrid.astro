@@ -29,13 +29,13 @@ const fallback = [
 const testimonials =
 	sanityTestimonials?.length && urlFor
 		? sanityTestimonials.slice(0, 3).map((t: any) => ({
-				photoUrl: t.photo
-					? urlFor(t.photo).width(200).height(200).fit('crop').auto('format').url()
+				photoUrl: t.image
+					? urlFor(t.image).width(200).height(200).fit('crop').auto('format').url()
 					: '',
-				photoAlt: t.photo?.alt ?? '',
-				quote: t.quote ?? '',
-				name: t.clientName ?? '',
-				pet: t.clientSubjectName ?? '',
+				photoAlt: t.image?.alt ?? '',
+				quote: t.testimonial ?? '',
+				name: t.client ?? '',
+				pet: '',
 		  }))
 		: fallback;
 ---

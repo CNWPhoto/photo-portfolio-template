@@ -54,6 +54,7 @@ export default defineConfig({
                   .items([
                     singleton(S, 'photographer', 'Photographer Profile', 'photographer'),
                     singleton(S, 'welcomeSection', 'Welcome Section', 'welcomeSection'),
+                    S.documentTypeListItem('testimonial').title('Testimonials Section'),
                   ]),
               ),
 
@@ -65,16 +66,6 @@ export default defineConfig({
                 S.list()
                   .title('Blog')
                   .items([S.documentTypeListItem('blogPost').title('Blog Posts')]),
-              ),
-
-            // ── Testimonials ─────────────────────────────────────────────
-            S.listItem()
-              .title('💬 Testimonials')
-              .id('testimonialsGroup')
-              .child(
-                S.list()
-                  .title('Testimonials')
-                  .items([S.documentTypeListItem('testimonial').title('Testimonials')]),
               ),
 
             // ── FAQs ─────────────────────────────────────────────────────
