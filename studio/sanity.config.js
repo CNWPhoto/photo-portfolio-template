@@ -53,6 +53,7 @@ export default defineConfig({
                   .title('Homepage')
                   .items([
                     singleton(S, 'photographer', 'Photographer Profile', 'photographer'),
+                    singleton(S, 'welcomeSection', 'Welcome Section', 'welcomeSection'),
                   ]),
               ),
 

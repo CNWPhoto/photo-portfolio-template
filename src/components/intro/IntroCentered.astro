@@ -1,20 +1,21 @@
 ---
-const { bio, approachText, profilePhoto, urlFor, theme } = Astro.props;
+const { welcomeSection, urlFor, theme } = Astro.props;
 
-// TODO:NICHE — fallback photo, bio, and approachText are dog/pet-specific; replace for your niche
+// TODO:NICHE — fallback photo and text are dog/pet-specific; replace for your niche
 const photoSrc =
-	profilePhoto && urlFor
-		? urlFor(profilePhoto).width(1600).height(800).fit('crop').auto('format').url()
+	welcomeSection?.image && urlFor
+		? urlFor(welcomeSection.image).width(1600).height(800).fit('crop').auto('format').url()
 		: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1600&h=800&fit=crop';
-const photoAlt = profilePhoto?.alt ?? 'Dog in a field in warm afternoon light'; // TODO:NICHE
+const photoAlt = welcomeSection?.image?.alt ?? 'Dog in a field in warm afternoon light'; // TODO:NICHE
 
-const bodyText = bio ?? "Every session is crafted entirely around your dog's unique personality. We find the light, the location, and the moments that tell their story — the tilt of a head, a full-speed sprint, a quiet glance."; // TODO:NICHE
-const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. Just you, your dog, and the kind of photography that makes people stop and say "that\'s exactly them."'; // TODO:NICHE
+const eyebrow = welcomeSection?.eyebrow || '';
+const bodyText = welcomeSection?.body || "Every session is crafted entirely around your dog's unique personality. We find the light, the location, and the moments that tell their story — the tilt of a head, a full-speed sprint, a quiet glance."; // TODO:NICHE
+const approachBodyText = welcomeSection?.bodySecondary || 'No forced poses. No rushed timelines. Just you, your dog, and the kind of photography that makes people stop and say "that\'s exactly them."'; // TODO:NICHE
 ---
 
 <section class="icentered" id="about" data-theme={theme || undefined}>
 	<div class="icentered__text">
-		<p class="icentered__eyebrow">Welcome</p>
+		{eyebrow && <p class="icentered__eyebrow">{eyebrow}</p>}
 		<div class="icentered__body-wrap">
 			<p class="icentered__body">{bodyText}</p>
 			<p class="icentered__body">{approachBodyText}</p>

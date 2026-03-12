@@ -1,29 +1,31 @@
 ---
-const { bio, approachText, profilePhoto, urlFor, theme } = Astro.props;
+const { welcomeSection, urlFor, theme } = Astro.props;
 
-// TODO:NICHE — fallback photo, bio, and approachText are dog/pet-specific; replace for your niche
+// TODO:NICHE — fallback photo and text are dog/pet-specific; replace for your niche
 const photoSrc =
-	profilePhoto && urlFor
-		? urlFor(profilePhoto).width(800).height(1100).fit('crop').auto('format').url()
+	welcomeSection?.image && urlFor
+		? urlFor(welcomeSection.image).width(1200).auto('format').url()
 		: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=800&h=1100&fit=crop';
-const photoAlt = profilePhoto?.alt ?? 'Dog portrait in natural light'; // TODO:NICHE
+const photoAlt = welcomeSection?.image?.alt ?? 'Dog portrait in natural light'; // TODO:NICHE
 
-const bodyText = bio ?? "Every session is crafted entirely around your dog's unique personality. We find the light, the location, and the moments that tell their story — the tilt of a head, a full-speed sprint, a quiet glance."; // TODO:NICHE
-const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. Just you, your dog, and the kind of photography that makes people stop and say "that\'s exactly them."'; // TODO:NICHE
+const eyebrow = welcomeSection?.eyebrow || '';
+const bodyText = welcomeSection?.body || 'Dog photography sessions that focus on personality, connection, and comfort.'; // TODO:NICHE
+const bodySecondary = welcomeSection?.bodySecondary || 'Whether you\'re celebrating a new puppy or capturing your dog just as they are now, each session is designed to feel relaxed and fun—for both of you.'; // TODO:NICHE
+const ctaText = welcomeSection?.ctaText || '';
 ---
 
 <section class="isplit" id="about" data-theme={theme || undefined}>
-	<div class="isplit__image">
-		<img src={photoSrc} alt={photoAlt} loading="lazy" />
-	</div>
-
 	<div class="isplit__content">
 		<div class="isplit__text-wrap">
-			<p class="isplit__eyebrow">Welcome</p>
+			{eyebrow && <p class="isplit__eyebrow">{eyebrow}</p>}
 			<p class="isplit__body">{bodyText}</p>
-			<p class="isplit__body">{approachBodyText}</p>
-			<a href="/experience" class="isplit__link">Learn about the experience &rarr;</a>
+			<p class="isplit__body">{bodySecondary}</p>
+			{ctaText && <a class="isplit__link" href="/experience">{ctaText}</a>}
 		</div>
+	</div>
+
+	<div class="isplit__image">
+		<img src={photoSrc} alt={photoAlt} loading="lazy" />
 	</div>
 </section>
 
@@ -31,20 +33,24 @@ const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. 
 	.isplit {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
+		height: 550px;
 		padding: 0;
+		margin-bottom: -100px;
+		position: relative;
+		z-index: 1;
 		border-top: 1px solid var(--border);
 	}
 
 	.isplit__image {
 		overflow: hidden;
-		min-height: 600px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.isplit__image img {
-		width: 100%;
 		height: 100%;
-		object-fit: cover;
-		object-position: center top;
+		width: auto;
 		display: block;
 	}
 
@@ -52,11 +58,13 @@ const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. 
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
+		align-items: center;
+		text-align: center;
 		padding: 60px 64px;
-		background: var(--bg);
+		background: var(--bg-alt);
 	}
 
-	.isplit__text-wrap { max-width: 440px; }
+	.isplit__text-wrap { max-width: 480px; }
 
 	.isplit__eyebrow {
 		font-family: var(--font-sans);
@@ -98,8 +106,9 @@ const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. 
 
 	@media (max-width: 900px) {
 		.isplit { grid-template-columns: 1fr; }
-		.isplit__image img { height: 55vw; min-height: 320px; }
-		.isplit__content { padding: 4rem 2rem; }
+		.isplit__image { order: -1; }
+		.isplit__image img { height: 60vw; min-height: 240px; }
+		.isplit__content { padding: 4rem 2rem; align-items: flex-start; text-align: left; }
 		.isplit__text-wrap { max-width: none; }
 	}
 </style>

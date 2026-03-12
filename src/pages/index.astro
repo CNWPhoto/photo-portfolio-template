@@ -22,8 +22,9 @@ const _layoutQuery = encodeURIComponent(
 	`*[_type == "homepageSettings"][0]{introVariant, testimonialsVariant, portfolioPreviewVariant, howItWorksVariant}`
 );
 
-const [photographer, testimonials, galleryImages, faqs, pageSections, layoutSettings] = await Promise.all([
-	sanityClient.fetch(`*[_type == "photographer"][0]`, {}, { cache: 'no-store' }),
+const [photographer, welcomeSection, testimonials, galleryImages, faqs, pageSections, layoutSettings] = await Promise.all([
+	sanityClient.fetch(`*[_type == "photographer"][0]{ name, location, tagline, bio, specialty, approachText, heroImages, profilePhoto }`, {}, { cache: 'no-store' }),
+	sanityClient.fetch(`*[_type == "welcomeSection" && _id == "welcomeSection"][0]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "testimonial"] | order(order asc)`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "portfolio"][0].images[0..5]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "faq"] | order(order asc)`, {}, { cache: 'no-store' }),
@@ -49,8 +50,8 @@ const howItWorksVariant   = layoutSettings?.howItWorksVariant      || 'columns';
 	<main>
 		<!-- Intro -->
 		{introVariant === 'centered'
-			? <IntroCentered bio={photographer?.bio} approachText={photographer?.approachText} profilePhoto={photographer?.profilePhoto} {urlFor} theme={sectionTheme('intro')} />
-			: <IntroSplit    bio={photographer?.bio} approachText={photographer?.approachText} profilePhoto={photographer?.profilePhoto} {urlFor} theme={sectionTheme('intro')} />
+			? <IntroCentered {welcomeSection} {urlFor} theme={sectionTheme('intro')} />
+			: <IntroSplit    {welcomeSection} {urlFor} theme={sectionTheme('intro')} />
 		}
 
 		<!-- Testimonials -->
