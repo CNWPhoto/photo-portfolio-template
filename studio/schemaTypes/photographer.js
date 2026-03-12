@@ -43,29 +43,6 @@ export default {
       description: 'A paragraph describing your photography style and approach. Shown in the Intro section alongside your bio.',
     },
     {
-      name: 'heroImages',
-      title: 'Hero Images',
-      type: 'array',
-      description: 'Images that scroll across the homepage hero carousel. Upload 4–8 landscape or portrait photos. The first image loads first.',
-      of: [
-        {
-          type: 'image',
-          options: {
-            hotspot: true,
-            crop: true,
-          },
-          fields: [
-            {
-              name: 'alt',
-              title: 'Alt Text',
-              type: 'string',
-              description: 'Describe the image for accessibility (e.g. "Golden retriever running on a mountain trail").',
-            },
-          ],
-        },
-      ],
-    },
-    {
       name: 'profilePhoto',
       title: 'Profile Photo',
       type: 'image',

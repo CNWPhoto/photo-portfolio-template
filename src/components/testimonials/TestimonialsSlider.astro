@@ -66,8 +66,6 @@ const testimonials =
 	</div>
 </section>
 
-<script type="application/json" id="tsliderData" set:text={JSON.stringify(testimonials)}></script>
-
 <style>
 	.tslider {
 		padding: 0;
@@ -78,15 +76,14 @@ const testimonials =
 		max-width: 1100px;
 		margin: 0 auto;
 		padding: 0 3rem;
-		display: grid;
-		grid-template-columns: 1fr 2fr;
+		display: flex;
 		align-items: center;
-		gap: 4rem;
+		justify-content: center;
+		gap: 150px;
 	}
 
 	.tslider__image-col {
-		display: flex;
-		justify-content: center;
+		flex-shrink: 0;
 	}
 
 	.tslider__image-wrap {
@@ -164,46 +161,55 @@ const testimonials =
 
 	@media (max-width: 900px) {
 		.tslider__inner {
-			grid-template-columns: 1fr;
+			flex-direction: column;
+			align-items: flex-start;
 			gap: 2.5rem;
 			padding: 0 1.5rem;
 		}
-		.tslider__image-col img { height: 70vw; max-height: 400px; }
+		.tslider__image-wrap { width: 100%; height: 70vw; max-height: 400px; }
 		.tslider__content { max-width: none; }
 	}
 </style>
 
-<script>
-	const data: Array<{ photoUrl: string; photoAlt: string; quote: string; client: string }> =
-		JSON.parse(document.getElementById('tsliderData')!.textContent!);
+<script define:vars={{ testimonials }}>
+	const imgEl    = document.getElementById('tsliderImg');
+	const quoteEl  = document.getElementById('tsliderQuote');
+	const clientEl = document.getElementById('tsliderClient');
+	const idxEl    = document.getElementById('tsliderIdx');
+	const prevBtn  = document.getElementById('tsliderPrev');
+	const nextBtn  = document.getElementById('tsliderNext');
 
-	const img      = document.getElementById('tsliderImg') as HTMLImageElement;
-	const quote    = document.getElementById('tsliderQuote')!;
-	const client   = document.getElementById('tsliderClient')!;
-	const idxEl    = document.getElementById('tsliderIdx')!;
-	const prevBtn  = document.getElementById('tsliderPrev') as HTMLButtonElement;
-	const nextBtn  = document.getElementById('tsliderNext') as HTMLButtonElement;
-
+	const data = testimonials;
 	let idx = 0;
 
-	function render(i: number) {
+	function render(i) {
 		const t = data[i];
-		quote.style.opacity = '0';
-		img.style.opacity = '0';
-		setTimeout(() => {
-			img.src = t.photoUrl;
-			img.alt = t.photoAlt;
-			quote.textContent = `\u201C${t.quote}\u201D`;
-			client.textContent = t.client;
+		if (!t) return;
+
+		quoteEl.style.opacity = '0';
+		imgEl.style.opacity = '0';
+
+		setTimeout(function() {
+			if (t.photoUrl) imgEl.src = t.photoUrl;
+			imgEl.alt = t.photoAlt || '';
+			quoteEl.textContent = '\u201C' + t.quote + '\u201D';
+			clientEl.textContent = t.client;
 			idxEl.textContent = String(i + 1);
-			quote.style.opacity = '1';
-			img.style.opacity = '1';
+			quoteEl.style.opacity = '1';
+			imgEl.style.opacity = '1';
 		}, 280);
+
 		prevBtn.disabled = i === 0;
 		nextBtn.disabled = i === data.length - 1;
 	}
 
-	prevBtn.addEventListener('click', () => { if (idx > 0) render(--idx); });
-	nextBtn.addEventListener('click', () => { if (idx < data.length - 1) render(++idx); });
+	prevBtn.addEventListener('click', function() {
+		if (idx > 0) { idx--; render(idx); }
+	});
+	nextBtn.addEventListener('click', function() {
+		if (idx < data.length - 1) { idx++; render(idx); }
+	});
+
 	prevBtn.disabled = true;
+	nextBtn.disabled = data.length <= 1;
 </script>

@@ -52,6 +52,7 @@ export default defineConfig({
                 S.list()
                   .title('Homepage')
                   .items([
+                    singleton(S, 'heroSlider', 'Homepage Top Slider', 'heroSlider'),
                     singleton(S, 'photographer', 'Photographer Profile', 'photographer'),
                     singleton(S, 'welcomeSection', 'Welcome Section', 'welcomeSection'),
                     S.documentTypeListItem('testimonial').title('Testimonials Section'),
