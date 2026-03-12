@@ -31,11 +31,14 @@ const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. 
 	.isplit {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		min-height: 80vh;
+		padding: 0;
 		border-top: 1px solid var(--border);
 	}
 
-	.isplit__image { overflow: hidden; }
+	.isplit__image {
+		overflow: hidden;
+		min-height: 600px;
+	}
 
 	.isplit__image img {
 		width: 100%;
@@ -47,8 +50,9 @@ const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. 
 
 	.isplit__content {
 		display: flex;
-		align-items: center;
-		padding: 6rem 6rem 6rem 5rem;
+		flex-direction: column;
+		justify-content: center;
+		padding: 60px 64px;
 		background: var(--bg);
 	}
 
@@ -57,17 +61,17 @@ const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. 
 	.isplit__eyebrow {
 		font-family: var(--font-sans);
 		font-style: normal;
-		font-size: 0.725rem;
+		font-size: 0.65rem;
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
 		color: var(--accent);
-		margin-bottom: 2rem;
+		margin-bottom: 20px;
 	}
 
 	.isplit__body {
 		font-style: italic;
-		font-size: 1.1875rem;
-		line-height: 1.78;
+		font-size: 1rem;
+		line-height: 1.9;
 		color: var(--text);
 		margin-bottom: 1.5rem;
 	}

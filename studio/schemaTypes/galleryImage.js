@@ -11,6 +11,16 @@ export default {
   ],
   fields: [
     {
+      name: 'sizingNote',
+      title: '📐 Image Sizing Requirement',
+      type: 'string',
+      readOnly: true,
+      initialValue:
+        'Resize all images to 2500–3000px on the long edge before uploading. This ensures fast load times without sacrificing print quality. Export as high-quality JPEG (85–95%) or PNG. Sanity handles further optimisation and delivery automatically.',
+      description:
+        'Resize all images to 2500–3000px on the long edge before uploading. This ensures fast load times without sacrificing print quality. Export as high-quality JPEG (85–95%) or PNG. Sanity handles further optimisation and delivery automatically.',
+    },
+    {
       name: 'title',
       title: 'Title',
       type: 'string',
@@ -20,7 +30,7 @@ export default {
       name: 'photo',
       title: 'Photo',
       type: 'image',
-      description: 'The gallery image. Use full-resolution files — Sanity handles resizing automatically.',
+      description: 'Upload at 2500–3000px on the long edge. Sanity handles resizing and delivery automatically.',
       options: {
         hotspot: true,
         crop: true,

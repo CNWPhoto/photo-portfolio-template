@@ -1,7 +1,7 @@
 ---
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
-const _settingsQuery = encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName }`)
+const _settingsQuery = encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage }`)
 const _settingsRes = await fetch(
   `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${_settingsQuery}`,
   { cache: 'no-store' }
@@ -11,6 +11,8 @@ const { result: settings } = await _settingsRes.json()
 const colorTheme = settings?.colorTheme || 'classic-cream';
 const fontTheme  = settings?.fontTheme  || 'classic-editorial';
 const siteName   = settings?.siteName   || 'Pet Photography';
+const logoType   = settings?.logoType   || 'text';
+const logoImage  = settings?.logoImage  ?? null;
 ---
 
 <!doctype html>
@@ -32,7 +34,7 @@ const siteName   = settings?.siteName   || 'Pet Photography';
 		/>
 	</head>
 	<body>
-		<Nav siteName={siteName} />
+		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} />
 		<slot />
 		<Footer />
 	</body>
@@ -273,5 +275,10 @@ const siteName   = settings?.siteName   || 'Pet Photography';
 
 	button {
 		font-family: var(--font-body);
+	}
+
+	section {
+		padding-top: 100px;
+		padding-bottom: 100px;
 	}
 </style>

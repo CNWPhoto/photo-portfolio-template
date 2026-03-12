@@ -1,8 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { sanityClient, urlFor } from '../lib/sanity.js';
 
-// TODO:NICHE — swap these for your niche's gallery images
-const images = [
+const portfolio = await sanityClient.fetch(`*[_type == "portfolio"][0].images`, {}, { cache: 'no-store' });
+
+// TODO:NICHE — swap fallback Pexels IDs and alt text for your niche
+const fallbackImages = [
 	{ id: '1108099',  alt: 'Golden retriever in warm afternoon light' },
 	{ id: '2253275',  alt: 'Dog exploring in golden afternoon light' },
 	{ id: '825949',   alt: 'Dog portrait in natural light' },
@@ -19,6 +22,13 @@ const images = [
 	src: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800`,
 	alt,
 }));
+
+const images = portfolio?.length
+	? portfolio.map((img: any) => ({
+			src: urlFor(img).width(800).auto('format').url(),
+			alt: img.alt ?? img.title ?? '',
+	  }))
+	: fallbackImages;
 ---
 
 <Layout>
@@ -42,7 +52,7 @@ const images = [
 	}
 
 	.portfolio__header {
-		max-width: 1400px;
+		max-width: 1100px;
 		margin: 0 auto;
 		padding: 6rem 3rem 4rem;
 		text-align: center;
@@ -58,7 +68,7 @@ const images = [
 	.portfolio__grid {
 		columns: 3;
 		column-gap: 12px;
-		max-width: 1400px;
+		max-width: 1100px;
 		margin: 0 auto;
 		padding: 3rem 3rem 7rem;
 	}

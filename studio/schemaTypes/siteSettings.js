@@ -44,6 +44,21 @@ export default {
       description: 'Studio or photographer name used in the nav logo, footer, and page title',
     },
     {
+      name: 'logoType',
+      title: 'Logo Type',
+      type: 'string',
+      options: {list: ['text', 'image']},
+      initialValue: 'text',
+    },
+    {
+      name: 'logoImage',
+      title: 'Logo Image',
+      type: 'image',
+      description:
+        'Upload your logo. Recommended size: 400 × 120px or similar horizontal format, 2× resolution for retina. PNG with transparent background preferred.',
+      hidden: ({document}) => document?.logoType !== 'image',
+    },
+    {
       name: 'colorTheme',
       title: 'Default Colour Theme',
       type: 'string',
