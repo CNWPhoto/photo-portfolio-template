@@ -19,8 +19,42 @@ const showImageLogo = logoType === 'image' && logoImage;
 				<li><a href="/contact" class="nav__inquire">Inquire</a></li>
 			</ul>
 		</nav>
+
+		<button
+			class="nav__hamburger"
+			id="navHamburger"
+			aria-label="Open navigation menu"
+			aria-expanded="false"
+			aria-controls="navOverlay"
+		>
+			<span class="nav__hamburger-bar"></span>
+			<span class="nav__hamburger-bar"></span>
+			<span class="nav__hamburger-bar"></span>
+		</button>
 	</div>
 </header>
+
+<!-- Mobile overlay -->
+<div class="nav__overlay" id="navOverlay" aria-hidden="true" role="dialog" aria-label="Navigation menu">
+	<div class="nav__overlay-inner">
+		<button
+			class="nav__overlay-close"
+			id="navOverlayClose"
+			aria-label="Close navigation menu"
+		>
+			<span aria-hidden="true">&times;</span>
+		</button>
+		<nav aria-label="Mobile navigation">
+			<ul class="nav__overlay-links">
+				<li><a href="/experience">Experience</a></li>
+				<li><a href="/portfolio">Portfolio</a></li>
+				<li><a href="/about">About</a></li>
+				<li><a href="/blog">Blog</a></li>
+				<li><a href="/contact" class="nav__overlay-inquire">Inquire</a></li>
+			</ul>
+		</nav>
+	</div>
+</div>
 
 <style>
 	.nav {
@@ -110,17 +144,172 @@ const showImageLogo = logoType === 'image' && logoImage;
 
 	.nav__inquire:hover { transform: translateY(-1px); letter-spacing: 0.08em; }
 
-	@media (max-width: 768px) {
+	/* ── Hamburger button (hidden on desktop) ── */
+	.nav__hamburger {
+		display: none;
+		flex-direction: column;
+		justify-content: center;
+		gap: 5px;
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 6px;
+		margin: -6px;
+	}
+
+	.nav__hamburger-bar {
+		display: block;
+		width: 24px;
+		height: 1.5px;
+		background: var(--text);
+		transition: opacity 0.2s;
+	}
+
+	.nav__hamburger:hover .nav__hamburger-bar {
+		opacity: 0.6;
+	}
+
+	/* ── Overlay (hidden by default) ── */
+	.nav__overlay {
+		display: none;
+		position: fixed;
+		inset: 0;
+		z-index: 200;
+		background: var(--bg);
+		opacity: 0;
+		transition: opacity 0.25s ease;
+	}
+
+	.nav__overlay.nav__overlay--open {
+		opacity: 1;
+	}
+
+	.nav__overlay-inner {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: flex-start;
+		height: 100%;
+		padding: 4rem 2rem 4rem 2.5rem;
+		max-width: 480px;
+	}
+
+	.nav__overlay-close {
+		position: absolute;
+		top: 1.5rem;
+		right: 1.5rem;
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-family: var(--font-body, system-ui, sans-serif);
+		font-size: 2rem;
+		font-weight: 300;
+		line-height: 1;
+		color: var(--muted);
+		padding: 6px;
+		transition: color 0.2s, transform 0.2s;
+	}
+
+	.nav__overlay-close:hover {
+		color: var(--text);
+		transform: rotate(90deg);
+	}
+
+	.nav__overlay-links {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		width: 100%;
+	}
+
+	.nav__overlay-links li {
+		border-bottom: 1px solid var(--border);
+	}
+
+	.nav__overlay-links li:first-child {
+		border-top: 1px solid var(--border);
+	}
+
+	.nav__overlay-links a {
+		display: block;
+		font-family: var(--font-heading, Georgia, serif);
+		font-style: italic;
+		font-size: clamp(1.75rem, 5vw, 2.5rem);
+		font-weight: normal;
+		color: var(--text);
+		text-decoration: none;
+		letter-spacing: -0.01em;
+		padding: 1rem 0;
+		transition: color 0.2s, padding-left 0.25s;
+	}
+
+	.nav__overlay-links a:hover {
+		color: var(--accent);
+		padding-left: 0.5rem;
+	}
+
+	.nav__overlay-inquire {
+		color: var(--accent) !important;
+	}
+
+	/* ── Responsive: swap to hamburger at 900px ── */
+	@media (max-width: 900px) {
 		.nav__inner {
 			padding: 20px 1.5rem;
 		}
 
 		.nav__links {
-			gap: 1.5rem;
+			display: none;
 		}
 
-		.nav__links li:nth-child(-n + 2) {
-			display: none;
+		.nav__hamburger {
+			display: flex;
+		}
+
+		.nav__overlay {
+			display: block;
+			pointer-events: none;
+		}
+
+		.nav__overlay.nav__overlay--open {
+			pointer-events: auto;
 		}
 	}
 </style>
+
+<script>
+	const hamburger = document.getElementById('navHamburger');
+	const overlay   = document.getElementById('navOverlay');
+	const closeBtn  = document.getElementById('navOverlayClose');
+
+	function openMenu() {
+		overlay.classList.add('nav__overlay--open');
+		overlay.setAttribute('aria-hidden', 'false');
+		hamburger.setAttribute('aria-expanded', 'true');
+		document.body.style.overflow = 'hidden';
+		closeBtn.focus();
+	}
+
+	function closeMenu() {
+		overlay.classList.remove('nav__overlay--open');
+		overlay.setAttribute('aria-hidden', 'true');
+		hamburger.setAttribute('aria-expanded', 'false');
+		document.body.style.overflow = '';
+		hamburger.focus();
+	}
+
+	hamburger.addEventListener('click', openMenu);
+	closeBtn.addEventListener('click', closeMenu);
+
+	// Close on Escape key
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape' && overlay.classList.contains('nav__overlay--open')) {
+			closeMenu();
+		}
+	});
+
+	// Close when a nav link is clicked (SPA-friendly)
+	overlay.querySelectorAll('a').forEach((link) => {
+		link.addEventListener('click', closeMenu);
+	});
+</script>
