@@ -169,10 +169,10 @@ const testimonials =
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: border-color 0.2s, color 0.2s;
+		transition: border-color 0.2s, color 0.2s, transform 0.18s;
 	}
 
-	.tslider__arrow:hover { border-color: var(--text); }
+	.tslider__arrow:hover:not(:disabled) { transform: scale(1.08); border-color: var(--text); }
 	.tslider__arrow:disabled { opacity: 0.3; cursor: default; }
 
 	@media (max-width: 900px) {
