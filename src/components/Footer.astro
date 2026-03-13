@@ -57,7 +57,14 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="footer" id="contact">
-	<!-- Columns: Social + Menu + Newsletter | Right: wordmark + portrait -->
+	<!-- Wordmark: full-width, right-aligned above the photo column -->
+	<div class="footer__wordmark-row">
+		<span class="footer__wordmark">{siteName}</span>
+	</div>
+
+	<hr />
+
+	<!-- Columns: left nav columns + optional right portrait photo -->
 	<div class="footer__cols">
 		<div class="footer__left">
 			{socialLinks.length > 0 && (
@@ -88,22 +95,16 @@ const year = new Date().getFullYear();
 			)}
 		</div>
 
-		<!-- Right panel: wordmark + optional portrait photo -->
-		<div class="footer__right">
-			<div class="footer__wordmark-row">
-				<span class="footer__wordmark">{siteName}</span>
+		{footerPhotoUrl && (
+			<div class="footer__right">
+				<img
+					src={footerPhotoUrl}
+					alt={siteName}
+					loading="lazy"
+					decoding="async"
+				/>
 			</div>
-			{footerPhotoUrl && (
-				<div class="footer__photo-col">
-					<img
-						src={footerPhotoUrl}
-						alt={siteName}
-						loading="lazy"
-						decoding="async"
-					/>
-				</div>
-			)}
-		</div>
+		)}
 	</div>
 
 	<hr />
@@ -124,11 +125,32 @@ const year = new Date().getFullYear();
 		color: var(--text);
 	}
 
-	/* Outer grid: left nav columns + right wordmark/photo panel */
+	/* Wordmark: full-width, right-aligned to sit above the photo column */
+	.footer__wordmark-row {
+		padding: 4rem calc(280px + 3rem) 0 3rem;
+		text-align: right;
+	}
+
+	.footer__wordmark {
+		font-family: var(--font-body, 'Jost', system-ui, sans-serif);
+		font-variant: normal;
+		font-style: normal;
+		font-weight: 500;
+		font-size: 2rem;
+		letter-spacing: 0.06em;
+		white-space: nowrap;
+		color: var(--text);
+	}
+
+	/* Outer grid: left nav columns + optional right photo panel */
 	.footer__cols {
 		display: grid;
-		grid-template-columns: 1fr 280px;
+		grid-template-columns: 1fr;
 		align-items: stretch;
+	}
+
+	.footer__cols:has(.footer__right) {
+		grid-template-columns: 1fr 280px;
 	}
 
 	/* Left: social + menu + newsletter sub-grid */
@@ -198,36 +220,13 @@ const year = new Date().getFullYear();
 		color: var(--accent);
 	}
 
-	/* Right panel: wordmark header + portrait photo */
+	/* Right photo panel */
 	.footer__right {
-		display: flex;
-		flex-direction: column;
 		border-left: 1px solid var(--border);
-	}
-
-	.footer__wordmark-row {
-		padding: 2rem 2rem 1.5rem;
-		text-align: right;
-		border-bottom: 1px solid var(--border);
-	}
-
-	.footer__wordmark {
-		font-family: var(--font-body, 'Jost', system-ui, sans-serif);
-		font-variant: normal;
-		font-style: normal;
-		font-weight: 500;
-		font-size: 2rem;
-		letter-spacing: 0.06em;
-		color: var(--text);
-	}
-
-	.footer__photo-col {
-		flex: 1;
 		overflow: hidden;
-		min-height: 180px;
 	}
 
-	.footer__photo-col img {
+	.footer__right img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
@@ -260,7 +259,12 @@ const year = new Date().getFullYear();
 	}
 
 	@media (max-width: 900px) {
-		.footer__cols {
+		.footer__wordmark-row {
+			padding: 2.5rem 1.5rem 0;
+		}
+
+		.footer__cols,
+		.footer__cols:has(.footer__right) {
 			grid-template-columns: 1fr;
 		}
 
@@ -287,13 +291,6 @@ const year = new Date().getFullYear();
 		.footer__right {
 			border-left: none;
 			border-top: 1px solid var(--border);
-		}
-
-		.footer__wordmark-row {
-			padding: 1.5rem;
-		}
-
-		.footer__photo-col {
 			min-height: 240px;
 		}
 
