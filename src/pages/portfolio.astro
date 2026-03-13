@@ -39,7 +39,7 @@ const images = portfolio?.length
 		<div class="portfolio__grid">
 			{images.map((img, i) => (
 				<div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
-					<img src={img.src} alt={img.alt} loading="lazy" />
+					<img src={img.src} alt={img.alt} loading="lazy" decoding="async" />
 				</div>
 			))}
 		</div>

@@ -35,7 +35,7 @@ const testimonials = [
 			{testimonials.map((t) => (
 				<div class="tgrid__card">
 					<div class="tgrid__photo-wrap">
-						<img src={t.photoUrl} alt={t.photoAlt} loading="lazy" />
+						<img src={t.photoUrl} alt={t.photoAlt} loading="lazy" decoding="async" />
 					</div>
 					<blockquote class="tgrid__quote">&ldquo;{t.quote}&rdquo;</blockquote>
 					<p class="tgrid__name">{t.name}</p>

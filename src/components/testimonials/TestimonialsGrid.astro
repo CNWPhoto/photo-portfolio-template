@@ -49,7 +49,7 @@ const testimonials =
 				<div class="tgrid__card">
 					{t.photoUrl && (
 						<div class="tgrid__photo-wrap">
-							<img src={t.photoUrl} alt={t.photoAlt} loading="lazy" class="tgrid__photo" />
+							<img src={t.photoUrl} alt={t.photoAlt} loading="lazy" class="tgrid__photo" decoding="async" />
 						</div>
 					)}
 					<blockquote class="tgrid__quote">&ldquo;{t.quote}&rdquo;</blockquote>

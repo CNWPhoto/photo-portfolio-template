@@ -46,7 +46,7 @@ const bodyHTML = post.body
             const alt = value.alt || '';
             const caption = value.caption || '';
             return `<figure class="body-image">
-              <img src="${src}" alt="${alt}" loading="lazy" />
+              <img src="${src}" alt="${alt}" loading="lazy" decoding="async" />
               ${caption ? `<figcaption class="body-image__caption">${caption}</figcaption>` : ''}
             </figure>`;
           },
@@ -81,7 +81,7 @@ const bodyHTML = post.body
           <img
             src={urlFor(post.coverImage).width(1100).auto('format').url()}
             alt={post.coverImage.alt || post.title}
-            loading="eager"
+            loading="eager" decoding="async"
           />
         </div>
       )}

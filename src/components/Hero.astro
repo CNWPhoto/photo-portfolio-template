@@ -43,9 +43,9 @@ const images =
 							srcset={sanitySrcset(img.base, [900, 1400, 2000, 2800])}
 							sizes="(max-width: 900px) 100vw, 60vw"
 							alt={img.alt}
-							loading="eager"
+							loading="eager" decoding="async"
 						/>
-					: <img src={img.base} alt={img.alt} loading="eager" />
+					: <img src={img.base} alt={img.alt} loading="eager" decoding="async" />
 			))}
 		</div>
 

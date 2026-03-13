@@ -7,7 +7,7 @@ const showImageLogo = logoType === 'image' && logoImage;
 <header class="nav">
 	<div class="nav__inner">
 		{showImageLogo
-			? <a href="/" class="nav__logo nav__logo--image"><img src={urlFor(logoImage).height(96).auto('format').url()} alt={siteName} class="nav__logo-img" /></a>
+			? <a href="/" class="nav__logo nav__logo--image"><img src={urlFor(logoImage).height(96).auto('format').url()} alt={siteName} class="nav__logo-img" decoding="async" /></a>
 			: <a href="/" class="nav__logo">{siteName}</a>
 		}
 		<nav aria-label="Main navigation">

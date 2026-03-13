@@ -33,9 +33,9 @@ const horizontalAlt = featuredSection?.imageHorizontal?.alt ?? 'Dog exploring in
 								srcset={sanitySrcset(verticalBase, [600, 900, 1200, 1800])}
 								sizes="(max-width: 900px) 50vw, 35vw"
 								alt={verticalAlt}
-								loading="lazy"
+								loading="lazy" decoding="async"
 							/>
-						: <img src={verticalFallback} alt={verticalAlt} loading="lazy" />
+						: <img src={verticalFallback} alt={verticalAlt} loading="lazy" decoding="async" />
 					}
 				</div>
 				<div class="pgrid__img pgrid__img--horizontal reveal reveal-delay-2">
@@ -45,9 +45,9 @@ const horizontalAlt = featuredSection?.imageHorizontal?.alt ?? 'Dog exploring in
 								srcset={sanitySrcset(horizontalBase, [600, 900, 1200, 1800])}
 								sizes="(max-width: 900px) 50vw, 35vw"
 								alt={horizontalAlt}
-								loading="lazy"
+								loading="lazy" decoding="async"
 							/>
-						: <img src={horizontalFallback} alt={horizontalAlt} loading="lazy" />
+						: <img src={horizontalFallback} alt={horizontalAlt} loading="lazy" decoding="async" />
 					}
 				</div>
 			</div>

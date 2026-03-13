@@ -40,9 +40,9 @@ const ctaText = welcomeSection?.ctaText || '';
 					srcset={sanitySrcset(photoBase, [800, 1200, 1600, 2400], 85)}
 					sizes="(max-width: 900px) 100vw, 50vw"
 					alt={photoAlt}
-					loading="lazy"
+					loading="lazy" decoding="async"
 				/>
-			: <img src={photoFallback} alt={photoAlt} loading="lazy" />
+			: <img src={photoFallback} alt={photoAlt} loading="lazy" decoding="async" />
 		}
 	</div>
 </section>

@@ -31,7 +31,7 @@ const displayImages =
 	<div class="pmasonry__grid">
 		{displayImages.map((img) => (
 			<div class="pmasonry__item">
-				<img src={img.src} alt={img.alt} loading="lazy" />
+				<img src={img.src} alt={img.alt} loading="lazy" decoding="async" />
 			</div>
 		))}
 	</div>
