@@ -88,6 +88,13 @@ export default {
       ],
     },
     {
+      name: 'footerPhoto',
+      title: 'Footer Portrait Photo',
+      type: 'image',
+      description:
+        'Optional portrait or branding photo shown in the right column of the footer, below the wordmark. Leave blank to hide the photo column.',
+    },
+    {
       name: 'newsletterEmbed',
       title: 'Newsletter Embed',
       type: 'text',
