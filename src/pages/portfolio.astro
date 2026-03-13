@@ -54,6 +54,8 @@ const images = portfolio?.length
 <style>
 	main {
 		min-height: 100vh;
+		width: 100%;
+		overflow-x: hidden;
 	}
 
 	/* Header row — byline + large title, right-aligned */
@@ -63,7 +65,8 @@ const images = portfolio?.length
 		justify-content: flex-end;
 		gap: 2rem;
 		padding: 3rem 3rem 0;
-		max-width: 100%;
+		width: 100%;
+		box-sizing: border-box;
 		border-bottom: none;
 	}
 
@@ -94,7 +97,8 @@ const images = portfolio?.length
 	.portfolio__grid {
 		columns: 3;
 		column-gap: 8px;
-		max-width: 100%;
+		width: 100%;
+		box-sizing: border-box;
 		margin: 0;
 		padding: 1.5rem 0 0;
 	}
