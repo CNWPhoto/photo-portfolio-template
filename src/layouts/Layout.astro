@@ -1,6 +1,7 @@
 ---
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
+import { siteConfig } from '../config';
 const _settingsQuery = encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage }`)
 const _settingsRes = await fetch(
   `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${_settingsQuery}`,
@@ -32,6 +33,7 @@ const logoImage  = settings?.logoImage  ?? null;
 			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,400;1,300;1,400&family=Nunito+Sans:ital,wght@0,300;0,400;0,600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500&family=Tenor+Sans&family=Raleway:wght@300;400;500&display=swap"
 			rel="stylesheet"
 		/>
+		{siteConfig.headScripts && <Fragment set:html={siteConfig.headScripts} />}
 	</head>
 	<body>
 		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} />
@@ -48,6 +50,7 @@ const logoImage  = settings?.logoImage  ?? null;
 			}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 			document.querySelectorAll('.reveal, .reveal-fade').forEach(el => observer.observe(el));
 		</script>
+		{siteConfig.bodyScripts && <Fragment set:html={siteConfig.bodyScripts} />}
 	</body>
 </html>
 

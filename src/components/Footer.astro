@@ -1,4 +1,5 @@
 ---
+import { siteConfig } from '../config';
 const { theme = 'classic-cream', siteName = 'Pet Photography' } = Astro.props;
 const year = new Date().getFullYear();
 const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253275'];
@@ -35,16 +36,12 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 			</ul>
 		</div>
 
-		<div class="footer__col">
-			<p class="footer__col-label">Newsletter</p>
-			<p class="footer__newsletter-desc">
-				Join for session tips, behind-the-scenes moments, and early access to booking dates.
-			</p>
-			<form class="footer__form" onsubmit="return false">
-				<input type="email" placeholder="Your email address" class="footer__input" />
-				<button type="submit" class="footer__submit">Join Today</button>
-			</form>
-		</div>
+		{siteConfig.newsletterEmbed && (
+			<div class="footer__col">
+				<p class="footer__col-label">Newsletter</p>
+				<Fragment set:html={siteConfig.newsletterEmbed} />
+			</div>
+		)}
 	</div>
 
 	<hr />
@@ -104,10 +101,14 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 	/* Three columns */
 	.footer__cols {
 		display: grid;
-		grid-template-columns: 1fr 1fr 1fr;
+		grid-template-columns: 1fr 1fr;
 		padding: 3.5rem 3rem;
 		max-width: 1100px;
 		margin: 0 auto;
+	}
+
+	.footer__cols:has(.footer__col:nth-child(3)) {
+		grid-template-columns: 1fr 1fr 1fr;
 	}
 
 	.footer__col {
@@ -154,60 +155,6 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 		color: var(--accent);
 	}
 
-	/* Newsletter */
-	.footer__newsletter-desc {
-		font-size: 0.9375rem;
-		line-height: 1.72;
-		color: var(--muted);
-		margin-bottom: 1.5rem;
-		font-style: italic;
-	}
-
-	.footer__form {
-		display: flex;
-		flex-direction: column;
-		gap: 0.625rem;
-	}
-
-	.footer__input {
-		font-family: var(--font-serif);
-		font-style: italic;
-		font-size: 0.9375rem;
-		color: var(--text);
-		background: transparent;
-		border: 1px solid var(--border);
-		padding: 0.7rem 1rem;
-		outline: none;
-		transition: border-color 0.2s;
-	}
-
-	.footer__input::placeholder {
-		color: var(--muted-light);
-	}
-
-	.footer__input:focus {
-		border-color: var(--text);
-	}
-
-	.footer__submit {
-		font-family: var(--font-sans);
-		font-style: normal;
-		font-size: 0.7rem;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-		color: var(--bg);
-		background: var(--text);
-		border: 1px solid var(--text);
-		padding: 0.7rem 1.5rem;
-		cursor: pointer;
-		transition: background 0.2s;
-		align-self: flex-start;
-	}
-
-	.footer__submit:hover {
-		background: var(--accent);
-		border-color: var(--accent);
-	}
 
 	/* Legal row */
 	.footer__legal {
