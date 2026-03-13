@@ -33,7 +33,13 @@ export default {
       name: 'ctaText',
       title: 'CTA Link Text',
       type: 'string',
-      description: 'Text for the call-to-action link (e.g. "Learn about the experience"). Leave blank to hide.',
+      description: 'Text for the call-to-action link (e.g. "See the Experience →"). Leave blank to hide the link entirely.',
+    },
+    {
+      name: 'ctaLink',
+      title: 'CTA Link URL',
+      type: 'string',
+      description: 'Where the link points (e.g. "/experience"). Only used if CTA Link Text is set.',
     },
     {
       name: 'image',
