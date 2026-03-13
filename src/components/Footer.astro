@@ -38,7 +38,6 @@ const menuLinks = [
 ].filter(item => menuDef ? menuDef[item.key]?.enabled !== false : true)
  .map(item => ({ href: item.href, label: menuDef?.[item.key]?.label || item.default }));
 const year = new Date().getFullYear();
-const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253275'];
 ---
 
 <footer class="footer" id="contact">
@@ -90,25 +89,6 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 		</p>
 	</div>
 
-	<!-- Instagram strip -->
-	<div class="footer__instagram">
-		<div class="footer__insta-header">
-			<p class="footer__insta-handle">@YourHandleHere</p>
-		</div>
-		<div class="footer__insta-grid">
-			{
-				instagramIds.map((id) => (
-					<a href="#" class="footer__insta-item" aria-label="View on Instagram">
-						<img
-							src={`https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop`}
-							alt=""
-							loading="lazy" decoding="async"
-						/>
-					</a>
-				))
-			}
-		</div>
-	</div>
 </footer>
 
 <style>
@@ -226,52 +206,6 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 		color: var(--accent);
 	}
 
-	/* Instagram strip */
-	.footer__instagram {
-		margin-top: 0;
-		border-top: 1px solid var(--border);
-	}
-
-	.footer__insta-header {
-		padding: 2rem 3rem 1.25rem;
-		text-align: center;
-	}
-
-	.footer__insta-handle {
-		font-style: italic;
-		font-size: 0.9375rem;
-		color: var(--muted);
-		letter-spacing: 0.04em;
-	}
-
-	.footer__insta-grid {
-		display: grid;
-		grid-template-columns: repeat(6, 1fr);
-		gap: 0;
-	}
-
-	.footer__insta-item {
-		overflow: hidden;
-		display: block;
-	}
-
-	.footer__insta-item img {
-		width: 100%;
-		aspect-ratio: 1;
-		object-fit: cover;
-		display: block;
-		transition:
-			opacity 0.3s,
-			transform 0.5s ease;
-		filter: saturate(0.85);
-	}
-
-	.footer__insta-item:hover img {
-		opacity: 0.85;
-		transform: scale(1.04);
-		filter: saturate(1.1);
-	}
-
 	@media (max-width: 900px) {
 		.footer__cols {
 			grid-template-columns: 1fr;
@@ -294,8 +228,5 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 			padding-right: 1.5rem;
 		}
 
-		.footer__insta-grid {
-			grid-template-columns: repeat(3, 1fr);
-		}
 	}
 </style>
