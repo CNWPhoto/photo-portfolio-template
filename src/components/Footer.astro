@@ -57,14 +57,14 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="footer" id="contact">
-	<!-- Wordmark: full-width, right-aligned above the photo column -->
+	<!-- Wordmark: constrained width, right-aligned above the photo column -->
 	<div class="footer__wordmark-row">
 		<span class="footer__wordmark">{siteName}</span>
 	</div>
 
 	<hr />
 
-	<!-- Columns: left nav columns + optional right portrait photo -->
+	<!-- Columns: left nav columns + right portrait photo (always rendered) -->
 	<div class="footer__cols">
 		<div class="footer__left">
 			{socialLinks.length > 0 && (
@@ -95,16 +95,14 @@ const year = new Date().getFullYear();
 			)}
 		</div>
 
-		{footerPhotoUrl && (
-			<div class="footer__right">
-				<img
-					src={footerPhotoUrl}
-					alt={siteName}
-					loading="lazy"
-					decoding="async"
-				/>
+		<div class="footer__right">
+			<div class="footer__photo-col">
+				{footerPhotoUrl
+					? <img src={footerPhotoUrl} alt={siteName} loading="lazy" decoding="async" />
+					: <span class="footer__photo-placeholder">Your Photo Here</span>
+				}
 			</div>
-		)}
+		</div>
 	</div>
 
 	<hr />
@@ -125,9 +123,19 @@ const year = new Date().getFullYear();
 		color: var(--text);
 	}
 
-	/* Wordmark: full-width, right-aligned to sit above the photo column */
+	/* Constrain all rows to site width */
+	.footer__wordmark-row,
+	.footer__cols,
+	.footer__legal {
+		max-width: 1100px;
+		margin-left: auto;
+		margin-right: auto;
+		box-sizing: border-box;
+	}
+
+	/* Wordmark: right-aligned, right padding matches photo column width */
 	.footer__wordmark-row {
-		padding: 4rem calc(280px + 3rem) 0 3rem;
+		padding: 4rem 0 0;
 		text-align: right;
 	}
 
@@ -142,27 +150,19 @@ const year = new Date().getFullYear();
 		color: var(--text);
 	}
 
-	/* Outer grid: left nav columns + optional right photo panel */
+	/* Outer grid: left nav columns + right photo panel (always present) */
 	.footer__cols {
 		display: grid;
-		grid-template-columns: 1fr;
-		align-items: stretch;
-	}
-
-	.footer__cols:has(.footer__right) {
 		grid-template-columns: 1fr 280px;
+		align-items: start;
+		padding-left: 0;
+		padding-right: 0;
 	}
 
-	/* Left: social + menu + newsletter sub-grid */
+	/* Left: menu pinned to 275px, remaining space for social/newsletter */
 	.footer__left {
 		display: grid;
-		grid-template-columns: 1fr;
-		padding: 3.5rem 3rem;
-		max-width: 820px;
-	}
-
-	.footer__left:has(.footer__col:nth-child(2)) {
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 275px 1fr;
 	}
 
 	.footer__left:has(.footer__col:nth-child(3)) {
@@ -170,11 +170,7 @@ const year = new Date().getFullYear();
 	}
 
 	.footer__col {
-		padding: 0 3rem;
-	}
-
-	.footer__col:first-child {
-		padding-left: 0;
+		padding: 3rem 2rem 3.5rem 0;
 	}
 
 	.footer__col:last-child {
@@ -183,6 +179,7 @@ const year = new Date().getFullYear();
 
 	.footer__col + .footer__col {
 		border-left: 1px solid var(--border);
+		padding-left: 2rem;
 	}
 
 	.footer__col-label {
@@ -220,13 +217,25 @@ const year = new Date().getFullYear();
 		color: var(--accent);
 	}
 
-	/* Right photo panel */
+	/* Right photo panel — always rendered, full height */
 	.footer__right {
+		align-self: stretch;
 		border-left: 1px solid var(--border);
+		display: flex;
+		flex-direction: column;
 		overflow: hidden;
+		min-height: 240px;
 	}
 
-	.footer__right img {
+	.footer__photo-col {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--bg-alt, color-mix(in srgb, var(--bg) 85%, var(--text)));
+	}
+
+	.footer__photo-col img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
@@ -234,12 +243,21 @@ const year = new Date().getFullYear();
 		display: block;
 	}
 
+	.footer__photo-placeholder {
+		font-family: var(--font-sans);
+		font-size: 0.65rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
 	/* Legal row */
 	.footer__legal {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 1.5rem 3rem;
+		padding-top: 1.5rem;
+		padding-bottom: 1.5rem;
 		font-family: var(--font-sans);
 		font-size: 0.8125rem;
 		font-style: normal;
@@ -259,21 +277,25 @@ const year = new Date().getFullYear();
 	}
 
 	@media (max-width: 900px) {
-		.footer__wordmark-row {
-			padding: 2.5rem 1.5rem 0;
+		.footer__wordmark-row,
+		.footer__cols,
+		.footer__legal {
+			padding-left: 1.5rem;
+			padding-right: 1.5rem;
 		}
 
-		.footer__cols,
-		.footer__cols:has(.footer__right) {
+		.footer__wordmark-row {
+			padding-top: 2.5rem;
+		}
+
+		.footer__cols {
 			grid-template-columns: 1fr;
 		}
 
 		.footer__left {
 			grid-template-columns: 1fr;
-			padding: 2.5rem 1.5rem;
 		}
 
-		.footer__left:has(.footer__col:nth-child(2)),
 		.footer__left:has(.footer__col:nth-child(3)) {
 			grid-template-columns: 1fr;
 		}
@@ -288,15 +310,14 @@ const year = new Date().getFullYear();
 			border-top: none;
 		}
 
+		.footer__col + .footer__col {
+			padding-left: 0;
+		}
+
 		.footer__right {
 			border-left: none;
 			border-top: 1px solid var(--border);
 			min-height: 240px;
-		}
-
-		.footer__legal {
-			padding-left: 1.5rem;
-			padding-right: 1.5rem;
 		}
 	}
 </style>
