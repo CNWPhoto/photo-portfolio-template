@@ -3,6 +3,11 @@ export default {
   title: 'Homepage Top Slider',
   type: 'document',
   __experimental_actions: ['create', 'update', 'publish'],
+  preview: {
+    prepare() {
+      return {title: 'Homepage Top Slider'}
+    },
+  },
   fields: [
     {
       name: 'images',
