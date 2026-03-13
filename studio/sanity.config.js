@@ -39,6 +39,7 @@ export default defineConfig({
                     singleton(S, 'siteSettings', 'Site & Theme', 'siteSettings'),
                     singleton(S, 'homepageSettings', 'Homepage Layout', 'homepageSettings'),
                     singleton(S, 'footerSettings', 'Footer', 'footerSettings'),
+                    singleton(S, 'socialSettings', 'Social', 'socialSettings'),
                     singleton(S, 'codeSettings', 'Code', 'codeSettings'),
                     S.documentTypeListItem('pageSection').title('Section Colours'),
                   ]),

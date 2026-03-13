@@ -1,12 +1,30 @@
 ---
 const { theme = 'classic-cream', siteName = 'Pet Photography' } = Astro.props;
 
-const _footerRes = await fetch(
-  `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ newsletterEmbed, menu }`)}`,
-  { cache: 'no-store' }
-);
+const [_footerRes, _socialRes] = await Promise.all([
+  fetch(
+    `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ newsletterEmbed, menu }`)}`,
+    { cache: 'no-store' }
+  ),
+  fetch(
+    `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`)}`,
+    { cache: 'no-store' }
+  ),
+]);
 const { result: footerData } = await _footerRes.json();
+const { result: socialData } = await _socialRes.json();
 const newsletterEmbed = footerData?.newsletterEmbed || '';
+
+// Social links — only include platforms with a URL filled in
+const socialLinks = [
+  { label: 'Instagram', url: socialData?.instagram },
+  { label: 'Facebook',  url: socialData?.facebook },
+  { label: 'YouTube',   url: socialData?.youtube },
+  { label: 'TikTok',    url: socialData?.tiktok },
+  socialData?.custom?.label && socialData?.custom?.url
+    ? { label: socialData.custom.label, url: socialData.custom.url }
+    : null,
+].filter(Boolean).filter(s => s?.url);
 
 // Menu links — fall back to showing all pages with default labels
 const menuDef = footerData?.menu;
@@ -31,16 +49,18 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 
 	<hr />
 
-	<!-- Three-column body -->
+	<!-- Columns: Social (if any links set) + Menu + Newsletter (if embed set) -->
 	<div class="footer__cols">
-		<div class="footer__col">
-			<p class="footer__col-label">Social</p>
-			<ul class="footer__list">
-				<li><a href="#">Facebook</a></li>
-				<li><a href="#">Pinterest</a></li>
-				<li><a href="#">TikTok</a></li>
-			</ul>
-		</div>
+		{socialLinks.length > 0 && (
+			<div class="footer__col">
+				<p class="footer__col-label">Social</p>
+				<ul class="footer__list">
+					{socialLinks.map(link => (
+						<li><a href={link.url} target="_blank" rel="noopener">{link.label}</a></li>
+					))}
+				</ul>
+			</div>
+		)}
 
 		<div class="footer__col">
 			<p class="footer__col-label">Menu</p>
@@ -116,10 +136,14 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 	/* Three columns */
 	.footer__cols {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr;
 		padding: 3.5rem 3rem;
 		max-width: 1100px;
 		margin: 0 auto;
+	}
+
+	.footer__cols:has(.footer__col:nth-child(2)) {
+		grid-template-columns: 1fr 1fr;
 	}
 
 	.footer__cols:has(.footer__col:nth-child(3)) {

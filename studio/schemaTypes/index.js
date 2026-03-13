@@ -15,5 +15,6 @@ import whyChooseSection from './sections/whyChooseSection'
 import homepageFaqs from './sections/homepageFaqs'
 import codeSettings from './codeSettings'
 import footerSettings from './footerSettings'
+import socialSettings from './socialSettings'
 
-export const schemaTypes = [siteSettings, homepageSettings, codeSettings, footerSettings, heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs, testimonial, portfolio, blogPost, faq, pageSection]
+export const schemaTypes = [siteSettings, homepageSettings, codeSettings, footerSettings, socialSettings, heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs, testimonial, portfolio, blogPost, faq, pageSection]
