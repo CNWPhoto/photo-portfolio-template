@@ -12,5 +12,6 @@ import featuredSection from './sections/featuredSection'
 import processSection from './sections/processSection'
 import soloHeroImage from './sections/soloHeroImage'
 import whyChooseSection from './sections/whyChooseSection'
+import homepageFaqs from './sections/homepageFaqs'
 
-export const schemaTypes = [siteSettings, homepageSettings, heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, testimonial, portfolio, blogPost, faq, pageSection]
+export const schemaTypes = [siteSettings, homepageSettings, heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs, testimonial, portfolio, blogPost, faq, pageSection]
