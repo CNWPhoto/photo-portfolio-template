@@ -4,11 +4,20 @@ export default {
   type: 'document',
   __experimental_actions: ['create', 'update', 'publish'],
   preview: {
-    prepare() {
-      return {title: 'Footer'}
+    select: {title: 'internalTitle'},
+    prepare({title}) {
+      return {title: title || 'Footer'}
     },
   },
   fields: [
+    {
+      name: 'internalTitle',
+      title: 'Title',
+      type: 'string',
+      readOnly: true,
+      initialValue: 'Footer',
+      hidden: true,
+    },
     {
       name: 'newsletterEmbed',
       title: 'Newsletter Embed',

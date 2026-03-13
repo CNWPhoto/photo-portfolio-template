@@ -5,7 +5,7 @@ import Nav from '../components/Nav.astro';
 const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production';
 
 const [_settingsRes, _codeRes] = await Promise.all([
-  fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage }`)}`, { cache: 'no-store' }),
+  fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon }`)}`, { cache: 'no-store' }),
   fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`)}`, { cache: 'no-store' }),
 ]);
 
@@ -19,6 +19,9 @@ const logoType    = settings?.logoType   || 'text';
 const logoImage   = settings?.logoImage  ?? null;
 const headScripts = code?.headScripts    || '';
 const bodyScripts = code?.bodyScripts    || '';
+const faviconUrl  = settings?.favicon?.asset?._ref
+  ? `https://cdn.sanity.io/images/hx5xgigp/production/${settings.favicon.asset._ref.replace('image-', '').replace(/-([a-z]+)$/, '.$1')}`
+  : null;
 ---
 
 <!doctype html>
@@ -26,8 +29,13 @@ const bodyScripts = code?.bodyScripts    || '';
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		{faviconUrl
+			? <link rel="icon" href={faviconUrl} />
+			: <>
+				<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+				<link rel="icon" href="/favicon.ico" />
+			</>
+		}
 		<meta name="generator" content={Astro.generator} />
 		<title>Pet Photography — Natural, Stress-Free Dog Portraits</title>
 		<!-- Google Fonts preconnect -->

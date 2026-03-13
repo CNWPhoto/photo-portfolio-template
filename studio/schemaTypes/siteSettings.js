@@ -83,6 +83,14 @@ export default {
       hidden: ({document}) => document?.logoType !== 'image',
     },
     {
+      name: 'favicon',
+      title: 'Favicon',
+      type: 'image',
+      description:
+        'Browser tab icon. Upload a square image (recommended: 512×512px PNG). Leave blank to use the default favicon.',
+      options: {accept: 'image/png,image/svg+xml,image/x-icon,image/jpeg'},
+    },
+    {
       name: 'colorTheme',
       title: 'Default Colour Theme',
       type: 'string',
