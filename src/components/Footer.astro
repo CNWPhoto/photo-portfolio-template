@@ -1,14 +1,13 @@
 ---
-const { theme = 'classic-cream' } = Astro.props;
+const { theme = 'classic-cream', siteName = 'Pet Photography' } = Astro.props;
 const year = new Date().getFullYear();
 const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253275'];
 ---
 
 <footer class="footer" id="contact">
-	<!-- Top: "Pet Photography" wordmark -->
+	<!-- Top: site name wordmark -->
 	<div class="footer__wordmark-row">
-		{/* TODO:NICHE — studio name wordmark */}
-		<span class="footer__wordmark">Pet Photography</span>
+		<span class="footer__wordmark">{siteName}</span>
 	</div>
 
 	<hr />
@@ -88,16 +87,17 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 
 	/* Wordmark row */
 	.footer__wordmark-row {
-		padding: 4rem 3rem 3rem;
+		padding: 4rem 3rem 0;
 		text-align: right;
 	}
 
 	.footer__wordmark {
-		font-family: var(--font-serif);
-		font-variant: small-caps;
+		font-family: var(--font-body, 'Jost', system-ui, sans-serif);
+		font-variant: normal;
 		font-style: normal;
-		font-size: clamp(2rem, 5vw, 3.5rem);
-		letter-spacing: 0.05em;
+		font-weight: 500;
+		font-size: 2rem;
+		letter-spacing: 0.06em;
 		color: var(--text);
 	}
 
