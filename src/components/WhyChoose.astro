@@ -75,6 +75,11 @@ const bgUrl       = heroBase ? sanityImg(heroBase, 2000) : heroFallback;
 		align-items: start;
 	}
 
+	.why__heading-col {
+		border-left: 2px solid var(--accent);
+		padding-left: 1.5rem;
+	}
+
 	.why__heading {
 		font-size: var(--why-heading-size, clamp(2rem, 4vw, 3.25rem));
 		color: var(--text);
@@ -88,9 +93,9 @@ const bgUrl       = heroBase ? sanityImg(heroBase, 2000) : heroFallback;
 
 	.why__body {
 		font-style: normal;
-		font-size: var(--why-body-size, 1.0625rem);
-		line-height: 1.8;
-		color: var(--muted);
+		font-size: 18px;
+		line-height: 1.85;
+		color: rgb(210, 205, 196);
 		margin-bottom: 1.5rem;
 	}
 
