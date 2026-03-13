@@ -1,11 +1,11 @@
 ---
-import { sanityImg, sanitySrcset } from '../utils/imageUrl';
+import { sanityImg } from '../utils/imageUrl';
 
 const { soloHeroImage, urlFor, theme, overrides } = Astro.props;
 
-const heroBase = soloHeroImage?.image && urlFor ? urlFor(soloHeroImage.image).url() : null;
-const heroAlt  = soloHeroImage?.image?.alt ?? 'Dog running freely in an open field'; // TODO:NICHE
+const heroBase    = soloHeroImage?.image && urlFor ? urlFor(soloHeroImage.image).url() : null;
 const heroFallback = 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=2000';
+const bgUrl       = heroBase ? sanityImg(heroBase, 2000) : heroFallback;
 ---
 
 <section
@@ -17,19 +17,8 @@ const heroFallback = 'https://images.pexels.com/photos/2253275/pexels-photo-2253
 		overrides?.whyBodySize ? `--why-body-size: ${overrides.whyBodySize}` : '',
 	].filter(Boolean).join('; ') || undefined}
 >
-	<!-- Full-bleed image -->
-	<div class="why__image-full">
-		{heroBase
-			? <img
-					src={sanityImg(heroBase, 2000)}
-					srcset={sanitySrcset(heroBase, [900, 1400, 2000, 2800])}
-					sizes="100vw"
-					alt={heroAlt}
-					loading="lazy"
-				/>
-			: <img src={heroFallback} alt={heroAlt} loading="lazy" />
-		}
-	</div>
+	<!-- Fixed background image — section acts as a viewport cutout -->
+	<div class="why__image-full" style={`background-image: url('${bgUrl}')`} aria-hidden="true"></div>
 
 	<!-- Two-column content below -->
 	<hr />
@@ -60,27 +49,19 @@ const heroFallback = 'https://images.pexels.com/photos/2253275/pexels-photo-2253
 
 <style>
 	.why {
-		overflow: hidden;
 		padding-top: 0;
 		padding-bottom: 0;
 	}
 
-	/* Full-bleed tall image */
+	/* Section acts as a viewport cutout; image is pinned in place */
 	.why__image-full {
 		width: 100%;
 		height: 65vh;
 		min-height: 420px;
-		overflow: hidden;
-	}
-
-	.why__image-full img {
-		width: 100%;
-		height: calc(100% + 400px);
-		margin-top: -200px;
-		object-fit: cover;
-		object-position: center;
-		display: block;
-		will-change: transform;
+		background-attachment: fixed;
+		background-size: cover;
+		background-position: center;
+		background-repeat: no-repeat;
 	}
 
 	/* Two-column text section */
@@ -153,35 +134,3 @@ const heroFallback = 'https://images.pexels.com/photos/2253275/pexels-photo-2253
 	}
 </style>
 
-<script>
-	const section = document.getElementById('why-choose');
-	const img = section?.querySelector('.why__image-full img') as HTMLImageElement | null;
-
-	const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	const isMobile = window.innerWidth < 768;
-
-	if (section && img && !prefersReducedMotion && !isMobile) {
-		let ticking = false;
-
-		function updateParallax() {
-			const rect = section.getBoundingClientRect();
-			const sectionCenter = rect.top + rect.height / 2;
-			const viewCenter = window.innerHeight / 2;
-			// Clamp to ±200px — matches the extra image overflow so the
-			// background is never exposed at either edge.
-			const raw = (sectionCenter - viewCenter) * 0.25;
-			const offset = Math.max(-200, Math.min(200, raw));
-			img.style.transform = `translateY(${offset}px)`;
-			ticking = false;
-		}
-
-		window.addEventListener('scroll', () => {
-			if (!ticking) {
-				requestAnimationFrame(updateParallax);
-				ticking = true;
-			}
-		}, { passive: true });
-
-		updateParallax();
-	}
-</script>
