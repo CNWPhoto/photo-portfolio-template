@@ -75,8 +75,8 @@ const heroFallback = 'https://images.pexels.com/photos/2253275/pexels-photo-2253
 
 	.why__image-full img {
 		width: 100%;
-		height: calc(100% + 140px);
-		margin-top: -70px;
+		height: calc(100% + 400px);
+		margin-top: -200px;
 		object-fit: cover;
 		object-position: center;
 		display: block;
@@ -167,7 +167,10 @@ const heroFallback = 'https://images.pexels.com/photos/2253275/pexels-photo-2253
 			const rect = section.getBoundingClientRect();
 			const sectionCenter = rect.top + rect.height / 2;
 			const viewCenter = window.innerHeight / 2;
-			const offset = (sectionCenter - viewCenter) * 0.25;
+			// Clamp to ±200px — matches the extra image overflow so the
+			// background is never exposed at either edge.
+			const raw = (sectionCenter - viewCenter) * 0.25;
+			const offset = Math.max(-200, Math.min(200, raw));
 			img.style.transform = `translateY(${offset}px)`;
 			ticking = false;
 		}
