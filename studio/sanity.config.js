@@ -57,7 +57,7 @@ export default defineConfig({
                     singleton(S, 'welcomeSection', 'Welcome Section', 'welcomeSection'),
                     S.documentTypeListItem('testimonial').title('Testimonials Section'),
                     singleton(S, 'featuredSection', 'Featured Section', 'featuredSection'),
-                    singleton(S, 'processSection', 'Process', 'processSection'),
+                    singleton(S, 'processSection', 'Process Section', 'processSection'),
                   ]),
               ),
 
