@@ -59,6 +59,7 @@ export default defineConfig({
                     singleton(S, 'featuredSection', 'Featured Section', 'featuredSection'),
                     singleton(S, 'processSection', 'Process Section', 'processSection'),
                     singleton(S, 'soloHeroImage', 'Solo Hero Image', 'soloHeroImage'),
+                    singleton(S, 'whyChooseSection', 'Why Choose Section', 'whyChooseSection'),
                   ]),
               ),
 
