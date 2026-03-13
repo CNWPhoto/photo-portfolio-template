@@ -1,6 +1,12 @@
 ---
-import { siteConfig } from '../config';
 const { theme = 'classic-cream', siteName = 'Pet Photography' } = Astro.props;
+
+const _footerRes = await fetch(
+  `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ newsletterEmbed }`)}`,
+  { cache: 'no-store' }
+);
+const { result: footerData } = await _footerRes.json();
+const newsletterEmbed = footerData?.newsletterEmbed || '';
 const year = new Date().getFullYear();
 const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253275'];
 ---
@@ -36,7 +42,7 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 			</ul>
 		</div>
 
-		{siteConfig.newsletterEmbed && (
+		{newsletterEmbed && (
 			<div class="footer__col">
 				<p class="footer__col-label">Newsletter</p>
 				<Fragment set:html={siteConfig.newsletterEmbed} />
