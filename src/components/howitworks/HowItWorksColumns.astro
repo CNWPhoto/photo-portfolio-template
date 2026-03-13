@@ -1,19 +1,24 @@
 ---
-const { theme } = Astro.props;
+const { processSection, theme } = Astro.props;
 
-// TODO:NICHE — step body copy references dogs/treats; update for your niche
+// TODO:NICHE — fallback step copy references dogs/treats; update for your niche
+const heading = processSection?.heading || 'Dog Photography Sessions'; // TODO:NICHE
+const tagline  = processSection?.tagline  || 'Simple and relaxed sessions you and your dog will love.'; // TODO:NICHE
+const ctaText  = processSection?.ctaText  || 'Learn How it Works';
+const ctaLink  = processSection?.ctaLink  || '#';
+
 const steps = [
 	{
-		label: 'Reach Out',
-		body: "Tell me about your dog — their personality, their quirks, what makes them uniquely them. We'll talk through location options, timing, and everything that will make your session perfect.", // TODO:NICHE
+		label: processSection?.step1Title || 'Reach Out', // TODO:NICHE
+		body:  processSection?.step1Body  || "Tell me about your dog — their personality, their quirks, what makes them uniquely them. We'll talk through location options, timing, and everything that will make your session perfect.", // TODO:NICHE
 	},
 	{
-		label: 'Your Session',
-		body: 'Sessions are completely play-based and led by your dog. There are no forced poses, no stiff backdrops — just natural moments, beautiful light, and a whole lot of treats.', // TODO:NICHE
+		label: processSection?.step2Title || 'Your Session', // TODO:NICHE
+		body:  processSection?.step2Body  || 'Sessions are completely play-based and led by your dog. There are no forced poses, no stiff backdrops — just natural moments, beautiful light, and a whole lot of treats.', // TODO:NICHE
 	},
 	{
-		label: 'The Images',
-		body: 'Within three weeks, your private online gallery arrives. Choose your favorites for fine art prints, heirloom albums, and high-resolution digital downloads.',
+		label: processSection?.step3Title || 'The Images', // TODO:NICHE
+		body:  processSection?.step3Body  || 'Within three weeks, your private online gallery arrives. Choose your favorites for fine art prints, heirloom albums, and high-resolution digital downloads.',
 	},
 ];
 ---
@@ -22,11 +27,8 @@ const steps = [
 	<hr />
 	<div class="hcols__inner">
 		<div class="hcols__header">
-			{/* TODO:NICHE — heading and subheading reference dogs */}
-			<h2 class="hcols__heading">Dog Photography Sessions</h2>
-			<p class="hcols__sub">
-				Simple and relaxed sessions you and your dog will <em>love.</em>
-			</p>
+				<h2 class="hcols__heading">{heading}</h2>
+			<p class="hcols__sub">{tagline}</p>
 		</div>
 
 		<div class="hcols__steps">
@@ -41,7 +43,7 @@ const steps = [
 		</div>
 
 		<div class="hcols__footer">
-			<a href="#" class="hcols__link">Learn How it Works &rarr;</a>
+			<a href={ctaLink} class="hcols__link">{ctaText} &rarr;</a>
 		</div>
 	</div>
 </section>
