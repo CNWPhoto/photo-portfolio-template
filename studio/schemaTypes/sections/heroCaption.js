@@ -3,6 +3,11 @@ export default {
   title: 'Homepage Hero Caption',
   type: 'document',
   __experimental_actions: ['create', 'update', 'publish'],
+  preview: {
+    prepare() {
+      return {title: 'Hero Caption (H1 + Tagline)'}
+    },
+  },
   fields: [
     {
       name: 'nicheKeyword',

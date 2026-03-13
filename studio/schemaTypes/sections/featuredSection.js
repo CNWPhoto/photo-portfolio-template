@@ -3,6 +3,11 @@ export default {
   title: 'Featured Section',
   type: 'document',
   __experimental_actions: ['create', 'update', 'publish'],
+  preview: {
+    prepare() {
+      return {title: 'Featured Section'}
+    },
+  },
   fields: [
     {
       name: 'imageVertical',

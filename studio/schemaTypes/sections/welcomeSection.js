@@ -3,6 +3,11 @@ export default {
   title: 'Welcome Section',
   type: 'document',
   __experimental_actions: ['create', 'update', 'publish'], // singleton — create allowed for first-time init; structure builder prevents duplicates
+  preview: {
+    prepare() {
+      return {title: 'Welcome Section'}
+    },
+  },
   fields: [
     {
       name: 'eyebrow',
