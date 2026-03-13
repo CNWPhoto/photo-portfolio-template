@@ -51,21 +51,20 @@ const ctaText = welcomeSection?.ctaText || '';
 	.isplit {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		height: 550px;
+		min-height: 550px;
 		padding: 0;
 		border-top: 1px solid var(--border);
 	}
 
 	.isplit__image {
 		overflow: hidden;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 
 	.isplit__image img {
+		width: 100%;
 		height: 100%;
-		width: auto;
+		object-fit: cover;
+		object-position: center;
 		display: block;
 	}
 
