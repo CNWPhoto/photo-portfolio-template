@@ -1,5 +1,5 @@
 ---
-const { welcomeSection, urlFor, theme } = Astro.props;
+const { welcomeSection, urlFor, theme, overrides } = Astro.props;
 
 // TODO:NICHE — fallback photo and text are dog/pet-specific; replace for your niche
 const photoSrc =
@@ -14,7 +14,16 @@ const bodySecondary = welcomeSection?.bodySecondary || 'Whether you\'re celebrat
 const ctaText = welcomeSection?.ctaText || '';
 ---
 
-<section class="isplit" id="about" data-theme={theme || undefined}>
+<section
+	class="isplit"
+	id="about"
+	data-theme={theme || undefined}
+	style={[
+		overrides?.isplitBodySize ? `--isplit-body-size: ${overrides.isplitBodySize}` : '',
+		overrides?.isplitEyebrowSize ? `--isplit-eyebrow-size: ${overrides.isplitEyebrowSize}` : '',
+		overrides?.isplitLinkSize ? `--isplit-link-size: ${overrides.isplitLinkSize}` : '',
+	].filter(Boolean).join('; ') || undefined}
+>
 	<div class="isplit__content">
 		<div class="isplit__text-wrap">
 			{eyebrow && <p class="isplit__eyebrow">{eyebrow}</p>}
@@ -66,7 +75,7 @@ const ctaText = welcomeSection?.ctaText || '';
 	.isplit__eyebrow {
 		font-family: var(--font-sans);
 		font-style: normal;
-		font-size: 0.65rem;
+		font-size: var(--isplit-eyebrow-size, 0.65rem);
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
 		color: var(--accent);
@@ -75,7 +84,7 @@ const ctaText = welcomeSection?.ctaText || '';
 
 	.isplit__body {
 		font-style: italic;
-		font-size: 1rem;
+		font-size: var(--isplit-body-size, 1rem);
 		line-height: 1.9;
 		color: var(--text);
 		margin-bottom: 1.5rem;
@@ -89,7 +98,7 @@ const ctaText = welcomeSection?.ctaText || '';
 	.isplit__link {
 		display: inline-block;
 		font-style: normal;
-		font-size: 0.875rem;
+		font-size: var(--isplit-link-size, 0.875rem);
 		letter-spacing: 0.05em;
 		color: var(--accent);
 		text-decoration: none;

@@ -1,5 +1,5 @@
 ---
-const { heroImages, urlFor, theme } = Astro.props;
+const { heroImages, urlFor, theme, overrides } = Astro.props;
 
 // TODO:NICHE — fallback hero images are dog photos; swap Pexels IDs and alt text for your niche
 const fallbackImages = [
@@ -19,7 +19,14 @@ const images =
 		: fallbackImages;
 ---
 
-<section class="hero" data-theme={theme || undefined}>
+<section
+	class="hero"
+	data-theme={theme || undefined}
+	style={[
+		overrides?.heroHeadingSize ? `--hero-heading-size: ${overrides.heroHeadingSize}` : '',
+		overrides?.heroSubSize ? `--hero-sub-size: ${overrides.heroSubSize}` : '',
+	].filter(Boolean).join('; ') || undefined}
+>
 	<div class="hero__viewport">
 		<div class="hero__track" id="heroTrack">
 			{images.map((img) => (
@@ -112,7 +119,7 @@ const images =
 	}
 
 	.hero__heading {
-		font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+		font-size: var(--hero-heading-size, clamp(2.5rem, 5.5vw, 4.25rem));
 		color: var(--text);
 		margin-bottom: 1.25rem;
 		letter-spacing: -0.01em;
@@ -121,7 +128,7 @@ const images =
 	.hero__sub {
 		font-family: var(--font-sans);
 		font-style: normal;
-		font-size: 0.75rem;
+		font-size: var(--hero-sub-size, 0.75rem);
 		letter-spacing: 0.22em;
 		text-transform: uppercase;
 		color: var(--muted);

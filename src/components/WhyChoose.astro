@@ -1,8 +1,16 @@
 ---
-const { theme } = Astro.props;
+const { theme, overrides } = Astro.props;
 ---
 
-<section class="why" id="why-choose" data-theme={theme || undefined}>
+<section
+	class="why"
+	id="why-choose"
+	data-theme={theme || undefined}
+	style={[
+		overrides?.whyHeadingSize ? `--why-heading-size: ${overrides.whyHeadingSize}` : '',
+		overrides?.whyBodySize ? `--why-body-size: ${overrides.whyBodySize}` : '',
+	].filter(Boolean).join('; ') || undefined}
+>
 	<!-- Full-bleed image -->
 	<div class="why__image-full">
 		<img
@@ -73,7 +81,7 @@ const { theme } = Astro.props;
 	}
 
 	.why__heading {
-		font-size: clamp(2rem, 4vw, 3.25rem);
+		font-size: var(--why-heading-size, clamp(2rem, 4vw, 3.25rem));
 		color: var(--text);
 		line-height: 1.18;
 		letter-spacing: -0.01em;
@@ -85,7 +93,7 @@ const { theme } = Astro.props;
 
 	.why__body {
 		font-style: normal;
-		font-size: 1.0625rem;
+		font-size: var(--why-body-size, 1.0625rem);
 		line-height: 1.8;
 		color: var(--muted);
 		margin-bottom: 1.5rem;

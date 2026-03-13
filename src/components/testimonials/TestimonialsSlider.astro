@@ -1,5 +1,5 @@
 ---
-const { testimonials: sanityTestimonials, urlFor, theme } = Astro.props;
+const { testimonials: sanityTestimonials, urlFor, theme, overrides } = Astro.props;
 
 // TODO:NICHE — fallback testimonials reference dogs; update for your niche
 const fallback = [
@@ -36,7 +36,12 @@ const testimonials =
 		: fallback;
 ---
 
-<section class="tslider" id="testimonials" data-theme={theme || undefined}>
+<section
+	class="tslider"
+	id="testimonials"
+	data-theme={theme || undefined}
+	style={overrides?.tsliderQuoteSize ? `--tslider-quote-size: ${overrides.tsliderQuoteSize}` : undefined}
+>
 	<div class="tslider__inner">
 		<div class="tslider__image-col">
 			<div class="tslider__image-wrap">
@@ -109,7 +114,7 @@ const testimonials =
 
 	.tslider__quote {
 		font-style: italic;
-		font-size: 1.25rem;
+		font-size: var(--tslider-quote-size, 1.25rem);
 		line-height: 1.8;
 		color: var(--text);
 		margin: 0 0 2rem;
