@@ -22,12 +22,13 @@ const _layoutQuery = encodeURIComponent(
 	`*[_type == "homepageSettings"][0]{introVariant, testimonialsVariant, portfolioPreviewVariant, howItWorksVariant}`
 );
 
-const [heroSlider, heroCaption, welcomeSection, featuredSection, processSection, testimonials, faqs, pageSections, layoutSettings, siteSettings] = await Promise.all([
+const [heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, testimonials, faqs, pageSections, layoutSettings, siteSettings] = await Promise.all([
 	sanityClient.fetch(`*[_type == "heroSlider" && _id == "heroSlider"][0].images`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "heroCaption" && _id == "heroCaption"][0]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "welcomeSection" && _id == "welcomeSection"][0]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "featuredSection" && _id == "featuredSection"][0]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "processSection" && _id == "processSection"][0]`, {}, { cache: 'no-store' }),
+	sanityClient.fetch(`*[_type == "soloHeroImage" && _id == "soloHeroImage"][0]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "testimonial"] | order(order asc)`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "faq"] | order(order asc)`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "pageSection"]`, {}, { cache: 'no-store' }),
@@ -77,7 +78,7 @@ const howItWorksVariant   = layoutSettings?.howItWorksVariant      || 'columns';
 			: <HowItWorksColumns {processSection} theme={sectionTheme('howItWorks', 'warm-studio')} />
 		}
 
-		<WhyChoose theme="dark-editorial" {overrides} />
+		<WhyChoose theme="dark-editorial" {soloHeroImage} {urlFor} {overrides} />
 		<FAQs faqs={faqs} {overrides} />
 	</main>
 </Layout>

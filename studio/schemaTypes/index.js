@@ -10,5 +10,6 @@ import heroSlider from './sections/heroSlider'
 import heroCaption from './sections/heroCaption'
 import featuredSection from './sections/featuredSection'
 import processSection from './sections/processSection'
+import soloHeroImage from './sections/soloHeroImage'
 
-export const schemaTypes = [siteSettings, homepageSettings, heroSlider, heroCaption, welcomeSection, featuredSection, processSection, testimonial, portfolio, blogPost, faq, pageSection]
+export const schemaTypes = [siteSettings, homepageSettings, heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, testimonial, portfolio, blogPost, faq, pageSection]

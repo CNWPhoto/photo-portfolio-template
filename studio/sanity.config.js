@@ -58,6 +58,7 @@ export default defineConfig({
                     S.documentTypeListItem('testimonial').title('Testimonials Section'),
                     singleton(S, 'featuredSection', 'Featured Section', 'featuredSection'),
                     singleton(S, 'processSection', 'Process Section', 'processSection'),
+                    singleton(S, 'soloHeroImage', 'Solo Hero Image', 'soloHeroImage'),
                   ]),
               ),
 

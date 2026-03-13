@@ -1,5 +1,11 @@
 ---
-const { theme, overrides } = Astro.props;
+import { sanityImg, sanitySrcset } from '../utils/imageUrl';
+
+const { soloHeroImage, urlFor, theme, overrides } = Astro.props;
+
+const heroBase = soloHeroImage?.image && urlFor ? urlFor(soloHeroImage.image).url() : null;
+const heroAlt  = soloHeroImage?.image?.alt ?? 'Dog running freely in an open field'; // TODO:NICHE
+const heroFallback = 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=2000';
 ---
 
 <section
@@ -13,11 +19,16 @@ const { theme, overrides } = Astro.props;
 >
 	<!-- Full-bleed image -->
 	<div class="why__image-full">
-		<img
-			src="https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop"
-			alt="Dog running freely in an open field"
-			loading="lazy"
-		/>
+		{heroBase
+			? <img
+					src={sanityImg(heroBase, 2000)}
+					srcset={sanitySrcset(heroBase, [900, 1400, 2000, 2800])}
+					sizes="100vw"
+					alt={heroAlt}
+					loading="lazy"
+				/>
+			: <img src={heroFallback} alt={heroAlt} loading="lazy" />
+		}
 	</div>
 
 	<!-- Two-column content below -->
