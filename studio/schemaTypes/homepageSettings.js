@@ -5,6 +5,11 @@ export default {
   title: 'Homepage Layout',
   type: 'document',
   __experimental_actions: ['update', 'publish'], // singleton — no create/delete
+  preview: {
+    prepare() {
+      return {title: 'Homepage Layout'}
+    },
+  },
   fields: [
     {
       name: 'introVariant',
