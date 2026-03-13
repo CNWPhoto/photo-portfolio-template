@@ -32,7 +32,7 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 
 		<div class="footer__col">
 			<p class="footer__col-label">Menu</p>
-			<ul class="footer__list">
+			<ul class="footer__list footer__list--2col">
 				<li><a href="/">Home</a></li>
 				<li><a href="/about">About</a></li>
 				<li><a href="/experience">Experience</a></li>
@@ -147,6 +147,13 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
+	}
+
+	.footer__list--2col {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		column-gap: 1.5rem;
+		row-gap: 0.75rem;
 	}
 
 	.footer__list a {
