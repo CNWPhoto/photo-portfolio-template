@@ -44,6 +44,30 @@ export default {
       description: 'Studio or photographer name used in the nav logo, footer, and page title',
     },
     {
+      name: 'photographerName',
+      title: 'Photographer Name',
+      type: 'string',
+      description: 'Your display name shown in the About page and site copy.',
+    },
+    {
+      name: 'location',
+      title: 'Location',
+      type: 'string',
+      description: 'City or region shown in site copy (e.g. "Denver, CO" or "Pacific Northwest").',
+    },
+    {
+      name: 'tagline',
+      title: 'Tagline',
+      type: 'string',
+      description: 'A short phrase shown in the hero (e.g. "Capturing the bond between dogs and their people").',
+    },
+    {
+      name: 'specialty',
+      title: 'Specialty',
+      type: 'string',
+      description: 'What you photograph (e.g. "pet photography", "newborn & family", "wedding"). Used in page copy and SEO.',
+    },
+    {
       name: 'logoType',
       title: 'Logo Type',
       type: 'string',

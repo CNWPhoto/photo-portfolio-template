@@ -22,12 +22,11 @@ const _layoutQuery = encodeURIComponent(
 	`*[_type == "homepageSettings"][0]{introVariant, testimonialsVariant, portfolioPreviewVariant, howItWorksVariant}`
 );
 
-const [photographer, heroSlider, welcomeSection, testimonials, galleryImages, faqs, pageSections, layoutSettings] = await Promise.all([
-	sanityClient.fetch(`*[_type == "photographer"][0]{ name, location, tagline, bio, specialty, approachText, profilePhoto }`, {}, { cache: 'no-store' }),
+const [heroSlider, welcomeSection, featuredSection, testimonials, faqs, pageSections, layoutSettings] = await Promise.all([
 	sanityClient.fetch(`*[_type == "heroSlider" && _id == "heroSlider"][0].images`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "welcomeSection" && _id == "welcomeSection"][0]`, {}, { cache: 'no-store' }),
+	sanityClient.fetch(`*[_type == "featuredSection" && _id == "featuredSection"][0]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "testimonial"] | order(order asc)`, {}, { cache: 'no-store' }),
-	sanityClient.fetch(`*[_type == "portfolio"][0].images[0..5]`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "faq"] | order(order asc)`, {}, { cache: 'no-store' }),
 	sanityClient.fetch(`*[_type == "pageSection"]`, {}, { cache: 'no-store' }),
 	fetch(`${SANITY_API}?query=${_layoutQuery}`, { cache: 'no-store' }).then(r => r.json()).then(d => d.result),
@@ -63,8 +62,8 @@ const howItWorksVariant   = layoutSettings?.howItWorksVariant      || 'columns';
 
 		<!-- Portfolio preview -->
 		{portfolioVariant === 'masonry'
-			? <PortfolioMasonry galleryImages={galleryImages} {urlFor} theme={sectionTheme('portfolio')} />
-			: <PortfolioGrid    galleryImages={galleryImages} {urlFor} theme={sectionTheme('portfolio')} />
+			? <PortfolioMasonry {featuredSection} {urlFor} theme={sectionTheme('portfolio')} />
+			: <PortfolioGrid    {featuredSection} {urlFor} theme={sectionTheme('portfolio')} />
 		}
 
 		<!-- How It Works -->

@@ -1,4 +1,3 @@
-import photographer from './photographer'
 import testimonial from './testimonial'
 import portfolio from './portfolio'
 import blogPost from './blogPost'
@@ -8,5 +7,6 @@ import siteSettings from './siteSettings'
 import homepageSettings from './homepageSettings'
 import welcomeSection from './sections/welcomeSection'
 import heroSlider from './sections/heroSlider'
+import featuredSection from './sections/featuredSection'
 
-export const schemaTypes = [siteSettings, homepageSettings, photographer, heroSlider, welcomeSection, testimonial, portfolio, blogPost, faq, pageSection]
+export const schemaTypes = [siteSettings, homepageSettings, heroSlider, welcomeSection, featuredSection, testimonial, portfolio, blogPost, faq, pageSection]
