@@ -26,7 +26,7 @@ import Layout from '../layouts/Layout.astro';
 			<div class="contact__inner">
 
 				<div class="contact__info">
-					<h2 class="contact__heading">I can't wait to meet you and your pup(s)!</h2>{/* TODO:NICHE */}
+					<h2 class="contact__heading reveal reveal-delay-1">I can't wait to meet you and your pup(s)!</h2>{/* TODO:NICHE */}
 					<p class="contact__body">
 						If you'd rather email directly, you can reach me at{' '}
 						<a href="mailto:yourname@domain.com" class="contact__link">yourname@domain.com</a>{/* TODO:NICHE */}
@@ -36,7 +36,7 @@ import Layout from '../layouts/Layout.astro';
 				</div>
 
 				<form class="contact__form" method="POST" action="#">
-					<div class="contact__field">
+					<div class="contact__field reveal reveal-delay-2">
 						<label class="contact__label" for="name">Full Name</label>
 						<input
 							class="contact__input"
@@ -47,7 +47,7 @@ import Layout from '../layouts/Layout.astro';
 							required
 						/>
 					</div>
-					<div class="contact__field">
+					<div class="contact__field reveal reveal-delay-3">
 						<label class="contact__label" for="email">Email</label>
 						<input
 							class="contact__input"
@@ -58,7 +58,7 @@ import Layout from '../layouts/Layout.astro';
 							required
 						/>
 					</div>
-					<div class="contact__field">
+					<div class="contact__field reveal reveal-delay-4">
 						<label class="contact__label" for="message">Message</label>
 						<textarea
 							class="contact__textarea"
@@ -69,7 +69,7 @@ import Layout from '../layouts/Layout.astro';
 							required
 						></textarea>
 					</div>
-					<button class="contact__submit" type="submit">Send Message &rarr;</button>
+					<button class="contact__submit reveal reveal-delay-5" type="submit">Send Message &rarr;</button>
 				</form>
 
 			</div>
@@ -239,13 +239,15 @@ import Layout from '../layouts/Layout.astro';
 		text-transform: uppercase;
 		color: var(--text);
 		cursor: pointer;
-		transition: background 0.2s, color 0.2s;
+		transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
 		margin-top: 0.5rem;
 	}
 
 	.contact__submit:hover {
 		background: var(--text);
 		color: var(--bg);
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
 	}
 
 	/* ══ Responsive ══ */

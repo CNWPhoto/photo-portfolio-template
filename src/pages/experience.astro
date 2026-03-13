@@ -55,8 +55,8 @@ const faqs = [
 		<!-- ══ SECTION 2: Intro Text ══ -->
 		<section class="intro" data-theme="classic-cream">
 			<div class="intro__inner">
-				<p class="intro__body">Every session is designed to feel relaxed, subject-led, and pressure-free. From planning your session to choosing your final images, you'll be guided through each step so the experience feels easy and enjoyable.</p>{/* TODO:NICHE */}
-				<p class="intro__body intro__body--bold">There's no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.</p>{/* TODO:NICHE */}
+				<p class="intro__body reveal reveal-delay-1">Every session is designed to feel relaxed, subject-led, and pressure-free. From planning your session to choosing your final images, you'll be guided through each step so the experience feels easy and enjoyable.</p>{/* TODO:NICHE */}
+				<p class="intro__body intro__body--bold reveal reveal-delay-2">There's no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.</p>{/* TODO:NICHE */}
 			</div>
 		</section>
 
@@ -64,7 +64,7 @@ const faqs = [
 		<section class="sessions" data-theme="warm-studio">
 			<hr />
 			<div class="sessions__inner">
-				<div class="sessions__img-wrap">
+				<div class="sessions__img-wrap reveal-fade reveal-delay-1">
 					<img
 						src="https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=900&h=900&fit=crop"
 						alt="Session photograph in golden afternoon light"
@@ -72,7 +72,7 @@ const faqs = [
 					/>
 				</div>
 				<div class="sessions__content">
-					<h2 class="sessions__heading">Sessions</h2>
+					<h2 class="sessions__heading reveal reveal-delay-1">Sessions</h2>
 					<p class="sessions__sub">The session fee covers the time, care, and preparation that go into creating your photography experience.</p>{/* TODO:NICHE */}
 					<p class="sessions__includes"><em><strong>This includes:</strong></em></p>
 					<ul class="sessions__list">
@@ -90,7 +90,7 @@ const faqs = [
 		<section class="artwork" data-theme="classic-cream">
 			<hr />
 			<div class="artwork__inner">
-				<div class="artwork__content">
+				<div class="artwork__content reveal reveal-delay-1">
 					<h2 class="artwork__heading">Artwork / Images</h2>
 					<p class="artwork__body">After your gallery is delivered, you'll choose the images you'd like to keep — whether that's a small digital collection or a fully curated set of wall artwork. There's no pressure to decide on the day; you'll have time to sit with your gallery and choose what feels right.</p>{/* TODO:NICHE */}
 					<p class="artwork__includes"><em><strong>Options may include:</strong></em></p>
@@ -102,7 +102,7 @@ const faqs = [
 					</ul>
 					<p class="artwork__statement"><strong>You're never locked into a one-size-fits-all package — selections are flexible and based on what matters most to you.</strong></p>{/* TODO:NICHE */}
 				</div>
-				<div class="artwork__img-wrap">
+				<div class="artwork__img-wrap reveal-fade reveal-delay-2">
 					<img
 						src="https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=800"
 						alt="Candid portrait session in soft natural light"
@@ -123,10 +123,10 @@ const faqs = [
 			/>
 			<div class="next__overlay" aria-hidden="true"></div>
 			<div class="next__box">
-				<h2 class="next__heading">Next Steps</h2>
-				<p class="next__body">Ready to get started? Reach out and tell me a little about yourself and what you're hoping to create. I'll be in touch within 48 hours to arrange a quick call and start planning your session.</p>{/* TODO:NICHE */}
-				<p class="next__body">Sessions fill up quickly, especially during spring and autumn — so if you have a time of year in mind, it's worth reaching out sooner rather than later.</p>{/* TODO:NICHE */}
-				<a href="/contact" class="next__btn">Get In Touch</a>
+				<h2 class="next__heading reveal reveal-delay-1">Next Steps</h2>
+				<p class="next__body reveal reveal-delay-2">Ready to get started? Reach out and tell me a little about yourself and what you're hoping to create. I'll be in touch within 48 hours to arrange a quick call and start planning your session.</p>{/* TODO:NICHE */}
+				<p class="next__body reveal reveal-delay-3">Sessions fill up quickly, especially during spring and autumn — so if you have a time of year in mind, it's worth reaching out sooner rather than later.</p>{/* TODO:NICHE */}
+				<a href="/contact" class="next__btn reveal reveal-delay-4">Get In Touch</a>
 			</div>
 		</section>
 
@@ -139,7 +139,7 @@ const faqs = [
 				</div>
 				<div class="faqs__list">
 					{faqs.map((faq, i) => (
-						<div class="faqs__item" id={`faq-${i}`}>
+						<div class={`faqs__item reveal reveal-delay-${Math.min(i + 1, 5)}`} id={`faq-${i}`}>
 							<button
 								class="faqs__question"
 								aria-expanded="false"
@@ -488,12 +488,14 @@ const faqs = [
 		text-decoration: none;
 		border: 1px solid var(--text);
 		padding: 0.7rem 1.75rem;
-		transition: background 0.2s, color 0.2s;
+		transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
 	}
 
 	.next__btn:hover {
 		background: var(--text);
 		color: var(--bg);
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
 	}
 
 	/* ══ SECTION 6: FAQs ══ */

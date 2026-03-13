@@ -336,4 +336,44 @@ const logoImage  = settings?.logoImage  ?? null;
 		.reveal, .reveal-fade { opacity: 1 !important; transform: none !important; }
 		.reveal.revealed, .reveal-fade.revealed { animation: none !important; }
 	}
+
+	/* ══════════════════════════════════════════════════
+	   GLOBAL BUTTON & LINK HOVER INTERACTIONS
+	══════════════════════════════════════════════════ */
+
+	/* Lift + shadow for primary CTA buttons */
+	.why__cta, .pgrid__cta, .cta__btn, .next__btn {
+		transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
+	}
+	.why__cta:hover, .pgrid__cta:hover, .cta__btn:hover, .next__btn:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
+	}
+
+	/* Italic/text links */
+	.hstack__link, .faqs__link, .pullquote__link, .contact__link {
+		transition: opacity 0.2s, letter-spacing 0.25s;
+	}
+	.hstack__link:hover, .faqs__link:hover, .pullquote__link:hover, .contact__link:hover {
+		opacity: 1;
+		letter-spacing: 0.04em;
+	}
+
+	/* Contact submit */
+	.contact__submit {
+		transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
+	}
+	.contact__submit:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
+	}
+
+	/* Blog post card */
+	.posts__item-inner {
+		transition: transform 0.2s, box-shadow 0.25s;
+	}
+	.posts__item-inner:hover {
+		transform: translateY(-3px);
+		box-shadow: 0 8px 24px rgba(26, 39, 68, 0.12);
+	}
 </style>

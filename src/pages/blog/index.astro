@@ -37,7 +37,7 @@ const { result: posts } = await _postsRes.json()
 				) : (
 					posts.map((post, i) => (
 						<article class={`posts__item ${i % 2 === 1 ? 'posts__item--reversed' : ''}`}>
-							<a href={`/blog/${post.slug}`} class="posts__item-inner">
+							<a href={`/blog/${post.slug}`} class={`posts__item-inner reveal reveal-delay-${Math.min(i + 1, 5)}`}>
 								<div class="posts__img-col">
 									{post.coverImage ? (
 										<img
@@ -144,6 +144,12 @@ const { result: posts } = await _postsRes.json()
 		min-height: 400px;
 		text-decoration: none;
 		color: inherit;
+		transition: transform 0.2s, box-shadow 0.25s;
+	}
+
+	.posts__item-inner:hover {
+		transform: translateY(-3px);
+		box-shadow: 0 8px 24px rgba(26, 39, 68, 0.12);
 	}
 
 	/* Reversed layout for even posts */
