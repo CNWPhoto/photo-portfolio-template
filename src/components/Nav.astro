@@ -252,46 +252,99 @@ const showImageLogo = logoType === 'image' && logoImage;
 		color: var(--accent) !important;
 	}
 
-	/* ── Responsive: swap to hamburger at 900px ── */
-	@media (max-width: 900px) {
-		.nav__inner {
-			padding: 20px 1.5rem;
-		}
+	/* ── Compact state: triggered by JS class or media-query fallback ──
+	   JS adds .nav--compact whenever the gap between logo and links
+	   drops below 50px, regardless of viewport width.
+	   The @media block below is a no-JS / very-small-screen safety net. */
 
-		/* Logo shrinks fluidly: scales with vw, capped at 2rem, min 0.9rem.
-		   flex-shrink + min-width let the flex item compress before overflowing. */
-		.nav__logo {
-			font-size: clamp(0.9rem, 4.5vw, 2rem);
-			min-width: 0;
-			flex-shrink: 1;
-			margin-right: 1rem;
-		}
+	.nav--compact .nav__inner {
+		padding: 20px 1.5rem;
+	}
 
-		.nav__links {
-			display: none;
-		}
+	/* Logo shrinks fluidly so it never crowds the hamburger button.
+	   margin-right keeps at least 1rem breathing room before the icon. */
+	.nav--compact .nav__logo {
+		font-size: clamp(0.9rem, 4.5vw, 2rem);
+		min-width: 0;
+		flex-shrink: 1;
+		margin-right: 1rem;
+	}
 
-		.nav__hamburger {
-			display: flex;
-			flex-shrink: 0;
-		}
+	.nav--compact .nav__links {
+		display: none;
+	}
 
-		.nav__overlay {
-			display: block;
-			pointer-events: none;
-		}
+	.nav--compact .nav__hamburger {
+		display: flex;
+		flex-shrink: 0;
+	}
 
-		.nav__overlay.nav__overlay--open {
-			pointer-events: auto;
-		}
+	.nav--compact .nav__overlay {
+		display: block;
+		pointer-events: none;
+	}
+
+	.nav--compact .nav__overlay.nav__overlay--open {
+		pointer-events: auto;
+	}
+
+	/* Hard fallback if JS is unavailable */
+	@media (max-width: 768px) {
+		.nav__inner    { padding: 20px 1.5rem; }
+		.nav__logo     { font-size: clamp(0.9rem, 4.5vw, 2rem); min-width: 0; flex-shrink: 1; margin-right: 1rem; }
+		.nav__links    { display: none; }
+		.nav__hamburger { display: flex; flex-shrink: 0; }
+		.nav__overlay  { display: block; pointer-events: none; }
+		.nav__overlay.nav__overlay--open { pointer-events: auto; }
 	}
 </style>
 
 <script>
-	const hamburger = document.getElementById('navHamburger');
-	const overlay   = document.getElementById('navOverlay');
-	const closeBtn  = document.getElementById('navOverlayClose');
+	const navHeader = document.querySelector('.nav') as HTMLElement;
+	const hamburger = document.getElementById('navHamburger') as HTMLButtonElement;
+	const overlay   = document.getElementById('navOverlay') as HTMLElement;
+	const closeBtn  = document.getElementById('navOverlayClose') as HTMLButtonElement;
+	const logo      = navHeader.querySelector('.nav__logo') as HTMLElement;
+	const links     = navHeader.querySelector('.nav__links') as HTMLElement;
 
+	// ── Dynamic gap checker ───────────────────────────────────────────
+	// Temporarily restores desktop state (invisible) to measure the true
+	// gap between logo and nav links, then applies .nav--compact if < 50px.
+	// ResizeObserver fires before paint so there's no visible flash.
+	function checkLayout() {
+		// Snapshot current compact state, then remove it for measurement
+		const wasCompact = navHeader.classList.contains('nav--compact');
+		navHeader.classList.remove('nav--compact');
+
+		// Force links visible-but-hidden so getBoundingClientRect works
+		links.style.cssText = 'display:flex!important;visibility:hidden!important;pointer-events:none!important;';
+
+		const logoRight  = logo.getBoundingClientRect().right;
+		const linksLeft  = links.getBoundingClientRect().left;
+		const gap        = linksLeft - logoRight;
+
+		// Restore links to their natural state before deciding
+		links.style.cssText = '';
+
+		if (gap < 50) {
+			navHeader.classList.add('nav--compact');
+		}
+		// If gap >= 50, compact class stays removed (desktop layout)
+
+		// If the menu was open and we switched back to desktop, close it cleanly
+		if (wasCompact && !navHeader.classList.contains('nav--compact')) {
+			overlay.classList.remove('nav__overlay--open');
+			overlay.setAttribute('aria-hidden', 'true');
+			hamburger.setAttribute('aria-expanded', 'false');
+			document.body.style.overflow = '';
+		}
+	}
+
+	const ro = new ResizeObserver(checkLayout);
+	ro.observe(document.documentElement);
+	checkLayout(); // run immediately on load
+
+	// ── Hamburger open / close ────────────────────────────────────────
 	function openMenu() {
 		overlay.classList.add('nav__overlay--open');
 		overlay.setAttribute('aria-hidden', 'false');
@@ -311,15 +364,9 @@ const showImageLogo = logoType === 'image' && logoImage;
 	hamburger.addEventListener('click', openMenu);
 	closeBtn.addEventListener('click', closeMenu);
 
-	// Close on Escape key
 	document.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape' && overlay.classList.contains('nav__overlay--open')) {
-			closeMenu();
-		}
+		if (e.key === 'Escape' && overlay.classList.contains('nav__overlay--open')) closeMenu();
 	});
 
-	// Close when a nav link is clicked (SPA-friendly)
-	overlay.querySelectorAll('a').forEach((link) => {
-		link.addEventListener('click', closeMenu);
-	});
+	overlay.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
 </script>
