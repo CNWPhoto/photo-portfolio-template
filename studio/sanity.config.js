@@ -53,6 +53,7 @@ export default defineConfig({
                   .title('Homepage')
                   .items([
                     singleton(S, 'heroSlider', 'Homepage Top Slider', 'heroSlider'),
+                    singleton(S, 'heroCaption', 'Hero Caption (H1 + Tagline)', 'heroCaption'),
                     singleton(S, 'welcomeSection', 'Welcome Section', 'welcomeSection'),
                     S.documentTypeListItem('testimonial').title('Testimonials Section'),
                     singleton(S, 'featuredSection', 'Featured Section', 'featuredSection'),

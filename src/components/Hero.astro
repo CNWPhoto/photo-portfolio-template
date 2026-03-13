@@ -1,7 +1,10 @@
 ---
 import { sanityImg, sanitySrcset } from '../utils/imageUrl';
 
-const { heroImages, urlFor, theme, overrides } = Astro.props;
+const { heroImages, heroCaption, urlFor, theme, overrides } = Astro.props;
+
+const heading = heroCaption?.nicheKeyword || 'Denver Dog Photographer'; // TODO:NICHE
+const tagline  = heroCaption?.tagline      || 'Natural, stress-free dog portraits for your best friend.'; // TODO:NICHE
 
 // TODO:NICHE — fallback hero images are dog photos; swap Pexels IDs and alt text for your niche
 const fallbackImages = [
@@ -55,8 +58,8 @@ const images =
 	</div>
 
 	<div class="hero__caption">
-		<h1 class="hero__heading">Denver Dog Photographer</h1>
-		<p class="hero__sub">Natural, stress-free dog portraits for your best friend.</p>
+		<h1 class="hero__heading">{heading}</h1>
+		<p class="hero__sub">{tagline}</p>
 	</div>
 </section>
 

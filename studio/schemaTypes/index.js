@@ -7,6 +7,7 @@ import siteSettings from './siteSettings'
 import homepageSettings from './homepageSettings'
 import welcomeSection from './sections/welcomeSection'
 import heroSlider from './sections/heroSlider'
+import heroCaption from './sections/heroCaption'
 import featuredSection from './sections/featuredSection'
 
-export const schemaTypes = [siteSettings, homepageSettings, heroSlider, welcomeSection, featuredSection, testimonial, portfolio, blogPost, faq, pageSection]
+export const schemaTypes = [siteSettings, homepageSettings, heroSlider, heroCaption, welcomeSection, featuredSection, testimonial, portfolio, blogPost, faq, pageSection]
