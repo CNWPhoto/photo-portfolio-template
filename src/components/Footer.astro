@@ -2,11 +2,23 @@
 const { theme = 'classic-cream', siteName = 'Pet Photography' } = Astro.props;
 
 const _footerRes = await fetch(
-  `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ newsletterEmbed }`)}`,
+  `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ newsletterEmbed, menu }`)}`,
   { cache: 'no-store' }
 );
 const { result: footerData } = await _footerRes.json();
 const newsletterEmbed = footerData?.newsletterEmbed || '';
+
+// Menu links — fall back to showing all pages with default labels
+const menuDef = footerData?.menu;
+const menuLinks = [
+  { key: 'home',       href: '/',            default: 'Home' },
+  { key: 'about',      href: '/about',       default: 'About' },
+  { key: 'experience', href: '/experience',  default: 'Experience' },
+  { key: 'portfolio',  href: '/portfolio',   default: 'Portfolio' },
+  { key: 'blog',       href: '/blog',        default: 'Blog' },
+  { key: 'contact',    href: '/contact',     default: 'Contact' },
+].filter(item => menuDef ? menuDef[item.key]?.enabled !== false : true)
+ .map(item => ({ href: item.href, label: menuDef?.[item.key]?.label || item.default }));
 const year = new Date().getFullYear();
 const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253275'];
 ---
@@ -33,19 +45,16 @@ const instagramIds = ['1108099', '825949', '2253275', '825949', '1108099', '2253
 		<div class="footer__col">
 			<p class="footer__col-label">Menu</p>
 			<ul class="footer__list footer__list--2col">
-				<li><a href="/">Home</a></li>
-				<li><a href="/about">About</a></li>
-				<li><a href="/experience">Experience</a></li>
-				<li><a href="/portfolio">Portfolio</a></li>
-				<li><a href="/blog">Blog</a></li>
-				<li><a href="/contact">Contact</a></li>
+				{menuLinks.map(link => (
+					<li><a href={link.href}>{link.label}</a></li>
+				))}
 			</ul>
 		</div>
 
 		{newsletterEmbed && (
 			<div class="footer__col">
 				<p class="footer__col-label">Newsletter</p>
-				<Fragment set:html={siteConfig.newsletterEmbed} />
+				<Fragment set:html={newsletterEmbed} />
 			</div>
 		)}
 	</div>

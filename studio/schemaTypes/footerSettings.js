@@ -19,6 +19,75 @@ export default {
       hidden: true,
     },
     {
+      name: 'menu',
+      title: 'Menu Links',
+      type: 'object',
+      description: 'Control which pages appear in the footer menu and how they are labelled.',
+      options: {collapsible: true, collapsed: false},
+      fields: [
+        {
+          name: 'home',
+          title: 'Home',
+          type: 'object',
+          options: {collapsible: false},
+          fields: [
+            {name: 'enabled', title: 'Show in footer', type: 'boolean', initialValue: true},
+            {name: 'label', title: 'Label', type: 'string', placeholder: 'Home'},
+          ],
+        },
+        {
+          name: 'about',
+          title: 'About',
+          type: 'object',
+          options: {collapsible: false},
+          fields: [
+            {name: 'enabled', title: 'Show in footer', type: 'boolean', initialValue: true},
+            {name: 'label', title: 'Label', type: 'string', placeholder: 'About'},
+          ],
+        },
+        {
+          name: 'experience',
+          title: 'Experience',
+          type: 'object',
+          options: {collapsible: false},
+          fields: [
+            {name: 'enabled', title: 'Show in footer', type: 'boolean', initialValue: true},
+            {name: 'label', title: 'Label', type: 'string', placeholder: 'Experience'},
+          ],
+        },
+        {
+          name: 'portfolio',
+          title: 'Portfolio',
+          type: 'object',
+          options: {collapsible: false},
+          fields: [
+            {name: 'enabled', title: 'Show in footer', type: 'boolean', initialValue: true},
+            {name: 'label', title: 'Label', type: 'string', placeholder: 'Portfolio'},
+          ],
+        },
+        {
+          name: 'blog',
+          title: 'Blog',
+          type: 'object',
+          options: {collapsible: false},
+          fields: [
+            {name: 'enabled', title: 'Show in footer', type: 'boolean', initialValue: true},
+            {name: 'label', title: 'Label', type: 'string', placeholder: 'Blog'},
+          ],
+        },
+        {
+          name: 'contact',
+          title: 'Contact',
+          type: 'object',
+          options: {collapsible: false},
+          fields: [
+            {name: 'enabled', title: 'Show in footer', type: 'boolean', initialValue: true},
+            {name: 'label', title: 'Label', type: 'string', placeholder: 'Contact'},
+          ],
+        },
+      ],
+    },
+    {
       name: 'newsletterEmbed',
       title: 'Newsletter Embed',
       type: 'text',
