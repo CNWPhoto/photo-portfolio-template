@@ -42,7 +42,7 @@ const faqs =
 			</div>
 
 			<div class="faqs__footer reveal">
-				<a href="#" class="faqs__link">View all FAQs &rarr;</a>
+				<a href="/experience#faqs" class="faqs__link">View all FAQs &rarr;</a>
 			</div>
 		</div>
 	</div>
@@ -95,11 +95,12 @@ const faqs =
 	}
 
 	.faqs__item:first-child {
-		border-top: 1px solid var(--border);
+		border-top: none;
 	}
 
 	.faqs__question {
-		font-size: var(--faqs-question-size, 1.25rem);
+		font-size: var(--faqs-question-size, 1.5rem);
+		font-weight: 500;
 		color: var(--text);
 		margin-bottom: 1.25rem;
 		letter-spacing: -0.01em;
@@ -110,7 +111,7 @@ const faqs =
 		padding: 0 0 0 1.75rem;
 		border-left: 2px solid var(--accent);
 		font-style: normal;
-		font-size: var(--faqs-answer-size, 0.9375rem);
+		font-size: var(--faqs-answer-size, 1.125rem);
 		line-height: 1.78;
 		color: var(--muted);
 	}
