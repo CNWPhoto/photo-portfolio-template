@@ -123,20 +123,15 @@ const year = new Date().getFullYear();
 		color: var(--text);
 	}
 
-	/* Constrain all rows to site width */
-	.footer__wordmark-row,
-	.footer__cols,
-	.footer__legal {
+	/* Wordmark: constrained width, right-aligned above photo column */
+	.footer__wordmark-row {
 		max-width: 1100px;
 		margin-left: auto;
 		margin-right: auto;
-		box-sizing: border-box;
-	}
-
-	/* Wordmark: right-aligned, right padding matches photo column width */
-	.footer__wordmark-row {
-		padding: 4rem 0 0;
+		padding: 64px 3rem 0;
 		text-align: right;
+		border-bottom: none;
+		box-sizing: border-box;
 	}
 
 	.footer__wordmark {
@@ -152,11 +147,14 @@ const year = new Date().getFullYear();
 
 	/* Outer grid: left nav columns + right photo panel (always present) */
 	.footer__cols {
+		max-width: 1100px;
+		margin-left: auto;
+		margin-right: auto;
+		padding: 0 3rem;
+		box-sizing: border-box;
 		display: grid;
 		grid-template-columns: 1fr 280px;
 		align-items: start;
-		padding-left: 0;
-		padding-right: 0;
 	}
 
 	/* Left: menu pinned to 275px, remaining space for social/newsletter */
@@ -170,7 +168,7 @@ const year = new Date().getFullYear();
 	}
 
 	.footer__col {
-		padding: 3rem 2rem 3.5rem 0;
+		padding: 48px 2rem 56px 0;
 	}
 
 	.footer__col:last-child {
@@ -232,7 +230,7 @@ const year = new Date().getFullYear();
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--bg-alt, color-mix(in srgb, var(--bg) 85%, var(--text)));
+		background: var(--bg-alt);
 	}
 
 	.footer__photo-col img {
@@ -253,11 +251,14 @@ const year = new Date().getFullYear();
 
 	/* Legal row */
 	.footer__legal {
+		max-width: 1100px;
+		margin-left: auto;
+		margin-right: auto;
+		padding: 24px 3rem;
+		box-sizing: border-box;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding-top: 1.5rem;
-		padding-bottom: 1.5rem;
 		font-family: var(--font-sans);
 		font-size: 0.8125rem;
 		font-style: normal;
@@ -277,15 +278,17 @@ const year = new Date().getFullYear();
 	}
 
 	@media (max-width: 900px) {
-		.footer__wordmark-row,
-		.footer__cols,
-		.footer__legal {
+		.footer__wordmark-row {
+			padding: 2.5rem 1.5rem 0;
+		}
+
+		.footer__cols {
 			padding-left: 1.5rem;
 			padding-right: 1.5rem;
 		}
 
-		.footer__wordmark-row {
-			padding-top: 2.5rem;
+		.footer__legal {
+			padding: 1.5rem;
 		}
 
 		.footer__cols {
