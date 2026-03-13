@@ -8,10 +8,11 @@ const photoBase = welcomeSection?.image && urlFor ? urlFor(welcomeSection.image)
 const photoFallback = 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=1600';
 const photoAlt = welcomeSection?.image?.alt ?? 'Dog portrait in natural light'; // TODO:NICHE
 
-const eyebrow = welcomeSection?.eyebrow || '';
+const eyebrow = welcomeSection?.eyebrow || 'Every Session is Unique';
 const bodyText = welcomeSection?.body || 'Dog photography sessions that focus on personality, connection, and comfort.'; // TODO:NICHE
 const bodySecondary = welcomeSection?.bodySecondary || 'Whether you\'re celebrating a new puppy or capturing your dog just as they are now, each session is designed to feel relaxed and fun—for both of you.'; // TODO:NICHE
-const ctaText = welcomeSection?.ctaText || '';
+const ctaText = welcomeSection?.ctaText || 'See the Experience →';
+const ctaLink = welcomeSection?.ctaLink || '/experience';
 ---
 
 <section
@@ -29,7 +30,7 @@ const ctaText = welcomeSection?.ctaText || '';
 			{eyebrow && <p class="isplit__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
 			<p class="isplit__body reveal reveal-delay-2">{bodyText}</p>
 			<p class="isplit__body reveal reveal-delay-3">{bodySecondary}</p>
-			{ctaText && <a class="isplit__link reveal reveal-delay-4" href="/experience">{ctaText}</a>}
+			{ctaText && <a class="isplit__link reveal reveal-delay-4" href={ctaLink}>{ctaText}</a>}
 		</div>
 	</div>
 
@@ -72,13 +73,13 @@ const ctaText = welcomeSection?.ctaText || '';
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		align-items: center;
-		text-align: center;
+		align-items: flex-start;
+		text-align: left;
 		padding: 60px 64px;
 		background: var(--bg-alt);
 	}
 
-	.isplit__text-wrap { max-width: 384px; }
+	.isplit__text-wrap { max-width: 440px; }
 
 	.isplit__eyebrow {
 		font-family: var(--font-sans);
@@ -92,7 +93,7 @@ const ctaText = welcomeSection?.ctaText || '';
 
 	.isplit__body {
 		font-style: italic;
-		font-size: var(--isplit-body-size, 1rem);
+		font-size: var(--isplit-body-size, 1.1rem);
 		line-height: 1.9;
 		color: var(--text);
 		margin-bottom: 1.5rem;
@@ -105,18 +106,18 @@ const ctaText = welcomeSection?.ctaText || '';
 
 	.isplit__link {
 		display: inline-block;
-		font-style: normal;
-		font-size: var(--isplit-link-size, 0.875rem);
-		letter-spacing: 0.05em;
+		font-style: italic;
+		font-size: var(--isplit-link-size, 1rem);
+		letter-spacing: 0.01em;
 		color: var(--accent);
 		text-decoration: none;
-		margin-top: 1rem;
-		border-bottom: 1px solid var(--accent);
-		padding-bottom: 1px;
-		transition: opacity 0.2s;
+		border-bottom: none;
+		padding-bottom: 0;
+		margin-top: 1.5rem;
+		transition: opacity 0.2s, letter-spacing 0.25s;
 	}
 
-	.isplit__link:hover { opacity: 0.7; }
+	.isplit__link:hover { opacity: 1; letter-spacing: 0.04em; }
 
 	@media (max-width: 900px) {
 		.isplit { grid-template-columns: 1fr; }
