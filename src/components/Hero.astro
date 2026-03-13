@@ -1,22 +1,26 @@
 ---
+import { sanityImg, sanitySrcset } from '../utils/imageUrl';
+
 const { heroImages, urlFor, theme, overrides } = Astro.props;
 
 // TODO:NICHE — fallback hero images are dog photos; swap Pexels IDs and alt text for your niche
 const fallbackImages = [
-	{ src: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1200', alt: 'Golden retriever running through a sunlit field' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1200', alt: 'Dog with a stick exploring a field' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=1200', alt: 'Dog portrait in warm natural light' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=1200', alt: 'Playful dog outdoors in soft light' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=1200', alt: 'Dog looking curiously at the camera' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=2000', alt: 'Golden retriever running through a sunlit field' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=2000', alt: 'Dog with a stick exploring a field' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=2000', alt: 'Dog portrait in warm natural light' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=2000', alt: 'Playful dog outdoors in soft light' }, // TODO:NICHE
+	{ src: 'https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=2000', alt: 'Dog looking curiously at the camera' }, // TODO:NICHE
 ];
 
+// isSanity flag tells the template to use srcset; fallback Pexels images get a plain <img>
 const images =
 	heroImages?.length && urlFor
 		? heroImages.map((img: any) => ({
-				src: urlFor(img).width(1200).auto('format').url(),
+				base: urlFor(img).url(),
 				alt: img.alt ?? '',
+				isSanity: true,
 		  }))
-		: fallbackImages;
+		: fallbackImages.map((img) => ({ base: img.src, alt: img.alt, isSanity: false }));
 ---
 
 <section
@@ -30,7 +34,15 @@ const images =
 	<div class="hero__viewport">
 		<div class="hero__track" id="heroTrack">
 			{images.map((img) => (
-				<img src={img.src} alt={img.alt} loading="eager" />
+				img.isSanity
+					? <img
+							src={sanityImg(img.base, 2000)}
+							srcset={sanitySrcset(img.base, [900, 1400, 2000, 2800])}
+							sizes="(max-width: 900px) 100vw, 60vw"
+							alt={img.alt}
+							loading="eager"
+						/>
+					: <img src={img.base} alt={img.alt} loading="eager" />
 			))}
 		</div>
 

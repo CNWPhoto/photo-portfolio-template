@@ -1,15 +1,19 @@
 ---
+import { sanityImg, sanitySrcset } from '../../utils/imageUrl';
+
 const { featuredSection, urlFor, theme } = Astro.props;
 
 // TODO:NICHE — fallback images are dog photos; swap for your niche
-const verticalSrc = featuredSection?.imageVertical && urlFor
-	? urlFor(featuredSection.imageVertical).width(800).auto('format').url()
-	: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=800';
+const verticalBase = featuredSection?.imageVertical && urlFor
+	? urlFor(featuredSection.imageVertical).url()
+	: null;
+const verticalFallback = 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=1200';
 const verticalAlt = featuredSection?.imageVertical?.alt ?? 'Dog portrait in warm natural light'; // TODO:NICHE
 
-const horizontalSrc = featuredSection?.imageHorizontal && urlFor
-	? urlFor(featuredSection.imageHorizontal).width(1200).auto('format').url()
-	: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1200';
+const horizontalBase = featuredSection?.imageHorizontal && urlFor
+	? urlFor(featuredSection.imageHorizontal).url()
+	: null;
+const horizontalFallback = 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1800';
 const horizontalAlt = featuredSection?.imageHorizontal?.alt ?? 'Dog exploring in golden afternoon light'; // TODO:NICHE
 ---
 
@@ -23,10 +27,28 @@ const horizontalAlt = featuredSection?.imageHorizontal?.alt ?? 'Dog exploring in
 		<div class="pgrid__content">
 			<div class="pgrid__images">
 				<div class="pgrid__img pgrid__img--vertical">
-					<img src={verticalSrc} alt={verticalAlt} loading="lazy" />
+					{verticalBase
+						? <img
+								src={sanityImg(verticalBase, 1200)}
+								srcset={sanitySrcset(verticalBase, [600, 900, 1200, 1800])}
+								sizes="(max-width: 900px) 50vw, 35vw"
+								alt={verticalAlt}
+								loading="lazy"
+							/>
+						: <img src={verticalFallback} alt={verticalAlt} loading="lazy" />
+					}
 				</div>
 				<div class="pgrid__img pgrid__img--horizontal">
-					<img src={horizontalSrc} alt={horizontalAlt} loading="lazy" />
+					{horizontalBase
+						? <img
+								src={sanityImg(horizontalBase, 1200)}
+								srcset={sanitySrcset(horizontalBase, [600, 900, 1200, 1800])}
+								sizes="(max-width: 900px) 50vw, 35vw"
+								alt={horizontalAlt}
+								loading="lazy"
+							/>
+						: <img src={horizontalFallback} alt={horizontalAlt} loading="lazy" />
+					}
 				</div>
 			</div>
 

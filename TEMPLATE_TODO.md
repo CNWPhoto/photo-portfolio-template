@@ -40,6 +40,22 @@ as an inline style on the root section element, filtering out empty values.
 If the new component needs data from Sanity, update the GROQ query in
 `src/pages/index.astro` (or the relevant page file) to include the new fields.
 
+### 5. Images
+Every `<img>` that uses a Sanity CDN URL must:
+- Use the `sanityImg()` helper for `src` (never hardcode `?w=` directly)
+- Have a `srcset` built with `sanitySrcset()` covering at least 4 widths
+- Have a `sizes` attribute matching the image's actual display width in the layout
+- Use `loading="eager"` for above-the-fold images, `loading="lazy"` for everything else
+- The `src` fallback width should be 1.5x–2x the largest expected display width to cover retina
+
+Reference widths by context:
+- Full-width / hero: `widths [900, 1400, 2000, 2800]`, `sizes="100vw"`
+- Half-column (50vw): `widths [800, 1200, 1600, 2400]`, `sizes="(max-width: 900px) 100vw, 50vw"`
+- Third-column or card: `widths [600, 900, 1200, 1800]`, `sizes="(max-width: 900px) 50vw, 35vw"`
+- Thumbnail / portrait photo: `widths [400, 800, 1200]`, `sizes="(max-width: 900px) 30vw, 200px"`
+
+Import the helpers: `import { sanityImg, sanitySrcset } from '../../utils/imageUrl';`
+
 ---
 
 ## Checklist for every new section
@@ -48,6 +64,8 @@ If the new component needs data from Sanity, update the GROQ query in
 - [ ] Component accepts `overrides` prop and applies inline CSS vars
 - [ ] GROQ query updated to include new fields
 - [ ] Fallback defaults in `var()` match the current hardcoded CSS values exactly
+- [ ] All Sanity images use `sanityImg()` + `sanitySrcset()` with appropriate `sizes`
+- [ ] Above-fold images use `loading="eager"`, all others use `loading="lazy"`
 
 ---
 
