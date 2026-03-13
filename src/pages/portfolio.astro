@@ -2,7 +2,11 @@
 import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity.js';
 
-const portfolio = await sanityClient.fetch(`*[_type == "portfolio"][0].images`, {}, { cache: 'no-store' });
+const portfolioDoc = await sanityClient.fetch(`*[_type == "portfolio"][0]{ title, byline, images }`, {}, { cache: 'no-store' });
+
+const pageTitle  = portfolioDoc?.title  || 'Portfolio';
+const byline     = portfolioDoc?.byline || 'A collection of recent dog photography sessions';
+const portfolio  = portfolioDoc?.images;
 
 // TODO:NICHE — swap fallback Pexels IDs and alt text for your niche
 const fallbackImages = [
@@ -34,7 +38,8 @@ const images = portfolio?.length
 <Layout>
 	<main data-theme="classic-cream">
 		<div class="portfolio__header">
-			<h1 class="portfolio__title">Portfolio</h1>
+			<p class="portfolio__byline">{byline}</p>
+			<h1 class="portfolio__title">{pageTitle}</h1>
 		</div>
 		<div class="portfolio__grid">
 			{images.map((img, i) => (
@@ -51,31 +56,52 @@ const images = portfolio?.length
 		min-height: 100vh;
 	}
 
+	/* Header row — byline + large title, right-aligned */
 	.portfolio__header {
-		max-width: 1100px;
-		margin: 0 auto;
-		padding: 6rem 3rem 4rem;
-		text-align: center;
-		border-bottom: 1px solid var(--border);
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 2rem;
+		padding: 3rem 3rem 0;
+		max-width: 100%;
+		border-bottom: none;
 	}
 
+	/* Small uppercase byline, accent color */
+	.portfolio__byline {
+		font-family: var(--font-sans);
+		font-size: 0.65rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: var(--accent);
+		text-align: right;
+		line-height: 1.8;
+		max-width: 180px;
+	}
+
+	/* Large page title */
 	.portfolio__title {
-		font-size: clamp(2.5rem, 6vw, 5rem);
+		font-size: clamp(3.5rem, 8vw, 7rem);
+		letter-spacing: -0.02em;
+		line-height: 1;
+		text-align: right;
 		color: var(--text);
-		letter-spacing: -0.01em;
+		margin: 0;
+		white-space: nowrap;
 	}
 
+	/* Full-width masonry grid, edge to edge */
 	.portfolio__grid {
 		columns: 3;
-		column-gap: 12px;
-		max-width: 1100px;
-		margin: 0 auto;
-		padding: 3rem 3rem 7rem;
+		column-gap: 8px;
+		max-width: 100%;
+		margin: 0;
+		padding: 1.5rem 0 0;
 	}
 
 	.portfolio__item {
 		break-inside: avoid;
-		margin-bottom: 12px;
+		margin-bottom: 8px;
 		overflow: hidden;
 	}
 
@@ -90,19 +116,28 @@ const images = portfolio?.length
 	}
 
 	@media (max-width: 900px) {
-		.portfolio__grid {
-			columns: 2;
-			padding-left: 1.5rem;
-			padding-right: 1.5rem;
-		}
-
 		.portfolio__header {
 			padding-left: 1.5rem;
 			padding-right: 1.5rem;
+			gap: 1.25rem;
+		}
+
+		.portfolio__grid {
+			columns: 2;
 		}
 	}
 
 	@media (max-width: 480px) {
+		.portfolio__header {
+			flex-direction: column;
+			align-items: flex-end;
+			gap: 0.5rem;
+		}
+
+		.portfolio__byline {
+			max-width: 100%;
+		}
+
 		.portfolio__grid {
 			columns: 1;
 		}

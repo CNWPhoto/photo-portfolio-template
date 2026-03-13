@@ -10,6 +10,20 @@ export default {
   },
   fields: [
     {
+      name: 'title',
+      title: 'Page Label',
+      type: 'string',
+      description: 'Large label shown top-right of the portfolio page. E.g. "Portfolio" or "Work".',
+      initialValue: 'Portfolio',
+    },
+    {
+      name: 'byline',
+      title: 'Byline',
+      type: 'string',
+      description: 'Small text shown to the left of the page label. E.g. "A collection of recent dog photography sessions".',
+      initialValue: 'A collection of recent dog photography sessions',
+    },
+    {
       name: 'sizingNote',
       title: '📐 Image Sizing Requirement',
       type: 'string',
