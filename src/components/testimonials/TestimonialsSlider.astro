@@ -47,7 +47,7 @@ const testimonials =
 	style={overrides?.tsliderQuoteSize ? `--tslider-quote-size: ${overrides.tsliderQuoteSize}` : undefined}
 >
 	<div class="tslider__inner">
-		<div class="tslider__image-col">
+		<div class="tslider__image-col reveal-fade">
 			<div class="tslider__image-wrap">
 				<img
 					id="tsliderImg"
@@ -64,7 +64,7 @@ const testimonials =
 			</div>
 		</div>
 
-		<div class="tslider__content">
+		<div class="tslider__content reveal reveal-delay-2">
 			<blockquote class="tslider__quote" id="tsliderQuote">
 				&ldquo;{testimonials[0].quote}&rdquo;
 			</blockquote>

@@ -26,14 +26,14 @@ const steps = [
 <section class="hstack" id="how-it-works" data-theme={theme || undefined}>
 	<hr />
 	<div class="hstack__inner">
-		<div class="hstack__header">
+		<div class="hstack__header reveal">
 				<h2 class="hstack__heading">{heading}</h2>
 			<p class="hstack__sub">{tagline}</p>
 		</div>
 
 		<div class="hstack__timeline">
 			{steps.map((step, i) => (
-				<div class="hstack__step">
+				<div class={`hstack__step reveal reveal-delay-${i + 1}`}>
 					<div class="hstack__step-left">
 						<div class="hstack__num-wrap">
 							<span class="hstack__num">{String(i + 1).padStart(2, '0')}</span>
@@ -48,7 +48,7 @@ const steps = [
 			))}
 		</div>
 
-		<div class="hstack__footer">
+		<div class="hstack__footer reveal reveal-delay-4">
 			<a href={ctaLink} class="hstack__link">{ctaText} &rarr;</a>
 		</div>
 	</div>

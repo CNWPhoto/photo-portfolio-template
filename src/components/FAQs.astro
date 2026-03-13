@@ -33,8 +33,8 @@ const faqs =
 		<div class="faqs__content">
 			<div class="faqs__list">
 				{
-					faqs.map((faq) => (
-						<div class="faqs__item">
+					faqs.map((faq, i) => (
+						<div class={`faqs__item reveal reveal-delay-${Math.min(i + 1, 5)}`}>
 							<h3 class="faqs__question">{faq.q}</h3>
 							<blockquote class="faqs__answer">{faq.a}</blockquote>
 						</div>
@@ -42,7 +42,7 @@ const faqs =
 				}
 			</div>
 
-			<div class="faqs__footer">
+			<div class="faqs__footer reveal">
 				<a href="#" class="faqs__link">View all FAQs &rarr;</a>
 			</div>
 		</div>

@@ -26,14 +26,14 @@ const ctaText = welcomeSection?.ctaText || '';
 >
 	<div class="isplit__content">
 		<div class="isplit__text-wrap">
-			{eyebrow && <p class="isplit__eyebrow">{eyebrow}</p>}
-			<p class="isplit__body">{bodyText}</p>
-			<p class="isplit__body">{bodySecondary}</p>
-			{ctaText && <a class="isplit__link" href="/experience">{ctaText}</a>}
+			{eyebrow && <p class="isplit__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
+			<p class="isplit__body reveal reveal-delay-2">{bodyText}</p>
+			<p class="isplit__body reveal reveal-delay-3">{bodySecondary}</p>
+			{ctaText && <a class="isplit__link reveal reveal-delay-4" href="/experience">{ctaText}</a>}
 		</div>
 	</div>
 
-	<div class="isplit__image">
+	<div class="isplit__image reveal-fade">
 		{photoBase
 			? <img
 					src={sanityImg(photoBase, 1600, 85)}

@@ -37,6 +37,17 @@ const logoImage  = settings?.logoImage  ?? null;
 		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} />
 		<slot />
 		<Footer />
+		<script>
+			const observer = new IntersectionObserver((entries) => {
+				entries.forEach(entry => {
+					if (entry.isIntersecting) {
+						entry.target.classList.add('revealed');
+						observer.unobserve(entry.target);
+					}
+				});
+			}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+			document.querySelectorAll('.reveal, .reveal-fade').forEach(el => observer.observe(el));
+		</script>
 	</body>
 </html>
 
@@ -280,5 +291,49 @@ const logoImage  = settings?.logoImage  ?? null;
 	section {
 		padding-top: 100px;
 		padding-bottom: 100px;
+	}
+
+	/* ══════════════════════════════════════════════════
+	   SCROLL REVEAL ANIMATIONS
+	══════════════════════════════════════════════════ */
+
+	@keyframes fadeUp {
+		from { opacity: 0; transform: translateY(22px); }
+		to   { opacity: 1; transform: translateY(0); }
+	}
+
+	@keyframes fadeIn {
+		from { opacity: 0; }
+		to   { opacity: 1; }
+	}
+
+	.reveal {
+		opacity: 0;
+		transform: translateY(22px);
+		will-change: opacity, transform;
+	}
+
+	.reveal.revealed {
+		animation: fadeUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	.reveal-fade {
+		opacity: 0;
+		will-change: opacity;
+	}
+
+	.reveal-fade.revealed {
+		animation: fadeIn 0.8s ease both;
+	}
+
+	.reveal-delay-1 { animation-delay: 0.08s; }
+	.reveal-delay-2 { animation-delay: 0.16s; }
+	.reveal-delay-3 { animation-delay: 0.24s; }
+	.reveal-delay-4 { animation-delay: 0.32s; }
+	.reveal-delay-5 { animation-delay: 0.40s; }
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal, .reveal-fade { opacity: 1 !important; transform: none !important; }
+		.reveal.revealed, .reveal-fade.revealed { animation: none !important; }
 	}
 </style>
