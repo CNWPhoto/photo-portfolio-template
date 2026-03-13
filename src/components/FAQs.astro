@@ -24,7 +24,6 @@ const faqs =
 		overrides?.faqsAnswerSize ? `--faqs-answer-size: ${overrides.faqsAnswerSize}` : '',
 	].filter(Boolean).join('; ') || undefined}
 >
-	<hr />
 	<div class="faqs__inner">
 		<div class="faqs__label-col" aria-hidden="true">
 			<span class="faqs__label">FAQs</span>
@@ -51,7 +50,7 @@ const faqs =
 
 <style>
 	.faqs {
-		padding-top: 40px;
+		padding-top: 0;
 		padding-bottom: 7rem;
 	}
 
