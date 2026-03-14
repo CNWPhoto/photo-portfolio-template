@@ -354,42 +354,73 @@ const faviconUrl  = settings?.favicon?.asset?._ref
 	}
 
 	/* ══════════════════════════════════════════════════
-	   GLOBAL BUTTON & LINK HOVER INTERACTIONS
+	   INTERACTION STANDARDS
+	   Hover micro-interactions for all interactive elements.
+	   Uses only transform, opacity, and letter-spacing —
+	   compositor-only properties with zero layout impact.
+	   All transitions respect prefers-reduced-motion.
 	══════════════════════════════════════════════════ */
 
-	/* Lift + shadow for primary CTA buttons */
-	.why__cta, .pgrid__cta, .cta__btn, .next__btn {
+	/* ── BORDERED / SOLID BUTTONS ─────────────────────────────
+	   Matches any element using __cta, __btn, __submit, __button */
+	[class*="__cta"],
+	[class*="__btn"],
+	[class*="__submit"],
+	[class*="__button"] {
 		transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
 	}
-	.why__cta:hover, .pgrid__cta:hover, .cta__btn:hover, .next__btn:hover {
+	[class*="__cta"]:hover,
+	[class*="__btn"]:hover,
+	[class*="__submit"]:hover,
+	[class*="__button"]:hover {
 		transform: translateY(-2px);
 		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
 	}
 
-	/* Italic/text links */
-	.hstack__link, .faqs__link, .pullquote__link, .contact__link {
+	/* ── ITALIC / ARROW TEXT LINKS ─────────────────────────────
+	   Matches any element using __link                         */
+	[class*="__link"] {
 		transition: opacity 0.2s, letter-spacing 0.25s;
 	}
-	.hstack__link:hover, .faqs__link:hover, .pullquote__link:hover, .contact__link:hover {
+	[class*="__link"]:hover {
 		opacity: 1;
 		letter-spacing: 0.04em;
 	}
 
-	/* Contact submit */
-	.contact__submit {
-		transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
-	}
-	.contact__submit:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
-	}
-
-	/* Blog post card */
-	.posts__item-inner {
+	/* ── CARD / ITEM HOVER ─────────────────────────────────────
+	   Matches blog post cards, portfolio items, gallery tiles  */
+	[class*="__item-inner"],
+	[class*="__card"] {
 		transition: transform 0.2s, box-shadow 0.25s;
 	}
-	.posts__item-inner:hover {
+	[class*="__item-inner"]:hover,
+	[class*="__card"]:hover {
 		transform: translateY(-3px);
 		box-shadow: 0 8px 24px rgba(26, 39, 68, 0.12);
+	}
+
+	/* ── SLIDER / CAROUSEL ARROWS ──────────────────────────────
+	   Matches testimonial arrows, hero prev/next arrows        */
+	[class*="__arrow"] {
+		transition: border-color 0.2s, color 0.2s, transform 0.18s;
+	}
+	[class*="__arrow"]:hover:not(:disabled) {
+		transform: scale(1.08);
+	}
+
+	/* ── REDUCED MOTION ────────────────────────────────────────
+	   Disables all transitions for users who prefer it         */
+	@media (prefers-reduced-motion: reduce) {
+		[class*="__cta"],
+		[class*="__btn"],
+		[class*="__submit"],
+		[class*="__button"],
+		[class*="__link"],
+		[class*="__item-inner"],
+		[class*="__card"],
+		[class*="__arrow"] {
+			transition: none !important;
+			transform: none !important;
+		}
 	}
 </style>
