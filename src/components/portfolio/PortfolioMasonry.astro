@@ -1,24 +1,9 @@
 ---
-const { galleryImages, urlFor, theme } = Astro.props;
+import SanityImage from '../../components/SanityImage.astro';
 
-// TODO:NICHE — fallback images are dog photos; swap for your niche
-// Mixed dimensions give the masonry its varied heights
-const fallbackImages = [
-	{ src: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=700&h=1050&fit=crop', alt: 'Dog portrait in warm natural light' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=700&h=560&fit=crop', alt: 'Dog exploring in golden afternoon light' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=700&h=900&fit=crop', alt: 'Golden retriever running through a field' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=700&h=620&fit=crop', alt: 'Playful dog outdoors in soft light' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=700&h=980&fit=crop', alt: 'Dog looking curiously at camera' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=700&h=700&fit=crop', alt: 'Dog portrait close-up' }, // TODO:NICHE
-];
+const { galleryImages, theme } = Astro.props;
 
-const displayImages =
-	galleryImages?.length && urlFor
-		? galleryImages.slice(0, 6).map((img: any) => ({
-				src: urlFor(img).width(700).auto('format').url(),
-				alt: img.alt ?? img.title ?? '',
-		  }))
-		: fallbackImages;
+const displayImages = galleryImages?.length ? galleryImages.slice(0, 6) : [];
 ---
 
 <section class="pmasonry" id="portfolio" data-theme={theme || undefined}>
@@ -29,9 +14,12 @@ const displayImages =
 	</div>
 
 	<div class="pmasonry__grid">
-		{displayImages.map((img) => (
+		{displayImages.map((img: any) => (
 			<div class="pmasonry__item">
-				<img src={img.src} alt={img.alt} loading="lazy" decoding="async" />
+				<SanityImage
+					image={img}
+					sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
+				/>
 			</div>
 		))}
 	</div>

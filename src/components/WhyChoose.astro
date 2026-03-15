@@ -1,11 +1,9 @@
 ---
-import { sanityImg } from '../utils/imageUrl';
+import { buildSrc } from '../lib/image';
 
-const { soloHeroImage, whyChooseSection, urlFor, theme, overrides } = Astro.props;
+const { soloHeroImage, whyChooseSection, theme, overrides } = Astro.props;
 
-const heroBase     = soloHeroImage?.image && urlFor ? urlFor(soloHeroImage.image).url() : null;
-const heroFallback = 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=2000';
-const bgUrl        = heroBase ? sanityImg(heroBase, 2000) : heroFallback;
+const bgUrl = soloHeroImage?.image ? buildSrc(soloHeroImage.image, 2000) : '';
 
 // Content — Sanity values with hardcoded fallbacks
 const heading    = whyChooseSection?.heading    ?? 'Why Choose\nPet Photography?';

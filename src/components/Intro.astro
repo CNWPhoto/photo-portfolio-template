@@ -1,12 +1,7 @@
 ---
-const { bio, approachText, profilePhoto, urlFor, theme = 'classic-cream' } = Astro.props;
+import SanityImage from '../components/SanityImage.astro';
 
-// TODO:NICHE — fallback photo, bio, and approachText are dog/pet-specific; replace for your niche
-const photoSrc =
-	profilePhoto && urlFor
-		? urlFor(profilePhoto).width(800).height(1100).fit('crop').auto('format').url()
-		: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=800&h=1100&fit=crop';
-const photoAlt = profilePhoto?.alt ?? 'Dog portrait in natural light';
+const { bio, approachText, profilePhoto, theme = 'classic-cream' } = Astro.props;
 
 const bodyText = bio ?? "Every session is crafted entirely around your dog's unique personality. We find the light, the location, and the moments that tell their story — the tilt of a head, a full-speed sprint, a quiet glance."; // TODO:NICHE
 const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. Just you, your dog, and the kind of photography that makes people stop and say "that\'s exactly them."'; // TODO:NICHE
@@ -14,11 +9,12 @@ const approachBodyText = approachText ?? 'No forced poses. No rushed timelines. 
 
 <section class="intro" id="about" data-theme={theme}>
 	<div class="intro__image">
-		<img
-			src={photoSrc}
-			alt={photoAlt}
-			loading="lazy" decoding="async"
-		/>
+		{profilePhoto && (
+			<SanityImage
+				image={profilePhoto}
+				sizes="(max-width: 900px) 100vw, 50vw"
+			/>
+		)}
 	</div>
 
 	<div class="intro__content">

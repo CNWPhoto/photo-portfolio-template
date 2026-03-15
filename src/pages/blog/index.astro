@@ -1,9 +1,9 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { urlFor } from '../../lib/sanity.js';
+import SanityImage from '../../components/SanityImage.astro';
 
 const _postsQuery = encodeURIComponent(
-  `*[_type == "blogPost"] | order(publishDate desc){ title, "slug": slug.current, publishDate, excerpt, coverImage, category }`
+  `*[_type == "blogPost"] | order(publishDate desc){ title, "slug": slug.current, publishDate, excerpt, coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt }, category }`
 )
 const _postsRes = await fetch(
   `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${_postsQuery}`,
@@ -40,10 +40,9 @@ const { result: posts } = await _postsRes.json()
 							<a href={`/blog/${post.slug}`} class={`posts__item-inner reveal reveal-delay-${Math.min(i + 1, 5)}`}>
 								<div class="posts__img-col">
 									{post.coverImage ? (
-										<img
-											src={urlFor(post.coverImage).width(900).height(700).fit('crop').auto('format').url()}
-											alt={post.coverImage.alt || post.title}
-											loading="lazy" decoding="async"
+										<SanityImage
+											image={post.coverImage}
+											sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
 										/>
 									) : (
 										<div class="posts__img-placeholder" />

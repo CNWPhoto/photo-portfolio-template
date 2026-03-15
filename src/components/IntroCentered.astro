@@ -1,9 +1,8 @@
 ---
-const { theme = 'classic-cream' } = Astro.props;
+import SanityImage from '../components/SanityImage.astro';
 
-// TODO:NICHE — fallback bio and photo are dog/pet-specific; replace for your niche
-const photoSrc = 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1600&h=800&fit=crop';
-const photoAlt = 'Dog in golden afternoon light'; // TODO:NICHE
+const { image, theme = 'classic-cream' } = Astro.props;
+
 const bodyText = "Every session is crafted entirely around your dog's unique personality. We find the light, the location, and the moments that tell their story — the tilt of a head, a full-speed sprint, a quiet glance. No forced poses. No rushed timelines. Just you, your dog, and the kind of photography that makes people stop and say that's exactly them."; // TODO:NICHE
 ---
 
@@ -14,7 +13,12 @@ const bodyText = "Every session is crafted entirely around your dog's unique per
 		<a href="/experience" class="icentered__link">Learn about the experience &rarr;</a>
 	</div>
 	<div class="icentered__image">
-		<img src={photoSrc} alt={photoAlt} loading="lazy" decoding="async" />
+		{image && (
+			<SanityImage
+				image={image}
+				sizes="(max-width: 900px) 100vw, 60vw"
+			/>
+		)}
 	</div>
 </section>
 

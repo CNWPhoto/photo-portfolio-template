@@ -1,19 +1,9 @@
 ---
-const { galleryImages, urlFor, theme = 'classic-cream' } = Astro.props;
+import SanityImage from '../components/SanityImage.astro';
 
-// TODO:NICHE — fallback images are dog photos; swap for your niche
-const fallbackImages = [
-	{ src: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=800&h=1050&fit=crop', alt: 'Dog portrait in warm natural light' }, // TODO:NICHE
-	{ src: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=800&h=1050&fit=crop', alt: 'Dog exploring in golden afternoon light' }, // TODO:NICHE
-];
+const { galleryImages, theme = 'classic-cream' } = Astro.props;
 
-const displayImages =
-	galleryImages?.length && urlFor
-		? galleryImages.slice(0, 2).map((img: any) => ({
-				src: urlFor(img.photo).width(800).height(1050).fit('crop').auto('format').url(),
-				alt: img.photo?.alt ?? img.title ?? '',
-		  }))
-		: fallbackImages;
+const displayImages = galleryImages?.length ? galleryImages.slice(0, 2) : [];
 ---
 
 <section class="featured" id="featured" data-theme={theme}>
@@ -26,13 +16,14 @@ const displayImages =
 
 		<div class="featured__content">
 			<div class="featured__images">
-				{displayImages.map((img: any) => (
+				{displayImages.map((item: any) => (
 					<div class="featured__img-wrap">
-						<img
-							src={img.src}
-							alt={img.alt}
-							loading="lazy" decoding="async"
-						/>
+						{item.photo && (
+							<SanityImage
+								image={item.photo}
+								sizes="(max-width: 900px) 100vw, 50vw"
+							/>
+						)}
 					</div>
 				))}
 			</div>

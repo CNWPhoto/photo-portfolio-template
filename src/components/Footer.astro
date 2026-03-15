@@ -1,9 +1,11 @@
 ---
+import SanityImage from '../components/SanityImage.astro';
+
 const { theme = 'classic-cream', siteName = 'Pet Photography' } = Astro.props;
 
 const [_footerRes, _socialRes, _siteRes] = await Promise.all([
   fetch(
-    `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ newsletterEmbed, menu, footerPhoto { asset { _ref } } }`)}`,
+    `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ newsletterEmbed, menu, footerPhoto { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt } }`)}`,
     { cache: 'no-store' }
   ),
   fetch(
@@ -22,13 +24,8 @@ const { result: siteData }   = await _siteRes.json();
 const newsletterEmbed  = footerData?.newsletterEmbed || '';
 const photographerName = siteData?.photographerName || siteName;
 
-// Footer portrait photo URL
-let footerPhotoUrl = '';
-const photoRef = footerData?.footerPhoto?.asset?._ref;
-if (photoRef) {
-  const id = photoRef.replace('image-', '').replace(/-([a-zA-Z0-9]+)$/, '.$1');
-  footerPhotoUrl = `https://cdn.sanity.io/images/hx5xgigp/production/${id}`;
-}
+// Footer portrait photo
+const footerPhoto = footerData?.footerPhoto ?? null;
 
 // Social links — only include platforms with a URL filled in
 const socialLinks = [
@@ -97,8 +94,8 @@ const year = new Date().getFullYear();
 
 		<div class="footer__right">
 			<div class="footer__photo-col">
-				{footerPhotoUrl
-					? <img src={footerPhotoUrl} alt={siteName} loading="lazy" decoding="async" />
+				{footerPhoto
+					? <SanityImage image={footerPhoto} sizes="280px" />
 					: <span class="footer__photo-placeholder">Your Photo Here</span>
 				}
 			</div>

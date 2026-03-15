@@ -1,55 +1,32 @@
 ---
-const { testimonials: sanityTestimonials, urlFor, theme = 'classic-cream' } = Astro.props;
+import SanityImage from '../components/SanityImage.astro';
+import { buildSrc, buildSrcset } from '../lib/image';
 
-// TODO:NICHE — fallback testimonials reference dogs/breeds; update for your niche
-const fallback = [
-	{
-		photoUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=700&h=950&fit=crop',
-		photoAlt: 'Golden retriever in warm afternoon light', // TODO:NICHE
-		quote: "Hazel captured something in Biscuit that we'd been trying to capture ourselves for years. Every single image is breathtaking. We have them printed throughout our home and can't stop looking at them.", // TODO:NICHE
-		name: 'Sarah & Tom K.',
-		pet: 'Biscuit, Golden Retriever', // TODO:NICHE
-	},
-	{
-		photoUrl: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=700&h=950&fit=crop',
-		photoAlt: 'Dog exploring outdoors with a stick', // TODO:NICHE
-		quote: "I was skeptical that Penny would cooperate for even five minutes. Hazel had her completely at ease within seconds. The patience and genuine love for dogs she brings to every session is unlike anything I've experienced.", // TODO:NICHE
-		name: 'Marcus R.',
-		pet: 'Penny, Rescue Mix', // TODO:NICHE
-	},
-	{
-		photoUrl: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=700&h=950&fit=crop',
-		photoAlt: 'Dog portrait in natural light', // TODO:NICHE
-		quote: "Three sessions in and each gallery is more beautiful than the last. Hazel has a gift for capturing the soul of a dog — not just their face, but everything that makes them who they are.", // TODO:NICHE
-		name: 'Jess & Olivia M.',
-		pet: 'Chester, Labrador', // TODO:NICHE
-	},
-];
+const { testimonials: sanityTestimonials, theme = 'classic-cream' } = Astro.props;
 
-const testimonials =
-	sanityTestimonials?.length && urlFor
-		? sanityTestimonials.map((t: any) => ({
-				photoUrl: t.photo
-					? urlFor(t.photo).width(700).height(950).fit('crop').auto('format').url()
-					: '',
-				photoAlt: t.photo?.alt ?? '',
-				quote: t.quote ?? '',
-				name: t.clientName ?? '',
-				pet: t.clientSubjectName ?? '',
-		  }))
-		: fallback;
+const testimonials = sanityTestimonials?.length
+	? sanityTestimonials.map((t: any) => ({
+			image: t.photo ?? null,
+			photoSrc: t.photo ? buildSrc(t.photo, 700) : '',
+			photoSrcset: t.photo ? buildSrcset(t.photo, [350, 700, 1050]) : '',
+			photoAlt: t.photo?.alt ?? '',
+			quote: t.quote ?? '',
+			name: t.clientName ?? '',
+			pet: t.clientSubjectName ?? '',
+	  }))
+	: [];
 ---
 
 <section class="testimonials" id="testimonials" data-theme={theme}>
 	<hr />
 	<div class="testimonials__inner" id="testimonialsInner">
-		<div class="testimonials__image-col">
-			<img
-				id="testimonialsImg"
-				src={testimonials[0].photoUrl}
-				alt={testimonials[0].photoAlt}
-				loading="lazy" decoding="async"
+		<div class="testimonials__image-col" id="testimonialsImgWrap">
+			{testimonials[0]?.image && (
+				<SanityImage
+					image={testimonials[0].image}
+					sizes="(max-width: 900px) 100vw, 40vw"
 			/>
+			)}
 		</div>
 
 		<div class="testimonials__content">
@@ -216,14 +193,15 @@ const testimonials =
 
 <script>
 	const data: Array<{
-		photoUrl: string;
+		photoSrc: string;
+		photoSrcset: string;
 		photoAlt: string;
 		quote: string;
 		name: string;
 		pet: string;
 	}> = JSON.parse(document.getElementById('testimonialsData')!.textContent!);
 
-	const img = document.getElementById('testimonialsImg') as HTMLImageElement;
+	const imgWrap = document.getElementById('testimonialsImgWrap');
 	const quoteText = document.getElementById('quoteText')!;
 	const quoteName = document.getElementById('quoteName')!;
 	const quotePet = document.getElementById('quotePet')!;
@@ -236,18 +214,27 @@ const testimonials =
 	function render(i: number, direction: 'prev' | 'next' | null = null) {
 		const t = data[i];
 		quoteText.style.opacity = '0';
-		img.style.opacity = '0';
+		if (imgWrap) imgWrap.style.opacity = '0';
 
 		setTimeout(() => {
-			img.src = t.photoUrl;
-			img.alt = t.photoAlt;
+			if (imgWrap) {
+				let imgEl = imgWrap.querySelector('img');
+				if (t.photoSrc) {
+					if (!imgEl) { imgEl = document.createElement('img'); imgWrap.appendChild(imgEl); }
+					imgEl.src = t.photoSrc;
+					imgEl.srcset = t.photoSrcset || '';
+					imgEl.alt = t.photoAlt;
+				} else if (imgEl) {
+					imgEl.remove();
+				}
+			}
 			quoteText.textContent = `\u201C${t.quote}\u201D`;
 			quoteName.textContent = t.name;
 			quotePet.textContent = t.pet;
 			currentIdx.textContent = String(i + 1);
 
 			quoteText.style.opacity = '1';
-			img.style.opacity = '1';
+			if (imgWrap) imgWrap.style.opacity = '1';
 		}, 280);
 
 		prevBtn.disabled = i === 0;

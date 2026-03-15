@@ -1,43 +1,19 @@
 ---
-const { testimonials: sanityTestimonials, urlFor, theme, overrides } = Astro.props;
+import SanityImage from '../../components/SanityImage.astro';
+import { buildSrc, buildSrcset } from '../../lib/image';
 
-// TODO:NICHE — fallback testimonials reference dogs; update for your niche
-// photoBase: Sanity CDN base URL (no params) — used to build srcset
-// photoUrl:  direct URL (Pexels fallbacks only) — used when photoBase is absent
-const fallback = [
-	{
-		photoBase: '',
-		photoUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=800&h=1200&fit=crop',
-		photoAlt: 'Golden retriever in warm afternoon light', // TODO:NICHE
-		quote: "Hazel captured something in Biscuit that we'd been trying to capture ourselves for years. Every single image is breathtaking. We have them printed throughout our home and can't stop looking at them.", // TODO:NICHE
-		client: 'Sarah & Tom K.',
-	},
-	{
-		photoBase: '',
-		photoUrl: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=800&h=1200&fit=crop',
-		photoAlt: 'Dog exploring outdoors with a stick', // TODO:NICHE
-		quote: "I was skeptical that Penny would cooperate for even five minutes. Hazel had her completely at ease within seconds. The patience and genuine love for dogs she brings to every session is unlike anything I've experienced.", // TODO:NICHE
-		client: 'Marcus R.',
-	},
-	{
-		photoBase: '',
-		photoUrl: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=800&h=1200&fit=crop',
-		photoAlt: 'Dog portrait in natural light', // TODO:NICHE
-		quote: "Three sessions in and each gallery is more beautiful than the last. Hazel has a gift for capturing the soul of a dog — not just their face, but everything that makes them who they are.", // TODO:NICHE
-		client: 'Jess & Olivia M.',
-	},
-];
+const { testimonials: sanityTestimonials, theme, overrides } = Astro.props;
 
-const testimonials =
-	sanityTestimonials?.length && urlFor
-		? sanityTestimonials.map((t: any) => ({
-				photoBase: t.image ? urlFor(t.image).url() : '',
-				photoUrl: '',
-				photoAlt: t.image?.alt ?? '',
-				quote: t.testimonial ?? '',
-				client: t.client ?? '',
-		  }))
-		: fallback;
+const testimonials = sanityTestimonials?.length
+	? sanityTestimonials.map((t: any) => ({
+			image: t.image ?? null,
+			photoSrc: t.image ? buildSrc(t.image, 800) : '',
+			photoSrcset: t.image ? buildSrcset(t.image, [400, 800, 1200]) : '',
+			photoAlt: t.image?.alt ?? '',
+			quote: t.testimonial ?? '',
+			client: t.client ?? '',
+	  }))
+	: [];
 ---
 
 <section
@@ -48,27 +24,21 @@ const testimonials =
 >
 	<div class="tslider__inner">
 		<div class="tslider__image-col reveal-fade">
-			<div class="tslider__image-wrap">
-				<img
-					id="tsliderImg"
-					src={testimonials[0].photoBase
-						? `${testimonials[0].photoBase}?w=800&auto=format&fit=max&q=85`
-						: testimonials[0].photoUrl}
-					srcset={testimonials[0].photoBase
-						? `${testimonials[0].photoBase}?w=400&auto=format&fit=max&q=85 400w, ${testimonials[0].photoBase}?w=800&auto=format&fit=max&q=85 800w, ${testimonials[0].photoBase}?w=1200&auto=format&fit=max&q=85 1200w`
-						: undefined}
-					sizes="(max-width: 900px) 30vw, 200px"
-					alt={testimonials[0].photoAlt}
-					loading="lazy" decoding="async"
-				/>
+			<div class="tslider__image-wrap" id="tsliderImgWrap">
+				{testimonials[0]?.image && (
+					<SanityImage
+						image={testimonials[0].image}
+						sizes="(max-width: 900px) 30vw, 200px"
+					/>
+				)}
 			</div>
 		</div>
 
 		<div class="tslider__content reveal reveal-delay-2">
 			<blockquote class="tslider__quote" id="tsliderQuote">
-				&ldquo;{testimonials[0].quote}&rdquo;
+				&ldquo;{testimonials[0]?.quote}&rdquo;
 			</blockquote>
-			<p class="tslider__attribution" id="tsliderClient">{testimonials[0].client}</p>
+			<p class="tslider__attribution" id="tsliderClient">{testimonials[0]?.client}</p>
 
 			<div class="tslider__nav">
 				<span class="tslider__count">
@@ -187,7 +157,7 @@ const testimonials =
 </style>
 
 <script define:vars={{ testimonials }}>
-	const imgEl    = document.getElementById('tsliderImg');
+	const imgWrap  = document.getElementById('tsliderImgWrap');
 	const quoteEl  = document.getElementById('tsliderQuote');
 	const clientEl = document.getElementById('tsliderClient');
 	const idxEl    = document.getElementById('tsliderIdx');
@@ -202,26 +172,30 @@ const testimonials =
 		if (!t) return;
 
 		quoteEl.style.opacity = '0';
-		imgEl.style.opacity = '0';
+		if (imgWrap) imgWrap.style.opacity = '0';
 
 		setTimeout(function() {
-			if (t.photoBase) {
-				imgEl.src = t.photoBase + '?w=800&auto=format&fit=max&q=85';
-				imgEl.srcset = [
-					t.photoBase + '?w=400&auto=format&fit=max&q=85 400w',
-					t.photoBase + '?w=800&auto=format&fit=max&q=85 800w',
-					t.photoBase + '?w=1200&auto=format&fit=max&q=85 1200w',
-				].join(', ');
-			} else if (t.photoUrl) {
-				imgEl.src = t.photoUrl;
-				imgEl.srcset = '';
+			if (imgWrap) {
+				if (t.photoSrc) {
+					let imgEl = imgWrap.querySelector('img');
+					if (!imgEl) {
+						imgEl = document.createElement('img');
+						imgWrap.appendChild(imgEl);
+					}
+					imgEl.src = t.photoSrc;
+					imgEl.srcset = t.photoSrcset || '';
+					imgEl.sizes = '(max-width: 900px) 30vw, 200px';
+					imgEl.alt = t.photoAlt || '';
+				} else {
+					const imgEl = imgWrap.querySelector('img');
+					if (imgEl) imgEl.remove();
+				}
+				imgWrap.style.opacity = '1';
 			}
-			imgEl.alt = t.photoAlt || '';
 			quoteEl.textContent = '\u201C' + t.quote + '\u201D';
 			clientEl.textContent = t.client;
 			idxEl.textContent = String(i + 1);
 			quoteEl.style.opacity = '1';
-			imgEl.style.opacity = '1';
 		}, 280);
 
 		prevBtn.disabled = i === 0;

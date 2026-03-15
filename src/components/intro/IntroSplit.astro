@@ -1,12 +1,7 @@
 ---
-import { sanityImg, sanitySrcset } from '../../utils/imageUrl';
+import SanityImage from '../../components/SanityImage.astro';
 
-const { welcomeSection, urlFor, theme, overrides } = Astro.props;
-
-// TODO:NICHE — fallback photo and text are dog/pet-specific; replace for your niche
-const photoBase = welcomeSection?.image && urlFor ? urlFor(welcomeSection.image).url() : null;
-const photoFallback = 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=1600';
-const photoAlt = welcomeSection?.image?.alt ?? 'Dog portrait in natural light'; // TODO:NICHE
+const { welcomeSection, theme, overrides } = Astro.props;
 
 const eyebrow = welcomeSection?.eyebrow || 'Every Session is Unique';
 const bodyText = welcomeSection?.body || 'Dog photography sessions that focus on personality, connection, and comfort.'; // TODO:NICHE
@@ -35,16 +30,12 @@ const ctaLink = welcomeSection?.ctaLink || '/experience';
 	</div>
 
 	<div class="isplit__image reveal-fade">
-		{photoBase
-			? <img
-					src={sanityImg(photoBase, 1600, 85)}
-					srcset={sanitySrcset(photoBase, [800, 1200, 1600, 2400], 85)}
-					sizes="(max-width: 900px) 100vw, 50vw"
-					alt={photoAlt}
-					loading="lazy" decoding="async"
-				/>
-			: <img src={photoFallback} alt={photoAlt} loading="lazy" decoding="async" />
-		}
+		{welcomeSection?.image && (
+			<SanityImage
+				image={welcomeSection.image}
+				sizes="(max-width: 900px) 100vw, 50vw"
+			/>
+		)}
 	</div>
 </section>
 

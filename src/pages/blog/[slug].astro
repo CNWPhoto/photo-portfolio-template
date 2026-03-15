@@ -1,7 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { urlFor } from '../../lib/sanity.js';
 import { toHTML } from '@portabletext/to-html';
+import SanityImage from '../../components/SanityImage.astro';
+import { buildSrc, buildSrcset } from '../../lib/image';
 
 const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production'
 
@@ -16,7 +17,7 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 
 const postQuery = encodeURIComponent(
-  `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, excerpt, coverImage, body, category }`
+  `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, excerpt, coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt }, body, category }`
 )
 const slugParam = encodeURIComponent(JSON.stringify(slug))
 const postRes = await fetch(
@@ -42,11 +43,12 @@ const bodyHTML = post.body
       components: {
         types: {
           image: ({ value }) => {
-            const src = urlFor(value).width(800).auto('format').url();
+            const src = buildSrc(value, 800);
+            const srcset = buildSrcset(value, [400, 800, 1200]);
             const alt = value.alt || '';
             const caption = value.caption || '';
             return `<figure class="body-image">
-              <img src="${src}" alt="${alt}" loading="lazy" decoding="async" />
+              <img src="${src}" srcset="${srcset}" sizes="(max-width: 900px) 100vw, 60vw" alt="${alt}" loading="lazy" decoding="async" />
               ${caption ? `<figcaption class="body-image__caption">${caption}</figcaption>` : ''}
             </figure>`;
           },
@@ -78,10 +80,10 @@ const bodyHTML = post.body
 
       {post.coverImage && (
         <div class="post__cover">
-          <img
-            src={urlFor(post.coverImage).width(1100).auto('format').url()}
-            alt={post.coverImage.alt || post.title}
-            loading="eager" decoding="async"
+          <SanityImage
+            image={post.coverImage}
+            sizes="(max-width: 900px) 100vw, 60vw"
+            loading="eager"
           />
         </div>
       )}

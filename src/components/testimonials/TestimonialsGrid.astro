@@ -1,43 +1,17 @@
 ---
-const { testimonials: sanityTestimonials, urlFor, theme } = Astro.props;
+import SanityImage from '../../components/SanityImage.astro';
 
-// TODO:NICHE — fallback testimonials reference dogs/breeds; update for your niche
-const fallback = [
-	{
-		photoUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
-		photoAlt: 'Golden retriever in warm afternoon light', // TODO:NICHE
-		quote: "Hazel captured something in Biscuit that we'd been trying to capture ourselves for years. Every single image is breathtaking.", // TODO:NICHE
-		name: 'Sarah & Tom K.',
-		pet: 'Biscuit, Golden Retriever', // TODO:NICHE
-	},
-	{
-		photoUrl: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
-		photoAlt: 'Dog exploring outdoors with a stick', // TODO:NICHE
-		quote: "Hazel had Penny completely at ease within seconds. The patience and genuine love for dogs she brings is unlike anything I've experienced.", // TODO:NICHE
-		name: 'Marcus R.',
-		pet: 'Penny, Rescue Mix', // TODO:NICHE
-	},
-	{
-		photoUrl: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
-		photoAlt: 'Dog portrait in natural light', // TODO:NICHE
-		quote: "Hazel has a gift for capturing the soul of a dog — not just their face, but everything that makes them who they are.", // TODO:NICHE
-		name: 'Jess & Olivia M.',
-		pet: 'Chester, Labrador', // TODO:NICHE
-	},
-];
+const { testimonials: sanityTestimonials, theme } = Astro.props;
 
-const testimonials =
-	sanityTestimonials?.length && urlFor
-		? sanityTestimonials.slice(0, 3).map((t: any) => ({
-				photoUrl: t.image
-					? urlFor(t.image).width(200).height(200).fit('crop').auto('format').url()
-					: '',
-				photoAlt: t.image?.alt ?? '',
-				quote: t.testimonial ?? '',
-				name: t.client ?? '',
-				pet: '',
-		  }))
-		: fallback;
+const testimonials = sanityTestimonials?.length
+	? sanityTestimonials.slice(0, 3).map((t: any) => ({
+			image: t.image ?? null,
+			photoAlt: t.image?.alt ?? '',
+			quote: t.testimonial ?? '',
+			name: t.client ?? '',
+			pet: '',
+	  }))
+	: [];
 ---
 
 <section class="tgrid" id="testimonials" data-theme={theme || undefined}>
@@ -47,9 +21,13 @@ const testimonials =
 		<div class="tgrid__cards">
 			{testimonials.map((t) => (
 				<div class="tgrid__card">
-					{t.photoUrl && (
+					{t.image && (
 						<div class="tgrid__photo-wrap">
-							<img src={t.photoUrl} alt={t.photoAlt} loading="lazy" class="tgrid__photo" decoding="async" />
+							<SanityImage
+								image={t.image}
+								sizes="(max-width: 900px) 30vw, 200px"
+								class="tgrid__photo"
+							/>
 						</div>
 					)}
 					<blockquote class="tgrid__quote">&ldquo;{t.quote}&rdquo;</blockquote>

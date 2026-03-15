@@ -1,12 +1,7 @@
 ---
-const { welcomeSection, urlFor, theme } = Astro.props;
+import SanityImage from '../../components/SanityImage.astro';
 
-// TODO:NICHE — fallback photo and text are dog/pet-specific; replace for your niche
-const photoSrc =
-	welcomeSection?.image && urlFor
-		? urlFor(welcomeSection.image).width(1600).height(800).fit('crop').auto('format').url()
-		: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=1600&h=800&fit=crop';
-const photoAlt = welcomeSection?.image?.alt ?? 'Dog in a field in warm afternoon light'; // TODO:NICHE
+const { welcomeSection, theme } = Astro.props;
 
 const eyebrow = welcomeSection?.eyebrow || '';
 const bodyText = welcomeSection?.body || "Every session is crafted entirely around your dog's unique personality. We find the light, the location, and the moments that tell their story — the tilt of a head, a full-speed sprint, a quiet glance."; // TODO:NICHE
@@ -24,7 +19,12 @@ const approachBodyText = welcomeSection?.bodySecondary || 'No forced poses. No r
 	</div>
 
 	<div class="icentered__image">
-		<img src={photoSrc} alt={photoAlt} loading="lazy" decoding="async" />
+		{welcomeSection?.image && (
+			<SanityImage
+				image={welcomeSection.image}
+				sizes="(max-width: 900px) 100vw, 60vw"
+			/>
+		)}
 	</div>
 </section>
 

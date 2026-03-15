@@ -1,0 +1,46 @@
+---
+/**
+ * SanityImage — use this for ALL content images throughout the site.
+ * Never use a plain <img> tag for Sanity-sourced images.
+ * Handles: srcset, sizes, width/height (CLS prevention), lazy loading, WebP via Sanity CDN.
+ *
+ * Usage:
+ *   <SanityImage image={sanityImageObject} sizes="(max-width: 900px) 100vw, 50vw" />
+ */
+import { buildSrc, buildSrcset, getDimensions } from '../lib/image';
+
+interface Props {
+  image: any;
+  sizes: string;
+  loading?: 'lazy' | 'eager';
+  class?: string;
+  widths?: number[];
+}
+
+const {
+  image,
+  sizes,
+  loading = 'lazy',
+  class: className,
+  widths,
+} = Astro.props;
+
+if (!image?.asset) return;
+
+const src    = buildSrc(image);
+const srcset = buildSrcset(image, widths);
+const { width, height } = getDimensions(image);
+const alt = image.alt ?? '';
+---
+
+<img
+  src={src}
+  srcset={srcset}
+  sizes={sizes}
+  width={width}
+  height={height}
+  alt={alt}
+  loading={loading}
+  decoding={loading === 'eager' ? 'sync' : 'async'}
+  class={className}
+/>
