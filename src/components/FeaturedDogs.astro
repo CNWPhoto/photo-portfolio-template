@@ -83,7 +83,7 @@ const displayImages = galleryImages?.length ? galleryImages.slice(0, 2) : [];
 		overflow: hidden;
 	}
 
-	.featured__img-wrap img {
+	.featured__img-wrap :global(.featured__img) {
 		width: 100%;
 		aspect-ratio: 4 / 5;
 		object-fit: cover;
@@ -91,7 +91,7 @@ const displayImages = galleryImages?.length ? galleryImages.slice(0, 2) : [];
 		transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	}
 
-	.featured__img-wrap:hover img {
+	.featured__img-wrap:hover :global(.featured__img) {
 		transform: scale(1.04);
 	}
 
@@ -118,6 +118,7 @@ const displayImages = galleryImages?.length ? galleryImages.slice(0, 2) : [];
 	.featured__cta:hover {
 		background: var(--text);
 		color: var(--bg);
+		border-color: var(--text);
 	}
 
 	@media (max-width: 768px) {
