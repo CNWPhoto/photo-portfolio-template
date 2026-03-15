@@ -50,9 +50,9 @@ const accentOverride = settings?.accentColorOverride || null;
 		{accentOverride && (
 			<style set:html={`
 				:root, [data-theme] {
-					--accent: ${accentOverride};
-					--accent-dark: color-mix(in srgb, ${accentOverride} 80%, black);
-					--btn-bg: ${accentOverride};
+					--accent: ${accentOverride} !important;
+					--accent-dark: color-mix(in srgb, ${accentOverride} 80%, black) !important;
+					--btn-bg: ${accentOverride} !important;
 				}
 			`} />
 		)}
