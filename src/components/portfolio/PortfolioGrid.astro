@@ -17,7 +17,10 @@ const { featuredSection, theme } = Astro.props;
 					{featuredSection?.imageVertical && (
 						<SanityImage
 							image={featuredSection.imageVertical}
-							sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
+							sizes="(max-width: 900px) 50vw, 35vw"
+							class="pgrid__img-el"
+							displayWidth={600}
+							displayHeight={434}
 						/>
 					)}
 				</div>
@@ -25,7 +28,10 @@ const { featuredSection, theme } = Astro.props;
 					{featuredSection?.imageHorizontal && (
 						<SanityImage
 							image={featuredSection.imageHorizontal}
-							sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
+							sizes="(max-width: 900px) 50vw, 35vw"
+							class="pgrid__img-el"
+							displayWidth={900}
+							displayHeight={434}
 						/>
 					)}
 				</div>
@@ -90,7 +96,7 @@ const { featuredSection, theme } = Astro.props;
 	.pgrid__img--vertical   { flex: 2; }
 	.pgrid__img--horizontal { flex: 3; }
 
-	.pgrid__img img {
+	.pgrid__img :global(.pgrid__img-el) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
@@ -98,7 +104,7 @@ const { featuredSection, theme } = Astro.props;
 		transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	}
 
-	.pgrid__img:hover img { transform: scale(1.03); }
+	.pgrid__img:hover :global(.pgrid__img-el) { transform: scale(1.03); }
 
 	/* ── Footer ── */
 	.pgrid__footer {
@@ -132,7 +138,7 @@ const { featuredSection, theme } = Astro.props;
 		.pgrid__label-col   { display: none; }
 		.pgrid__images      { height: auto; flex-direction: column; gap: 0.75rem; }
 		.pgrid__img         { height: auto; flex: none; }
-		.pgrid__img img     { height: 70vw; }
+		.pgrid__img :global(.pgrid__img-el) { height: 70vw; }
 		.pgrid__footer      { grid-column: 1; }
 	}
 </style>

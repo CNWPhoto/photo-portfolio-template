@@ -15,6 +15,8 @@ interface Props {
   loading?: 'lazy' | 'eager';
   class?: string;
   widths?: number[];
+  displayWidth?: number;
+  displayHeight?: number;
 }
 
 const {
@@ -23,6 +25,8 @@ const {
   loading = 'lazy',
   class: className,
   widths,
+  displayWidth,
+  displayHeight,
 } = Astro.props;
 
 if (!image?.asset) return;
@@ -30,6 +34,8 @@ if (!image?.asset) return;
 const src    = buildSrc(image);
 const srcset = buildSrcset(image, widths);
 const { width, height } = getDimensions(image);
+const attrWidth  = displayWidth  ?? width;
+const attrHeight = displayHeight ?? height;
 const alt = image.alt ?? '';
 ---
 
@@ -37,8 +43,8 @@ const alt = image.alt ?? '';
   src={src}
   srcset={srcset}
   sizes={sizes}
-  width={width}
-  height={height}
+  width={attrWidth}
+  height={attrHeight}
   alt={alt}
   loading={loading}
   decoding={loading === 'eager' ? 'sync' : 'async'}
