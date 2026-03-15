@@ -5,7 +5,7 @@ import Nav from '../components/Nav.astro';
 const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production';
 
 const [_settingsRes, _codeRes] = await Promise.all([
-  fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon }`)}`, { cache: 'no-store' }),
+  fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon, accentColorOverride }`)}`, { cache: 'no-store' }),
   fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`)}`, { cache: 'no-store' }),
 ]);
 
@@ -22,6 +22,7 @@ const bodyScripts = code?.bodyScripts    || '';
 const faviconUrl  = settings?.favicon?.asset?._ref
   ? `https://cdn.sanity.io/images/hx5xgigp/production/${settings.favicon.asset._ref.replace('image-', '').replace(/-([a-z]+)$/, '.$1')}`
   : null;
+const accentOverride = settings?.accentColorOverride || null;
 ---
 
 <!doctype html>
@@ -46,6 +47,15 @@ const faviconUrl  = settings?.favicon?.asset?._ref
 			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,400;1,300;1,400&family=Nunito+Sans:ital,wght@0,300;0,400;0,600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500&family=Tenor+Sans&family=Raleway:wght@300;400;500&display=swap"
 			rel="stylesheet"
 		/>
+		{accentOverride && (
+			<style set:html={`
+				:root, [data-theme] {
+					--accent: ${accentOverride};
+					--accent-dark: color-mix(in srgb, ${accentOverride} 80%, black);
+					--btn-bg: ${accentOverride};
+				}
+			`} />
+		)}
 		{headScripts && <Fragment set:html={headScripts} />}
 	</head>
 	<body>
