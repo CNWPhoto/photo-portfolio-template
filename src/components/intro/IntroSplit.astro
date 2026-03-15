@@ -72,7 +72,11 @@ const ctaLink = welcomeSection?.ctaLink || '/experience';
 		background: var(--bg-alt);
 	}
 
-	.isplit__text-wrap { max-width: 440px; }
+	.isplit__text-wrap {
+		max-width: 440px;
+		text-align: right;
+		padding-right: 75px;
+	}
 
 	.isplit__eyebrow {
 		font-family: var(--font-sans);
@@ -82,14 +86,15 @@ const ctaLink = welcomeSection?.ctaLink || '/experience';
 		text-transform: uppercase;
 		color: var(--accent);
 		margin-bottom: 20px;
+		text-align: right;
 	}
 
 	.isplit__body {
-		font-style: italic;
-		font-size: var(--isplit-body-size, 1.1rem);
+		font-size: var(--isplit-body-size, 1.32rem);
 		line-height: 1.9;
 		color: var(--text);
 		margin-bottom: 1.5rem;
+		text-align: right;
 	}
 
 	.isplit__body em {
@@ -98,7 +103,7 @@ const ctaLink = welcomeSection?.ctaLink || '/experience';
 	}
 
 	.isplit__link {
-		display: inline-block;
+		display: block;
 		font-style: italic;
 		font-size: var(--isplit-link-size, 1rem);
 		letter-spacing: 0.01em;
@@ -107,6 +112,7 @@ const ctaLink = welcomeSection?.ctaLink || '/experience';
 		border-bottom: none;
 		padding-bottom: 0;
 		margin-top: 1.5rem;
+		text-align: right;
 	}
 
 	@media (max-width: 900px) {
