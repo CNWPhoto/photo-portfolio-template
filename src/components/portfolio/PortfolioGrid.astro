@@ -19,8 +19,6 @@ const { featuredSection, theme } = Astro.props;
 							image={featuredSection.imageVertical}
 							sizes="(max-width: 900px) 50vw, 35vw"
 							class="pgrid__img-el"
-							displayWidth={600}
-							displayHeight={434}
 						/>
 					)}
 				</div>
@@ -30,8 +28,6 @@ const { featuredSection, theme } = Astro.props;
 							image={featuredSection.imageHorizontal}
 							sizes="(max-width: 900px) 50vw, 35vw"
 							class="pgrid__img-el"
-							displayWidth={900}
-							displayHeight={434}
 						/>
 					)}
 				</div>
@@ -121,9 +117,9 @@ const { featuredSection, theme } = Astro.props;
 		font-size: 0.7rem;
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
-		color: var(--text);
+		color: var(--accent);
 		text-decoration: none;
-		border: 1px solid var(--text);
+		border: 1px solid var(--accent);
 		padding: 0.7rem 1.5rem;
 	}
 
