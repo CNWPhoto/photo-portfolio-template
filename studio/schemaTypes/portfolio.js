@@ -24,6 +24,21 @@ export default {
       initialValue: 'A collection of recent dog photography sessions',
     },
     {
+      name: 'galleryColumns',
+      title: 'Gallery Columns',
+      type: 'number',
+      description: 'Number of columns in the masonry grid on desktop. Choose 2, 3, or 4.',
+      initialValue: 3,
+      options: {
+        list: [
+          {title: '2 columns', value: 2},
+          {title: '3 columns (default)', value: 3},
+          {title: '4 columns', value: 4},
+        ],
+        layout: 'radio',
+      },
+    },
+    {
       name: 'sizingNote',
       title: '📐 Image Sizing Requirement',
       type: 'string',

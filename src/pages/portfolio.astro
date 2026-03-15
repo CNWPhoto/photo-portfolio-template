@@ -2,11 +2,12 @@
 import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity.js';
 
-const portfolioDoc = await sanityClient.fetch(`*[_type == "portfolio"][0]{ title, byline, images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } } }`, {}, { cache: 'no-store' });
+const portfolioDoc = await sanityClient.fetch(`*[_type == "portfolio"][0]{ title, byline, galleryColumns, images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } } }`, {}, { cache: 'no-store' });
 
-const pageTitle  = portfolioDoc?.title  || 'Portfolio';
-const byline     = portfolioDoc?.byline || 'A collection of recent dog photography sessions';
-const portfolio  = portfolioDoc?.images;
+const pageTitle      = portfolioDoc?.title          || 'Portfolio';
+const byline         = portfolioDoc?.byline         || 'A collection of recent dog photography sessions';
+const galleryColumns = portfolioDoc?.galleryColumns || 3;
+const portfolio      = portfolioDoc?.images;
 
 // TODO:NICHE — swap fallback Pexels IDs and alt text for your niche
 // Alternating tall/wide aspect ratios so CSS columns mixes orientations across all three columns
@@ -50,7 +51,7 @@ const images = portfolio?.length
 			<p class="portfolio__byline">{byline}</p>
 			<h1 class="portfolio__title">{pageTitle}</h1>
 		</div>
-		<div class="portfolio__grid">
+		<div class="portfolio__grid" style={`--gallery-columns: ${galleryColumns}`}>
 			{images.map((img, i) => (
 				<div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
 					<img src={img.src} alt={img.alt} width={img.w} height={img.h} loading="lazy" decoding="async" class="portfolio__img" />
@@ -104,7 +105,7 @@ const images = portfolio?.length
 
 	/* Full-width masonry grid, edge to edge */
 	.portfolio__grid {
-		columns: 3;
+		columns: var(--gallery-columns, 3);
 		column-gap: 15px;
 		width: 100%;
 		box-sizing: border-box;
