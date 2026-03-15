@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity.js';
 
-const portfolioDoc = await sanityClient.fetch(`*[_type == "portfolio"][0]{ title, byline, images }`, {}, { cache: 'no-store' });
+const portfolioDoc = await sanityClient.fetch(`*[_type == "portfolio"][0]{ title, byline, images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } } }`, {}, { cache: 'no-store' });
 
 const pageTitle  = portfolioDoc?.title  || 'Portfolio';
 const byline     = portfolioDoc?.byline || 'A collection of recent dog photography sessions';
@@ -25,14 +25,22 @@ const fallbackImages = [
 	{ id: '2607546',  alt: 'Dog portrait, candid expression',             w: 800, h: 533  }, // wide
 ].map(({ id, alt, w, h }) => ({
 	src: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${h}&fit=crop`,
-	alt,
+	alt, w, h,
 }));
 
 const images = portfolio?.length
-	? portfolio.map((img: any) => ({
-			src: urlFor(img).width(800).auto('format').url(),
-			alt: img.alt ?? img.title ?? '',
-	  }))
+	? portfolio.map((img: any) => {
+			const naturalW = img.asset?.metadata?.dimensions?.width ?? 1200;
+			const naturalH = img.asset?.metadata?.dimensions?.height ?? 800;
+			const displayW = Math.min(naturalW, 800);
+			const displayH = Math.round((displayW / naturalW) * naturalH);
+			return {
+				src: urlFor(img).width(800).auto('format').url(),
+				alt: img.alt ?? img.title ?? '',
+				w: displayW,
+				h: displayH,
+			};
+	  })
 	: fallbackImages;
 ---
 
@@ -45,7 +53,7 @@ const images = portfolio?.length
 		<div class="portfolio__grid">
 			{images.map((img, i) => (
 				<div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
-					<img src={img.src} alt={img.alt} loading="lazy" decoding="async" />
+					<img src={img.src} alt={img.alt} width={img.w} height={img.h} loading="lazy" decoding="async" class="portfolio__img" />
 				</div>
 			))}
 		</div>
@@ -114,6 +122,13 @@ const images = portfolio?.length
 		width: 100%;
 		display: block;
 		transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	}
+
+	.portfolio__img {
+		width: 100%;
+		height: auto;
+		display: block;
+		object-fit: cover;
 	}
 
 	.portfolio__item:hover img {
