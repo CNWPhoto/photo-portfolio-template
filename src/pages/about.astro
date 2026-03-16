@@ -59,7 +59,7 @@ const introImage        = intro.image ?? null;
 		</section>
 
 		<!-- ══ SECTION 2: What to Expect ══ -->
-		<section class="expect">
+		<section class="expect" data-theme="warm-studio">
 			<hr />
 			<div class="expect__inner">
 				<div class="expect__label-col" aria-hidden="true">
@@ -233,12 +233,6 @@ const introImage        = intro.image ?? null;
 	/* ══ SECTION 2: What to Expect ══ */
 	.expect {
 		padding: 0 0 6rem;
-		background: var(--section-dark);
-		color: var(--section-dark-text);
-	}
-
-	.expect hr {
-		border-color: rgba(255, 255, 255, 0.12);
 	}
 
 	.expect__inner {
@@ -261,7 +255,7 @@ const introImage        = intro.image ?? null;
 		font-style: italic;
 		font-size: clamp(1.5rem, 2.5vw, 2.25rem);
 		letter-spacing: 0.12em;
-		color: rgba(255, 255, 255, 0.15);
+		color: #1a2744;
 		writing-mode: vertical-rl;
 		transform: rotate(180deg);
 		white-space: nowrap;
@@ -309,8 +303,7 @@ const introImage        = intro.image ?? null;
 	.expect__col-body {
 		font-size: 0.9375rem;
 		line-height: 1.78;
-		color: var(--section-dark-text);
-		opacity: 0.72;
+		color: var(--muted);
 	}
 
 	/* ══ SECTION 3: Personal Split ══ */
