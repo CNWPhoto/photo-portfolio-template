@@ -67,6 +67,18 @@ export default defineConfig({
                   ]),
               ),
 
+            // ── About ────────────────────────────────────────────────────
+            S.listItem()
+              .title('👤 About')
+              .id('aboutGroup')
+              .child(
+                S.list()
+                  .title('About')
+                  .items([
+                    singleton(S, 'aboutSettings', 'Intro Section', 'aboutSettings'),
+                  ]),
+              ),
+
             // ── Blog ─────────────────────────────────────────────────────
             S.listItem()
               .title('📝 Blog')
