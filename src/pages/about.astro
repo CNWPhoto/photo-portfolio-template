@@ -59,7 +59,7 @@ const introImage        = intro.image ?? null;
 		</section>
 
 		<!-- ══ SECTION 2: What to Expect ══ -->
-		<section class="expect" data-theme="warm-studio">
+		<section class="expect">
 			<hr />
 			<div class="expect__inner">
 				<div class="expect__label-col" aria-hidden="true">
@@ -233,6 +233,12 @@ const introImage        = intro.image ?? null;
 	/* ══ SECTION 2: What to Expect ══ */
 	.expect {
 		padding: 0 0 6rem;
+		background: var(--section-dark);
+		color: var(--section-dark-text);
+	}
+
+	.expect hr {
+		border-color: rgba(255, 255, 255, 0.12);
 	}
 
 	.expect__inner {
@@ -255,7 +261,7 @@ const introImage        = intro.image ?? null;
 		font-style: italic;
 		font-size: clamp(1.5rem, 2.5vw, 2.25rem);
 		letter-spacing: 0.12em;
-		color: var(--border);
+		color: rgba(255, 255, 255, 0.15);
 		writing-mode: vertical-rl;
 		transform: rotate(180deg);
 		white-space: nowrap;
@@ -272,11 +278,14 @@ const introImage        = intro.image ?? null;
 	.expect__img-wrap {
 		overflow: hidden;
 		margin-bottom: 1.5rem;
+		height: 250px;
+		width: 250px;
+		max-width: 100%;
 	}
 
 	.expect__img-wrap img {
 		width: 100%;
-		aspect-ratio: 1 / 1;
+		height: 100%;
 		object-fit: cover;
 		display: block;
 		transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -292,7 +301,7 @@ const introImage        = intro.image ?? null;
 		font-size: 0.7rem;
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
-		color: var(--text);
+		color: var(--accent);
 		font-weight: 600;
 		margin-bottom: 1rem;
 	}
@@ -300,7 +309,8 @@ const introImage        = intro.image ?? null;
 	.expect__col-body {
 		font-size: 0.9375rem;
 		line-height: 1.78;
-		color: var(--muted);
+		color: var(--section-dark-text);
+		opacity: 0.72;
 	}
 
 	/* ══ SECTION 3: Personal Split ══ */
