@@ -11,6 +11,7 @@ import Layout from '../layouts/Layout.astro';
 				<img
 					src="https://images.pexels.com/photos/1300402/pexels-photo-1300402.jpeg?auto=compress&cs=tinysrgb&w=900"
 					alt="Photographer portrait"
+					width="900" height="600"
 					loading="eager" decoding="async"
 				/>
 			</div>
@@ -37,6 +38,7 @@ import Layout from '../layouts/Layout.astro';
 							<img
 								src="https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
 								alt="Subject-led session in golden afternoon light"
+								width="600" height="600"
 								loading="lazy" decoding="async"
 							/>
 						</div>
@@ -48,6 +50,7 @@ import Layout from '../layouts/Layout.astro';
 							<img
 								src="https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
 								alt="Calm and supportive direction during a session"
+								width="600" height="600"
 								loading="lazy" decoding="async"
 							/>
 						</div>
@@ -59,6 +62,7 @@ import Layout from '../layouts/Layout.astro';
 							<img
 								src="https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
 								alt="A genuine moment of connection"
+								width="600" height="600"
 								loading="lazy" decoding="async"
 							/>
 						</div>
@@ -79,6 +83,7 @@ import Layout from '../layouts/Layout.astro';
 				<img
 					src="https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=900"
 					alt="Candid moment captured during a photography session"
+					width="900" height="600"
 					loading="lazy" decoding="async"
 				/>
 			</div>
@@ -104,6 +109,7 @@ import Layout from '../layouts/Layout.astro';
 						<img
 							src="https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=600&h=750&fit=crop"
 							alt="Photography session moment"
+							width="600" height="750"
 							loading="lazy" decoding="async"
 						/>
 					</div>
@@ -111,6 +117,7 @@ import Layout from '../layouts/Layout.astro';
 						<img
 							src="https://images.pexels.com/photos/1254140/pexels-photo-1254140.jpeg?auto=compress&cs=tinysrgb&w=500&h=640&fit=crop"
 							alt="Another moment from a photography session"
+							width="500" height="640"
 							loading="lazy" decoding="async"
 						/>
 					</div>
@@ -131,12 +138,13 @@ import Layout from '../layouts/Layout.astro';
 	/* ══ SECTION 1: Intro ══ */
 	.intro {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 2fr 3fr;
 		min-height: 90vh;
 	}
 
 	.intro__image {
 		overflow: hidden;
+		height: 100%;
 	}
 
 	.intro__image img {
@@ -150,18 +158,20 @@ import Layout from '../layouts/Layout.astro';
 	.intro__content {
 		display: flex;
 		align-items: center;
-		padding: 6rem 6rem 6rem 5rem;
+		padding: 6rem 5rem 6rem 6rem;
+		border-left: 1px solid var(--border);
 	}
 
 	.intro__text-wrap {
-		max-width: 480px;
+		max-width: 560px;
 	}
 
 	.intro__heading {
-		font-size: clamp(2rem, 3.5vw, 3.25rem);
+		font-size: clamp(2.5rem, 5vw, 4.5rem);
 		color: var(--text);
-		margin-bottom: 1.5rem;
-		letter-spacing: -0.01em;
+		margin-bottom: 2rem;
+		letter-spacing: -0.02em;
+		line-height: 1.12;
 	}
 
 	.intro__sub {
@@ -172,14 +182,14 @@ import Layout from '../layouts/Layout.astro';
 		text-transform: uppercase;
 		color: var(--accent);
 		line-height: 1.7;
-		margin-bottom: 2rem;
+		margin-bottom: 2.5rem;
 	}
 
 	.intro__body {
-		font-style: italic;
+		font-style: normal;
 		font-size: 1.0625rem;
 		line-height: 1.82;
-		color: var(--text);
+		color: var(--muted);
 		margin-bottom: 1.25rem;
 	}
 
@@ -445,12 +455,14 @@ import Layout from '../layouts/Layout.astro';
 		}
 
 		.intro__image img {
-			height: 60vw;
-			min-height: 300px;
+			height: 75vw;
+			min-height: 320px;
 		}
 
 		.intro__content {
 			padding: 4rem 2rem;
+			border-left: none;
+			border-top: 1px solid var(--border);
 		}
 
 		.intro__text-wrap {
