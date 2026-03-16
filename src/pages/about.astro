@@ -1,5 +1,29 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { sanityClient, urlFor } from '../lib/sanity.js';
+import SanityImage from '../components/SanityImage.astro';
+
+const aboutDoc = await sanityClient.fetch(
+	`*[_type == "aboutSettings"][0]{
+		intro {
+			image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
+			heading,
+			subtext,
+			bodyParagraph1,
+			bodyParagraph2
+		}
+	}`,
+	{},
+	{ cache: 'no-store' }
+);
+
+const intro = aboutDoc?.intro ?? {};
+
+const introHeading      = intro.heading       || "Hi, I'm Connor";
+const introSubtext      = intro.subtext        || 'A photographer based in [City], here to help you document your story in a way that feels natural and stress-free.';
+const introBody1        = intro.bodyParagraph1 || "I've spent the last decade photographing the moments that matter most — the quiet ones, the joyful ones, the ones you don't even notice are happening until the camera catches them. My approach is unhurried and entirely led by you.";
+const introBody2        = intro.bodyParagraph2 || 'What started as a personal project became a calling. I believe every person, every family, every bond deserves to be documented beautifully — not in a stiff, posed way, but in a way that is completely, unmistakably them.';
+const introImage        = intro.image ?? null;
 ---
 
 <Layout>
@@ -8,19 +32,28 @@ import Layout from '../layouts/Layout.astro';
 		<!-- ══ SECTION 1: Intro Split ══ -->
 		<section class="intro" data-theme="classic-cream">
 			<div class="intro__image reveal-fade">
-				<img
-					src="https://images.pexels.com/photos/1704488/pexels-photo-1704488.jpeg?auto=compress&cs=tinysrgb&w=900"
-					alt="Photographer portrait"
-					width="900" height="600"
-					loading="eager" decoding="async"
-				/>
+				{introImage ? (
+					<SanityImage
+						image={introImage}
+						sizes="(max-width: 900px) 100vw, 500px"
+						class="intro__img"
+						loading="eager"
+					/>
+				) : (
+					<img
+						src="https://images.pexels.com/photos/1704488/pexels-photo-1704488.jpeg?auto=compress&cs=tinysrgb&w=900"
+						alt="Photographer portrait"
+						width="900" height="600"
+						loading="eager" decoding="async"
+					/>
+				)}
 			</div>
 			<div class="intro__content">
 				<div class="intro__text-wrap">
-					<h1 class="intro__heading">Hi, I'm Connor</h1>
-					<p class="intro__sub reveal reveal-delay-1">A photographer based in [City], here to help you document your story in a way that feels natural and stress-free.</p>{/* TODO:NICHE */}
-					<p class="intro__body reveal reveal-delay-2">I've spent the last decade photographing the moments that matter most — the quiet ones, the joyful ones, the ones you don't even notice are happening until the camera catches them. My approach is unhurried and entirely led by you.</p>{/* TODO:NICHE */}
-					<p class="intro__body reveal reveal-delay-3">What started as a personal project became a calling. I believe every person, every family, every bond deserves to be documented beautifully — not in a stiff, posed way, but in a way that is completely, unmistakably them.</p>{/* TODO:NICHE */}
+					<h1 class="intro__heading">{introHeading}</h1>
+					<p class="intro__sub reveal reveal-delay-1">{introSubtext}</p>
+					<p class="intro__body reveal reveal-delay-2">{introBody1}</p>
+					<p class="intro__body reveal reveal-delay-3">{introBody2}</p>
 				</div>
 			</div>
 		</section>
@@ -151,7 +184,8 @@ import Layout from '../layouts/Layout.astro';
 		padding-left: 3rem;
 	}
 
-	.intro__image img {
+	.intro__image img,
+	.intro__image :global(.intro__img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
@@ -462,7 +496,8 @@ import Layout from '../layouts/Layout.astro';
 			aspect-ratio: 2 / 3;
 		}
 
-		.intro__image img {
+		.intro__image img,
+		.intro__image :global(.intro__img) {
 			height: 100%;
 		}
 
