@@ -3,29 +3,27 @@ import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity.js';
 import SanityImage from '../components/SanityImage.astro';
 
-const aboutDoc = await sanityClient.fetch(
-	`*[_type == "aboutSettings"][0]{
-		intro {
+const [introDoc, wteDoc] = await Promise.all([
+	sanityClient.fetch(
+		`*[_type == "aboutIntro"][0]{
 			image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
-			heading,
-			subtext,
-			bodyParagraph1,
-			bodyParagraph2
-		},
-		whatToExpect {
+			heading, subtext, bodyParagraph1, bodyParagraph2
+		}`,
+		{}, { cache: 'no-store' }
+	),
+	sanityClient.fetch(
+		`*[_type == "aboutWhatToExpect"][0]{
 			sectionLabel,
 			columns[] {
 				image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
-				title,
-				body
+				title, body
 			}
-		}
-	}`,
-	{},
-	{ cache: 'no-store' }
-);
+		}`,
+		{}, { cache: 'no-store' }
+	),
+]);
 
-const intro = aboutDoc?.intro ?? {};
+const intro = introDoc ?? {};
 
 const introHeading      = intro.heading       || "Hi, I'm Connor";
 const introSubtext      = intro.subtext        || 'A photographer based in [City], here to help you document your story in a way that feels natural and stress-free.';
@@ -33,7 +31,7 @@ const introBody1        = intro.bodyParagraph1 || "I've spent the last decade ph
 const introBody2        = intro.bodyParagraph2 || 'What started as a personal project became a calling. I believe every person, every family, every bond deserves to be documented beautifully — not in a stiff, posed way, but in a way that is completely, unmistakably them.';
 const introImage        = intro.image ?? null;
 
-const wte = aboutDoc?.whatToExpect ?? {};
+const wte = wteDoc ?? {};
 const wteLabel = wte.sectionLabel || 'What to Expect';
 const wteColumns = wte.columns?.length ? wte.columns : [
 	{
