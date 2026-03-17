@@ -77,6 +77,7 @@ export default defineConfig({
                   .items([
                     singleton(S, 'aboutIntro', 'Intro Section', 'aboutIntro'),
                     singleton(S, 'aboutWhatToExpect', 'What to Expect Section', 'aboutWhatToExpect'),
+                    singleton(S, 'aboutPersonal', 'Deeper Dive Section', 'aboutPersonal'),
                   ]),
               ),
 

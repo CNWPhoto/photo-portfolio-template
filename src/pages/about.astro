@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity.js';
 import SanityImage from '../components/SanityImage.astro';
 
-const [introDoc, wteDoc] = await Promise.all([
+const [introDoc, wteDoc, personalDoc] = await Promise.all([
 	sanityClient.fetch(
 		`*[_type == "aboutIntro"][0]{
 			image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
@@ -21,7 +21,19 @@ const [introDoc, wteDoc] = await Promise.all([
 		}`,
 		{}, { cache: 'no-store' }
 	),
+	sanityClient.fetch(
+		`*[_type == "aboutPersonal"][0]{
+			image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
+			bodyParagraph1, bodyParagraph2
+		}`,
+		{}, { cache: 'no-store' }
+	),
 ]);
+
+const personal = personalDoc ?? {};
+const personalImage  = personal.image ?? null;
+const personalBody1  = personal.bodyParagraph1 || 'Photography found me at a time when I needed it most. A camera in hand became a reason to look closely at the world — to slow down, notice the small things, and find beauty in the ordinary.';
+const personalBody2  = personal.bodyParagraph2 || "That sense of attention is something I bring to every session. I'm not here to manufacture a perfect image. I'm here to find the one that's already there, waiting.";
 
 const intro = introDoc ?? {};
 
@@ -130,17 +142,28 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 
 		<!-- ══ SECTION 3: Personal Split ══ -->
 		<section class="personal" data-theme="classic-cream">
-			<div class="personal__text reveal reveal-delay-1">
-				<p class="personal__body"><em>Photography found me at a time when I needed it most. A camera in hand became a reason to look closely at the world — to slow down, notice the small things, and find beauty in the ordinary.</em></p>{/* TODO:NICHE */}
-				<p class="personal__body"><em>That sense of attention is something I bring to every session. I'm not here to manufacture a perfect image. I'm here to find the one that's already there, waiting.</em></p>{/* TODO:NICHE */}
-			</div>
-			<div class="personal__image">
-				<img
-					src="https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=900"
-					alt="Candid moment captured during a photography session"
-					width="900" height="600"
-					loading="lazy" decoding="async"
-				/>
+			<div class="personal__inner">
+				<div class="personal__text reveal reveal-delay-1">
+					<p class="personal__body">{personalBody1}</p>
+					<p class="personal__body">{personalBody2}</p>
+				</div>
+				<div class="personal__image">
+					{personalImage ? (
+						<SanityImage
+							image={personalImage}
+							sizes="(max-width: 900px) 100vw, 550px"
+							class="personal__img"
+							loading="lazy"
+						/>
+					) : (
+						<img
+							src="https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=900"
+							alt="Candid moment captured during a photography session"
+							width="900" height="600"
+							loading="lazy" decoding="async"
+						/>
+					)}
+				</div>
 			</div>
 		</section>
 
@@ -332,9 +355,15 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 
 	/* ══ SECTION 3: Personal Split ══ */
 	.personal {
+		padding: 0;
+	}
+
+	.personal__inner {
+		max-width: 1100px;
+		margin: 0 auto;
+		height: 500px;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		min-height: 70vh;
 	}
 
 	.personal__text {
@@ -342,7 +371,7 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		padding: 6rem 5rem;
+		padding: 4rem;
 		text-align: center;
 		border-right: 1px solid var(--border);
 	}
@@ -353,7 +382,7 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 		font-size: clamp(1.0625rem, 1.75vw, 1.25rem);
 		line-height: 1.82;
 		color: var(--text);
-		max-width: 420px;
+		max-width: 380px;
 		margin-bottom: 1.5rem;
 	}
 
@@ -361,15 +390,13 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 		margin-bottom: 0;
 	}
 
-	.personal__body em {
-		font-style: normal;
-	}
-
 	.personal__image {
 		overflow: hidden;
+		height: 500px;
 	}
 
-	.personal__image img {
+	.personal__image img,
+	.personal__image :global(.personal__img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
@@ -551,8 +578,9 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 			padding-top: 3rem;
 		}
 
-		.personal {
+		.personal__inner {
 			grid-template-columns: 1fr;
+			height: auto;
 		}
 
 		.personal__text {
@@ -561,9 +589,14 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 			border-bottom: 1px solid var(--border);
 		}
 
-		.personal__image img {
+		.personal__image {
 			height: 60vw;
 			min-height: 300px;
+		}
+
+		.personal__image img,
+		.personal__image :global(.personal__img) {
+			height: 100%;
 		}
 
 		.pullquote__inner {
