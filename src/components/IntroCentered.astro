@@ -17,6 +17,7 @@ const bodyText = "Every session is crafted entirely around your dog's unique per
 			<SanityImage
 				image={image}
 				sizes="(max-width: 900px) 100vw, 60vw"
+				class="icentered__img"
 			/>
 		)}
 	</div>
@@ -74,7 +75,7 @@ const bodyText = "Every session is crafted entirely around your dog's unique per
 		overflow: hidden;
 	}
 
-	.icentered__image img {
+	.icentered__image :global(.icentered__img) {
 		width: 100%;
 		height: 55vw;
 		max-height: 680px;

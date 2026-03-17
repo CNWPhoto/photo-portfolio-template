@@ -29,6 +29,7 @@ const testimonials = sanityTestimonials?.length
 					<SanityImage
 						image={testimonials[0].image}
 						sizes="(max-width: 900px) 30vw, 200px"
+						class="tslider__img"
 					/>
 				)}
 			</div>
@@ -79,7 +80,7 @@ const testimonials = sanityTestimonials?.length
 		flex-shrink: 0;
 	}
 
-	.tslider__image-wrap img {
+	.tslider__image-wrap :global(.tslider__img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;

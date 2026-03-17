@@ -34,8 +34,8 @@ if (!image?.asset) return;
 const src    = buildSrc(image);
 const srcset = buildSrcset(image, widths);
 const { width, height } = getDimensions(image);
-const attrWidth  = displayWidth  ?? width;
-const attrHeight = displayHeight ?? height;
+const attrWidth  = displayWidth  ?? Math.min(width, 1200);
+const attrHeight = displayHeight ?? Math.round((attrWidth / width) * height);
 const alt = image.alt ?? '';
 ---
 

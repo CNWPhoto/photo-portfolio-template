@@ -84,6 +84,7 @@ const bodyHTML = post.body
             image={post.coverImage}
             sizes="(max-width: 900px) 100vw, 60vw"
             loading="eager"
+            class="post__cover-img"
           />
         </div>
       )}
@@ -144,7 +145,7 @@ const bodyHTML = post.body
     margin: 2.5rem auto 0;
   }
 
-  .post__cover img {
+  .post__cover :global(.post__cover-img) {
     width: 100%;
     height: auto;
     display: block;

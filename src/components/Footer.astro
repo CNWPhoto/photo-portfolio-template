@@ -95,7 +95,7 @@ const year = new Date().getFullYear();
 		<div class="footer__right">
 			<div class="footer__photo-col">
 				{footerPhoto
-					? <SanityImage image={footerPhoto} sizes="280px" />
+					? <SanityImage image={footerPhoto} sizes="280px" class="footer__portrait" displayWidth={280} displayHeight={420} />
 					: <span class="footer__photo-placeholder">Your Photo Here</span>
 				}
 			</div>
@@ -230,7 +230,7 @@ const year = new Date().getFullYear();
 		background: var(--bg-alt);
 	}
 
-	.footer__photo-col img {
+	.footer__photo-col :global(.footer__portrait) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;

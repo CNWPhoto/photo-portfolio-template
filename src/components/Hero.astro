@@ -22,6 +22,7 @@ const tagline  = heroCaption?.tagline      || 'Natural, stress-free dog portrait
 					image={img}
 					sizes="100vw"
 					loading={i === 0 ? 'eager' : 'lazy'}
+					class="hero__img"
 				/>
 			))}
 		</div>
@@ -66,7 +67,7 @@ const tagline  = heroCaption?.tagline      || 'Natural, stress-free dog portrait
 	}
 
 	/* ── Images: fill container height, natural width, never compress ── */
-	.hero__track img {
+	.hero__track :global(.hero__img) {
 		height: 100%;
 		width: auto;
 		flex-shrink: 0;
