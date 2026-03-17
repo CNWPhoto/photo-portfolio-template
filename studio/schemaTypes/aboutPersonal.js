@@ -10,6 +10,12 @@ export default {
   },
   fields: [
     {
+      name: 'enabled',
+      title: 'Show this section',
+      type: 'boolean',
+      initialValue: true,
+    },
+    {
       name: 'image',
       title: 'Image',
       type: 'image',

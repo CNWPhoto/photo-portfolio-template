@@ -10,6 +10,12 @@ export default {
   },
   fields: [
     {
+      name: 'enabled',
+      title: 'Show this section',
+      type: 'boolean',
+      initialValue: true,
+    },
+    {
       name: 'sectionLabel',
       title: 'Section Label',
       type: 'string',

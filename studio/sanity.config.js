@@ -78,6 +78,7 @@ export default defineConfig({
                     singleton(S, 'aboutIntro', 'Intro Section', 'aboutIntro'),
                     singleton(S, 'aboutWhatToExpect', 'What to Expect Section', 'aboutWhatToExpect'),
                     singleton(S, 'aboutPersonal', 'Deeper Dive Section', 'aboutPersonal'),
+                    singleton(S, 'aboutQuote', 'Quote Section', 'aboutQuote'),
                   ]),
               ),
 

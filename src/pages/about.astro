@@ -3,17 +3,17 @@ import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity.js';
 import SanityImage from '../components/SanityImage.astro';
 
-const [introDoc, wteDoc, personalDoc] = await Promise.all([
+const [introDoc, wteDoc, personalDoc, quoteDoc] = await Promise.all([
 	sanityClient.fetch(
 		`*[_type == "aboutIntro"][0]{
-			image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
+			enabled, image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
 			heading, subtext, bodyParagraph1, bodyParagraph2
 		}`,
 		{}, { cache: 'no-store' }
 	),
 	sanityClient.fetch(
 		`*[_type == "aboutWhatToExpect"][0]{
-			sectionLabel,
+			enabled, sectionLabel,
 			columns[] {
 				image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
 				title, body
@@ -23,17 +23,28 @@ const [introDoc, wteDoc, personalDoc] = await Promise.all([
 	),
 	sanityClient.fetch(
 		`*[_type == "aboutPersonal"][0]{
-			image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
+			enabled, image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
 			bodyParagraph1, bodyParagraph2
 		}`,
 		{}, { cache: 'no-store' }
 	),
+	sanityClient.fetch(
+		`*[_type == "aboutQuote"][0]{ enabled, quoteText }`,
+		{}, { cache: 'no-store' }
+	),
 ]);
+
+const showIntro    = introDoc?.enabled    !== false;
+const showWte      = wteDoc?.enabled      !== false;
+const showPersonal = personalDoc?.enabled !== false;
+const showQuote    = quoteDoc?.enabled    !== false;
 
 const personal = personalDoc ?? {};
 const personalImage  = personal.image ?? null;
 const personalBody1  = personal.bodyParagraph1 || 'Photography found me at a time when I needed it most. A camera in hand became a reason to look closely at the world — to slow down, notice the small things, and find beauty in the ordinary.';
 const personalBody2  = personal.bodyParagraph2 || "That sense of attention is something I bring to every session. I'm not here to manufacture a perfect image. I'm here to find the one that's already there, waiting.";
+
+const quoteText = quoteDoc?.quoteText || 'I believe photographs should feel honest, timeless, and personal.';
 
 const intro = introDoc ?? {};
 
@@ -77,7 +88,7 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 	<main>
 
 		<!-- ══ SECTION 1: Intro Split ══ -->
-		<section class="intro" data-theme="classic-cream">
+		{showIntro && <section class="intro" data-theme="classic-cream">
 			<div class="intro__image reveal-fade">
 				{introImage ? (
 					<SanityImage
@@ -103,10 +114,10 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 					<p class="intro__body reveal reveal-delay-3">{introBody2}</p>
 				</div>
 			</div>
-		</section>
+		</section>}
 
 		<!-- ══ SECTION 2: What to Expect ══ -->
-		<section class="expect" data-theme="warm-studio">
+		{showWte && <section class="expect" data-theme="warm-studio">
 			<hr />
 			<div class="expect__inner">
 				<div class="expect__label-col" aria-hidden="true">
@@ -138,10 +149,10 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 					))}
 				</div>
 			</div>
-		</section>
+		</section>}
 
 		<!-- ══ SECTION 3: Personal Split ══ -->
-		<section class="personal" data-theme="classic-cream">
+		{showPersonal && <section class="personal" data-theme="classic-cream">
 			<div class="personal__inner">
 				<div class="personal__text reveal reveal-delay-1">
 					<p class="personal__body">{personalBody1}</p>
@@ -165,18 +176,17 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 					)}
 				</div>
 			</div>
-		</section>
+		</section>}
 
 		<!-- ══ SECTION 4: Pull Quote ══ -->
-		<section class="pullquote" data-theme="classic-cream">
+		{showQuote && <section class="pullquote" data-theme="classic-cream">
 			<hr />
 			<div class="pullquote__inner">
 				<blockquote class="pullquote__text reveal reveal-delay-1">
-					&ldquo;I believe photographs should feel honest, timeless, and personal.&rdquo;
+					&ldquo;{quoteText}&rdquo;
 				</blockquote>
-				<a href="/contact" class="pullquote__link reveal reveal-delay-2">Work with me &rarr;</a>
 			</div>
-		</section>
+		</section>}
 
 		<!-- ══ SECTION 5: Let's Do This CTA ══ -->
 		<section class="cta" data-theme="warm-studio">
