@@ -11,6 +11,14 @@ const aboutDoc = await sanityClient.fetch(
 			subtext,
 			bodyParagraph1,
 			bodyParagraph2
+		},
+		whatToExpect {
+			sectionLabel,
+			columns[] {
+				image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
+				title,
+				body
+			}
 		}
 	}`,
 	{},
@@ -24,6 +32,35 @@ const introSubtext      = intro.subtext        || 'A photographer based in [City
 const introBody1        = intro.bodyParagraph1 || "I've spent the last decade photographing the moments that matter most — the quiet ones, the joyful ones, the ones you don't even notice are happening until the camera catches them. My approach is unhurried and entirely led by you.";
 const introBody2        = intro.bodyParagraph2 || 'What started as a personal project became a calling. I believe every person, every family, every bond deserves to be documented beautifully — not in a stiff, posed way, but in a way that is completely, unmistakably them.';
 const introImage        = intro.image ?? null;
+
+const wte = aboutDoc?.whatToExpect ?? {};
+const wteLabel = wte.sectionLabel || 'What to Expect';
+const wteColumns = wte.columns?.length ? wte.columns : [
+	{
+		_fallback: true,
+		image: null,
+		imageSrc: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop',
+		imageAlt: 'Subject-led session in golden afternoon light',
+		title: 'Subject-Led Sessions',
+		body: 'Every session moves at your pace. There are no forced poses or rigid shot lists — just space for you to be yourself while I follow the light and the moments as they unfold.',
+	},
+	{
+		_fallback: true,
+		image: null,
+		imageSrc: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop',
+		imageAlt: 'Calm and supportive direction during a session',
+		title: 'Calm Supportive Direction',
+		body: "I'll gently guide you through the session so you never feel unsure of what to do. Most people tell me they forget the camera is there — that's exactly the point.",
+	},
+	{
+		_fallback: true,
+		image: null,
+		imageSrc: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop',
+		imageAlt: 'A genuine moment of connection',
+		title: 'Connection',
+		body: 'The best photographs come from real connection. I invest time before every session getting to know you so that what we create together feels personal, not generic.',
+	},
+];
 ---
 
 <Layout>
@@ -63,45 +100,32 @@ const introImage        = intro.image ?? null;
 			<hr />
 			<div class="expect__inner">
 				<div class="expect__label-col" aria-hidden="true">
-					<span class="expect__label">What to Expect</span>
+					<span class="expect__label">{wteLabel}</span>
 				</div>
 				<div class="expect__cols">
-					<div class="expect__col reveal reveal-delay-1">
-						<div class="expect__img-wrap">
-							<img
-								src="https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
-								alt="Subject-led session in golden afternoon light"
-								width="600" height="600"
-								loading="lazy" decoding="async"
-							/>
+					{wteColumns.map((col: any, i: number) => (
+						<div class={`expect__col reveal reveal-delay-${i + 1}`}>
+							<div class="expect__img-wrap">
+								{col._fallback ? (
+									<img
+										src={col.imageSrc}
+										alt={col.imageAlt}
+										width="600" height="600"
+										loading="lazy" decoding="async"
+									/>
+								) : (
+									<SanityImage
+										image={col.image}
+										sizes="250px"
+										class="expect__col-img"
+										loading="lazy"
+									/>
+								)}
+							</div>
+							<p class="expect__col-label">{col.title}</p>
+							<p class="expect__col-body">{col.body}</p>
 						</div>
-						<p class="expect__col-label">Subject-Led Sessions</p>{/* TODO:NICHE */}
-						<p class="expect__col-body">Every session moves at your pace. There are no forced poses or rigid shot lists — just space for you to be yourself while I follow the light and the moments as they unfold.</p>{/* TODO:NICHE */}
-					</div>
-					<div class="expect__col reveal reveal-delay-2">
-						<div class="expect__img-wrap">
-							<img
-								src="https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
-								alt="Calm and supportive direction during a session"
-								width="600" height="600"
-								loading="lazy" decoding="async"
-							/>
-						</div>
-						<p class="expect__col-label">Calm Supportive Direction</p>{/* TODO:NICHE */}
-						<p class="expect__col-body">I'll gently guide you through the session so you never feel unsure of what to do. Most people tell me they forget the camera is there — that's exactly the point.</p>{/* TODO:NICHE */}
-					</div>
-					<div class="expect__col reveal reveal-delay-3">
-						<div class="expect__img-wrap">
-							<img
-								src="https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop"
-								alt="A genuine moment of connection"
-								width="600" height="600"
-								loading="lazy" decoding="async"
-							/>
-						</div>
-						<p class="expect__col-label">Connection</p>{/* TODO:NICHE */}
-						<p class="expect__col-body">The best photographs come from real connection. I invest time before every session getting to know you so that what we create together feels personal, not generic.</p>{/* TODO:NICHE */}
-					</div>
+					))}
 				</div>
 			</div>
 		</section>
@@ -278,7 +302,8 @@ const introImage        = intro.image ?? null;
 		max-width: 100%;
 	}
 
-	.expect__img-wrap img {
+	.expect__img-wrap img,
+	.expect__img-wrap :global(.expect__col-img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;

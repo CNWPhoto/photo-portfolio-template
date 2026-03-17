@@ -75,7 +75,7 @@ export default defineConfig({
                 S.list()
                   .title('About')
                   .items([
-                    singleton(S, 'aboutSettings', 'Intro Section', 'aboutSettings'),
+                    singleton(S, 'aboutSettings', 'About Page Content', 'aboutSettings'),
                   ]),
               ),
 
