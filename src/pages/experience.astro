@@ -48,7 +48,7 @@ const faqs = [
 			<div class="hero__overlay" aria-hidden="true"></div>
 			<div class="hero__content">
 				<h1 class="hero__heading">The Experience &amp; Investment</h1>
-				<p class="hero__sub">Relaxed, natural dog portraits designed to celebrate your dog</p>
+				<p class="hero__sub">What working together looks like, from your session to finished artwork.</p>
 			</div>
 		</section>
 
@@ -80,16 +80,7 @@ const faqs = [
 					/>
 				</div>
 				<div class="sessions__content">
-					<p class="sessions__eyebrow">Sessions</p>
-					<h2 class="sessions__heading">$XXX</h2>{/* TODO:NICHE — update pricing */}
-					<p class="sessions__sub">Session fee begins at</p>
-					<p class="sessions__body reveal reveal-delay-2">The session includes a relaxed, unhurried photo experience designed around your dog's pace and comfort. Sessions are unhurried and dog-led, with time built in for your pup to settle, explore, and be themselves.</p>
-					<ul class="sessions__list reveal reveal-delay-3">
-						<li>Relaxed outdoor setting</li>
-						<li>Dog-led pacing and comfort</li>
-						<li>Natural, unposed moments</li>
-						<li>Professional guidance throughout</li>
-					</ul>
+					<h2 class="sessions__heading reveal reveal-delay-1">Sessions</h2>
 				</div>
 			</div>
 		</section>
@@ -340,61 +331,10 @@ const faqs = [
 		display: block;
 	}
 
-	.sessions__eyebrow {
-		font-family: var(--font-sans);
-		font-style: normal;
-		font-size: 0.7rem;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-		color: var(--accent);
-		margin-bottom: 0.75rem;
-	}
-
 	.sessions__heading {
-		font-size: clamp(3rem, 6vw, 5rem);
+		font-size: clamp(2.25rem, 4vw, 3.5rem);
 		color: var(--text);
-		letter-spacing: -0.02em;
-		line-height: 1;
-		margin-bottom: 0.5rem;
-	}
-
-	.sessions__sub {
-		font-family: var(--font-sans);
-		font-style: normal;
-		font-size: 0.75rem;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		color: var(--muted);
-		margin-bottom: 2rem;
-	}
-
-	.sessions__body {
-		font-style: italic;
-		font-size: 1.0625rem;
-		line-height: 1.82;
-		color: var(--text);
-		margin-bottom: 2rem;
-	}
-
-	.sessions__list {
-		list-style: none;
-	}
-
-	.sessions__list li {
-		font-size: 1rem;
-		color: var(--muted);
-		padding: 0.45rem 0 0.45rem 1.25rem;
-		position: relative;
-		border-bottom: 1px solid var(--border);
-		line-height: 1.6;
-	}
-
-	.sessions__list li::before {
-		content: '—';
-		position: absolute;
-		left: 0;
-		color: var(--accent);
-		font-size: 0.75rem;
+		letter-spacing: -0.01em;
 	}
 
 	/* ══ SECTION 4: Artwork ══ */
