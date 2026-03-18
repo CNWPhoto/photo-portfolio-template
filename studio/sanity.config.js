@@ -23,11 +23,6 @@ export default defineConfig({
         S.list()
           .title('Studio')
           .items([
-            // ── Portfolio ─────────────────────────────────────────────────
-            singleton(S, 'portfolio', '📷 Portfolio', 'portfolio'),
-
-            S.divider(),
-
             // ── Site Settings ─────────────────────────────────────────────
             S.listItem()
               .title('⚙️ Site Settings')
@@ -57,6 +52,7 @@ export default defineConfig({
                   .items([
                     singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
                     singleton(S, 'aboutPage', 'About Page', 'aboutPage'),
+                    singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
                   ]),
               ),
 
