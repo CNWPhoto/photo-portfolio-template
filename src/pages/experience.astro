@@ -57,14 +57,6 @@ const faqs = [
 			<div class="intro__inner">
 				<p class="intro__body reveal reveal-delay-1">Every dog photography session is designed to feel relaxed, dog-led, and pressure-free. From planning your session to choosing your final images, you'll be guided through each step so the experience feels easy and enjoyable for both you and your dog.</p>
 				<p class="intro__body intro__body--bold reveal reveal-delay-2">There's no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.</p>
-				<p class="intro__includes reveal reveal-delay-3"><em>This includes:</em></p>
-				<ul class="intro__list reveal reveal-delay-4">
-					<li>Pre-session guidance to help you feel prepared</li>
-					<li>A relaxed, unhurried photo session</li>
-					<li>A curated online gallery to view and select your images</li>
-				</ul>
-				<p class="intro__price reveal reveal-delay-5">Session fee begins at $XXX<br /><em>(Artwork and images purchased separately.)</em></p>{/* TODO:NICHE — update pricing */}
-				<p class="intro__closing reveal reveal-delay-5">The session fee covers the time, care, and preparation that go into creating your dog's photography experience.</p>
 			</div>
 		</section>
 
@@ -81,6 +73,15 @@ const faqs = [
 				</div>
 				<div class="sessions__content">
 					<h2 class="sessions__heading reveal reveal-delay-1">Sessions</h2>
+					<p class="sessions__sub">The session fee covers the time, care, and preparation that go into creating your dog's photography experience.</p>
+					<p class="sessions__includes reveal reveal-delay-2"><em><strong>This includes:</strong></em></p>
+					<ul class="sessions__list reveal reveal-delay-3">
+						<li>Pre-session guidance to help you feel prepared</li>
+						<li>A relaxed, unhurried photo session</li>
+						<li>A curated online gallery to view and select your images</li>
+					</ul>
+					<p class="sessions__price reveal reveal-delay-4"><strong>Session fee begins at $XXX</strong></p>{/* TODO:NICHE — update pricing */}
+					<p class="sessions__caption reveal reveal-delay-4"><em>(Artwork and images purchased separately.)</em></p>
 				</div>
 			</div>
 		</section>
@@ -260,51 +261,6 @@ const faqs = [
 		font-weight: 500;
 	}
 
-	.intro__includes {
-		font-size: 1rem;
-		color: var(--text);
-		margin-top: 2rem;
-		margin-bottom: 0.75rem;
-	}
-
-	.intro__list {
-		list-style: none;
-		margin: 0 auto 2rem;
-		text-align: left;
-		max-width: 420px;
-	}
-
-	.intro__list li {
-		font-size: 1rem;
-		color: var(--muted);
-		padding: 0.45rem 0 0.45rem 1.25rem;
-		position: relative;
-		border-bottom: 1px solid var(--border);
-		line-height: 1.6;
-	}
-
-	.intro__list li::before {
-		content: '—';
-		position: absolute;
-		left: 0;
-		color: var(--accent);
-		font-size: 0.75rem;
-	}
-
-	.intro__price {
-		font-size: 1.0625rem;
-		color: var(--text);
-		line-height: 1.7;
-		margin-bottom: 1.25rem;
-	}
-
-	.intro__closing {
-		font-style: italic;
-		font-size: 0.9375rem;
-		color: var(--muted);
-		line-height: 1.75;
-	}
-
 	/* ══ SECTION 3: Sessions ══ */
 	.sessions {
 		padding-bottom: 6rem;
@@ -335,6 +291,57 @@ const faqs = [
 		font-size: clamp(2.25rem, 4vw, 3.5rem);
 		color: var(--text);
 		letter-spacing: -0.01em;
+		margin-bottom: 1.25rem;
+	}
+
+	.sessions__sub {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.9rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--accent);
+		line-height: 1.7;
+		margin-bottom: 2rem;
+	}
+
+	.sessions__includes {
+		font-size: 1.2rem;
+		color: var(--text);
+		margin-bottom: 0.75rem;
+	}
+
+	.sessions__list {
+		list-style: none;
+		margin-bottom: 2rem;
+	}
+
+	.sessions__list li {
+		font-size: 1.125rem;
+		color: var(--muted);
+		padding: 0.45rem 0 0.45rem 1.25rem;
+		position: relative;
+		border-bottom: 1px solid var(--border);
+		line-height: 1.6;
+	}
+
+	.sessions__list li::before {
+		content: '—';
+		position: absolute;
+		left: 0;
+		color: var(--accent);
+		font-size: 0.75rem;
+	}
+
+	.sessions__price {
+		font-size: 1.275rem;
+		color: var(--text);
+		margin-bottom: 0.5rem;
+	}
+
+	.sessions__caption {
+		font-size: 1.05rem;
+		color: var(--muted);
 	}
 
 	/* ══ SECTION 4: Artwork ══ */
@@ -611,10 +618,6 @@ const faqs = [
 
 		.intro__inner {
 			padding: 4rem 1.5rem;
-		}
-
-		.intro__list {
-			max-width: none;
 		}
 
 		.sessions__inner,
