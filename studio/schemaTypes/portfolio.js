@@ -8,12 +8,17 @@ export default {
       return {title: 'Portfolio Images'}
     },
   },
+  groups: [
+    {name: 'all', title: 'All', default: true},
+    {name: 'seo', title: 'SEO'},
+  ],
   fields: [
     {
       name: 'pageTitle',
       title: 'Page Title',
       type: 'string',
       description: 'Used in the browser tab and as the SEO title fallback. E.g. "Portfolio | Denver Dog Photographer".',
+      group: ['all', 'seo'],
     },
     {
       name: 'slug',
@@ -21,11 +26,13 @@ export default {
       type: 'slug',
       description: 'URL path for this page.',
       options: {source: 'pageTitle'},
+      group: ['all', 'seo'],
     },
     {
       name: 'seo',
       title: 'SEO',
       type: 'seo',
+      group: ['all', 'seo'],
     },
     {
       name: 'title',
@@ -33,6 +40,7 @@ export default {
       type: 'string',
       description: 'Large label shown top-right of the portfolio page. E.g. "Portfolio" or "Work".',
       initialValue: 'Portfolio',
+      group: 'all',
     },
     {
       name: 'byline',
@@ -40,6 +48,7 @@ export default {
       type: 'string',
       description: 'Small text shown to the left of the page label. E.g. "A collection of recent dog photography sessions".',
       initialValue: 'A collection of recent dog photography sessions',
+      group: 'all',
     },
     {
       name: 'galleryColumns',
@@ -55,6 +64,7 @@ export default {
         ],
         layout: 'radio',
       },
+      group: 'all',
     },
     {
       name: 'sizingNote',
@@ -65,6 +75,7 @@ export default {
         'Resize all images to 2500–3000px on the long edge before uploading. Export as high-quality JPEG (85–95%) or PNG. Sanity handles further optimisation and delivery automatically.',
       description:
         'Resize all images to 2500–3000px on the long edge before uploading. Export as high-quality JPEG (85–95%) or PNG. Sanity handles further optimisation and delivery automatically.',
+      group: 'all',
     },
     {
       name: 'images',
@@ -72,6 +83,7 @@ export default {
       type: 'array',
       description:
         'Drag to reorder. When the upload dialog opens you can select multiple files at once to bulk-upload.',
+      group: 'all',
       of: [
         {
           type: 'image',
