@@ -10,6 +10,24 @@ export default {
   },
   fields: [
     {
+      name: 'pageTitle',
+      title: 'Page Title',
+      type: 'string',
+      description: 'Used in the browser tab and as the SEO title fallback. E.g. "Portfolio | Denver Dog Photographer".',
+    },
+    {
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      description: 'URL path for this page.',
+      options: {source: 'pageTitle'},
+    },
+    {
+      name: 'seo',
+      title: 'SEO',
+      type: 'seo',
+    },
+    {
       name: 'title',
       title: 'Page Label',
       type: 'string',

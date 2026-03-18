@@ -2,6 +2,14 @@
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
 
+interface Props {
+  pageTitle?: string;
+  seoDescription?: string;
+  ogImage?: string;
+}
+
+const { pageTitle, seoDescription, ogImage } = Astro.props;
+
 const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production';
 
 const [_settingsRes, _codeRes] = await Promise.all([
@@ -38,7 +46,16 @@ const accentOverride = settings?.accentColorOverride || null;
 			</>
 		}
 		<meta name="generator" content={Astro.generator} />
-		<title>Pet Photography — Natural, Stress-Free Dog Portraits</title>
+		<title>{pageTitle ? `${pageTitle} | ${siteName}` : siteName}</title>
+		{seoDescription && <meta name="description" content={seoDescription} />}
+		<meta property="og:title" content={pageTitle ? `${pageTitle} | ${siteName}` : siteName} />
+		{seoDescription && <meta property="og:description" content={seoDescription} />}
+		{ogImage && <meta property="og:image" content={ogImage} />}
+		<meta property="og:type" content="website" />
+		<meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+		<meta name="twitter:title" content={pageTitle ? `${pageTitle} | ${siteName}` : siteName} />
+		{seoDescription && <meta name="twitter:description" content={seoDescription} />}
+		{ogImage && <meta name="twitter:image" content={ogImage} />}
 		<!-- Google Fonts preconnect -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

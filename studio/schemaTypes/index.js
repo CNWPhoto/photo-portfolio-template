@@ -1,3 +1,4 @@
+import seo from './seo'
 import testimonial from './testimonial'
 import portfolio from './portfolio'
 import blogPost from './blogPost'
@@ -25,6 +26,7 @@ import aboutQuoteSection from './sections/aboutQuoteSection'
 import aboutCtaSection from './sections/aboutCtaSection'
 
 export const schemaTypes = [
+  seo,
   siteSettings, homepageSettings, homepagePage,
   aboutPage,
   aboutIntroSection, aboutWhatToExpectSection, aboutPersonalSection, aboutQuoteSection, aboutCtaSection,

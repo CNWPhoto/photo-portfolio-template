@@ -17,19 +17,23 @@ import HowItWorksStacked from '../components/howitworks/HowItWorksStacked.astro'
 
 import { sanityClient, urlFor } from '../lib/sanity.js';
 
-const [homepageSections, testimonials, pageSections, layoutSettings, siteSettings] = await Promise.all([
+const [homepageDoc, testimonials, pageSections, layoutSettings, siteSettings] = await Promise.all([
 	sanityClient.fetch(
-		`*[_type == "homepagePage"][0].sections[] {
-			_type,
-			images[] { ..., asset-> },
-			nicheKeyword, tagline,
-			eyebrow, body, bodySecondary, ctaText, ctaLink,
-			image { ..., asset-> },
-			imageVertical { ..., asset-> },
-			imageHorizontal { ..., asset-> },
-			heading, step1Title, step1Body, step2Title, step2Body, step3Title, step3Body,
-			bodyFirst, bodySecond, caption,
-			faqs[] { question, answer }
+		`*[_type == "homepagePage"][0]{
+			pageTitle,
+			seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+			"sections": sections[] {
+				_type,
+				images[] { ..., asset-> },
+				nicheKeyword, tagline,
+				eyebrow, body, bodySecondary, ctaText, ctaLink,
+				image { ..., asset-> },
+				imageVertical { ..., asset-> },
+				imageHorizontal { ..., asset-> },
+				heading, step1Title, step1Body, step2Title, step2Body, step3Title, step3Body,
+				bodyFirst, bodySecond, caption,
+				faqs[] { question, answer }
+			}
 		}`,
 		{}, { cache: 'no-store' }
 	),
@@ -39,7 +43,12 @@ const [homepageSections, testimonials, pageSections, layoutSettings, siteSetting
 	sanityClient.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0].typographyOverrides`, {}, { cache: 'no-store' }),
 ]);
 
-const getSection = (type: string) => (homepageSections ?? []).find((s: any) => s._type === type);
+const homepageSections = homepageDoc?.sections ?? [];
+const getSection = (type: string) => homepageSections.find((s: any) => s._type === type);
+
+const seoTitle       = homepageDoc?.seo?.seoTitle       || homepageDoc?.pageTitle || null;
+const seoDescription = homepageDoc?.seo?.seoDescription || null;
+const ogImage        = homepageDoc?.seo?.socialImage?.asset?.url || null;
 
 const heroSlider      = getSection('heroSlider')?.images ?? null;
 const heroCaption     = getSection('heroCaption') ?? null;
@@ -65,7 +74,7 @@ const portfolioVariant    = layoutSettings?.portfolioPreviewVariant || 'grid';
 const howItWorksVariant   = layoutSettings?.howItWorksVariant      || 'columns';
 ---
 
-<Layout>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
 	<Hero heroImages={heroSlider} {heroCaption} {urlFor} {overrides} />
 	<main>
 		<!-- Intro -->

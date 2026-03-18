@@ -5,6 +5,8 @@ import SanityImage from '../components/SanityImage.astro';
 
 const aboutDoc = await sanityClient.fetch(
 	`*[_type == "aboutPage"][0]{
+		pageTitle,
+		seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
 		sections[] {
 			_type, enabled,
 			// aboutIntroSection
@@ -30,6 +32,10 @@ const aboutDoc = await sanityClient.fetch(
 );
 
 const sections = aboutDoc?.sections ?? [];
+
+const seoTitle       = aboutDoc?.seo?.seoTitle       || aboutDoc?.pageTitle || null;
+const seoDescription = aboutDoc?.seo?.seoDescription || null;
+const ogImage        = aboutDoc?.seo?.socialImage?.asset?.url || null;
 
 // Per-section fallback data
 const fallbackWteColumns = [
@@ -98,7 +104,7 @@ const ctaImageBg    = ctaDoc?.imageBackground ?? null;
 const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 ---
 
-<Layout>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
 	<main>
 
 		<!-- ══ SECTION 1: Intro Split ══ -->

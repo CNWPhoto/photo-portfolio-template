@@ -2,8 +2,11 @@
 import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity.js';
 
-const portfolioDoc = await sanityClient.fetch(`*[_type == "portfolio"][0]{ title, byline, galleryColumns, images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } } }`, {}, { cache: 'no-store' });
+const portfolioDoc = await sanityClient.fetch(`*[_type == "portfolio"][0]{ pageTitle, seo { seoTitle, seoDescription, socialImage { asset->{ url } } }, title, byline, galleryColumns, images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } } }`, {}, { cache: 'no-store' });
 
+const seoTitle       = portfolioDoc?.seo?.seoTitle       || portfolioDoc?.pageTitle || null;
+const seoDescription = portfolioDoc?.seo?.seoDescription || null;
+const ogImage        = portfolioDoc?.seo?.socialImage?.asset?.url || null;
 const pageTitle      = portfolioDoc?.title          || 'Portfolio';
 const byline         = portfolioDoc?.byline         || 'A collection of recent dog photography sessions';
 const galleryColumns = portfolioDoc?.galleryColumns || 3;
@@ -45,7 +48,7 @@ const images = portfolio?.length
 	: fallbackImages;
 ---
 
-<Layout>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
 	<main data-theme="classic-cream">
 		<div class="portfolio__header">
 			<p class="portfolio__byline">{byline}</p>

@@ -10,6 +10,17 @@ export default {
   },
   fields: [
     {
+      name: 'pageTitle',
+      title: 'Page Title',
+      type: 'string',
+      description: 'Used in the browser tab and as the SEO title fallback. E.g. "Dog Photography | Denver, CO".',
+    },
+    {
+      name: 'seo',
+      title: 'SEO',
+      type: 'seo',
+    },
+    {
       name: 'sections',
       title: 'Sections',
       type: 'array',
