@@ -470,7 +470,7 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 	.cta__images {
 		position: relative;
 		margin-left: 25%;
-		height: 560px;
+		height: 700px;
 	}
 
 	/* Back image: landscape, fills full width of images container */
@@ -498,7 +498,7 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 		position: absolute;
 		top: 160px;
 		left: -33.33%;
-		width: 44%;
+		width: 57%;
 		overflow: hidden;
 		border: 20px solid white;
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
@@ -507,17 +507,17 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 	.cta__img-front img {
 		width: 100%;
 		display: block;
-		height: 400px;
+		height: 520px;
 		object-fit: cover;
 	}
 
 	/* Text: ~100px below bottom of back image, 100px right of front image's right edge.
 	   Back image bottom = 6rem (padding) + 320px.
-	   Front image right edge ≈ 33% of inner content width (44% × 75%). */
+	   Front image right edge ≈ 43% of inner content width (57% × 75%). */
 	.cta__content {
 		position: absolute;
 		top: calc(6rem + 320px + 100px);
-		left: calc(33% + 100px);
+		left: calc(43% + 100px);
 		right: 3rem;
 	}
 
