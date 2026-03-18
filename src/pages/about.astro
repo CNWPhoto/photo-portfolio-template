@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity.js';
 import SanityImage from '../components/SanityImage.astro';
 
-const [introDoc, wteDoc, personalDoc, quoteDoc] = await Promise.all([
+const [introDoc, wteDoc, personalDoc, quoteDoc, ctaDoc] = await Promise.all([
 	sanityClient.fetch(
 		`*[_type == "aboutIntro"][0]{
 			enabled, image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
@@ -32,12 +32,29 @@ const [introDoc, wteDoc, personalDoc, quoteDoc] = await Promise.all([
 		`*[_type == "aboutQuote"][0]{ enabled, quoteText }`,
 		{}, { cache: 'no-store' }
 	),
+	sanityClient.fetch(
+		`*[_type == "aboutCta"][0]{
+			enabled, heading, body, buttonText, buttonLink, caption,
+			imageBackground { ..., asset->{ _id, metadata { dimensions { width, height } } } },
+			imageForeground { ..., asset->{ _id, metadata { dimensions { width, height } } } }
+		}`,
+		{}, { cache: 'no-store' }
+	),
 ]);
 
 const showIntro    = introDoc?.enabled    !== false;
 const showWte      = wteDoc?.enabled      !== false;
 const showPersonal = personalDoc?.enabled !== false;
 const showQuote    = quoteDoc?.enabled    !== false;
+const showCta      = ctaDoc?.enabled      !== false;
+
+const ctaHeading    = ctaDoc?.heading    || "Let's Do This!";
+const ctaBody       = ctaDoc?.body       || "If you're ready to have photographs that actually look and feel like you, I'd love to hear from you. Get in touch and let's start planning something special.";
+const ctaButtonText = ctaDoc?.buttonText || 'Get In Touch';
+const ctaButtonLink = ctaDoc?.buttonLink || '/contact';
+const ctaCaption    = ctaDoc?.caption    || 'Serving [City] and surrounding areas.';
+const ctaImageBg    = ctaDoc?.imageBackground ?? null;
+const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 
 const personal = personalDoc ?? {};
 const personalImage  = personal.image ?? null;
@@ -188,36 +205,34 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 			</div>
 		</section>}
 
-		<!-- ══ SECTION 5: Let's Do This CTA ══ -->
-		<section class="cta" data-theme="warm-studio">
+		<!-- ══ SECTION 5: Get in Touch CTA ══ -->
+		{showCta && <section class="cta" data-theme="warm-studio">
 			<hr />
 			<div class="cta__inner">
 				<div class="cta__images">
 					<div class="cta__img-back">
-						<img
-							src="https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=600&h=750&fit=crop"
-							alt="Photography session moment"
-							width="600" height="750"
-							loading="lazy" decoding="async"
-						/>
+						{ctaImageBg ? (
+							<SanityImage image={ctaImageBg} sizes="(max-width: 900px) 100vw, 75vw" class="cta__img-back-el" loading="lazy" />
+						) : (
+							<img src="https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=600&h=750&fit=crop" alt="Photography session moment" width="600" height="750" loading="lazy" decoding="async" />
+						)}
 					</div>
 					<div class="cta__img-front">
-						<img
-							src="https://images.pexels.com/photos/1254140/pexels-photo-1254140.jpeg?auto=compress&cs=tinysrgb&w=500&h=640&fit=crop"
-							alt="Another moment from a photography session"
-							width="500" height="640"
-							loading="lazy" decoding="async"
-						/>
+						{ctaImageFg ? (
+							<SanityImage image={ctaImageFg} sizes="(max-width: 900px) 50vw, 40vw" class="cta__img-front-el" loading="lazy" />
+						) : (
+							<img src="https://images.pexels.com/photos/1254140/pexels-photo-1254140.jpeg?auto=compress&cs=tinysrgb&w=500&h=640&fit=crop" alt="Photography session moment" width="500" height="640" loading="lazy" decoding="async" />
+						)}
 					</div>
 				</div>
 				<div class="cta__content">
-					<h2 class="cta__heading reveal reveal-delay-1">Let's Do This!</h2>{/* TODO:NICHE */}
-					<p class="cta__body reveal reveal-delay-2">If you're ready to have photographs that actually look and feel like you, I'd love to hear from you. Get in touch and let's start planning something special.</p>{/* TODO:NICHE */}
-					<a href="/contact" class="cta__btn reveal reveal-delay-3">Get In Touch</a>
-					<p class="cta__caption">Serving [City] and surrounding areas.</p>{/* TODO:NICHE */}
+					<h2 class="cta__heading reveal reveal-delay-1">{ctaHeading}</h2>
+					<p class="cta__body reveal reveal-delay-2">{ctaBody}</p>
+					<a href={ctaButtonLink} class="cta__btn reveal reveal-delay-3">{ctaButtonText}</a>
+					<p class="cta__caption">{ctaCaption}</p>
 				</div>
 			</div>
-		</section>
+		</section>}
 
 	</main>
 </Layout>
@@ -484,7 +499,8 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 	}
 
-	.cta__img-back img {
+	.cta__img-back img,
+	.cta__img-back :global(.cta__img-back-el) {
 		width: 100%;
 		display: block;
 		height: 320px;
@@ -504,7 +520,8 @@ const wteColumns = wte.columns?.length ? wte.columns : [
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
 	}
 
-	.cta__img-front img {
+	.cta__img-front img,
+	.cta__img-front :global(.cta__img-front-el) {
 		width: 100%;
 		display: block;
 		height: 520px;

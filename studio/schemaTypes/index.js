@@ -20,5 +20,6 @@ import aboutIntro from './aboutIntro'
 import aboutWhatToExpect from './aboutWhatToExpect'
 import aboutPersonal from './aboutPersonal'
 import aboutQuote from './aboutQuote'
+import aboutCta from './aboutCta'
 
-export const schemaTypes = [siteSettings, homepageSettings, aboutIntro, aboutWhatToExpect, aboutPersonal, aboutQuote, codeSettings, footerSettings, socialSettings, heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs, testimonial, portfolio, blogPost, faq, pageSection]
+export const schemaTypes = [siteSettings, homepageSettings, aboutIntro, aboutWhatToExpect, aboutPersonal, aboutQuote, aboutCta, codeSettings, footerSettings, socialSettings, heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs, testimonial, portfolio, blogPost, faq, pageSection]
