@@ -5,6 +5,7 @@ import faq from './faq'
 import pageSection from './pageSection'
 import siteSettings from './siteSettings'
 import homepageSettings from './homepageSettings'
+import homepagePage from './homepagePage'
 import welcomeSection from './sections/welcomeSection'
 import heroSlider from './sections/heroSlider'
 import heroCaption from './sections/heroCaption'
@@ -24,7 +25,7 @@ import aboutQuoteSection from './sections/aboutQuoteSection'
 import aboutCtaSection from './sections/aboutCtaSection'
 
 export const schemaTypes = [
-  siteSettings, homepageSettings,
+  siteSettings, homepageSettings, homepagePage,
   aboutPage,
   aboutIntroSection, aboutWhatToExpectSection, aboutPersonalSection, aboutQuoteSection, aboutCtaSection,
   codeSettings, footerSettings, socialSettings,

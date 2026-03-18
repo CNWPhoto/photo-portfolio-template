@@ -1,8 +1,7 @@
 export default {
   name: 'featuredSection',
   title: 'Featured Section',
-  type: 'document',
-  __experimental_actions: ['create', 'update', 'publish'],
+  type: 'object',
   preview: {
     prepare() {
       return {title: 'Featured Section'}

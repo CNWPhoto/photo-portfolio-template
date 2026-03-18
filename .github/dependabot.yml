@@ -1,0 +1,33 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      sanity:
+        patterns:
+          - "sanity"
+          - "@sanity/*"
+          - "sanity-plugin-*"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "npm"
+    directory: "/studio"
+    schedule:
+      interval: "monthly"
+    groups:
+      sanity:
+        patterns:
+          - "sanity"
+          - "@sanity/*"
+          - "sanity-plugin-*"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

@@ -2,7 +2,7 @@ export default {
   name: 'aboutPage',
   title: 'About Page',
   type: 'document',
-  __experimental_actions: ['update', 'publish'],
+  __experimental_actions: ['update', 'publish', 'create'],
   preview: {
     prepare() {
       return {title: 'About Page'}
@@ -20,13 +20,6 @@ export default {
         {type: 'aboutPersonalSection'},
         {type: 'aboutQuoteSection'},
         {type: 'aboutCtaSection'},
-      ],
-      initialValue: [
-        {_type: 'aboutIntroSection', enabled: true},
-        {_type: 'aboutWhatToExpectSection', enabled: true},
-        {_type: 'aboutPersonalSection', enabled: true},
-        {_type: 'aboutQuoteSection', enabled: true},
-        {_type: 'aboutCtaSection', enabled: true},
       ],
     },
   ],

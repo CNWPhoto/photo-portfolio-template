@@ -1,8 +1,7 @@
 export default {
   name: 'welcomeSection',
   title: 'Welcome Section',
-  type: 'document',
-  __experimental_actions: ['create', 'update', 'publish'], // singleton — create allowed for first-time init; structure builder prevents duplicates
+  type: 'object',
   preview: {
     prepare() {
       return {title: 'Welcome Section'}

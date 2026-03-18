@@ -1,8 +1,7 @@
 export default {
   name: 'whyChooseSection',
   title: 'Why Choose Section',
-  type: 'document',
-  __experimental_actions: ['create', 'update', 'publish'],
+  type: 'object',
   preview: {
     prepare() {
       return {title: 'Why Choose Section'}

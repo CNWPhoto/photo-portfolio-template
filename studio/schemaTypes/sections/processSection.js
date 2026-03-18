@@ -1,8 +1,7 @@
 export default {
   name: 'processSection',
   title: 'Process Section',
-  type: 'document',
-  __experimental_actions: ['create', 'update', 'publish'],
+  type: 'object',
   preview: {
     prepare() {
       return {title: 'Process Section'}

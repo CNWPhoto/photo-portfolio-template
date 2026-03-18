@@ -1,8 +1,7 @@
 export default {
   name: 'heroSlider',
   title: 'Homepage Top Slider',
-  type: 'document',
-  __experimental_actions: ['create', 'update', 'publish'],
+  type: 'object',
   preview: {
     prepare() {
       return {title: 'Homepage Top Slider'}

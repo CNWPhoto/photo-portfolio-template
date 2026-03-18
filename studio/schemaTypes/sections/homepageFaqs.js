@@ -1,8 +1,7 @@
 export default {
   name: 'homepageFaqs',
   title: 'Homepage FAQs',
-  type: 'document',
-  __experimental_actions: ['create', 'update', 'publish'],
+  type: 'object',
   preview: {
     prepare() {
       return {title: 'Homepage FAQs'}

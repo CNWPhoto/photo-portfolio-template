@@ -1,8 +1,7 @@
 export default {
   name: 'heroCaption',
   title: 'Homepage Hero Caption',
-  type: 'document',
-  __experimental_actions: ['create', 'update', 'publish'],
+  type: 'object',
   preview: {
     prepare() {
       return {title: 'Hero Caption (H1 + Tagline)'}

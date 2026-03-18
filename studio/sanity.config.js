@@ -47,26 +47,6 @@ export default defineConfig({
 
             S.divider(),
 
-            // ── Homepage ─────────────────────────────────────────────────
-            S.listItem()
-              .title('🏠 Homepage')
-              .id('homepageGroup')
-              .child(
-                S.list()
-                  .title('Homepage')
-                  .items([
-                    singleton(S, 'heroSlider', 'Homepage Top Slider', 'heroSlider'),
-                    singleton(S, 'heroCaption', 'Hero Caption (H1 + Tagline)', 'heroCaption'),
-                    singleton(S, 'welcomeSection', 'Welcome Section', 'welcomeSection'),
-                    S.documentTypeListItem('testimonial').title('Testimonials Section'),
-                    singleton(S, 'featuredSection', 'Featured Section', 'featuredSection'),
-                    singleton(S, 'processSection', 'Process Section', 'processSection'),
-                    singleton(S, 'soloHeroImage', 'Solo Hero Image', 'soloHeroImage'),
-                    singleton(S, 'whyChooseSection', 'Why Choose Section', 'whyChooseSection'),
-                    singleton(S, 'homepageFaqs', 'FAQs Section', 'homepageFaqs'),
-                  ]),
-              ),
-
             // ── Pages ────────────────────────────────────────────────────
             S.listItem()
               .title('📄 Pages')
@@ -75,9 +55,15 @@ export default defineConfig({
                 S.list()
                   .title('Pages')
                   .items([
+                    singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
                     singleton(S, 'aboutPage', 'About Page', 'aboutPage'),
                   ]),
               ),
+
+            S.divider(),
+
+            // ── Testimonials ──────────────────────────────────────────────
+            S.documentTypeListItem('testimonial').title('⭐ Testimonials'),
 
             // ── Blog ─────────────────────────────────────────────────────
             S.listItem()

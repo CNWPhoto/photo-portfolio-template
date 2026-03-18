@@ -1,8 +1,7 @@
 export default {
   name: 'soloHeroImage',
   title: 'Solo Hero Image',
-  type: 'document',
-  __experimental_actions: ['create', 'update', 'publish'],
+  type: 'object',
   preview: {
     prepare() {
       return {title: 'Solo Hero Image'}
