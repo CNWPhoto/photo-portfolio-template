@@ -16,10 +16,18 @@ import homepageFaqs from './sections/homepageFaqs'
 import codeSettings from './codeSettings'
 import footerSettings from './footerSettings'
 import socialSettings from './socialSettings'
-import aboutIntro from './aboutIntro'
-import aboutWhatToExpect from './aboutWhatToExpect'
-import aboutPersonal from './aboutPersonal'
-import aboutQuote from './aboutQuote'
-import aboutCta from './aboutCta'
+import aboutPage from './aboutPage'
+import aboutIntroSection from './sections/aboutIntroSection'
+import aboutWhatToExpectSection from './sections/aboutWhatToExpectSection'
+import aboutPersonalSection from './sections/aboutPersonalSection'
+import aboutQuoteSection from './sections/aboutQuoteSection'
+import aboutCtaSection from './sections/aboutCtaSection'
 
-export const schemaTypes = [siteSettings, homepageSettings, aboutIntro, aboutWhatToExpect, aboutPersonal, aboutQuote, aboutCta, codeSettings, footerSettings, socialSettings, heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs, testimonial, portfolio, blogPost, faq, pageSection]
+export const schemaTypes = [
+  siteSettings, homepageSettings,
+  aboutPage,
+  aboutIntroSection, aboutWhatToExpectSection, aboutPersonalSection, aboutQuoteSection, aboutCtaSection,
+  codeSettings, footerSettings, socialSettings,
+  heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs,
+  testimonial, portfolio, blogPost, faq, pageSection,
+]

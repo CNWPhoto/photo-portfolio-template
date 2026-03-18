@@ -68,20 +68,7 @@ export default defineConfig({
               ),
 
             // ── About ────────────────────────────────────────────────────
-            S.listItem()
-              .title('👤 About')
-              .id('aboutGroup')
-              .child(
-                S.list()
-                  .title('About')
-                  .items([
-                    singleton(S, 'aboutIntro', 'Intro Section', 'aboutIntro'),
-                    singleton(S, 'aboutWhatToExpect', 'What to Expect Section', 'aboutWhatToExpect'),
-                    singleton(S, 'aboutPersonal', 'Deeper Dive Section', 'aboutPersonal'),
-                    singleton(S, 'aboutQuote', 'Quote Section', 'aboutQuote'),
-                    singleton(S, 'aboutCta', 'Get in Touch Section', 'aboutCta'),
-                  ]),
-              ),
+            singleton(S, 'aboutPage', '👤 About Page', 'aboutPage'),
 
             // ── Blog ─────────────────────────────────────────────────────
             S.listItem()

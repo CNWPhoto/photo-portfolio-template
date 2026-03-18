@@ -3,102 +3,99 @@ import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity.js';
 import SanityImage from '../components/SanityImage.astro';
 
-const [introDoc, wteDoc, personalDoc, quoteDoc, ctaDoc] = await Promise.all([
-	sanityClient.fetch(
-		`*[_type == "aboutIntro"][0]{
-			enabled, image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
-			heading, subtext, bodyParagraph1, bodyParagraph2
-		}`,
-		{}, { cache: 'no-store' }
-	),
-	sanityClient.fetch(
-		`*[_type == "aboutWhatToExpect"][0]{
-			enabled, sectionLabel,
+const aboutDoc = await sanityClient.fetch(
+	`*[_type == "aboutPage"][0]{
+		sections[] {
+			_type, enabled,
+			// aboutIntroSection
+			image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
+			heading, subtext, bodyParagraph1, bodyParagraph2,
+			// aboutWhatToExpectSection
+			sectionLabel,
 			columns[] {
 				image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
 				title, body
-			}
-		}`,
-		{}, { cache: 'no-store' }
-	),
-	sanityClient.fetch(
-		`*[_type == "aboutPersonal"][0]{
-			enabled, image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
-			bodyParagraph1, bodyParagraph2
-		}`,
-		{}, { cache: 'no-store' }
-	),
-	sanityClient.fetch(
-		`*[_type == "aboutQuote"][0]{ enabled, quoteText }`,
-		{}, { cache: 'no-store' }
-	),
-	sanityClient.fetch(
-		`*[_type == "aboutCta"][0]{
-			enabled, heading, body, buttonText, buttonLink, caption,
+			},
+			// aboutPersonalSection (shares image, bodyParagraph1, bodyParagraph2)
+			// aboutQuoteSection
+			quoteText,
+			// aboutCtaSection
+			"ctaBody": body, "ctaHeading": heading,
+			buttonText, buttonLink, caption,
 			imageBackground { ..., asset->{ _id, metadata { dimensions { width, height } } } },
 			imageForeground { ..., asset->{ _id, metadata { dimensions { width, height } } } }
-		}`,
-		{}, { cache: 'no-store' }
-	),
-]);
+		}
+	}`,
+	{}, { cache: 'no-store' }
+);
 
-const showIntro    = introDoc?.enabled    !== false;
-const showWte      = wteDoc?.enabled      !== false;
-const showPersonal = personalDoc?.enabled !== false;
-const showQuote    = quoteDoc?.enabled    !== false;
-const showCta      = ctaDoc?.enabled      !== false;
+const sections = aboutDoc?.sections ?? [];
 
-const ctaHeading    = ctaDoc?.heading    || "Let's Do This!";
-const ctaBody       = ctaDoc?.body       || "If you're ready to have photographs that actually look and feel like you, I'd love to hear from you. Get in touch and let's start planning something special.";
-const ctaButtonText = ctaDoc?.buttonText || 'Get In Touch';
-const ctaButtonLink = ctaDoc?.buttonLink || '/contact';
-const ctaCaption    = ctaDoc?.caption    || 'Serving [City] and surrounding areas.';
-const ctaImageBg    = ctaDoc?.imageBackground ?? null;
-const ctaImageFg    = ctaDoc?.imageForeground ?? null;
-
-const personal = personalDoc ?? {};
-const personalImage  = personal.image ?? null;
-const personalBody1  = personal.bodyParagraph1 || 'Photography found me at a time when I needed it most. A camera in hand became a reason to look closely at the world — to slow down, notice the small things, and find beauty in the ordinary.';
-const personalBody2  = personal.bodyParagraph2 || "That sense of attention is something I bring to every session. I'm not here to manufacture a perfect image. I'm here to find the one that's already there, waiting.";
-
-const quoteText = quoteDoc?.quoteText || 'I believe photographs should feel honest, timeless, and personal.';
-
-const intro = introDoc ?? {};
-
-const introHeading      = intro.heading       || "Hi, I'm Connor";
-const introSubtext      = intro.subtext        || 'A photographer based in [City], here to help you document your story in a way that feels natural and stress-free.';
-const introBody1        = intro.bodyParagraph1 || "I've spent the last decade photographing the moments that matter most — the quiet ones, the joyful ones, the ones you don't even notice are happening until the camera catches them. My approach is unhurried and entirely led by you.";
-const introBody2        = intro.bodyParagraph2 || 'What started as a personal project became a calling. I believe every person, every family, every bond deserves to be documented beautifully — not in a stiff, posed way, but in a way that is completely, unmistakably them.';
-const introImage        = intro.image ?? null;
-
-const wte = wteDoc ?? {};
-const wteLabel = wte.sectionLabel || 'What to Expect';
-const wteColumns = wte.columns?.length ? wte.columns : [
+// Per-section fallback data
+const fallbackWteColumns = [
 	{
-		_fallback: true,
-		image: null,
+		_fallback: true, image: null,
 		imageSrc: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop',
 		imageAlt: 'Subject-led session in golden afternoon light',
 		title: 'Subject-Led Sessions',
 		body: 'Every session moves at your pace. There are no forced poses or rigid shot lists — just space for you to be yourself while I follow the light and the moments as they unfold.',
 	},
 	{
-		_fallback: true,
-		image: null,
+		_fallback: true, image: null,
 		imageSrc: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop',
 		imageAlt: 'Calm and supportive direction during a session',
 		title: 'Calm Supportive Direction',
 		body: "I'll gently guide you through the session so you never feel unsure of what to do. Most people tell me they forget the camera is there — that's exactly the point.",
 	},
 	{
-		_fallback: true,
-		image: null,
+		_fallback: true, image: null,
 		imageSrc: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop',
 		imageAlt: 'A genuine moment of connection',
 		title: 'Connection',
 		body: 'The best photographs come from real connection. I invest time before every session getting to know you so that what we create together feels personal, not generic.',
 	},
 ];
+
+// If no sections have been set up in Sanity yet, fall back to showing all sections with defaults
+const useFallback = sections.length === 0;
+
+// Helper to find a section by type (for fallback mode)
+const getSection = (type: string) => sections.find((s: any) => s._type === type);
+
+const introDoc    = useFallback ? {} : (getSection('aboutIntroSection') ?? {});
+const wteDoc      = useFallback ? {} : (getSection('aboutWhatToExpectSection') ?? {});
+const personalDoc = useFallback ? {} : (getSection('aboutPersonalSection') ?? {});
+const quoteDoc    = useFallback ? {} : (getSection('aboutQuoteSection') ?? {});
+const ctaDoc      = useFallback ? {} : (getSection('aboutCtaSection') ?? {});
+
+const showIntro    = useFallback || introDoc?.enabled    !== false;
+const showWte      = useFallback || wteDoc?.enabled      !== false;
+const showPersonal = useFallback || personalDoc?.enabled !== false;
+const showQuote    = useFallback || quoteDoc?.enabled    !== false;
+const showCta      = useFallback || ctaDoc?.enabled      !== false;
+
+const introHeading = introDoc?.heading       || "Hi, I'm Connor";
+const introSubtext = introDoc?.subtext       || 'A photographer based in [City], here to help you document your story in a way that feels natural and stress-free.';
+const introBody1   = introDoc?.bodyParagraph1 || "I've spent the last decade photographing the moments that matter most — the quiet ones, the joyful ones, the ones you don't even notice are happening until the camera catches them. My approach is unhurried and entirely led by you.";
+const introBody2   = introDoc?.bodyParagraph2 || 'What started as a personal project became a calling. I believe every person, every family, every bond deserves to be documented beautifully — not in a stiff, posed way, but in a way that is completely, unmistakably them.';
+const introImage   = introDoc?.image ?? null;
+
+const wteLabel   = wteDoc?.sectionLabel || 'What to Expect';
+const wteColumns = wteDoc?.columns?.length ? wteDoc.columns : fallbackWteColumns;
+
+const personalImage = personalDoc?.image ?? null;
+const personalBody1 = personalDoc?.bodyParagraph1 || 'Photography found me at a time when I needed it most. A camera in hand became a reason to look closely at the world — to slow down, notice the small things, and find beauty in the ordinary.';
+const personalBody2 = personalDoc?.bodyParagraph2 || "That sense of attention is something I bring to every session. I'm not here to manufacture a perfect image. I'm here to find the one that's already there, waiting.";
+
+const quoteText = quoteDoc?.quoteText || 'I believe photographs should feel honest, timeless, and personal.';
+
+const ctaHeading    = ctaDoc?.ctaHeading  || ctaDoc?.heading  || "Let's Do This!";
+const ctaBody       = ctaDoc?.ctaBody     || ctaDoc?.body     || "If you're ready to have photographs that actually look and feel like you, I'd love to hear from you. Get in touch and let's start planning something special.";
+const ctaButtonText = ctaDoc?.buttonText || 'Get In Touch';
+const ctaButtonLink = ctaDoc?.buttonLink || '/contact';
+const ctaCaption    = ctaDoc?.caption    || 'Serving [City] and surrounding areas.';
+const ctaImageBg    = ctaDoc?.imageBackground ?? null;
+const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 ---
 
 <Layout>
