@@ -1,35 +1,35 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// TODO:NICHE — update FAQ answers, pricing, and copy for your niche
+// TODO:NICHE — update FAQ answers and pricing for your niche
 const faqs = [
 	{
 		q: 'How do I book a session?',
-		a: 'Reach out via the contact form or email and we\'ll set up a quick call to chat through your vision, location options, and timing. Once we\'ve confirmed the details, a deposit and signed agreement will secure your date.',
+		a: "Simply reach out through the contact form to start the conversation. You'll be guided through the next steps from there.",
 	},
 	{
-		q: 'Do you work with shy, reactive, or senior subjects?',
-		a: 'Absolutely. Sessions are led entirely by the subject\'s comfort level. There\'s no pressure to perform, and we move at whatever pace feels right. Some of the most beautiful sessions have come from the quietest moments.',
+		q: 'Do you work with shy, reactive, or senior dogs?',
+		a: 'Absolutely. Sessions are approached with patience and flexibility, and every dog is photographed at their own pace.',
 	},
 	{
 		q: 'When will I receive my images?',
-		a: 'Your private online gallery will be delivered within three weeks of your session. You\'ll have time to review everything before choosing your favorites for prints, albums, or digital downloads.',
+		a: "You'll receive a curated online gallery within a few weeks of your session, featuring thoughtfully edited images ready to enjoy and share.",
 	},
 	{
-		q: 'Can I be in the photos too?',
-		a: 'Yes — and I encourage it. The relationship and connection between you and your subject is often the most meaningful thing to document. Just let me know when you book and we\'ll plan for it.',
+		q: 'Can I be in the photos with my dog?',
+		a: 'Yes — pet and owner photos are always welcome and focus on natural connection rather than posed moments.',
 	},
 	{
-		q: 'Where do sessions take place?',
-		a: 'Sessions can take place anywhere that feels meaningful to you — a favourite park, your home, a special location. I\'m happy to suggest spots with beautiful light if you\'d prefer a recommendation.',
+		q: 'Where do dog photography sessions take place?',
+		a: "Sessions take place at quiet, dog-friendly outdoor locations chosen with your dog's comfort and safety in mind.",
 	},
 	{
 		q: 'How long does a session last?',
-		a: 'Most sessions run between 60 and 90 minutes. This gives us enough time to warm up, explore the space, and capture a range of natural moments without anyone feeling rushed or tired.',
+		a: 'Most sessions last about an hour, allowing enough time to settle in, explore, and capture natural moments without rushing.',
 	},
 	{
-		q: 'What if my subject isn\'t trained or doesn\'t sit still?',
-		a: 'That\'s completely fine — and very normal. I don\'t work with rigid shot lists or expect perfect behaviour. Movement, chaos, and personality make for the best photographs. We\'ll work with whatever the session gives us.',
+		q: "What if my dog isn't trained or doesn't sit still?",
+		a: "That's completely okay. Sessions are relaxed and dog-led, with plenty of time for movement, breaks, and patience so your dog can be themselves.",
 	},
 ];
 ---
@@ -48,15 +48,23 @@ const faqs = [
 			<div class="hero__overlay" aria-hidden="true"></div>
 			<div class="hero__content">
 				<h1 class="hero__heading">The Experience &amp; Investment</h1>
-				<p class="hero__sub">What working together looks like, from your session to finished artwork.</p>
+				<p class="hero__sub">Relaxed, natural dog portraits designed to celebrate your dog</p>
 			</div>
 		</section>
 
-		<!-- ══ SECTION 2: Intro Text ══ -->
+		<!-- ══ SECTION 2: Intro ══ -->
 		<section class="intro" data-theme="classic-cream">
 			<div class="intro__inner">
-				<p class="intro__body reveal reveal-delay-1">Every session is designed to feel relaxed, subject-led, and pressure-free. From planning your session to choosing your final images, you'll be guided through each step so the experience feels easy and enjoyable.</p>{/* TODO:NICHE */}
-				<p class="intro__body intro__body--bold reveal reveal-delay-2">There's no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.</p>{/* TODO:NICHE */}
+				<p class="intro__body reveal reveal-delay-1">Every dog photography session is designed to feel relaxed, dog-led, and pressure-free. From planning your session to choosing your final images, you'll be guided through each step so the experience feels easy and enjoyable for both you and your dog.</p>
+				<p class="intro__body intro__body--bold reveal reveal-delay-2">There's no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.</p>
+				<p class="intro__includes reveal reveal-delay-3"><em>This includes:</em></p>
+				<ul class="intro__list reveal reveal-delay-4">
+					<li>Pre-session guidance to help you feel prepared</li>
+					<li>A relaxed, unhurried photo session</li>
+					<li>A curated online gallery to view and select your images</li>
+				</ul>
+				<p class="intro__price reveal reveal-delay-5">Session fee begins at $XXX<br /><em>(Artwork and images purchased separately.)</em></p>{/* TODO:NICHE — update pricing */}
+				<p class="intro__closing reveal reveal-delay-5">The session fee covers the time, care, and preparation that go into creating your dog's photography experience.</p>
 			</div>
 		</section>
 
@@ -72,16 +80,16 @@ const faqs = [
 					/>
 				</div>
 				<div class="sessions__content">
-					<h2 class="sessions__heading reveal reveal-delay-1">Sessions</h2>
-					<p class="sessions__sub">The session fee covers the time, care, and preparation that go into creating your photography experience.</p>{/* TODO:NICHE */}
-					<p class="sessions__includes"><em><strong>This includes:</strong></em></p>
-					<ul class="sessions__list">
-						<li>Pre-session guidance to help you feel prepared</li>
-						<li>A relaxed, unhurried photo session</li>
-						<li>A curated online gallery to view and select your images</li>
+					<p class="sessions__eyebrow">Sessions</p>
+					<h2 class="sessions__heading">$XXX</h2>{/* TODO:NICHE — update pricing */}
+					<p class="sessions__sub">Session fee begins at</p>
+					<p class="sessions__body reveal reveal-delay-2">The session includes a relaxed, unhurried photo experience designed around your dog's pace and comfort. Sessions are unhurried and dog-led, with time built in for your pup to settle, explore, and be themselves.</p>
+					<ul class="sessions__list reveal reveal-delay-3">
+						<li>Relaxed outdoor setting</li>
+						<li>Dog-led pacing and comfort</li>
+						<li>Natural, unposed moments</li>
+						<li>Professional guidance throughout</li>
 					</ul>
-					<p class="sessions__price"><strong>Session fee begins at $XXX</strong></p>{/* TODO:NICHE — update pricing */}
-					<p class="sessions__caption"><em>(Artwork and images purchased separately.)</em></p>
 				</div>
 			</div>
 		</section>
@@ -91,16 +99,15 @@ const faqs = [
 			<hr />
 			<div class="artwork__inner">
 				<div class="artwork__content reveal reveal-delay-1">
-					<h2 class="artwork__heading">Artwork / Images</h2>
-					<p class="artwork__body">After your gallery is delivered, you'll choose the images you'd like to keep — whether that's a small digital collection or a fully curated set of wall artwork. There's no pressure to decide on the day; you'll have time to sit with your gallery and choose what feels right.</p>{/* TODO:NICHE */}
-					<p class="artwork__includes"><em><strong>Options may include:</strong></em></p>
+					<h2 class="artwork__heading">After your session, you'll select your favorite images from an online gallery. A variety of digital image and artwork options are available, allowing you to choose how you'd like to enjoy your photos.</h2>
+					<p class="artwork__includes"><em>Options may include:</em></p>
 					<ul class="artwork__list">
 						<li>Digital image collections</li>
 						<li>Fine art prints</li>
 						<li>Wall artwork</li>
 						<li>Albums or keepsake pieces</li>
 					</ul>
-					<p class="artwork__statement"><strong>You're never locked into a one-size-fits-all package — selections are flexible and based on what matters most to you.</strong></p>{/* TODO:NICHE */}
+					<p class="artwork__statement">You're never locked into a one-size-fits-all package — selections are flexible and based on what matters most to you.</p>
 				</div>
 				<div class="artwork__img-wrap reveal-fade reveal-delay-2">
 					<img
@@ -112,7 +119,7 @@ const faqs = [
 			</div>
 		</section>
 
-		<!-- ══ SECTION 5: Next Steps (Full-Bleed Background) ══ -->
+		<!-- ══ SECTION 5: Next Steps ══ -->
 		<section class="next">
 			<img
 				class="next__bg"
@@ -123,10 +130,11 @@ const faqs = [
 			/>
 			<div class="next__overlay" aria-hidden="true"></div>
 			<div class="next__box">
-				<h2 class="next__heading reveal reveal-delay-1">Next Steps</h2>
-				<p class="next__body reveal reveal-delay-2">Ready to get started? Reach out and tell me a little about yourself and what you're hoping to create. I'll be in touch within 48 hours to arrange a quick call and start planning your session.</p>{/* TODO:NICHE */}
-				<p class="next__body reveal reveal-delay-3">Sessions fill up quickly, especially during spring and autumn — so if you have a time of year in mind, it's worth reaching out sooner rather than later.</p>{/* TODO:NICHE */}
-				<a href="/contact" class="next__btn reveal reveal-delay-4">Get In Touch</a>
+				<p class="next__label reveal reveal-delay-1">Next Steps</p>
+				<h2 class="next__heading reveal reveal-delay-2">Get in touch</h2>
+				<p class="next__body reveal reveal-delay-3">If this experience feels like the right fit for you and your dog, the next step is simply reaching out to start the conversation.</p>
+				<p class="next__body reveal reveal-delay-4">I'm happy to answer questions, talk through options, and help you decide if this is the right experience for you.</p>
+				<a href="/contact" class="next__btn reveal reveal-delay-5">Get in touch</a>
 			</div>
 		</section>
 
@@ -206,7 +214,7 @@ const faqs = [
 		background: linear-gradient(
 			to right,
 			rgba(0, 0, 0, 0.1) 0%,
-			rgba(0, 0, 0, 0.55) 100%
+			rgba(0, 0, 0, 0.6) 100%
 		);
 	}
 
@@ -243,7 +251,7 @@ const faqs = [
 	}
 
 	.intro__inner {
-		max-width: 600px;
+		max-width: 620px;
 		margin: 0 auto;
 		padding: 5.5rem 3rem;
 		text-align: center;
@@ -257,12 +265,53 @@ const faqs = [
 		margin-bottom: 1.5rem;
 	}
 
-	.intro__body:last-child {
-		margin-bottom: 0;
-	}
-
 	.intro__body--bold {
 		font-weight: 500;
+	}
+
+	.intro__includes {
+		font-size: 1rem;
+		color: var(--text);
+		margin-top: 2rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.intro__list {
+		list-style: none;
+		margin: 0 auto 2rem;
+		text-align: left;
+		max-width: 420px;
+	}
+
+	.intro__list li {
+		font-size: 1rem;
+		color: var(--muted);
+		padding: 0.45rem 0 0.45rem 1.25rem;
+		position: relative;
+		border-bottom: 1px solid var(--border);
+		line-height: 1.6;
+	}
+
+	.intro__list li::before {
+		content: '—';
+		position: absolute;
+		left: 0;
+		color: var(--accent);
+		font-size: 0.75rem;
+	}
+
+	.intro__price {
+		font-size: 1.0625rem;
+		color: var(--text);
+		line-height: 1.7;
+		margin-bottom: 1.25rem;
+	}
+
+	.intro__closing {
+		font-style: italic;
+		font-size: 0.9375rem;
+		color: var(--muted);
+		line-height: 1.75;
 	}
 
 	/* ══ SECTION 3: Sessions ══ */
@@ -291,37 +340,48 @@ const faqs = [
 		display: block;
 	}
 
+	.sessions__eyebrow {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 0.75rem;
+	}
+
 	.sessions__heading {
-		font-size: clamp(2.25rem, 4vw, 3.5rem);
+		font-size: clamp(3rem, 6vw, 5rem);
 		color: var(--text);
-		margin-bottom: 1.25rem;
-		letter-spacing: -0.01em;
+		letter-spacing: -0.02em;
+		line-height: 1;
+		margin-bottom: 0.5rem;
 	}
 
 	.sessions__sub {
 		font-family: var(--font-sans);
 		font-style: normal;
-		font-size: 0.9rem;
+		font-size: 0.75rem;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
-		color: var(--accent);
-		line-height: 1.7;
+		color: var(--muted);
 		margin-bottom: 2rem;
 	}
 
-	.sessions__includes {
-		font-size: 1.2rem;
+	.sessions__body {
+		font-style: italic;
+		font-size: 1.0625rem;
+		line-height: 1.82;
 		color: var(--text);
-		margin-bottom: 0.75rem;
+		margin-bottom: 2rem;
 	}
 
 	.sessions__list {
 		list-style: none;
-		margin-bottom: 2rem;
 	}
 
 	.sessions__list li {
-		font-size: 1.125rem;
+		font-size: 1rem;
 		color: var(--muted);
 		padding: 0.45rem 0 0.45rem 1.25rem;
 		position: relative;
@@ -335,17 +395,6 @@ const faqs = [
 		left: 0;
 		color: var(--accent);
 		font-size: 0.75rem;
-	}
-
-	.sessions__price {
-		font-size: 1.275rem;
-		color: var(--text);
-		margin-bottom: 0.5rem;
-	}
-
-	.sessions__caption {
-		font-size: 1.05rem;
-		color: var(--muted);
 	}
 
 	/* ══ SECTION 4: Artwork ══ */
@@ -364,18 +413,14 @@ const faqs = [
 	}
 
 	.artwork__heading {
-		font-size: clamp(2.25rem, 4vw, 3.5rem);
-		color: var(--text);
-		margin-bottom: 1.5rem;
-		letter-spacing: -0.01em;
-	}
-
-	.artwork__body {
+		font-family: var(--font-serif);
 		font-style: italic;
-		font-size: 1.0625rem;
-		line-height: 1.82;
+		font-size: clamp(1.125rem, 2vw, 1.5rem);
+		line-height: 1.6;
 		color: var(--text);
-		margin-bottom: 1.5rem;
+		letter-spacing: -0.01em;
+		margin-bottom: 2rem;
+		font-weight: 400;
 	}
 
 	.artwork__includes {
@@ -407,6 +452,7 @@ const faqs = [
 	}
 
 	.artwork__statement {
+		font-style: italic;
 		font-size: 1.0625rem;
 		color: var(--text);
 		line-height: 1.65;
@@ -458,10 +504,20 @@ const faqs = [
 		padding: 3.5rem;
 	}
 
+	.next__label {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.7rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--accent);
+		margin-bottom: 1rem;
+	}
+
 	.next__heading {
 		font-size: clamp(2rem, 3.5vw, 3rem);
 		color: var(--text);
-		margin-bottom: 1.25rem;
+		margin-bottom: 1.5rem;
 		letter-spacing: -0.01em;
 	}
 
@@ -479,7 +535,7 @@ const faqs = [
 
 	.next__btn {
 		display: inline-block;
-		font-family: var(--font-sans, system-ui, sans-serif);
+		font-family: var(--font-sans);
 		font-style: normal;
 		font-size: 0.7rem;
 		letter-spacing: 0.2em;
@@ -525,8 +581,9 @@ const faqs = [
 		font-size: clamp(1.5rem, 2.5vw, 2.25rem);
 		letter-spacing: 0.12em;
 		color: var(--border);
-		writing-mode: vertical-lr;
-		transform: rotate(180deg);
+		writing-mode: horizontal-tb;
+		transform: rotate(-90deg);
+		transform-origin: center center;
 		white-space: nowrap;
 		user-select: none;
 	}
@@ -609,11 +666,15 @@ const faqs = [
 		}
 
 		.hero__overlay {
-			background: rgba(0, 0, 0, 0.4);
+			background: rgba(0, 0, 0, 0.45);
 		}
 
 		.intro__inner {
 			padding: 4rem 1.5rem;
+		}
+
+		.intro__list {
+			max-width: none;
 		}
 
 		.sessions__inner,
