@@ -21,6 +21,13 @@ export default {
         {type: 'aboutQuoteSection'},
         {type: 'aboutCtaSection'},
       ],
+      initialValue: [
+        {_type: 'aboutIntroSection', enabled: true},
+        {_type: 'aboutWhatToExpectSection', enabled: true},
+        {_type: 'aboutPersonalSection', enabled: true},
+        {_type: 'aboutQuoteSection', enabled: true},
+        {_type: 'aboutCtaSection', enabled: true},
+      ],
     },
   ],
 }
