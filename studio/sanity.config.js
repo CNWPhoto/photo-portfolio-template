@@ -32,6 +32,7 @@ export default defineConfig({
                   .title('Site Settings')
                   .items([
                     singleton(S, 'siteSettings', 'Site & Theme', 'siteSettings'),
+                    singleton(S, 'navSettings', 'Navigation', 'navSettings'),
                     singleton(S, 'homepageSettings', 'Homepage Layout', 'homepageSettings'),
                     singleton(S, 'footerSettings', 'Footer', 'footerSettings'),
                     singleton(S, 'socialSettings', 'Social', 'socialSettings'),

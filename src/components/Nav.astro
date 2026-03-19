@@ -1,22 +1,68 @@
 ---
 import { urlFor } from '../lib/sanity.js';
-const { siteName = 'Pet Photography', logoType = 'text', logoImage = null } = Astro.props;
+
+const {
+	siteName = 'Pet Photography',
+	logoType = 'text',
+	logoImage = null,
+	navVariant = 'classic',
+	navLinks = null,
+} = Astro.props;
+
 const showImageLogo = logoType === 'image' && logoImage;
+
+// Default links used when nothing is configured in Sanity yet
+const defaultLinks = [
+	{ label: 'Experience', url: '/experience', enabled: true, openInNewTab: false, isButton: false },
+	{ label: 'Portfolio',  url: '/portfolio',  enabled: true, openInNewTab: false, isButton: false },
+	{ label: 'About',      url: '/about',      enabled: true, openInNewTab: false, isButton: false },
+	{ label: 'Blog',       url: '/blog',       enabled: true, openInNewTab: false, isButton: false },
+	{ label: 'Inquire',    url: '/contact',    enabled: true, openInNewTab: false, isButton: true  },
+];
+
+const links = (navLinks ?? defaultLinks).filter((l: any) => l.enabled !== false);
+
+// Split variant: divide links evenly left and right of the centered logo
+const isSplit = navVariant === 'split';
+const splitMid = Math.floor(links.length / 2);
+const leftLinks  = isSplit ? links.slice(0, splitMid) : [];
+const rightLinks = isSplit ? links.slice(splitMid)    : links;
 ---
 
-<header class="nav">
+<header class="nav" data-variant={navVariant}>
 	<div class="nav__inner">
+		{isSplit && (
+			<nav aria-label="Main navigation left" class="nav__left-nav">
+				<ul class="nav__links nav__links--left">
+					{leftLinks.map((link: any) => (
+						<li>
+							<a
+								href={link.url}
+								class={link.isButton ? 'nav__inquire' : ''}
+								target={link.openInNewTab ? '_blank' : undefined}
+								rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+							>{link.label}</a>
+						</li>
+					))}
+				</ul>
+			</nav>
+		)}
 		{showImageLogo
 			? <a href="/" class="nav__logo nav__logo--image"><img src={urlFor(logoImage).height(96).auto('format').url()} alt={siteName} class="nav__logo-img" decoding="async" /></a>
 			: <a href="/" class="nav__logo">{siteName}</a>
 		}
 		<nav aria-label="Main navigation">
-			<ul class="nav__links">
-				<li><a href="/experience">Experience</a></li>
-				<li><a href="/portfolio">Portfolio</a></li>
-				<li><a href="/about">About</a></li>
-				<li><a href="/blog">Blog</a></li>
-				<li><a href="/contact" class="nav__inquire">Inquire</a></li>
+			<ul class={`nav__links${isSplit ? ' nav__links--right' : ''}`}>
+				{rightLinks.map((link: any) => (
+					<li>
+						<a
+							href={link.url}
+							class={link.isButton ? 'nav__inquire' : ''}
+							target={link.openInNewTab ? '_blank' : undefined}
+							rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+						>{link.label}</a>
+					</li>
+				))}
 			</ul>
 		</nav>
 
@@ -46,22 +92,31 @@ const showImageLogo = logoType === 'image' && logoImage;
 		</button>
 		<nav aria-label="Mobile navigation">
 			<ul class="nav__overlay-links">
-				<li><a href="/experience">Experience</a></li>
-				<li><a href="/portfolio">Portfolio</a></li>
-				<li><a href="/about">About</a></li>
-				<li><a href="/blog">Blog</a></li>
-				<li><a href="/contact" class="nav__overlay-inquire">Inquire</a></li>
+				{links.map((link: any) => (
+					<li>
+						<a
+							href={link.url}
+							class={link.isButton ? 'nav__overlay-inquire' : ''}
+							target={link.openInNewTab ? '_blank' : undefined}
+							rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+						>{link.label}</a>
+					</li>
+				))}
 			</ul>
 		</nav>
 	</div>
 </div>
 
 <style>
+	/* ═══════════════════════════════════════
+	   BASE NAV (shared by all variants)
+	═══════════════════════════════════════ */
 	.nav {
 		position: relative;
 		z-index: 100;
 		background: var(--bg);
 		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+		transition: background 0.3s ease, box-shadow 0.3s ease;
 	}
 
 	.nav__inner {
@@ -80,7 +135,7 @@ const showImageLogo = logoType === 'image' && logoImage;
 		color: var(--text);
 		text-decoration: none;
 		white-space: nowrap;
-		transition: opacity 0.2s;
+		transition: opacity 0.2s, color 0.3s;
 	}
 
 	.nav__logo:hover { opacity: 0.7; }
@@ -110,7 +165,7 @@ const showImageLogo = logoType === 'image' && logoImage;
 		color: var(--text);
 		text-decoration: none;
 		letter-spacing: 0.1em;
-		transition: color 0.2s;
+		transition: color 0.2s, color 0.3s;
 	}
 
 	.nav__links a:not(.nav__inquire) {
@@ -161,7 +216,7 @@ const showImageLogo = logoType === 'image' && logoImage;
 		width: 24px;
 		height: 1.5px;
 		background: var(--text);
-		transition: opacity 0.2s;
+		transition: opacity 0.2s, background 0.3s;
 	}
 
 	.nav__hamburger:hover .nav__hamburger-bar {
@@ -251,17 +306,130 @@ const showImageLogo = logoType === 'image' && logoImage;
 		color: var(--accent) !important;
 	}
 
-	/* ── Compact state: triggered by JS class or media-query fallback ──
-	   JS adds .nav--compact whenever the gap between logo and links
-	   drops below 50px, regardless of viewport width.
-	   The @media block below is a no-JS / very-small-screen safety net. */
+	/* ═══════════════════════════════════════
+	   VARIANT: CENTERED
+	   Logo centered at top, links centered below
+	═══════════════════════════════════════ */
+	.nav[data-variant='centered'] .nav__inner {
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		padding: 1.25rem 1.5rem 1rem;
+	}
 
-	.nav--compact .nav__inner {
+	.nav[data-variant='centered'] .nav__logo {
+		order: 1;
+	}
+
+	.nav[data-variant='centered'] nav {
+		order: 2;
+	}
+
+	.nav[data-variant='centered'] .nav__links {
+		gap: 2rem;
+	}
+
+	.nav[data-variant='centered'] .nav__hamburger {
+		/* shown via compact JS, placed absolutely so it doesn't shift layout */
+		position: absolute;
+		right: 1.5rem;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	/* ═══════════════════════════════════════
+	   VARIANT: TRANSPARENT
+	   Starts clear over hero, fills in on scroll
+	═══════════════════════════════════════ */
+	.nav[data-variant='transparent'] {
+		position: sticky;
+		top: 0;
+		background: transparent;
+		box-shadow: none;
+	}
+
+	/* transparent state: white text/bars so it reads over hero imagery */
+	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__logo,
+	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a {
+		color: #ffffff;
+	}
+
+	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a:not(.nav__inquire)::after {
+		background-color: #ffffff;
+	}
+
+	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__hamburger-bar {
+		background: #ffffff;
+	}
+
+	/* scrolled state: opaque background returns */
+	.nav[data-variant='transparent'].nav--scrolled {
+		background: var(--bg);
+		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+	}
+
+	/* ═══════════════════════════════════════
+	   VARIANT: SPLIT
+	   Logo centered; links balanced left and right
+	═══════════════════════════════════════ */
+	.nav[data-variant='split'] .nav__inner {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		grid-template-areas: 'left logo right';
+		align-items: center;
 		padding: 20px 1.5rem;
 	}
 
-	/* Logo shrinks fluidly so it never crowds the hamburger button.
-	   margin-right keeps at least 1rem breathing room before the icon. */
+	.nav[data-variant='split'] .nav__left-nav {
+		grid-area: left;
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	.nav[data-variant='split'] .nav__logo {
+		grid-area: logo;
+		margin: 0 2rem;
+		text-align: center;
+	}
+
+	.nav[data-variant='split'] nav:not(.nav__left-nav) {
+		grid-area: right;
+	}
+
+	.nav[data-variant='split'] .nav__links--left {
+		justify-content: flex-end;
+	}
+
+	.nav[data-variant='split'] .nav__links--right {
+		justify-content: flex-start;
+	}
+
+	/* Hamburger sits in the right grid area in compact state */
+	.nav[data-variant='split'] .nav__hamburger {
+		grid-area: right;
+		justify-self: end;
+	}
+
+	/* Compact: collapse to logo-left, hamburger-right */
+	.nav[data-variant='split'].nav--compact .nav__inner {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.nav[data-variant='split'].nav--compact .nav__logo {
+		margin: 0 1rem 0 0;
+	}
+
+	.nav[data-variant='split'].nav--compact .nav__left-nav {
+		display: none;
+	}
+
+	/* ═══════════════════════════════════════
+	   COMPACT STATE (JS-driven, all variants)
+	═══════════════════════════════════════ */
+
+	/* Logo shrinks fluidly so it never crowds the hamburger button */
 	.nav--compact .nav__logo {
 		font-size: clamp(0.9rem, 4.5vw, 2rem);
 		min-width: 0;
@@ -276,6 +444,19 @@ const showImageLogo = logoType === 'image' && logoImage;
 	.nav--compact .nav__hamburger {
 		display: flex;
 		flex-shrink: 0;
+	}
+
+	/* Reset centered column layout in compact state */
+	.nav[data-variant='centered'].nav--compact .nav__inner {
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		padding: 20px 1.5rem;
+	}
+
+	.nav[data-variant='centered'].nav--compact .nav__hamburger {
+		position: static;
+		transform: none;
 	}
 
 	.nav--compact .nav__overlay {
@@ -295,6 +476,25 @@ const showImageLogo = logoType === 'image' && logoImage;
 		.nav__hamburger { display: flex; flex-shrink: 0; }
 		.nav__overlay  { display: block; pointer-events: none; }
 		.nav__overlay.nav__overlay--open { pointer-events: auto; }
+
+		/* centered: revert to row on mobile */
+		.nav[data-variant='centered'] .nav__inner {
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+		}
+		.nav[data-variant='centered'] .nav__hamburger {
+			position: static;
+			transform: none;
+		}
+
+		/* split: revert to flex row on mobile */
+		.nav[data-variant='split'] .nav__inner {
+			display: flex;
+			justify-content: space-between;
+		}
+		.nav[data-variant='split'] .nav__logo { margin: 0 1rem 0 0; }
+		.nav[data-variant='split'] .nav__left-nav { display: none; }
 	}
 </style>
 
@@ -304,33 +504,65 @@ const showImageLogo = logoType === 'image' && logoImage;
 	const overlay   = document.getElementById('navOverlay') as HTMLElement;
 	const closeBtn  = document.getElementById('navOverlayClose') as HTMLButtonElement;
 	const logo      = navHeader.querySelector('.nav__logo') as HTMLElement;
-	const links     = navHeader.querySelector('.nav__links') as HTMLElement;
+	const linksEl   = navHeader.querySelector('.nav__links') as HTMLElement;
+	const leftNavEl = navHeader.querySelector('.nav__left-nav') as HTMLElement | null;
+	const variant   = navHeader.dataset.variant || 'classic';
 
-	// ── Dynamic gap checker ───────────────────────────────────────────
+	// ── Transparent variant: solidify on scroll ───────────────────────
+	if (variant === 'transparent') {
+		const onScroll = () => {
+			if (window.scrollY > 60) {
+				navHeader.classList.add('nav--scrolled');
+			} else {
+				navHeader.classList.remove('nav--scrolled');
+			}
+		};
+		window.addEventListener('scroll', onScroll, { passive: true });
+		onScroll(); // run on load
+	}
+
+	// ── Dynamic gap checker (classic & centered variants) ─────────────
 	// Temporarily restores desktop state (invisible) to measure the true
 	// gap between logo and nav links, then applies .nav--compact if < 50px.
-	// ResizeObserver fires before paint so there's no visible flash.
 	function checkLayout() {
-		// Snapshot current compact state, then remove it for measurement
 		const wasCompact = navHeader.classList.contains('nav--compact');
 		navHeader.classList.remove('nav--compact');
 
-		// Force links visible-but-hidden so getBoundingClientRect works
-		links.style.cssText = 'display:flex!important;visibility:hidden!important;pointer-events:none!important;';
+		// Make links temporarily visible-but-hidden so we can measure them
+		const showHide = (el: HTMLElement | null, show: boolean) => {
+			if (el) el.style.cssText = show
+				? 'display:flex!important;visibility:hidden!important;pointer-events:none!important;'
+				: '';
+		};
 
-		const logoRight  = logo.getBoundingClientRect().right;
-		const linksLeft  = links.getBoundingClientRect().left;
-		const gap        = linksLeft - logoRight;
+		showHide(linksEl, true);
+		if (leftNavEl) showHide(leftNavEl, true);
 
-		// Restore links to their natural state before deciding
-		links.style.cssText = '';
+		let gap: number;
+
+		if (variant === 'centered') {
+			const linksRect = linksEl.getBoundingClientRect();
+			gap = linksRect.width < window.innerWidth - 48 ? 100 : -1;
+		} else if (variant === 'split') {
+			// Check if the inner grid overflows the nav width
+			const inner = navHeader.querySelector('.nav__inner') as HTMLElement;
+			gap = inner.scrollWidth <= inner.clientWidth + 2 ? 100 : -1;
+		} else {
+			const logoRect  = logo.getBoundingClientRect();
+			const linksRect = linksEl.getBoundingClientRect();
+			gap = linksRect.left - logoRect.right;
+		}
+
+		showHide(linksEl, false);
+		if (leftNavEl) showHide(leftNavEl, false);
+
+		// Keep --nav-height in sync so the transparent hero pull-up stays accurate
+		document.documentElement.style.setProperty('--nav-height', navHeader.offsetHeight + 'px');
 
 		if (gap < 50) {
 			navHeader.classList.add('nav--compact');
 		}
-		// If gap >= 50, compact class stays removed (desktop layout)
 
-		// If the menu was open and we switched back to desktop, close it cleanly
 		if (wasCompact && !navHeader.classList.contains('nav--compact')) {
 			overlay.classList.remove('nav__overlay--open');
 			overlay.setAttribute('aria-hidden', 'true');
@@ -341,7 +573,7 @@ const showImageLogo = logoType === 'image' && logoImage;
 
 	const ro = new ResizeObserver(checkLayout);
 	ro.observe(document.documentElement);
-	checkLayout(); // run immediately on load
+	checkLayout();
 
 	// ── Hamburger open / close ────────────────────────────────────────
 	function openMenu() {

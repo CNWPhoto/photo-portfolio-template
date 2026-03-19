@@ -62,7 +62,6 @@ const faqs = [
 
 		<!-- ══ SECTION 3: Sessions ══ -->
 		<section class="sessions" data-theme="warm-studio">
-			<hr />
 			<div class="sessions__inner">
 				<div class="sessions__img-wrap reveal-fade reveal-delay-1">
 					<img
@@ -73,7 +72,7 @@ const faqs = [
 				</div>
 				<div class="sessions__content">
 					<h2 class="sessions__heading reveal reveal-delay-1">Sessions</h2>
-					<p class="sessions__sub">The session fee covers the time, care, and preparation that go into creating your dog's photography experience.</p>
+					<p class="sessions__sub reveal reveal-delay-2">The session fee covers the time, care, and preparation that go into creating your dog's photography experience.</p>
 					<p class="sessions__includes reveal reveal-delay-2"><em><strong>This includes:</strong></em></p>
 					<ul class="sessions__list reveal reveal-delay-3">
 						<li>Pre-session guidance to help you feel prepared</li>
@@ -88,11 +87,11 @@ const faqs = [
 
 		<!-- ══ SECTION 4: Artwork / Images ══ -->
 		<section class="artwork" data-theme="classic-cream">
-			<hr />
 			<div class="artwork__inner">
 				<div class="artwork__content reveal reveal-delay-1">
-					<h2 class="artwork__heading">After your session, you'll select your favorite images from an online gallery. A variety of digital image and artwork options are available, allowing you to choose how you'd like to enjoy your photos.</h2>
-					<p class="artwork__includes"><em>Options may include:</em></p>
+					<h2 class="artwork__title">Artwork/Images</h2>
+					<p class="artwork__heading">After your session, you'll select your favorite images from an online gallery. A variety of digital image and artwork options are available, allowing you to choose how you'd like to enjoy your photos.</p>
+					<p class="artwork__includes"><strong>Options may include:</strong></p>
 					<ul class="artwork__list">
 						<li>Digital image collections</li>
 						<li>Fine art prints</li>
@@ -186,7 +185,7 @@ const faqs = [
 		min-height: 400px;
 		overflow: hidden;
 		display: flex;
-		align-items: flex-end;
+		align-items: flex-start;
 		justify-content: flex-end;
 	}
 
@@ -214,12 +213,13 @@ const faqs = [
 		position: relative;
 		z-index: 1;
 		max-width: 580px;
-		padding: 4rem 4rem 4rem 3rem;
+		padding: 150px 4rem 4rem 3rem;
 		text-align: right;
 	}
 
 	.hero__heading {
-		font-size: clamp(2rem, 4vw, 3.5rem);
+		font-size: clamp(2.5rem, 5vw, 4.375rem);
+		font-weight: 700;
 		color: #ffffff;
 		letter-spacing: -0.01em;
 		margin-bottom: 1.25rem;
@@ -230,7 +230,7 @@ const faqs = [
 	.hero__sub {
 		font-family: var(--font-sans);
 		font-style: normal;
-		font-size: 0.725rem;
+		font-size: 0.906rem;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
 		color: rgba(255, 255, 255, 0.85);
@@ -245,12 +245,13 @@ const faqs = [
 	.intro__inner {
 		max-width: 620px;
 		margin: 0 auto;
-		padding: 5.5rem 3rem;
-		text-align: center;
+		padding: 1.1rem 3rem;
+		text-align: left;
 	}
 
 	.intro__body {
-		font-style: italic;
+		font-style: normal;
+		font-weight: 500;
 		font-size: 1.0625rem;
 		line-height: 1.82;
 		color: var(--text);
@@ -258,11 +259,12 @@ const faqs = [
 	}
 
 	.intro__body--bold {
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	/* ══ SECTION 3: Sessions ══ */
 	.sessions {
+		padding-top: 50px;
 		padding-bottom: 6rem;
 	}
 
@@ -289,6 +291,7 @@ const faqs = [
 
 	.sessions__heading {
 		font-size: clamp(2.25rem, 4vw, 3.5rem);
+		font-weight: 700;
 		color: var(--text);
 		letter-spacing: -0.01em;
 		margin-bottom: 1.25rem;
@@ -319,24 +322,20 @@ const faqs = [
 	.sessions__list li {
 		font-size: 1.125rem;
 		color: var(--muted);
-		padding: 0.45rem 0 0.45rem 1.25rem;
+		padding: 0.45rem 0;
 		position: relative;
 		border-bottom: 1px solid var(--border);
 		line-height: 1.6;
 	}
 
 	.sessions__list li::before {
-		content: '—';
-		position: absolute;
-		left: 0;
-		color: var(--accent);
-		font-size: 0.75rem;
+		content: none;
 	}
 
 	.sessions__price {
 		font-size: 1.275rem;
 		color: var(--text);
-		margin-bottom: 0.5rem;
+		margin-bottom: 0.15rem;
 	}
 
 	.sessions__caption {
@@ -346,26 +345,44 @@ const faqs = [
 
 	/* ══ SECTION 4: Artwork ══ */
 	.artwork {
-		padding-bottom: 6rem;
+		padding-top: 0;
+		padding-bottom: 0;
+		overflow: hidden;
 	}
 
 	.artwork__inner {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: minmax(0, 550px) 1fr;
 		gap: 5rem;
 		align-items: center;
-		max-width: 1100px;
-		margin: 0 auto;
-		padding: 5rem 3rem 0;
+		min-height: 680px;
+		max-height: 680px;
+		/* Left padding keeps content aligned with the rest of the page.
+		   On large screens it matches the offset of a centered 1100px container. */
+		padding: 0 0 0 max(3rem, calc((100vw - 1100px) / 2 + 3rem));
+	}
+
+	.artwork__content {
+		padding-top: 100px;
+		padding-bottom: 100px;
+	}
+
+	.artwork__title {
+		font-size: clamp(2.25rem, 4vw, 3.5rem);
+		font-weight: 700;
+		color: var(--text);
+		letter-spacing: -0.01em;
+		margin-bottom: 1.25rem;
+		margin-left: -25px;
 	}
 
 	.artwork__heading {
-		font-family: var(--font-serif);
-		font-style: italic;
-		font-size: clamp(1.125rem, 2vw, 1.5rem);
-		line-height: 1.6;
+		font-family: var(--font-body);
+		font-style: normal;
+		font-size: clamp(0.844rem, 1.5vw, 1.125rem);
+		line-height: 1.45;
 		color: var(--text);
-		letter-spacing: -0.01em;
+		letter-spacing: 0;
 		margin-bottom: 2rem;
 		font-weight: 400;
 	}
@@ -384,22 +401,19 @@ const faqs = [
 	.artwork__list li {
 		font-size: 0.9375rem;
 		color: var(--muted);
-		padding: 0.45rem 0 0.45rem 1.25rem;
+		padding: 0.45rem 0;
 		position: relative;
 		border-bottom: 1px solid var(--border);
 		line-height: 1.6;
 	}
 
 	.artwork__list li::before {
-		content: '—';
-		position: absolute;
-		left: 0;
-		color: var(--accent);
-		font-size: 0.75rem;
+		content: none;
 	}
 
 	.artwork__statement {
-		font-style: italic;
+		font-style: normal;
+		font-weight: 600;
 		font-size: 1.0625rem;
 		color: var(--text);
 		line-height: 1.65;
@@ -491,7 +505,7 @@ const faqs = [
 		text-decoration: none;
 		border: 1px solid var(--text);
 		padding: 0.7rem 1.75rem;
-		transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
+		transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s, letter-spacing 0.25s;
 	}
 
 	.next__btn:hover {
@@ -499,10 +513,12 @@ const faqs = [
 		color: var(--bg);
 		transform: translateY(-2px);
 		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
+		letter-spacing: 0.28em;
 	}
 
 	/* ══ SECTION 6: FAQs ══ */
 	.faqs {
+		padding-top: 0;
 		padding-bottom: 7rem;
 	}
 
@@ -517,16 +533,16 @@ const faqs = [
 
 	.faqs__label-col {
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		justify-content: center;
-		padding-top: 0.5rem;
 	}
 
 	.faqs__label {
 		font-family: var(--font-serif);
 		font-style: italic;
-		font-size: clamp(1.5rem, 2.5vw, 2.25rem);
-		letter-spacing: 0.12em;
+		font-weight: 700;
+		font-size: clamp(1.875rem, 3.125vw, 2.8125rem);
+		letter-spacing: 0.09em;
 		color: var(--border);
 		writing-mode: horizontal-tb;
 		transform: rotate(-90deg);
@@ -560,7 +576,8 @@ const faqs = [
 		cursor: pointer;
 		font-family: var(--font-serif);
 		font-style: italic;
-		font-size: 1.125rem;
+		font-weight: 500;
+		font-size: 1.406rem;
 		color: var(--text);
 		text-align: left;
 		line-height: 1.4;
@@ -596,7 +613,7 @@ const faqs = [
 	}
 
 	.faqs__answer-text {
-		font-size: 0.9375rem;
+		font-size: 1.172rem;
 		line-height: 1.78;
 		color: var(--muted);
 		border-left: 2px solid var(--accent);
@@ -607,7 +624,7 @@ const faqs = [
 	/* ══ Responsive ══ */
 	@media (max-width: 900px) {
 		.hero__content {
-			padding: 2rem 1.5rem;
+			padding: 80px 1.5rem 2rem;
 			max-width: none;
 			text-align: left;
 		}
@@ -617,15 +634,28 @@ const faqs = [
 		}
 
 		.intro__inner {
-			padding: 4rem 1.5rem;
+			padding: 0.8rem 1.5rem;
 		}
 
-		.sessions__inner,
-		.artwork__inner {
+		.sessions__inner {
 			grid-template-columns: 1fr;
 			gap: 2.5rem;
 			padding-left: 1.5rem;
 			padding-right: 1.5rem;
+		}
+
+		.artwork__inner {
+			grid-template-columns: 1fr;
+			gap: 0;
+			padding: 0;
+		}
+
+		.artwork__content {
+			padding: 3rem 1.5rem;
+		}
+
+		.artwork__title {
+			margin-left: 0;
 		}
 
 		.artwork__img-wrap img {

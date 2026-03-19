@@ -12,13 +12,15 @@ const { pageTitle, seoDescription, ogImage } = Astro.props;
 
 const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production';
 
-const [_settingsRes, _codeRes] = await Promise.all([
+const [_settingsRes, _codeRes, _navRes] = await Promise.all([
   fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon, accentColorOverride }`)}`, { cache: 'no-store' }),
   fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`)}`, { cache: 'no-store' }),
+  fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "navSettings" && _id == "navSettings"][0]{ navVariant, links[] { label, url, enabled, openInNewTab, isButton } }`)}`, { cache: 'no-store' }),
 ]);
 
 const { result: settings } = await _settingsRes.json();
 const { result: code }     = await _codeRes.json();
+const { result: nav }      = await _navRes.json();
 
 const colorTheme  = settings?.colorTheme || 'classic-cream';
 const fontTheme   = settings?.fontTheme  || 'classic-editorial';
@@ -31,6 +33,8 @@ const faviconUrl  = settings?.favicon?.asset?._ref
   ? `https://cdn.sanity.io/images/hx5xgigp/production/${settings.favicon.asset._ref.replace('image-', '').replace(/-([a-z]+)$/, '.$1')}`
   : null;
 const accentOverride = settings?.accentColorOverride || null;
+const navVariant     = nav?.navVariant || 'classic';
+const navLinks       = nav?.links ?? null;
 ---
 
 <!doctype html>
@@ -61,7 +65,7 @@ const accentOverride = settings?.accentColorOverride || null;
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<!-- All font theme families loaded upfront; only the active theme's fonts render -->
 		<link
-			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,400;1,300;1,400&family=Nunito+Sans:ital,wght@0,300;0,400;0,600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500&family=Tenor+Sans&family=Raleway:wght@300;400;500&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Jost:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400;700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500;600;700&family=Tenor+Sans&family=Raleway:wght@300;400;500;600;700&display=swap"
 			rel="stylesheet"
 		/>
 		{accentOverride && (
@@ -75,8 +79,8 @@ const accentOverride = settings?.accentColorOverride || null;
 		)}
 		{headScripts && <Fragment set:html={headScripts} />}
 	</head>
-	<body>
-		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} />
+	<body data-nav-variant={navVariant}>
+		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} navVariant={navVariant} navLinks={navLinks} />
 		<slot />
 		<Footer {siteName} />
 		<script>
@@ -449,5 +453,17 @@ const accentOverride = settings?.accentColorOverride || null;
 			transition: none !important;
 			transform: none !important;
 		}
+	}
+
+	/* ══════════════════════════════════════════════════
+	   TRANSPARENT NAV — HERO PULL-UP
+	   When navVariant is transparent, hero/full-bleed image
+	   sections that are the FIRST child of <main> pull themselves
+	   up behind the sticky nav so the image fills edge-to-edge.
+	   Text-first pages are unaffected (no .hero first child).
+	   --nav-height is set in px by Nav.astro's JS on load/resize.
+	══════════════════════════════════════════════════ */
+	body[data-nav-variant='transparent'] main > .hero:first-child {
+		margin-top: calc(-1 * var(--nav-height, 80px));
 	}
 </style>

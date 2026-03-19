@@ -1,4 +1,5 @@
 import seo from './seo'
+import navSettings from './navSettings'
 import testimonial from './testimonial'
 import portfolio from './portfolio'
 import blogPost from './blogPost'
@@ -27,6 +28,7 @@ import aboutCtaSection from './sections/aboutCtaSection'
 
 export const schemaTypes = [
   seo,
+  navSettings,
   siteSettings, homepageSettings, homepagePage,
   aboutPage,
   aboutIntroSection, aboutWhatToExpectSection, aboutPersonalSection, aboutQuoteSection, aboutCtaSection,
