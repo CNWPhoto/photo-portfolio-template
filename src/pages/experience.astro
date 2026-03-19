@@ -1,62 +1,123 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { sanityClient, urlFor } from '../lib/sanity.js';
 
-// TODO:NICHE — update FAQ answers and pricing for your niche
-const faqs = [
-	{
-		q: 'How do I book a session?',
-		a: "Simply reach out through the contact form to start the conversation. You'll be guided through the next steps from there.",
-	},
-	{
-		q: 'Do you work with shy, reactive, or senior dogs?',
-		a: 'Absolutely. Sessions are approached with patience and flexibility, and every dog is photographed at their own pace.',
-	},
-	{
-		q: 'When will I receive my images?',
-		a: "You'll receive a curated online gallery within a few weeks of your session, featuring thoughtfully edited images ready to enjoy and share.",
-	},
-	{
-		q: 'Can I be in the photos with my dog?',
-		a: 'Yes — pet and owner photos are always welcome and focus on natural connection rather than posed moments.',
-	},
-	{
-		q: 'Where do dog photography sessions take place?',
-		a: "Sessions take place at quiet, dog-friendly outdoor locations chosen with your dog's comfort and safety in mind.",
-	},
-	{
-		q: 'How long does a session last?',
-		a: 'Most sessions last about an hour, allowing enough time to settle in, explore, and capture natural moments without rushing.',
-	},
-	{
-		q: "What if my dog isn't trained or doesn't sit still?",
-		a: "That's completely okay. Sessions are relaxed and dog-led, with plenty of time for movement, breaks, and patience so your dog can be themselves.",
-	},
+const expDoc = await sanityClient.fetch(
+  `*[_type == "experiencePage"][0]{
+    pageTitle,
+    seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+    "sections": sections[] {
+      _type, enabled,
+      image { ..., asset-> },
+      heading, subtext,
+      bodyFirst, bodySecond,
+      sub,
+      "includesList": includesList[].text,
+      price, caption,
+      bodyText,
+      "optionsList": optionsList[].text,
+      statement,
+      backgroundImage { ..., asset-> },
+      label, bodyFirst, bodySecond, ctaText, ctaLink,
+      "faqs": faqs[] { question, answer }
+    }
+  }`,
+  {},
+  { cache: 'no-store' }
+);
+
+const getSection = (type: string) => expDoc?.sections?.find((s: any) => s._type === type);
+
+const seoTitle       = expDoc?.seo?.seoTitle       || expDoc?.pageTitle || null;
+const seoDescription = expDoc?.seo?.seoDescription || null;
+const ogImage        = expDoc?.seo?.socialImage?.asset?.url || null;
+
+const hero      = getSection('experienceHero');
+const intro     = getSection('experienceIntro');
+const sessions  = getSection('experienceSessions');
+const artwork   = getSection('experienceArtwork');
+const nextSteps = getSection('experienceNextSteps');
+const faqsSec   = getSection('experienceFaqs');
+
+// ── Fallback content (used until Sanity is populated) ─────────────────────
+const heroImgSrc = hero?.image
+  ? urlFor(hero.image).width(1600).auto('format').url()
+  : 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg?auto=compress&cs=tinysrgb&w=1600';
+const heroImgAlt  = hero?.image?.alt  || 'Dog running through an open field in warm afternoon light';
+const heroHeading = hero?.heading     || 'The Experience & Investment';
+const heroSub     = hero?.subtext     || 'What working together looks like, from your session to finished artwork.';
+
+const introBody1 = intro?.bodyFirst  || 'Every dog photography session is designed to feel relaxed, dog-led, and pressure-free. From planning your session to choosing your final images, you\'ll be guided through each step so the experience feels easy and enjoyable for both you and your dog.';
+const introBody2 = intro?.bodySecond || 'There\'s no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.';
+
+const sessionsImgSrc  = sessions?.image
+  ? urlFor(sessions.image).width(900).height(900).fit('crop').auto('format').url()
+  : 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=900&h=900&fit=crop';
+const sessionsImgAlt  = sessions?.image?.alt || 'Session photograph in golden afternoon light';
+const sessionsHeading = sessions?.heading    || 'Sessions';
+const sessionsSub     = sessions?.sub        || "The session fee covers the time, care, and preparation that go into creating your dog's photography experience.";
+const sessionsIncludes = sessions?.includesList?.length
+  ? sessions.includesList
+  : ['Pre-session guidance to help you feel prepared', 'A relaxed, unhurried photo session', 'A curated online gallery to view and select your images'];
+const sessionsPrice   = sessions?.price   || 'Session fee begins at $XXX'; // TODO:NICHE — update pricing
+const sessionsCaption = sessions?.caption || '(Artwork and images purchased separately.)';
+
+const artworkHeading  = artwork?.heading   || 'Artwork/Images';
+const artworkBody     = artwork?.bodyText  || "After your session, you'll select your favorite images from an online gallery. A variety of digital image and artwork options are available, allowing you to choose how you'd like to enjoy your photos.";
+const artworkOptions  = artwork?.optionsList?.length
+  ? artwork.optionsList
+  : ['Digital image collections', 'Fine art prints', 'Wall artwork', 'Albums or keepsake pieces'];
+const artworkStatement = artwork?.statement || "You're never locked into a one-size-fits-all package — selections are flexible and based on what matters most to you.";
+const artworkImgSrc   = artwork?.image
+  ? urlFor(artwork.image).width(800).auto('format').url()
+  : 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=800';
+const artworkImgAlt   = artwork?.image?.alt || 'Candid portrait session in soft natural light';
+
+const nextBgSrc   = nextSteps?.backgroundImage
+  ? urlFor(nextSteps.backgroundImage).width(1600).auto('format').url()
+  : 'https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=1600';
+const nextLabel   = nextSteps?.label      || 'Next Steps';
+const nextHeading = nextSteps?.heading    || 'Get in touch';
+const nextBody1   = nextSteps?.bodyFirst  || 'If this experience feels like the right fit for you and your dog, the next step is simply reaching out to start the conversation.';
+const nextBody2   = nextSteps?.bodySecond || "I'm happy to answer questions, talk through options, and help you decide if this is the right experience for you.";
+const nextCtaText = nextSteps?.ctaText    || 'Get in touch';
+const nextCtaLink = nextSteps?.ctaLink    || '/contact';
+
+// TODO:NICHE — update FAQ answers for your niche
+const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.question, a: f.answer})) : [
+  { q: 'How do I book a session?', a: "Simply reach out through the contact form to start the conversation. You'll be guided through the next steps from there." },
+  { q: 'Do you work with shy, reactive, or senior dogs?', a: 'Absolutely. Sessions are approached with patience and flexibility, and every dog is photographed at their own pace.' },
+  { q: 'When will I receive my images?', a: "You'll receive a curated online gallery within a few weeks of your session, featuring thoughtfully edited images ready to enjoy and share." },
+  { q: 'Can I be in the photos with my dog?', a: 'Yes — pet and owner photos are always welcome and focus on natural connection rather than posed moments.' },
+  { q: 'Where do dog photography sessions take place?', a: "Sessions take place at quiet, dog-friendly outdoor locations chosen with your dog's comfort and safety in mind." },
+  { q: 'How long does a session last?', a: 'Most sessions last about an hour, allowing enough time to settle in, explore, and capture natural moments without rushing.' },
+  { q: "What if my dog isn't trained or doesn't sit still?", a: "That's completely okay. Sessions are relaxed and dog-led, with plenty of time for movement, breaks, and patience so your dog can be themselves." },
 ];
 ---
 
-<Layout>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
 	<main>
 
 		<!-- ══ SECTION 1: Full-Bleed Hero Image ══ -->
 		<section class="hero">
 			<img
 				class="hero__img"
-				src="https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg?auto=compress&cs=tinysrgb&w=1600"
-				alt="Dog running through an open field in warm afternoon light"
+				src={heroImgSrc}
+				alt={heroImgAlt}
 				loading="eager" decoding="async"
 			/>
 			<div class="hero__overlay" aria-hidden="true"></div>
 			<div class="hero__content">
-				<h1 class="hero__heading">The Experience &amp; Investment</h1>
-				<p class="hero__sub">What working together looks like, from your session to finished artwork.</p>
+				<h1 class="hero__heading">{heroHeading}</h1>
+				<p class="hero__sub">{heroSub}</p>
 			</div>
 		</section>
 
 		<!-- ══ SECTION 2: Intro ══ -->
 		<section class="intro" data-theme="classic-cream">
 			<div class="intro__inner">
-				<p class="intro__body reveal reveal-delay-1">Every dog photography session is designed to feel relaxed, dog-led, and pressure-free. From planning your session to choosing your final images, you'll be guided through each step so the experience feels easy and enjoyable for both you and your dog.</p>
-				<p class="intro__body intro__body--bold reveal reveal-delay-2">There's no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.</p>
+				<p class="intro__body reveal reveal-delay-1">{introBody1}</p>
+				<p class="intro__body intro__body--bold reveal reveal-delay-2">{introBody2}</p>
 			</div>
 		</section>
 
@@ -65,22 +126,20 @@ const faqs = [
 			<div class="sessions__inner">
 				<div class="sessions__img-wrap reveal-fade reveal-delay-1">
 					<img
-						src="https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=900&h=900&fit=crop"
-						alt="Session photograph in golden afternoon light"
+						src={sessionsImgSrc}
+						alt={sessionsImgAlt}
 						loading="lazy" decoding="async"
 					/>
 				</div>
 				<div class="sessions__content">
-					<h2 class="sessions__heading reveal reveal-delay-1">Sessions</h2>
-					<p class="sessions__sub reveal reveal-delay-2">The session fee covers the time, care, and preparation that go into creating your dog's photography experience.</p>
+					<h2 class="sessions__heading reveal reveal-delay-1">{sessionsHeading}</h2>
+					<p class="sessions__sub reveal reveal-delay-2">{sessionsSub}</p>
 					<p class="sessions__includes reveal reveal-delay-2"><em><strong>This includes:</strong></em></p>
 					<ul class="sessions__list reveal reveal-delay-3">
-						<li>Pre-session guidance to help you feel prepared</li>
-						<li>A relaxed, unhurried photo session</li>
-						<li>A curated online gallery to view and select your images</li>
+						{sessionsIncludes.map((item: string) => <li>{item}</li>)}
 					</ul>
-					<p class="sessions__price reveal reveal-delay-4"><strong>Session fee begins at $XXX</strong></p>{/* TODO:NICHE — update pricing */}
-					<p class="sessions__caption reveal reveal-delay-4"><em>(Artwork and images purchased separately.)</em></p>
+					<p class="sessions__price reveal reveal-delay-4"><strong>{sessionsPrice}</strong></p>
+					<p class="sessions__caption reveal reveal-delay-4"><em>{sessionsCaption}</em></p>
 				</div>
 			</div>
 		</section>
@@ -89,21 +148,18 @@ const faqs = [
 		<section class="artwork" data-theme="classic-cream">
 			<div class="artwork__inner">
 				<div class="artwork__content reveal reveal-delay-1">
-					<h2 class="artwork__title">Artwork/Images</h2>
-					<p class="artwork__heading">After your session, you'll select your favorite images from an online gallery. A variety of digital image and artwork options are available, allowing you to choose how you'd like to enjoy your photos.</p>
+					<h2 class="artwork__title">{artworkHeading}</h2>
+					<p class="artwork__heading">{artworkBody}</p>
 					<p class="artwork__includes"><strong>Options may include:</strong></p>
 					<ul class="artwork__list">
-						<li>Digital image collections</li>
-						<li>Fine art prints</li>
-						<li>Wall artwork</li>
-						<li>Albums or keepsake pieces</li>
+						{artworkOptions.map((item: string) => <li>{item}</li>)}
 					</ul>
-					<p class="artwork__statement">You're never locked into a one-size-fits-all package — selections are flexible and based on what matters most to you.</p>
+					<p class="artwork__statement">{artworkStatement}</p>
 				</div>
 				<div class="artwork__img-wrap reveal-fade reveal-delay-2">
 					<img
-						src="https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=800"
-						alt="Candid portrait session in soft natural light"
+						src={artworkImgSrc}
+						alt={artworkImgAlt}
 						loading="lazy" decoding="async"
 					/>
 				</div>
@@ -114,18 +170,18 @@ const faqs = [
 		<section class="next">
 			<img
 				class="next__bg"
-				src="https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=1600"
+				src={nextBgSrc}
 				alt=""
 				aria-hidden="true"
 				loading="lazy" decoding="async"
 			/>
 			<div class="next__overlay" aria-hidden="true"></div>
 			<div class="next__box">
-				<p class="next__label reveal reveal-delay-1">Next Steps</p>
-				<h2 class="next__heading reveal reveal-delay-2">Get in touch</h2>
-				<p class="next__body reveal reveal-delay-3">If this experience feels like the right fit for you and your dog, the next step is simply reaching out to start the conversation.</p>
-				<p class="next__body reveal reveal-delay-4">I'm happy to answer questions, talk through options, and help you decide if this is the right experience for you.</p>
-				<a href="/contact" class="next__btn reveal reveal-delay-5">Get in touch</a>
+				<p class="next__label reveal reveal-delay-1">{nextLabel}</p>
+				<h2 class="next__heading reveal reveal-delay-2">{nextHeading}</h2>
+				<p class="next__body reveal reveal-delay-3">{nextBody1}</p>
+				<p class="next__body reveal reveal-delay-4">{nextBody2}</p>
+				<a href={nextCtaLink} class="next__btn reveal reveal-delay-5">{nextCtaText}</a>
 			</div>
 		</section>
 
@@ -265,7 +321,7 @@ const faqs = [
 	/* ══ SECTION 3: Sessions ══ */
 	.sessions {
 		padding-top: 50px;
-		padding-bottom: 6rem;
+		padding-bottom: 50px;
 	}
 
 	.sessions__inner {
@@ -275,7 +331,7 @@ const faqs = [
 		align-items: center;
 		max-width: 1100px;
 		margin: 0 auto;
-		padding: 5rem 3rem 0;
+		padding: 5rem 3rem;
 	}
 
 	.sessions__img-wrap {
@@ -648,10 +704,17 @@ const faqs = [
 			grid-template-columns: 1fr;
 			gap: 0;
 			padding: 0;
+			min-height: 0;
+			max-height: none;
 		}
 
 		.artwork__content {
 			padding: 3rem 1.5rem;
+			order: 2;
+		}
+
+		.artwork__img-wrap {
+			order: 1;
 		}
 
 		.artwork__title {

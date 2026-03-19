@@ -53,6 +53,7 @@ export default defineConfig({
                   .items([
                     singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
                     singleton(S, 'aboutPage', 'About Page', 'aboutPage'),
+                    singleton(S, 'experiencePage', 'Experience', 'experiencePage'),
                     singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
                   ]),
               ),

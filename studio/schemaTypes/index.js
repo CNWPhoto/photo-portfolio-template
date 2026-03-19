@@ -20,6 +20,13 @@ import codeSettings from './codeSettings'
 import footerSettings from './footerSettings'
 import socialSettings from './socialSettings'
 import aboutPage from './aboutPage'
+import experiencePage from './experiencePage'
+import experienceHero from './sections/experienceHero'
+import experienceIntro from './sections/experienceIntro'
+import experienceSessions from './sections/experienceSessions'
+import experienceArtwork from './sections/experienceArtwork'
+import experienceNextSteps from './sections/experienceNextSteps'
+import experienceFaqs from './sections/experienceFaqs'
 import aboutIntroSection from './sections/aboutIntroSection'
 import aboutWhatToExpectSection from './sections/aboutWhatToExpectSection'
 import aboutPersonalSection from './sections/aboutPersonalSection'
@@ -31,6 +38,8 @@ export const schemaTypes = [
   navSettings,
   siteSettings, homepageSettings, homepagePage,
   aboutPage,
+  experiencePage,
+  experienceHero, experienceIntro, experienceSessions, experienceArtwork, experienceNextSteps, experienceFaqs,
   aboutIntroSection, aboutWhatToExpectSection, aboutPersonalSection, aboutQuoteSection, aboutCtaSection,
   codeSettings, footerSettings, socialSettings,
   heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs,
