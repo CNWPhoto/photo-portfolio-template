@@ -131,11 +131,21 @@ const faqs =
 	@media (max-width: 768px) {
 		.faqs__inner {
 			grid-template-columns: 1fr;
-			padding: 4rem 1.5rem 0;
+			padding: 0 1.5rem 0;
 		}
 
 		.faqs__label-col {
-			display: none;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding-top: 3rem;
+		}
+
+		.faqs__label {
+			writing-mode: horizontal-tb;
+			transform: none;
+			font-size: clamp(1.6rem, 6vw, 2.25rem);
+			text-align: center;
 		}
 	}
 </style>

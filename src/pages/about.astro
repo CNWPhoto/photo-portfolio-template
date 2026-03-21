@@ -220,19 +220,19 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 							<img src="https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=600&h=750&fit=crop" alt="Photography session moment" width="600" height="750" loading="lazy" decoding="async" />
 						)}
 					</div>
-					<div class="cta__img-front">
-						{ctaImageFg ? (
-							<SanityImage image={ctaImageFg} sizes="(max-width: 900px) 50vw, 40vw" class="cta__img-front-el" loading="lazy" />
-						) : (
-							<img src="https://images.pexels.com/photos/1254140/pexels-photo-1254140.jpeg?auto=compress&cs=tinysrgb&w=500&h=640&fit=crop" alt="Photography session moment" width="500" height="640" loading="lazy" decoding="async" />
-						)}
-					</div>
 				</div>
 				<div class="cta__content">
 					<h2 class="cta__heading reveal reveal-delay-1">{ctaHeading}</h2>
 					<p class="cta__body reveal reveal-delay-2">{ctaBody}</p>
 					<a href={ctaButtonLink} class="cta__btn reveal reveal-delay-3">{ctaButtonText}</a>
 					<p class="cta__caption">{ctaCaption}</p>
+				</div>
+				<div class="cta__img-front">
+					{ctaImageFg ? (
+						<SanityImage image={ctaImageFg} sizes="(max-width: 900px) 80vw, 40vw" class="cta__img-front-el" loading="lazy" />
+					) : (
+						<img src="https://images.pexels.com/photos/1254140/pexels-photo-1254140.jpeg?auto=compress&cs=tinysrgb&w=500&h=640&fit=crop" alt="Photography session moment" width="500" height="640" loading="lazy" decoding="async" />
+					)}
 				</div>
 			</div>
 		</section>}
@@ -245,6 +245,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 	.intro {
 		display: grid;
 		grid-template-columns: 500px 1fr;
+		align-items: center;
 		max-width: 1100px;
 		margin-left: auto;
 		margin-right: auto;
@@ -253,7 +254,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 
 	.intro__image {
 		overflow: hidden;
-		aspect-ratio: 2 / 3;
+		aspect-ratio: 10 / 11;
 		padding-left: 3rem;
 	}
 
@@ -269,11 +270,12 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 	.intro__content {
 		display: flex;
 		align-items: center;
-		padding: 6rem 5rem 6rem 6rem;
+		padding: 4rem 5rem 4rem 6rem;
+		overflow: hidden;
 	}
 
 	.intro__text-wrap {
-		max-width: 560px;
+		max-width: 610px;
 	}
 
 	.intro__heading {
@@ -288,6 +290,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		font-family: var(--font-sans);
 		font-style: normal;
 		font-size: 0.75rem;
+		font-weight: 700;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		color: var(--accent);
@@ -312,7 +315,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		display: grid;
 		grid-template-columns: 100px 1fr;
 		padding: 0 3rem;
-		max-width: 1100px;
+		max-width: 1265px;
 		margin: 0 auto;
 		gap: 2rem;
 	}
@@ -329,7 +332,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		font-style: italic;
 		font-weight: 500;
 		font-size: clamp(2rem, 3.2vw, 3rem);
-		letter-spacing: 0.12em;
+		letter-spacing: 0.05em;
 		color: #1a2744;
 		writing-mode: horizontal-tb;
 		transform: rotate(-90deg);
@@ -348,8 +351,8 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 	.expect__img-wrap {
 		overflow: hidden;
 		margin-bottom: 1.5rem;
-		height: 250px;
-		width: 250px;
+		height: 288px;
+		width: 288px;
 		max-width: 100%;
 	}
 
@@ -369,12 +372,13 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 	.expect__col-label {
 		font-family: var(--font-sans);
 		font-style: normal;
-		font-size: 0.7rem;
-		letter-spacing: 0.2em;
+		font-size: 0.84rem;
+		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		color: var(--accent);
+		color: var(--accent-dark);
 		font-weight: 600;
 		margin-bottom: 1rem;
+		text-align: center;
 	}
 
 	.expect__col-body {
@@ -481,14 +485,14 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		max-width: 1100px;
 		margin: 0 auto;
 		padding: 6rem 3rem 7rem;
-		min-height: 820px;
+		min-height: 1020px;
 	}
 
 	/* Images span from 25% of section width to right edge, sitting above text */
 	.cta__images {
 		position: relative;
 		margin-left: 25%;
-		height: 700px;
+		height: 900px;
 	}
 
 	/* Back image: landscape, fills full width of images container */
@@ -506,7 +510,8 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 	.cta__img-back :global(.cta__img-back-el) {
 		width: 100%;
 		display: block;
-		height: 320px;
+		height: auto;
+		aspect-ratio: 3 / 2;
 		object-fit: cover;
 	}
 
@@ -515,9 +520,9 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 	   of images container width (25% / 75% = 33.33%) to reach content left edge */
 	.cta__img-front {
 		position: absolute;
-		top: 160px;
-		left: -33.33%;
-		width: 57%;
+		top: 240px;
+		left: 3rem;
+		width: 43%;
 		overflow: hidden;
 		border: 20px solid white;
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
@@ -536,7 +541,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 	   Front image right edge ≈ 43% of inner content width (57% × 75%). */
 	.cta__content {
 		position: absolute;
-		top: calc(6rem + 320px + 100px);
+		top: calc(6rem + 475px + 100px);
 		left: calc(43% + 100px);
 		right: 3rem;
 	}
@@ -594,7 +599,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 
 		.intro__image {
 			padding-left: 1.5rem;
-			aspect-ratio: 2 / 3;
+			aspect-ratio: 1 / 1;
 		}
 
 		.intro__image img,
@@ -617,12 +622,38 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		}
 
 		.expect__label-col {
-			display: none;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			overflow: visible;
+			padding-top: 3rem;
+		}
+
+		.expect__label {
+			writing-mode: horizontal-tb;
+			transform: none;
+			font-size: clamp(1.6rem, 6vw, 2.25rem);
+			text-align: center;
 		}
 
 		.expect__cols {
 			grid-template-columns: 1fr;
-			padding-top: 3rem;
+			padding-top: 2rem;
+			align-items: center;
+		}
+
+		.expect__col {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+			max-width: 400px;
+			margin: 0 auto;
+		}
+
+		.expect__img-wrap {
+			width: 200px;
+			height: 200px;
 		}
 
 		.personal__inner {
@@ -657,20 +688,28 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 
 		.cta__images {
 			margin-left: 0;
-			height: 360px;
+			height: auto;
 		}
 
-		.cta__img-back img {
-			height: 200px;
+		.cta__img-back {
+			position: static;
+		}
+
+		.cta__img-back img,
+		.cta__img-back :global(.cta__img-back-el) {
+			height: auto;
+			aspect-ratio: 3 / 2;
 		}
 
 		.cta__img-front {
-			top: 100px;
-			width: 48%;
+			position: static;
+			width: 80%;
+			margin-top: 2rem;
 		}
 
-		.cta__img-front img {
-			height: 270px;
+		.cta__img-front img,
+		.cta__img-front :global(.cta__img-front-el) {
+			height: auto;
 		}
 
 		.cta__content {

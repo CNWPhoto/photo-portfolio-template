@@ -38,6 +38,15 @@ const socialLinks = [
     : null,
 ].filter(Boolean).filter(s => s?.url);
 
+// Icon SVG paths per platform
+const icons: Record<string, string> = {
+  Instagram: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+  Facebook:  `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`,
+  YouTube:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58a2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon fill="white" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>`,
+  TikTok:    `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.22 6.22 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/></svg>`,
+};
+const defaultIcon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
+
 // Menu links — fall back to showing all pages with default labels
 const menuDef = footerData?.menu;
 const menuLinks = [
@@ -54,27 +63,16 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="footer" id="contact">
-	<!-- Wordmark: constrained width, right-aligned above the photo column -->
+	<!-- Wordmark: overhangs the section above -->
 	<div class="footer__wordmark-row">
 		<span class="footer__wordmark">{siteName}</span>
 	</div>
 
 	<hr />
 
-	<!-- Columns: left nav columns + right portrait photo (always rendered) -->
+	<!-- Columns: left nav columns + right photo + icons -->
 	<div class="footer__cols">
 		<div class="footer__left">
-			{socialLinks.length > 0 && (
-				<div class="footer__col">
-					<p class="footer__col-label">Social</p>
-					<ul class="footer__list">
-						{socialLinks.map(link => (
-							<li><a href={link.url} target="_blank" rel="noopener">{link.label}</a></li>
-						))}
-					</ul>
-				</div>
-			)}
-
 			<div class="footer__col">
 				<p class="footer__col-label">Menu</p>
 				<ul class="footer__list footer__list--2col">
@@ -93,9 +91,24 @@ const year = new Date().getFullYear();
 		</div>
 
 		<div class="footer__right">
+			{socialLinks.length > 0 && (
+				<div class="footer__social-col">
+					{socialLinks.map(link => (
+						<a
+							href={link.url}
+							class="footer__social-icon"
+							target="_blank"
+							rel="noopener"
+							aria-label={link.label}
+						>
+							<Fragment set:html={icons[link.label] ?? defaultIcon} />
+						</a>
+					))}
+				</div>
+			)}
 			<div class="footer__photo-col">
 				{footerPhoto
-					? <SanityImage image={footerPhoto} sizes="280px" class="footer__portrait" displayWidth={280} displayHeight={420} />
+					? <SanityImage image={footerPhoto} sizes="180px" class="footer__portrait" displayWidth={180} displayHeight={130} />
 					: <span class="footer__photo-placeholder">Your Photo Here</span>
 				}
 			</div>
@@ -118,31 +131,57 @@ const year = new Date().getFullYear();
 	.footer {
 		background: var(--bg);
 		color: var(--text);
+		position: relative;
+		padding-top: 3.5rem;
 	}
 
-	/* Wordmark: constrained width, right-aligned above photo column */
+	/* Wordmark: overhangs the section above */
 	.footer__wordmark-row {
+		position: absolute;
+		top: 0;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 100%;
 		max-width: 1100px;
-		margin-left: auto;
-		margin-right: auto;
-		padding: 64px 3rem 0;
+		padding: 0 3rem;
 		text-align: right;
-		border-bottom: none;
 		box-sizing: border-box;
+		pointer-events: none;
 	}
 
 	.footer__wordmark {
-		font-family: var(--font-body, 'Jost', system-ui, sans-serif);
+		font-family: var(--font-serif, Georgia, serif);
+		font-style: italic;
 		font-variant: normal;
-		font-style: normal;
-		font-weight: 500;
+		font-weight: 700;
 		font-size: 2rem;
-		letter-spacing: 0.048em;
+		letter-spacing: 0.01em;
 		white-space: nowrap;
 		color: var(--text);
+		pointer-events: auto;
 	}
 
-	/* Outer grid: left nav columns + right photo panel (always present) */
+	/* Social icons: vertical column beside photo */
+	.footer__social-col {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 10px;
+		padding: 0 1rem 0 0;
+	}
+
+	.footer__social-icon {
+		color: var(--muted);
+		display: flex;
+		align-items: center;
+		transition: color 0.2s;
+	}
+
+	.footer__social-icon:hover {
+		color: var(--accent);
+	}
+
+	/* Outer grid: left nav columns + right photo panel */
 	.footer__cols {
 		max-width: 1100px;
 		margin-left: auto;
@@ -154,14 +193,14 @@ const year = new Date().getFullYear();
 		align-items: start;
 	}
 
-	/* Left: menu pinned to 275px, remaining space for social/newsletter */
+	/* Left: menu pinned to 275px, remaining space for newsletter */
 	.footer__left {
 		display: grid;
 		grid-template-columns: 275px 1fr;
 	}
 
-	.footer__left:has(.footer__col:nth-child(3)) {
-		grid-template-columns: 1fr 1fr 1fr;
+	.footer__left:has(.footer__col:nth-child(2)) {
+		grid-template-columns: 1fr 1fr;
 	}
 
 	.footer__col {
@@ -212,22 +251,29 @@ const year = new Date().getFullYear();
 		color: var(--accent);
 	}
 
-	/* Right photo panel — always rendered, full height */
+	/* Right panel — icons + photo side by side */
 	.footer__right {
-		align-self: stretch;
 		border-left: 1px solid var(--border);
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-end;
 		overflow: hidden;
-		min-height: 240px;
+		height: 130px;
+		align-self: center;
+		margin: 2rem 0;
+		padding-left: 1.5rem;
 	}
 
 	.footer__photo-col {
-		flex: 1;
+		height: 130px;
+		width: 180px;
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		background: var(--bg-alt);
+		overflow: hidden;
 	}
 
 	.footer__photo-col :global(.footer__portrait) {
@@ -276,19 +322,16 @@ const year = new Date().getFullYear();
 
 	@media (max-width: 900px) {
 		.footer__wordmark-row {
-			padding: 2.5rem 1.5rem 0;
+			padding: 0 1.5rem;
+		}
+
+		.footer__social-row {
+			padding: 1.25rem 1.5rem 0;
 		}
 
 		.footer__cols {
 			padding-left: 1.5rem;
 			padding-right: 1.5rem;
-		}
-
-		.footer__legal {
-			padding: 1.5rem;
-		}
-
-		.footer__cols {
 			grid-template-columns: 1fr;
 		}
 
@@ -296,7 +339,7 @@ const year = new Date().getFullYear();
 			grid-template-columns: 1fr;
 		}
 
-		.footer__left:has(.footer__col:nth-child(3)) {
+		.footer__left:has(.footer__col:nth-child(2)) {
 			grid-template-columns: 1fr;
 		}
 
@@ -317,7 +360,14 @@ const year = new Date().getFullYear();
 		.footer__right {
 			border-left: none;
 			border-top: 1px solid var(--border);
-			min-height: 240px;
+			height: 130px;
+			margin: 0;
+			padding-left: 0;
+			justify-content: flex-start;
+		}
+
+		.footer__legal {
+			padding: 1.5rem;
 		}
 	}
 </style>

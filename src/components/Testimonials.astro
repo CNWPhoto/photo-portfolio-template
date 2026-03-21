@@ -180,9 +180,20 @@ const testimonials = sanityTestimonials?.length
 			grid-template-columns: 1fr;
 		}
 
-		.testimonials__image-col img {
-			height: 55vw;
+		.testimonials__image-col {
+			display: flex;
+			justify-content: center;
+		}
+
+		.testimonials__image-col img,
+		.testimonials__image-col :global(img) {
+			height: 70vw;
 			min-height: 300px;
+			width: 80%;
+			max-width: 480px;
+			object-fit: cover;
+			object-position: center top;
+			display: block;
 		}
 
 		.testimonials__content {

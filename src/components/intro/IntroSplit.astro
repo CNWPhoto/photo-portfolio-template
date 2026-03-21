@@ -81,6 +81,7 @@ const ctaLink = welcomeSection?.ctaLink || '/experience';
 		font-family: var(--font-sans);
 		font-style: normal;
 		font-size: var(--isplit-eyebrow-size, 0.65rem);
+		font-weight: 700;
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
 		color: var(--accent);
@@ -118,7 +119,10 @@ const ctaLink = welcomeSection?.ctaLink || '/experience';
 		.isplit { grid-template-columns: 1fr; }
 		.isplit__image { order: -1; }
 		.isplit__image :global(.isplit__img) { height: 60vw; min-height: 240px; }
-		.isplit__content { padding: 4rem 2rem; align-items: flex-start; text-align: left; }
-		.isplit__text-wrap { max-width: none; }
+		.isplit__content { padding: 4rem 2rem; align-items: center; text-align: center; }
+		.isplit__text-wrap { max-width: none; padding-right: 0; text-align: center; }
+		.isplit__eyebrow { text-align: center; }
+		.isplit__body { text-align: center; }
+		.isplit__link { text-align: center; }
 	}
 </style>
