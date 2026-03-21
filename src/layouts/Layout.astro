@@ -1,6 +1,7 @@
 ---
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
+import { getClient } from '../lib/sanity.js';
 
 interface Props {
   pageTitle?: string;
@@ -9,18 +10,14 @@ interface Props {
 }
 
 const { pageTitle, seoDescription, ogImage } = Astro.props;
+const isPreview = Astro.locals.isPreview ?? false;
+const client = getClient(isPreview);
 
-const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production';
-
-const [_settingsRes, _codeRes, _navRes] = await Promise.all([
-  fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon, accentColorOverride }`)}`, { cache: 'no-store' }),
-  fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`)}`, { cache: 'no-store' }),
-  fetch(`${SANITY_API}?query=${encodeURIComponent(`*[_type == "navSettings" && _id == "navSettings"][0]{ navVariant, links[] { label, url, enabled, openInNewTab, isButton } }`)}`, { cache: 'no-store' }),
+const [settings, code, nav] = await Promise.all([
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon, accentColorOverride }`),
+  client.fetch(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`),
+  client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{ navVariant, links[] { label, url, enabled, openInNewTab, isButton } }`),
 ]);
-
-const { result: settings } = await _settingsRes.json();
-const { result: code }     = await _codeRes.json();
-const { result: nav }      = await _navRes.json();
 
 const colorTheme  = settings?.colorTheme || 'classic-cream';
 const fontTheme   = settings?.fontTheme  || 'classic-editorial';
@@ -35,6 +32,7 @@ const faviconUrl  = settings?.favicon?.asset?._ref
 const accentOverride = settings?.accentColorOverride || null;
 const navVariant     = nav?.navVariant || 'classic';
 const navLinks       = nav?.links ?? null;
+
 ---
 
 <!doctype html>
@@ -80,6 +78,12 @@ const navLinks       = nav?.links ?? null;
 		{headScripts && <Fragment set:html={headScripts} />}
 	</head>
 	<body data-nav-variant={navVariant}>
+		{isPreview && (
+			<div class="preview-banner">
+				<span>Preview mode — draft content visible</span>
+				<a href="/api/disable-preview">Exit preview</a>
+			</div>
+		)}
 		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} navVariant={navVariant} navLinks={navLinks} />
 		<slot />
 		<Footer {siteName} />
@@ -453,6 +457,33 @@ const navLinks       = nav?.links ?? null;
 			transition: none !important;
 			transform: none !important;
 		}
+	}
+
+	/* ══════════════════════════════════════════════════
+	   PREVIEW BANNER
+	══════════════════════════════════════════════════ */
+	.preview-banner {
+		position: fixed;
+		bottom: 1rem;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 9999;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		background: #1a2744;
+		color: #f5f3ef;
+		font-family: system-ui, sans-serif;
+		font-size: 0.8125rem;
+		padding: 0.5rem 1rem;
+		border-radius: 2rem;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+		white-space: nowrap;
+	}
+	.preview-banner a {
+		color: #c9a96e;
+		text-decoration: underline;
+		font-weight: 600;
 	}
 
 	/* ══════════════════════════════════════════════════

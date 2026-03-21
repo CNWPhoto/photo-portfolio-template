@@ -1,6 +1,7 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
+import {presentationTool} from 'sanity/presentation'
 import {schemaTypes} from './schemaTypes'
 
 // Singleton helper — links directly to a specific document by ID
@@ -18,6 +19,15 @@ export default defineConfig({
   dataset: 'production',
 
   plugins: [
+    presentationTool({
+      previewUrl: {
+        origin: process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:4321',
+        previewMode: {
+          enable: '/api/preview',
+          disable: '/api/disable-preview',
+        },
+      },
+    }),
     structureTool({
       structure: (S) =>
         S.list()
@@ -55,6 +65,7 @@ export default defineConfig({
                     singleton(S, 'aboutPage', 'About Page', 'aboutPage'),
                     singleton(S, 'experiencePage', 'Experience', 'experiencePage'),
                     singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
+                    singleton(S, 'contactPage', 'Contact', 'contactPage'),
                   ]),
               ),
 

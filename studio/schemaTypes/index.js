@@ -32,6 +32,7 @@ import aboutWhatToExpectSection from './sections/aboutWhatToExpectSection'
 import aboutPersonalSection from './sections/aboutPersonalSection'
 import aboutQuoteSection from './sections/aboutQuoteSection'
 import aboutCtaSection from './sections/aboutCtaSection'
+import contactPage from './contactPage'
 
 export const schemaTypes = [
   seo,
@@ -41,6 +42,7 @@ export const schemaTypes = [
   experiencePage,
   experienceHero, experienceIntro, experienceSessions, experienceArtwork, experienceNextSteps, experienceFaqs,
   aboutIntroSection, aboutWhatToExpectSection, aboutPersonalSection, aboutQuoteSection, aboutCtaSection,
+  contactPage,
   codeSettings, footerSettings, socialSettings,
   heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs,
   testimonial, portfolio, blogPost, faq, pageSection,

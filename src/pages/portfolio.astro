@@ -1,8 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { sanityClient, urlFor } from '../lib/sanity.js';
+import { getClient, urlFor } from '../lib/sanity.js';
 
-const portfolioDoc = await sanityClient.fetch(`*[_type == "portfolio"][0]{ pageTitle, seo { seoTitle, seoDescription, socialImage { asset->{ url } } }, title, byline, galleryColumns, images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } } }`, {}, { cache: 'no-store' });
+const portfolioDoc = await getClient(Astro.locals.isPreview).fetch(`*[_type == "portfolio"][0]{ pageTitle, seo { seoTitle, seoDescription, socialImage { asset->{ url } } }, title, byline, galleryColumns, images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } } }`, {}, { cache: 'no-store' });
 
 const seoTitle       = portfolioDoc?.seo?.seoTitle       || portfolioDoc?.pageTitle || null;
 const seoDescription = portfolioDoc?.seo?.seoDescription || null;

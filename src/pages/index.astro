@@ -15,10 +15,12 @@ import PortfolioMasonry from '../components/portfolio/PortfolioMasonry.astro';
 import HowItWorksColumns from '../components/howitworks/HowItWorksColumns.astro';
 import HowItWorksStacked from '../components/howitworks/HowItWorksStacked.astro';
 
-import { sanityClient, urlFor } from '../lib/sanity.js';
+import { getClient, urlFor } from '../lib/sanity.js';
+
+const client = getClient(Astro.locals.isPreview);
 
 const [homepageDoc, testimonials, pageSections, layoutSettings, siteSettings] = await Promise.all([
-	sanityClient.fetch(
+	client.fetch(
 		`*[_type == "homepagePage"][0]{
 			pageTitle,
 			seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
@@ -34,13 +36,12 @@ const [homepageDoc, testimonials, pageSections, layoutSettings, siteSettings] = 
 				bodyFirst, bodySecond, caption,
 				faqs[] { question, answer }
 			}
-		}`,
-		{}, { cache: 'no-store' }
+		}`
 	),
-	sanityClient.fetch(`*[_type == "testimonial"] | order(order asc)`, {}, { cache: 'no-store' }),
-	sanityClient.fetch(`*[_type == "pageSection"]`, {}, { cache: 'no-store' }),
-	sanityClient.fetch(`*[_type == "homepageSettings"][0]{introVariant, testimonialsVariant, portfolioPreviewVariant, howItWorksVariant}`, {}, { cache: 'no-store' }),
-	sanityClient.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0].typographyOverrides`, {}, { cache: 'no-store' }),
+	client.fetch(`*[_type == "testimonial"] | order(order asc)`),
+	client.fetch(`*[_type == "pageSection"]`),
+	client.fetch(`*[_type == "homepageSettings"][0]{introVariant, testimonialsVariant, portfolioPreviewVariant, howItWorksVariant}`),
+	client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0].typographyOverrides`),
 ]);
 
 const homepageSections = homepageDoc?.sections ?? [];

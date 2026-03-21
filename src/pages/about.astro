@@ -1,9 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { sanityClient, urlFor } from '../lib/sanity.js';
+import { getClient, urlFor } from '../lib/sanity.js';
 import SanityImage from '../components/SanityImage.astro';
 
-const aboutDoc = await sanityClient.fetch(
+const aboutDoc = await getClient(Astro.locals.isPreview).fetch(
 	`*[_type == "aboutPage"][0]{
 		pageTitle,
 		seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
