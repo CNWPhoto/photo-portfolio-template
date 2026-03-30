@@ -2,8 +2,8 @@ import { createClient } from '@sanity/client'
 import imageUrlBuilder from '@sanity/image-url'
 
 const config = {
-  projectId: 'hx5xgigp',
-  dataset: 'production',
+  projectId: import.meta.env.PUBLIC_SANITY_PROJECT_ID || 'hx5xgigp',
+  dataset:   import.meta.env.PUBLIC_SANITY_DATASET    || 'production',
   apiVersion: '2024-01-01',
 }
 
