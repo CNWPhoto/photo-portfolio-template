@@ -54,50 +54,58 @@ const faqSchemaData = rawFaqs?.length
 	? [{ '@type': 'FAQPage', mainEntity: rawFaqs.map((f: any) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) }]
 	: undefined;
 
-const heroSlider      = getSection('heroSlider')?.images ?? null;
-const heroCaption     = getSection('heroCaption') ?? null;
-const welcomeSection  = getSection('welcomeSection') ?? null;
-const featuredSection = getSection('featuredSection') ?? null;
-const processSection  = getSection('processSection') ?? null;
-const soloHeroImage   = getSection('soloHeroImage') ?? null;
-const whyChooseSection = getSection('whyChooseSection') ?? null;
-const faqs            = getSection('homepageFaqs')?.faqs ?? null;
+const isEnabled = (type: string) => getSection(type)?.enabled !== false;
+
+const heroSliderSection   = getSection('heroSlider');
+const heroSlider          = heroSliderSection?.images ?? null;
+const showHero            = heroSliderSection?.enabled !== false;
+const heroCaptionSection  = getSection('heroCaption');
+const heroCaption         = heroCaptionSection ?? null;
+const showHeroCaption     = heroCaptionSection?.enabled !== false;
+const welcomeSection      = isEnabled('welcomeSection')   ? getSection('welcomeSection')   ?? null : null;
+const featuredSection     = isEnabled('featuredSection')  ? getSection('featuredSection')  ?? null : null;
+const processSection      = isEnabled('processSection')   ? getSection('processSection')   ?? null : null;
+const soloHeroImage       = isEnabled('soloHeroImage')    ? getSection('soloHeroImage')    ?? null : null;
+const whyChooseSection    = isEnabled('whyChooseSection') ? getSection('whyChooseSection') ?? null : null;
+const showTestimonials    = isEnabled('testimonialsSection');
+const faqsSection         = getSection('homepageFaqs');
+const faqs                = isEnabled('homepageFaqs') ? (faqsSection?.faqs ?? null) : null;
 
 // Layout variants — read from each section's own variant field
-const introVariant        = welcomeSection?.variant                          || 'classic';
-const testimonialsVariant = getSection('testimonialsSection')?.variant       || 'slider';
-const portfolioVariant    = featuredSection?.variant                         || 'classic';
-const howItWorksVariant   = processSection?.variant                          || 'columns';
+const introVariant        = welcomeSection?.variant  || 'classic';
+const testimonialsVariant = getSection('testimonialsSection')?.variant || 'slider';
+const portfolioVariant    = featuredSection?.variant  || 'classic';
+const howItWorksVariant   = processSection?.variant   || 'columns';
 ---
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData}>
-	<Hero heroImages={heroSlider} {heroCaption} {urlFor} />
+	{showHero && <Hero heroImages={heroSlider} heroCaption={showHeroCaption ? heroCaption : null} {urlFor} />}
 	<main>
 		<!-- Intro -->
-		{introVariant === 'centered'
+		{welcomeSection && (introVariant === 'centered'
 			? <IntroCentered {welcomeSection} {urlFor} />
 			: <IntroSplit    {welcomeSection} {urlFor} />
-		}
+		)}
 
 		<!-- Testimonials -->
-		{testimonialsVariant === 'grid'
+		{showTestimonials && (testimonialsVariant === 'grid'
 			? <TestimonialsGrid   testimonials={testimonials} {urlFor} />
 			: <TestimonialsSlider testimonials={testimonials} {urlFor} />
-		}
+		)}
 
 		<!-- Portfolio preview -->
-		{portfolioVariant === 'masonry'
+		{featuredSection && (portfolioVariant === 'masonry'
 			? <PortfolioMasonry {featuredSection} {urlFor} />
 			: <PortfolioGrid    {featuredSection} {urlFor} />
-		}
+		)}
 
 		<!-- How It Works -->
-		{howItWorksVariant === 'stacked'
+		{processSection && (howItWorksVariant === 'stacked'
 			? <HowItWorksStacked {processSection} />
 			: <HowItWorksColumns {processSection} />
-		}
+		)}
 
-		<WhyChoose theme="dark-editorial" {soloHeroImage} {whyChooseSection} {urlFor} />
-		<FAQs faqs={faqs} />
+		{(soloHeroImage || whyChooseSection) && <WhyChoose theme="dark-editorial" {soloHeroImage} {whyChooseSection} {urlFor} />}
+		{faqs && <FAQs {faqs} />}
 	</main>
 </Layout>

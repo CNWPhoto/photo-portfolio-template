@@ -9,6 +9,13 @@ export default {
   },
   fields: [
     {
+      name: 'enabled',
+      title: 'Show Section',
+      type: 'boolean',
+      description: 'Toggle this section on or off on the homepage.',
+      initialValue: true,
+    },
+    {
       name: 'imageVertical',
       title: 'Image — Vertical (left)',
       type: 'image',
