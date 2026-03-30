@@ -1,25 +1,15 @@
 ---
 import { toHTML } from '@portabletext/to-html';
+import { getClient } from '../lib/sanity.js';
 
 const { siteName = 'Pet Photography', blogEnabled = true } = Astro.props;
 
-const [_footerRes, _socialRes, _siteRes] = await Promise.all([
-  fetch(
-    `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ menu, middleColumn { label, embedCode, note } }`)}`,
-    { cache: 'no-store' }
-  ),
-  fetch(
-    `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`)}`,
-    { cache: 'no-store' }
-  ),
-  fetch(
-    `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName }`)}`,
-    { cache: 'no-store' }
-  ),
+const client = getClient(false);
+const [footerData, socialData, siteData] = await Promise.all([
+  client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ menu, middleColumn { label, embedCode, note } }`),
+  client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`),
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName }`),
 ]);
-const { result: footerData } = await _footerRes.json();
-const { result: socialData } = await _socialRes.json();
-const { result: siteData }   = await _siteRes.json();
 
 const photographerName = siteData?.photographerName || siteName;
 
@@ -101,7 +91,7 @@ const year = new Date().getFullYear();
 							href={link.url}
 							class="footer__social-icon"
 							target="_blank"
-							rel="noopener"
+							rel="noopener noreferrer"
 							aria-label={link.label}
 						>
 							<Fragment set:html={icons[link.label] ?? defaultIcon} />
@@ -117,9 +107,6 @@ const year = new Date().getFullYear();
 	<!-- Copyright -->
 	<div class="footer__legal">
 		<p>&copy; {year} {photographerName}. All rights reserved.</p>
-		<p>
-			<a href="#">Privacy Policy</a> &middot; <a href="#">Terms</a>
-		</p>
 	</div>
 
 </footer>

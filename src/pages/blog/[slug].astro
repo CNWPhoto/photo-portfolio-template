@@ -3,28 +3,19 @@ import Layout from '../../layouts/Layout.astro';
 import { toHTML } from '@portabletext/to-html';
 import SanityImage from '../../components/SanityImage.astro';
 import { buildSrc, buildSrcset } from '../../lib/image';
-
-const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production'
+import { sanityClient } from '../../lib/sanity.js';
 
 export async function getStaticPaths() {
-  const SANITY_API = 'https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production'
-  const query = encodeURIComponent(`*[_type == "blogPost"]{ "slug": slug.current }`)
-  const res = await fetch(`${SANITY_API}?query=${query}`, { cache: 'no-store' })
-  const { result: posts } = await res.json()
+  const posts = await sanityClient.fetch(`*[_type == "blogPost" && defined(slug.current)]{ "slug": slug.current }`);
   return posts.map((post) => ({ params: { slug: post.slug } }));
 }
 
 const { slug } = Astro.params;
 
-const postQuery = encodeURIComponent(
-  `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, excerpt, coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt }, body, category }`
-)
-const slugParam = encodeURIComponent(JSON.stringify(slug))
-const postRes = await fetch(
-  `${SANITY_API}?query=${postQuery}&$slug=${slugParam}`,
-  { cache: 'no-store' }
-)
-const { result: post } = await postRes.json()
+const post = await sanityClient.fetch(
+  `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, _updatedAt, excerpt, coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt }, body, category }`,
+  { slug }
+);
 
 if (!post) {
   return Astro.redirect('/blog');
@@ -46,9 +37,10 @@ const coverImageUrl = post.coverImage?.asset
 const blogPostingSchema = [{
 	'@type': 'BlogPosting',
 	headline: post.title,
-	...(post.publishDate ? { datePublished: post.publishDate } : {}),
-	...(post.excerpt     ? { description:    post.excerpt     } : {}),
-	...(coverImageUrl    ? { image:           coverImageUrl    } : {}),
+	...(post.publishDate  ? { datePublished:  post.publishDate  } : {}),
+	...(post._updatedAt   ? { dateModified:   post._updatedAt   } : {}),
+	...(post.excerpt      ? { description:    post.excerpt      } : {}),
+	...(coverImageUrl     ? { image:          coverImageUrl     } : {}),
 }];
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -65,6 +57,23 @@ const bodyHTML = post.body
             const caption = esc(value.caption || '');
             return `<figure class="body-image">
               <img src="${src}" srcset="${srcset}" sizes="(max-width: 900px) 100vw, 60vw" alt="${alt}" loading="lazy" decoding="async" />
+              ${caption ? `<figcaption class="body-image__caption">${caption}</figcaption>` : ''}
+            </figure>`;
+          },
+          videoEmbed: ({ value }) => {
+            if (!value?.url) return '';
+            const url = value.url as string;
+            let embedUrl = '';
+            const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/);
+            if (yt) embedUrl = `https://www.youtube.com/embed/${yt[1]}`;
+            const vimeo = url.match(/vimeo\.com\/(\d+)/);
+            if (vimeo) embedUrl = `https://player.vimeo.com/video/${vimeo[1]}`;
+            if (!embedUrl) return '';
+            const caption = esc(value.caption || '');
+            return `<figure class="body-video">
+              <div class="body-video__wrap">
+                <iframe src="${embedUrl}" title="${caption || 'Video'}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+              </div>
               ${caption ? `<figcaption class="body-image__caption">${caption}</figcaption>` : ''}
             </figure>`;
           },
@@ -218,7 +227,8 @@ const bodyHTML = post.body
     margin-bottom: 0;
   }
 
-  .post__body :global(.body-image) {
+  .post__body :global(.body-image),
+  .post__body :global(.body-video) {
     margin: 2rem 0;
   }
 
@@ -226,6 +236,20 @@ const bodyHTML = post.body
     width: 100%;
     height: auto;
     display: block;
+  }
+
+  .post__body :global(.body-video__wrap) {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+  }
+
+  .post__body :global(.body-video__wrap iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .post__body :global(.body-image__caption) {
