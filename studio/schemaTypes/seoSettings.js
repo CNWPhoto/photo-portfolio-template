@@ -10,6 +10,14 @@ export default {
   },
   fields: [
     {
+      name: 'seoNote',
+      title: 'SEO Settings',
+      type: 'string',
+      readOnly: true,
+      initialValue: 'These fields power your structured data (Google rich results), sitemap, and local SEO. Fill in as much as you can — the more complete, the better.',
+      description: 'These fields power your structured data (Google rich results), sitemap, and local SEO. Fill in as much as you can — the more complete, the better.',
+    },
+    {
       name: 'siteUrl',
       title: 'Site URL',
       type: 'url',
