@@ -7,22 +7,25 @@ interface Props {
   pageTitle?: string;
   seoDescription?: string;
   ogImage?: string;
-  /** Extra schema.org nodes to merge into the page's @graph (FAQPage, BlogPosting, etc.) */
   schemaData?: Record<string, any>[];
-  /** Human-readable name of the current page — triggers BreadcrumbList generation on non-root paths */
   breadcrumb?: string;
+  publishDate?: string;  // ISO date — triggers article OG tags
+  updatedAt?: string;    // ISO date — article:modified_time
+  prevUrl?: string;      // blog pagination rel="prev"
+  nextUrl?: string;      // blog pagination rel="next"
 }
 
-const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb } = Astro.props;
+const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb, publishDate, updatedAt, prevUrl, nextUrl } = Astro.props;
 const isPreview = Astro.locals.isPreview ?? false;
 const client = getClient(isPreview);
 
-const [settings, seo, code, nav, blogConfig] = await Promise.all([
-  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon, accentColorOverride, textColorPreset }`),
-  client.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState }`),
+const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, photographerName, logoType, logoImage, favicon, accentColorOverride, textColorPreset }`),
+  client.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState, priceRange, areaServed, twitterHandle }`),
   client.fetch(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`),
   client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{ navVariant, links[] { label, url, enabled, openInNewTab, isButton } }`),
   client.fetch(`*[_type == "blogPage" && _id == "blogPage"][0]{ blogEnabled }`),
+  client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok }`),
 ]);
 
 const colorTheme  = settings?.colorTheme || 'classic-cream';
@@ -35,8 +38,31 @@ const bodyScripts = code?.bodyScripts    || '';
 const faviconUrl  = settings?.favicon?.asset?._ref
   ? `https://cdn.sanity.io/images/hx5xgigp/production/${settings.favicon.asset._ref.replace('image-', '').replace(/-([a-z]+)$/, '.$1')}`
   : null;
+const photographerName  = settings?.photographerName || siteName;
 const accentOverride    = settings?.accentColorOverride || null;
 const textColorPreset   = settings?.textColorPreset || null;
+const twitterHandle     = seo?.twitterHandle ? seo.twitterHandle.replace(/^@/, '') : null;
+const sameAs            = [social?.instagram, social?.facebook, social?.youtube, social?.tiktok].filter(Boolean);
+
+const THEME_BG: Record<string, string> = {
+  'classic-cream':  '#f5f3ef',
+  'warm-studio':    '#fdf6ee',
+  'dark-editorial': '#1a1a1a',
+  'cool-minimal':   '#f8f9fa',
+  'forest-sage':    '#f2f4f0',
+};
+const themeColor = THEME_BG[colorTheme] ?? '#f5f3ef';
+
+const FONT_MAP: Record<string, string> = {
+  'classic-editorial': 'family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Jost:wght@300;400;500;600;700',
+  'romantic-script':   'family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400;700',
+  'modern-luxury':     'family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700',
+  'soft-contemporary': 'family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700',
+  'bold-editorial':    'family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500;600;700',
+  'airy-minimal':      'family=Tenor+Sans&family=Raleway:wght@300;400;500;600;700',
+};
+const fontUrl    = `https://fonts.googleapis.com/css2?${FONT_MAP[fontTheme] ?? FONT_MAP['classic-editorial']}&display=swap`;
+const canonicalUrl = canonicalBase ? `${canonicalBase}${Astro.url.pathname}` : null;
 
 // Text color preset palette — only applied on light themes
 const LIGHT_THEMES = ['classic-cream', 'warm-studio', 'cool-minimal', 'forest-sage'];
@@ -83,7 +109,21 @@ if (canonicalBase) {
     };
   }
   if (ogImage) biz.image = ogImage;
+  if (seo?.priceRange) biz.priceRange = seo.priceRange;
+  if (seo?.areaServed) biz.areaServed = seo.areaServed.split(',').map((s: string) => s.trim()).filter(Boolean);
+  if (sameAs.length)   biz.sameAs     = sameAs;
   schemaGraph.push(biz);
+
+  // Person — the photographer (E-A-T signal)
+  schemaGraph.push({
+    '@type': 'Person',
+    '@id': `${canonicalBase}/#photographer`,
+    name: photographerName,
+    url: `${canonicalBase}/about`,
+    jobTitle: 'Photographer',
+    worksFor: { '@id': `${canonicalBase}/#business` },
+    ...(sameAs.length ? { sameAs } : {}),
+  });
 
   // BreadcrumbList — auto-generated from URL path + breadcrumb label
   const urlPath = Astro.url.pathname;
@@ -125,25 +165,33 @@ const schemaJSON = schemaGraph.length
 				<link rel="icon" href="/favicon.ico" />
 			</>
 		}
-		<meta name="generator" content={Astro.generator} />
 		<title>{pageTitle ? `${pageTitle} | ${siteName}` : siteName}</title>
 		{seoDescription && <meta name="description" content={seoDescription} />}
+		{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+		{prevUrl && <link rel="prev" href={prevUrl} />}
+		{nextUrl && <link rel="next" href={nextUrl} />}
+		{isPreview && <meta name="robots" content="noindex, nofollow" />}
 		<meta property="og:title" content={pageTitle ? `${pageTitle} | ${siteName}` : siteName} />
 		{seoDescription && <meta property="og:description" content={seoDescription} />}
 		{ogImage && <meta property="og:image" content={ogImage} />}
-		<meta property="og:type" content="website" />
+		<meta property="og:type" content={publishDate ? 'article' : 'website'} />
+		{canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+		<meta property="og:site_name" content={siteName} />
+		<meta property="og:locale" content="en_US" />
+		{publishDate && <meta property="article:published_time" content={publishDate} />}
+		{updatedAt && <meta property="article:modified_time" content={updatedAt} />}
 		<meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
 		<meta name="twitter:title" content={pageTitle ? `${pageTitle} | ${siteName}` : siteName} />
 		{seoDescription && <meta name="twitter:description" content={seoDescription} />}
 		{ogImage && <meta name="twitter:image" content={ogImage} />}
-		<!-- Google Fonts preconnect -->
+		{twitterHandle && <meta name="twitter:site" content={`@${twitterHandle}`} />}
+		{twitterHandle && <meta name="twitter:creator" content={`@${twitterHandle}`} />}
+		<meta name="theme-color" content={themeColor} />
+		<link rel="manifest" href="/manifest.json" />
+		<!-- Google Fonts — only the 2 families for the active theme are loaded -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<!-- All font theme families loaded upfront; only the active theme's fonts render -->
-		<link
-			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Jost:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400;700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500;600;700&family=Tenor+Sans&family=Raleway:wght@300;400;500;600;700&display=swap"
-			rel="stylesheet"
-		/>
+		<link href={fontUrl} rel="stylesheet" />
 		{accentOverride && (
 			<style set:html={`
 				:root, [data-theme] {

@@ -2,8 +2,11 @@
 import Layout from '../layouts/Layout.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
 
-const [pageDoc, posts] = await Promise.all([
-  getClient(Astro.locals.isPreview).fetch(
+const client = getClient(Astro.locals.isPreview);
+const currentPage = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10));
+
+const [pageDoc, totalCount] = await Promise.all([
+  client.fetch(
     `*[_type == "blogPage"][0]{
       pageTitle,
       seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
@@ -16,14 +19,7 @@ const [pageDoc, posts] = await Promise.all([
     {},
     { cache: 'no-store' }
   ),
-  getClient(Astro.locals.isPreview).fetch(
-    `*[_type == "blogPost"] | order(publishDate desc) [0...100]{
-      _id, title, slug, publishDate, excerpt, category,
-      coverImage { ..., asset-> }
-    }`,
-    {},
-    { cache: 'no-store' }
-  ),
+  client.fetch(`count(*[_type == "blogPost"])`, {}, { cache: 'no-store' }),
 ]);
 
 const seoTitle       = pageDoc?.seo?.seoTitle       || pageDoc?.pageTitle || 'Blog';
@@ -38,6 +34,22 @@ const heroSubtext = pageDoc?.heroSubtext || 'Dogs, Love, and Tails of Photograph
 
 const layout       = pageDoc?.layout       || 'list';
 const postsPerPage = pageDoc?.postsPerPage || 12;
+const totalPages   = Math.max(1, Math.ceil(totalCount / postsPerPage));
+const safePage     = Math.min(currentPage, totalPages);
+const skip         = (safePage - 1) * postsPerPage;
+
+const posts = await client.fetch(
+  `*[_type == "blogPost"] | order(publishDate desc) [$skip...$end]{
+    _id, title, slug, publishDate, excerpt, category,
+    coverImage { ..., asset-> }
+  }`,
+  { skip, end: skip + postsPerPage },
+  { cache: 'no-store' }
+);
+
+const blogSlug = pageDoc?.slug?.current || 'blog';
+const prevUrl = safePage > 1 ? `/${blogSlug}?page=${safePage - 1}` : null;
+const nextUrl = safePage < totalPages ? `/${blogSlug}?page=${safePage + 1}` : null;
 
 type Post = {
   _id: string;
@@ -57,7 +69,7 @@ const fallbackPosts: Post[] = [
   { _id: 'f4', title: 'A Morning in the Studio',         slug: { current: '#' }, category: 'Behind the Scenes', excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
 ];
 
-const sanityPosts: Post[] = (posts ?? []).slice(0, postsPerPage);
+const sanityPosts: Post[] = posts ?? [];
 const displayPosts: Post[] = sanityPosts.length ? sanityPosts : fallbackPosts;
 
 function postImgUrl(post: Post): string {
@@ -71,7 +83,7 @@ function formatDate(dateStr?: string): string {
 }
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Blog">
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Blog" prevUrl={prevUrl ?? undefined} nextUrl={nextUrl ?? undefined}>
   <main>
 
     <!-- ══ SECTION 1: Hero ══ -->
@@ -80,7 +92,7 @@ function formatDate(dateStr?: string): string {
         class="hero__img"
         src={heroImgUrl}
         alt={heroHeading}
-        loading="eager" decoding="async"
+        loading="eager" decoding="async" fetchpriority="high"
       />
       <div class="hero__content">
         <h1 class="hero__title">{heroHeading}</h1>
@@ -144,6 +156,21 @@ function formatDate(dateStr?: string): string {
       }
 
     </section>
+
+    <!-- ══ Pagination ══ -->
+    {totalPages > 1 && (
+      <nav class="pagination" aria-label="Blog pages">
+        {prevUrl
+          ? <a href={prevUrl} class="pagination__btn">&larr; Newer</a>
+          : <span class="pagination__btn pagination__btn--disabled">&larr; Newer</span>
+        }
+        <span class="pagination__info">Page {safePage} of {totalPages}</span>
+        {nextUrl
+          ? <a href={nextUrl} class="pagination__btn">Older &rarr;</a>
+          : <span class="pagination__btn pagination__btn--disabled">Older &rarr;</span>
+        }
+      </nav>
+    )}
 
   </main>
 </Layout>
@@ -394,5 +421,44 @@ function formatDate(dateStr?: string): string {
       grid-template-columns: 1fr;
       padding: 2.5rem 1.25rem;
     }
+  }
+
+  /* ══ Pagination ══ */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem 2rem 5rem;
+  }
+
+  .pagination__btn {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.65rem 1.5rem;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+
+  a.pagination__btn:hover {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .pagination__btn--disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .pagination__info {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
   }
 </style>

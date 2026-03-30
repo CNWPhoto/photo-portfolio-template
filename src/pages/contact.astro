@@ -56,7 +56,7 @@ const cf3 = doc?.formSettings?.customField3 ?? null;
         class="hero__img"
         src={heroImgUrl}
         alt={heroHeading}
-        loading="eager" decoding="async"
+        loading="eager" decoding="async" fetchpriority="high"
       />
       <div class="hero__overlay" aria-hidden="true"></div>
       <div class="hero__content">

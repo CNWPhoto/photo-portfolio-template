@@ -56,5 +56,24 @@ export default {
       type: 'string',
       description: 'State or province abbreviation e.g. CO, CA, NY',
     },
+    {
+      name: 'areaServed',
+      title: 'Area Served',
+      type: 'string',
+      description: 'Cities or regions you photograph in, comma-separated. Used in local SEO schema. e.g. Denver, Boulder, Fort Collins',
+    },
+    {
+      name: 'priceRange',
+      title: 'Price Range',
+      type: 'string',
+      description: 'Approximate price tier shown in Google local results.',
+      options: {list: [{title: 'Budget ($)', value: '$'}, {title: 'Moderate ($$)', value: '$$'}, {title: 'Premium ($$$)', value: '$$$'}, {title: 'Luxury ($$$$)', value: '$$$$'}], layout: 'radio'},
+    },
+    {
+      name: 'twitterHandle',
+      title: 'Twitter / X Handle',
+      type: 'string',
+      description: 'Your Twitter/X handle without the @ symbol, e.g. yourstudio — used for Twitter Card attribution.',
+    },
   ],
 }

@@ -12,10 +12,13 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 
-const post = await sanityClient.fetch(
-  `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, _updatedAt, excerpt, coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt }, body, category }`,
-  { slug }
-);
+const [post, siteSettings] = await Promise.all([
+  sanityClient.fetch(
+    `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, _updatedAt, excerpt, coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt }, body, category }`,
+    { slug }
+  ),
+  sanityClient.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ siteName, photographerName }`),
+]);
 
 if (!post) {
   return Astro.redirect('/blog');
@@ -34,6 +37,7 @@ const coverImageUrl = post.coverImage?.asset
 	? buildSrc(post.coverImage, 1200)
 	: undefined;
 
+const authorName = siteSettings?.photographerName || siteSettings?.siteName || 'Photographer';
 const blogPostingSchema = [{
 	'@type': 'BlogPosting',
 	headline: post.title,
@@ -41,6 +45,12 @@ const blogPostingSchema = [{
 	...(post._updatedAt   ? { dateModified:   post._updatedAt   } : {}),
 	...(post.excerpt      ? { description:    post.excerpt      } : {}),
 	...(coverImageUrl     ? { image:          coverImageUrl     } : {}),
+	author: { '@type': 'Person', name: authorName },
+	publisher: {
+		'@type': 'Organization',
+		name: siteSettings?.siteName || authorName,
+		...(coverImageUrl ? { logo: { '@type': 'ImageObject', url: coverImageUrl } } : {}),
+	},
 }];
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -99,6 +109,8 @@ const bodyHTML = post.body
   ogImage={coverImageUrl}
   breadcrumb={post.title}
   schemaData={blogPostingSchema}
+  publishDate={post.publishDate || undefined}
+  updatedAt={post._updatedAt || undefined}
 >
   <main>
     <article class="post">
