@@ -1,21 +1,25 @@
 # Update & Maintenance Guide
-## Pushing Code Updates to All Client Sites Safely
+## Pushing Updates to Care Plan Clients Safely
 
 ---
 
-## How Updates Work
+## How It Works
 
-Because every client's Cloudflare Pages project points to your GitHub `main`
-branch, **any commit you push to `main` triggers a rebuild of every client site
-simultaneously.** This is powerful but requires a deliberate workflow so you
-never deploy broken code to live sites.
+Your private GitHub repo is the single source of truth for all care plan
+client sites. When you push to `main`, a GitHub Action builds the site once
+per client (with their Sanity env vars) and uploads the result directly to
+their Cloudflare account via the CF API.
 
 ```
-Your local machine
+You push to main
     │
-    ├── feature-branch  ──►  Cloudflare Preview URL (test here)
-    │                              │
-    └── merge to main  ──────────►  All client sites rebuild automatically
+    └── GitHub Action runs in parallel for each care plan client
+            ├── builds with Smith's Sanity project ID → uploads to Smith's CF account
+            ├── builds with Jones's Sanity project ID → uploads to Jones's CF account
+            └── builds with ...
+
+One-time clients are unaffected — they have their own fork, their own repo,
+their own CF connection. You have no access to their deployments.
 ```
 
 ---
@@ -23,277 +27,285 @@ Your local machine
 ## Branch Strategy
 
 ```
-main          ← production; all clients deploy from here
-│
-├── dev       ← your working branch for all new features
-│   │
-│   └── feature/lightbox-fix    ← individual feature or fix branches
-│       feature/new-section
-│       fix/mobile-nav
+main        ← live; every push redeploys all care plan clients
+staging     ← your personal testing branch; gets a CF preview URL
+feature/*   ← individual feature branches; also get preview URLs
 ```
 
 **Rules:**
-- Never commit directly to `main` for anything beyond typo fixes
-- All work happens on `dev` or a named feature branch
-- Always preview on Cloudflare before merging to `main`
-- One merge to `main` = all clients update
+- Never commit directly to `main` for anything beyond a typo fix
+- All work starts on `staging` or a `feature/*` branch
+- Test on a Cloudflare preview URL before merging to `main`
+- One merge to `main` = all care plan clients update simultaneously
 
 ---
 
-## Step-by-Step: Making and Deploying a Change
+## Day-to-Day Development Workflow
 
-### Step 1 — Create a branch
-
-```sh
-git checkout dev
-git pull origin dev          # make sure you're up to date
-git checkout -b fix/nav-bug  # create your working branch
-```
-
-### Step 2 — Make and test changes locally
+### Step 1 — Branch off staging
 
 ```sh
-./start.sh   # starts Astro dev server + Sanity Studio
+git checkout staging
+git pull origin staging
+git checkout -b feature/new-section
 ```
 
-Test thoroughly against your own Sanity project before touching any client
-environments.
-
-### Step 3 — Push branch and get a Cloudflare preview URL
+### Step 2 — Build and test locally
 
 ```sh
-git push origin fix/nav-bug
+./start.sh   # Astro dev server + Sanity Studio
+npm run build  # catch build errors before pushing
 ```
 
-Cloudflare Pages automatically builds every pushed branch and gives it a unique
-preview URL:
-```
-https://fix-nav-bug.<your-pages-project>.pages.dev
-```
-
-This preview uses **your own Sanity env vars** (whichever project is set as the
-default in Cloudflare's preview environment variables). Use it to verify the
-change looks correct in a real Cloudflare environment, not just localhost.
-
-### Step 4 — Merge to `dev`, then to `main`
+### Step 3 — Push and get a Cloudflare preview URL
 
 ```sh
-# Merge feature into dev first
-git checkout dev
-git merge fix/nav-bug
-git push origin dev
+git push origin feature/new-section
+```
 
-# When confident, merge dev to main
+Cloudflare Pages (your own demo project) automatically builds every pushed
+branch at a unique preview URL:
+```
+https://feature-new-section.<your-demo-project>.pages.dev
+```
+
+This is a real Cloudflare build — not localhost. Verify it looks correct here
+before touching `main`.
+
+### Step 4 — Merge to staging, then to main
+
+```sh
+# Merge feature into staging and verify once more
+git checkout staging
+git merge feature/new-section
+git push origin staging
+
+# When confident — this deploys to ALL care plan clients
 git checkout main
-git merge dev
+git merge staging
 git push origin main
 ```
 
-Pushing to `main` triggers **all client rebuilds simultaneously.**
-Cloudflare shows build progress in each Pages project under **Deployments.**
-
 ### Step 5 — Monitor builds
 
-1. Open [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages
-2. Check each client's Pages project — builds usually complete in 2–4 minutes
-3. If any build fails, it only affects that project's deployment
-   (the previous deployment stays live automatically)
+1. Open your GitHub repo → Actions → the running workflow
+2. Each client is a matrix job — watch for failures
+3. Cloudflare also shows deployment history in each client's Pages project
+4. If a build fails, the previous deployment stays live automatically
 
 ---
 
 ## Safety Checks Before Merging to Main
 
-Run through this list before every `main` merge:
+Run through this list before every push to `main`:
 
-**Code**
-- [ ] Tested locally with `npm run build` (catches TypeScript/build errors early)
-- [ ] Tested on Cloudflare preview URL (not just localhost)
-- [ ] No hardcoded client-specific values (IDs, names, URLs)
-- [ ] No `.env` file accidentally staged (`git status` — check before committing)
+**Build**
+- [ ] `npm run build` passes locally with no errors
+- [ ] Tested on a Cloudflare preview URL (not just localhost)
+- [ ] No hardcoded client-specific values anywhere in the code
+- [ ] No `.env` file accidentally staged (`git status` before committing)
 
 **Visual**
-- [ ] Desktop layout looks correct
-- [ ] Mobile layout looks correct (check at 375px and 768px)
-- [ ] Dark theme tested if applicable
-- [ ] Images load and are not broken
+- [ ] Desktop layout correct
+- [ ] Mobile layout correct (375px and 768px)
+- [ ] All color themes still render correctly if theme-related changes were made
 
 **Functional**
 - [ ] Navigation links work
-- [ ] Contact form submits (test against Web3Forms)
-- [ ] Blog pages render (list and individual post)
+- [ ] Contact form submits
+- [ ] Blog list and individual post render
+- [ ] Portfolio images load
 - [ ] No JavaScript console errors
 
-**Sanity**
-- [ ] Any new schema fields have safe fallback values in the frontend code
-  (new fields won't exist in existing client documents until they publish)
-- [ ] Any removed schema fields are also removed from all GROQ queries
-  (stale queries won't break anything but produce unnecessary null fields)
+**Sanity schema changes (extra care required)**
+- [ ] New fields have safe `null`/`undefined` fallbacks in frontend code
+- [ ] Removed fields are also removed from all GROQ queries
+- [ ] Studio redeployed for all care plan clients (see below)
 
 ---
 
-## What is Safe vs. What Can Break
+## What Is Safe vs. What Needs Care
 
-### Safe to update anytime — no client impact on content
+### Safe — deploy anytime, no client content impact
 
-These changes deploy silently. Clients won't notice anything except
-improvements:
-
-- CSS/styling changes
-- New components that aren't wired into existing pages
-- SEO metadata improvements
+- CSS and styling changes
+- New components not yet wired to pages
+- SEO improvements
 - Performance optimizations
 - Bug fixes that don't touch the Sanity schema
 
-### Requires care — schema changes
+### Requires care — Sanity schema changes
 
-When you add a new field to a Sanity schema:
+New fields won't exist in client documents until the client publishes in their
+Studio. Always write frontend code to handle missing values:
 
-- The field won't exist in client documents until the client visits their
-  Studio and publishes
-- **Always write frontend code to handle the field being `null` or `undefined`**
-- Never assume a new field has a value — use fallbacks everywhere:
-  ```js
-  const heading = section?.heading || 'Default Heading';
-  ```
+```js
+// Always use fallbacks
+const heading = section?.heading || 'Default Heading';
+const faqs    = section?.faqs    ?? null;
+```
 
-When you remove a field from a Sanity schema:
+When removing a field: remove it from GROQ queries at the same time. The data
+stays in Sanity (clients can recover it) — it just stops being fetched.
 
-- Remove it from all GROQ queries at the same time
-- The content is not deleted from Sanity — it just becomes inaccessible
-  (clients can recover it by re-adding the schema field)
+When renaming a field: treat as add new + remove old. Migrate content before
+removing.
 
-When you rename a field:
+### High risk — coordinate with clients first
 
-- Treat it as: add new field + remove old field
-- Migrate content in Sanity before removing the old field
-
-### High risk — avoid or coordinate carefully
-
-- Changing URL structure (slugs, page paths) — breaks bookmarks, search rankings
-- Removing sections or section types that clients are actively using
-- Changing Sanity document IDs (siteSettings, homepagePage, etc.)
-- Modifying `_key` values in singleton sections
+- Changing page URL structure (slugs, routes) — breaks bookmarks and SEO
+- Removing a section type a client is actively using
+- Changing Sanity singleton document IDs (`siteSettings`, `homepagePage`, etc.)
 
 ---
 
-## Rollback: If Something Goes Wrong
+## Deploying Sanity Studio Updates
 
-Cloudflare Pages keeps all previous deployments permanently. Rolling back
-takes about 30 seconds.
+The Studio (`studio/`) is separate from the Astro frontend and must be
+redeployed manually whenever you change a schema file. Clients won't see
+new fields in their CMS until you do this.
 
-**To roll back a specific client:**
-1. Go to Cloudflare → Workers & Pages → select the client's project
-2. Click **Deployments**
-3. Find the last known-good deployment
-4. Click **•••** → **Rollback to this deployment**
-5. That deployment goes live immediately — no rebuild needed
+### Quick deploy script per client
 
-**To roll back all clients:**
+Keep a small script for each care plan client so you can swap the project ID
+without touching git:
+
 ```sh
-git revert HEAD        # creates a new commit that undoes the last commit
-git push origin main   # triggers rebuild of all clients with the revert
+# scripts/deploy-studio-smith.sh
+cd studio
+SANITY_STUDIO_PROJECT_ID=abc123xy npm run deploy
 ```
 
-Using `git revert` (not `git reset`) keeps the git history clean and avoids
+This requires `studio/sanity.config.js` to read from the env var:
+```js
+projectId: process.env.SANITY_STUDIO_PROJECT_ID || 'your-template-id',
+```
+
+### Studio update workflow
+
+1. Update schema files in `studio/schemaTypes/`
+2. Test locally: `cd studio && npm run dev`
+3. Run each client's deploy script
+4. Commit schema changes to the main repo
+5. Push to `main` — the frontend deploy follows automatically
+
+---
+
+## Rolling Back
+
+Cloudflare keeps every deployment permanently. Rollback takes ~30 seconds.
+
+**Roll back one client:**
+1. Client's Cloudflare account → Workers & Pages → their project
+2. Deployments → find the last known-good build
+3. `•••` → **Rollback to this deployment** — goes live instantly
+
+**Roll back all care plan clients:**
+```sh
+git revert HEAD        # new commit that undoes the last commit
+git push origin main   # triggers Action, all clients get the reverted build
+```
+
+Use `git revert` (not `git reset --hard`) — it keeps history clean and avoids
 force-pushing.
 
 ---
 
-## Handling Client-Specific Customizations
+## Adding a New Care Plan Client
 
-Since all clients share the same codebase, client-specific content (copy,
-colors, images) lives entirely in Sanity. Occasionally a client may need a
-truly unique feature that other clients don't want.
-
-**Preferred approach: Sanity toggle**
-Add an on/off toggle in Sanity so the feature can be enabled per client.
-This keeps one codebase and lets each client opt in/out.
-
-**If a feature is genuinely one-off:**
-Create a client-specific branch in GitHub:
-```
-main           ← all shared clients
-client-smith   ← branch with Smith's unique addition, merged from main
-```
-That client's Cloudflare Pages project deploys from `client-smith` instead of
-`main`. Updates still flow: merge `main` into `client-smith` when needed.
+1. Complete the full setup in `client-setup-guide.md`
+2. Add their entry to the `matrix.client` list in
+   `.github/workflows/deploy-clients.yml`
+3. Add their GitHub Secrets (CF account ID, CF API token, Sanity token, etc.)
+4. Push any commit to `main` to trigger their first Action deploy
+5. Add to your uptime monitor
 
 ---
 
-## Keeping the Sanity Studio Up to Date
+## Off-Boarding a Care Plan Client (They Cancel)
 
-The Studio (`studio/`) is deployed separately from the Astro frontend.
-When you change a schema file, **you must redeploy the Studio** for clients
-to see the new fields in their CMS.
+Their site keeps running. They get the code. Clean handoff.
 
-**Workflow for schema changes:**
+1. **Fork the repo** to their GitHub account at its current state
+   - GitHub UI: your repo → Use this template, or manually fork to their account
+   - Make it private in their account
+2. **Reconnect their CF Pages** to their fork
+   - In their CF account: delete the Direct Upload project
+   - Create a new Pages project connected to their GitHub fork
+   - Re-add env vars (they already have these from initial setup)
+3. **Remove them from your GitHub Action**
+   - Delete their entry from `matrix.client` in the workflow file
+   - Commit and push
+4. **Remove their GitHub Secrets** from your repo
+5. **Confirm their site is still live** from their own fork before closing out
+6. **Hand off documentation:**
+   - Their GitHub repo URL and login
+   - Their Sanity Studio URL (sanity.io/manage for their project)
+   - Their Web3Forms login (they already own this — it's on their email)
+   - A brief note: *"Your site now deploys from your own GitHub repo. Future
+     Cloudflare builds are triggered automatically when you push to main.
+     Contact your developer for future changes."*
 
-1. Update schema files in `studio/schemaTypes/`
-2. Test locally: `cd studio && npm run dev`
-3. For each client:
-   - Temporarily update `studio/sanity.config.js` with their project ID
-   - Run `npm run deploy` from the `studio/` directory
-   - Revert the config change
-4. Commit the schema changes to the main repo
+**What they own at handoff:**
+- The source code (their GitHub fork)
+- Their Sanity project and all content
+- Their Cloudflare account and DNS
+- Their Web3Forms account
+- Their domain
 
-> **Tip:** Keep a small shell script per client to swap the project ID and
-> deploy without touching git:
-> ```sh
-> # deploy-studio-smith.sh
-> SANITY_PROJECT_ID=abc123 npm run deploy
-> ```
-> (Requires the studio config to read from `process.env.SANITY_PROJECT_ID`)
-
----
-
-## Monitoring Client Sites
-
-Set up a free uptime monitor for each live client site so you know before
-they tell you if something is down.
-
-**Recommended free options:**
-- [UptimeRobot](https://uptimerobot.com) — monitors every 5 minutes, free for up to 50 sites
-- [Better Stack](https://betterstack.com) — 10-second checks, good alerting
-
-**What to monitor per client:**
-- `https://clientdomain.com` — homepage (200 OK)
-- `https://clientdomain.com/contact` — contact page
-- `https://clientdomain.com/sitemap.xml` — confirms build succeeded
-
-Set alerts to go to your email or Slack so you catch issues immediately.
+**What they don't get:** future updates you make to the template after their
+cancellation date. That is the sole value of the care plan — ongoing
+improvements. Everything else was always theirs.
 
 ---
 
-## Periodic Maintenance Checklist
+## Monitoring
+
+Set up free uptime monitoring for each care plan client. You should know
+before they do.
+
+**Recommended:** [UptimeRobot](https://uptimerobot.com) — free for up to 50
+monitors, checks every 5 minutes, email/Slack alerts.
+
+**Monitor per client:**
+- `https://clientdomain.com` — homepage (HTTP 200)
+- `https://clientdomain.com/contact` — confirms SSR is working
+- `https://clientdomain.com/sitemap.xml` — confirms last build succeeded
+
+---
+
+## Periodic Maintenance
 
 ### Monthly
-- [ ] Check for npm dependency updates: `npm outdated` in root and `studio/`
-- [ ] Review Cloudflare Pages build logs for any warnings
-- [ ] Confirm all client contact forms are still delivering email (spot-check)
-- [ ] Check Google Search Console for any crawl errors on active client sites
+- [ ] Check GitHub Action run history for any recurring failures
+- [ ] Spot-check one care plan client's contact form is delivering email
+- [ ] Review Cloudflare build minutes usage (500/month free limit)
 
-### Per Astro or Sanity major version release
-- [ ] Test the upgrade on a feature branch and preview deployment first
+### Quarterly (per care plan client)
+- [ ] SSL certificate valid (Cloudflare auto-renews, but verify)
+- [ ] Domain not expiring within 60 days — remind client if so
+- [ ] Check-in: any content help needed?
+- [ ] Renewal reminder if on annual plan
+
+### Per major Astro or Sanity version release
 - [ ] Read the migration guide for breaking changes
-- [ ] Update one client site first; monitor for a week before rolling out to all
-
-### Per client — quarterly check-in
-- [ ] Is the SSL certificate still valid? (Cloudflare auto-renews, but confirm)
-- [ ] Is the domain still registered and not expiring? (remind clients 60 days out)
-- [ ] Are contact form submissions being received?
-- [ ] Any content updates the client needs help with?
+- [ ] Test upgrade on `staging` branch and preview deployment
+- [ ] Deploy to your own demo site first, monitor for one week
+- [ ] Then merge to `main` to roll out to all care plan clients
 
 ---
 
-## Emergency Contacts & Access
+## Emergency Contacts Per Client
 
-Keep a secure record (1Password or similar) for each client containing:
+Keep in your password manager (1Password, etc.):
 
 | Item | Notes |
 |---|---|
-| Domain registrar login | Where to change nameservers if needed |
-| Cloudflare account | If client has their own CF account |
-| Sanity project ID + studio URL | For CMS access |
-| Web3Forms email + access key | For form troubleshooting |
-| Client's email + phone | For coordinating domain changes |
-| Date site went live | For anniversary check-ins |
+| Domain registrar | Where to update nameservers if needed |
+| CF Account ID + API token | For manual deploys or debugging |
+| Sanity project ID + Studio URL | For CMS access |
+| Web3Forms email | For form troubleshooting |
+| Client name, email, phone | For coordination |
+| Tier | Care Plan / One-Time |
+| Go-live date | For anniversary check-ins + renewals |
+| Care plan renewal date | For invoicing |
