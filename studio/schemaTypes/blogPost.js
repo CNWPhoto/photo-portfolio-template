@@ -63,6 +63,7 @@ export default {
           {title: 'Tips & Advice', value: 'Tips & Advice'},
           {title: 'Client Stories', value: 'Client Stories'},
         ],
+        allowInput: true,
       },
     },
     {
@@ -98,6 +99,31 @@ export default {
                 ],
               },
             ],
+          },
+        },
+        {
+          type: 'object',
+          name: 'videoEmbed',
+          title: 'Video Embed',
+          fields: [
+            {
+              name: 'url',
+              title: 'Video URL',
+              type: 'url',
+              description: 'Paste a YouTube or Vimeo URL (e.g. https://www.youtube.com/watch?v=...).',
+            },
+            {
+              name: 'caption',
+              title: 'Caption',
+              type: 'string',
+              description: 'Optional caption displayed below the video.',
+            },
+          ],
+          preview: {
+            select: {title: 'url', subtitle: 'caption'},
+            prepare({title, subtitle}) {
+              return {title: subtitle || 'Video', subtitle: title}
+            },
           },
         },
         {

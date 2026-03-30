@@ -19,13 +19,14 @@ import { getClient, urlFor } from '../lib/sanity.js';
 
 const client = getClient(Astro.locals.isPreview);
 
-const [homepageDoc, testimonials, pageSections, layoutSettings, siteSettings] = await Promise.all([
+const [homepageDoc, testimonials, siteSettings] = await Promise.all([
 	client.fetch(
 		`*[_type == "homepagePage"][0]{
 			pageTitle,
 			seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
 			"sections": sections[] {
 				_type,
+				variant,
 				images[] { ..., asset-> },
 				nicheKeyword, tagline,
 				eyebrow, body, bodySecondary, ctaText, ctaLink,
@@ -39,8 +40,6 @@ const [homepageDoc, testimonials, pageSections, layoutSettings, siteSettings] = 
 		}`
 	),
 	client.fetch(`*[_type == "testimonial"] | order(order asc)`),
-	client.fetch(`*[_type == "pageSection"]`),
-	client.fetch(`*[_type == "homepageSettings"][0]{introVariant, testimonialsVariant, portfolioPreviewVariant, howItWorksVariant}`),
 	client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0].typographyOverrides`),
 ]);
 
@@ -62,17 +61,11 @@ const faqs            = getSection('homepageFaqs')?.faqs ?? null;
 
 const overrides = siteSettings ?? {};
 
-// Section theme from pageSection documents (per-section colour overrides)
-const sectionTheme = (type: string, defaultTheme?: string) => {
-	const s = pageSections?.find((p: any) => p.sectionType === type);
-	return s?.colorTheme ?? defaultTheme;
-};
-
-// Layout variants from homepageSettings singleton (fallback to defaults)
-const introVariant        = layoutSettings?.introVariant           || 'classic';
-const testimonialsVariant = layoutSettings?.testimonialsVariant    || 'slider';
-const portfolioVariant    = layoutSettings?.portfolioPreviewVariant || 'grid';
-const howItWorksVariant   = layoutSettings?.howItWorksVariant      || 'columns';
+// Layout variants — read from each section's own variant field
+const introVariant        = welcomeSection?.variant                          || 'classic';
+const testimonialsVariant = getSection('testimonialsSection')?.variant       || 'slider';
+const portfolioVariant    = featuredSection?.variant                         || 'classic';
+const howItWorksVariant   = processSection?.variant                          || 'columns';
 ---
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
@@ -80,26 +73,26 @@ const howItWorksVariant   = layoutSettings?.howItWorksVariant      || 'columns';
 	<main>
 		<!-- Intro -->
 		{introVariant === 'centered'
-			? <IntroCentered {welcomeSection} {urlFor} theme={sectionTheme('intro')} {overrides} />
-			: <IntroSplit    {welcomeSection} {urlFor} theme={sectionTheme('intro')} {overrides} />
+			? <IntroCentered {welcomeSection} {urlFor} {overrides} />
+			: <IntroSplit    {welcomeSection} {urlFor} {overrides} />
 		}
 
 		<!-- Testimonials -->
 		{testimonialsVariant === 'grid'
-			? <TestimonialsGrid   testimonials={testimonials} {urlFor} theme={sectionTheme('testimonials')} {overrides} />
-			: <TestimonialsSlider testimonials={testimonials} {urlFor} theme={sectionTheme('testimonials')} {overrides} />
+			? <TestimonialsGrid   testimonials={testimonials} {urlFor} {overrides} />
+			: <TestimonialsSlider testimonials={testimonials} {urlFor} {overrides} />
 		}
 
 		<!-- Portfolio preview -->
 		{portfolioVariant === 'masonry'
-			? <PortfolioMasonry {featuredSection} {urlFor} theme={sectionTheme('portfolio')} />
-			: <PortfolioGrid    {featuredSection} {urlFor} theme={sectionTheme('portfolio')} />
+			? <PortfolioMasonry {featuredSection} {urlFor} />
+			: <PortfolioGrid    {featuredSection} {urlFor} />
 		}
 
 		<!-- How It Works -->
 		{howItWorksVariant === 'stacked'
-			? <HowItWorksStacked {processSection} theme={sectionTheme('howItWorks', 'warm-studio')} />
-			: <HowItWorksColumns {processSection} theme={sectionTheme('howItWorks', 'warm-studio')} />
+			? <HowItWorksStacked {processSection} theme="warm-studio" />
+			: <HowItWorksColumns {processSection} theme="warm-studio" />
 		}
 
 		<WhyChoose theme="dark-editorial" {soloHeroImage} {whyChooseSection} {urlFor} {overrides} />

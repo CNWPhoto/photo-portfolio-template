@@ -1,6 +1,5 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
-import {visionTool} from '@sanity/vision'
 import {presentationTool} from 'sanity/presentation'
 import {schemaTypes} from './schemaTypes'
 
@@ -43,11 +42,9 @@ export default defineConfig({
                   .items([
                     singleton(S, 'siteSettings', 'Site & Theme', 'siteSettings'),
                     singleton(S, 'navSettings', 'Navigation', 'navSettings'),
-                    singleton(S, 'homepageSettings', 'Homepage Layout', 'homepageSettings'),
                     singleton(S, 'footerSettings', 'Footer', 'footerSettings'),
                     singleton(S, 'socialSettings', 'Social', 'socialSettings'),
                     singleton(S, 'codeSettings', 'Code', 'codeSettings'),
-                    S.documentTypeListItem('pageSection').title('Section Colours'),
                   ]),
               ),
 
@@ -65,6 +62,7 @@ export default defineConfig({
                     singleton(S, 'aboutPage', 'About Page', 'aboutPage'),
                     singleton(S, 'experiencePage', 'Experience', 'experiencePage'),
                     singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
+                    singleton(S, 'blogPage', 'Blog', 'blogPage'),
                     singleton(S, 'contactPage', 'Contact', 'contactPage'),
                   ]),
               ),
@@ -75,27 +73,10 @@ export default defineConfig({
             S.documentTypeListItem('testimonial').title('⭐ Testimonials'),
 
             // ── Blog ─────────────────────────────────────────────────────
-            S.listItem()
-              .title('📝 Blog')
-              .id('blogGroup')
-              .child(
-                S.list()
-                  .title('Blog')
-                  .items([S.documentTypeListItem('blogPost').title('Blog Posts')]),
-              ),
+            S.documentTypeListItem('blogPost').title('📝 Blog Posts'),
 
-            // ── FAQs ─────────────────────────────────────────────────────
-            S.listItem()
-              .title('❓ FAQs')
-              .id('faqsGroup')
-              .child(
-                S.list()
-                  .title('FAQs')
-                  .items([S.documentTypeListItem('faq').title('FAQs')]),
-              ),
           ]),
     }),
-    visionTool(),
   ],
 
   schema: {

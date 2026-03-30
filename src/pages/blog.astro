@@ -1,0 +1,398 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getClient, urlFor } from '../lib/sanity.js';
+
+const [pageDoc, posts] = await Promise.all([
+  getClient(Astro.locals.isPreview).fetch(
+    `*[_type == "blogPage"][0]{
+      pageTitle,
+      seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+      heroImage { ..., asset-> },
+      heroHeading,
+      heroSubtext,
+      layout,
+      postsPerPage
+    }`,
+    {},
+    { cache: 'no-store' }
+  ),
+  getClient(Astro.locals.isPreview).fetch(
+    `*[_type == "blogPost"] | order(publishDate desc) [0...100]{
+      _id, title, slug, publishDate, excerpt, category,
+      coverImage { ..., asset-> }
+    }`,
+    {},
+    { cache: 'no-store' }
+  ),
+]);
+
+const seoTitle       = pageDoc?.seo?.seoTitle       || pageDoc?.pageTitle || 'Blog';
+const seoDescription = pageDoc?.seo?.seoDescription || null;
+const ogImage        = pageDoc?.seo?.socialImage?.asset?.url || null;
+
+const heroImgUrl  = pageDoc?.heroImage
+  ? urlFor(pageDoc.heroImage).width(1600).auto('format').url()
+  : 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg?auto=compress&cs=tinysrgb&w=1600';
+const heroHeading = pageDoc?.heroHeading || 'Dog Tails'; // TODO:NICHE
+const heroSubtext = pageDoc?.heroSubtext || 'Dogs, Love, and Tails of Photography'; // TODO:NICHE
+
+const layout       = pageDoc?.layout       || 'list';
+const postsPerPage = pageDoc?.postsPerPage || 12;
+
+type Post = {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  publishDate?: string;
+  excerpt?: string;
+  category?: string;
+  coverImage?: any;
+  _fallbackImg?: string;
+};
+
+const fallbackPosts: Post[] = [
+  { _id: 'f1', title: 'Captured High in the Mountains',  slug: { current: '#' }, category: 'On Location',       excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
+  { _id: 'f2', title: 'Swimming with Spot',              slug: { current: '#' }, category: 'Portraits',          excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
+  { _id: 'f3', title: 'Rocky on the Ridgetop',           slug: { current: '#' }, category: 'On Location',       excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
+  { _id: 'f4', title: 'A Morning in the Studio',         slug: { current: '#' }, category: 'Behind the Scenes', excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
+];
+
+const sanityPosts: Post[] = (posts ?? []).slice(0, postsPerPage);
+const displayPosts: Post[] = sanityPosts.length ? sanityPosts : fallbackPosts;
+
+function postImgUrl(post: Post): string {
+  if (post.coverImage) return urlFor(post.coverImage).width(900).height(700).fit('crop').auto('format').url();
+  return post._fallbackImg ?? 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop';
+}
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '';
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+---
+
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
+  <main>
+
+    <!-- ══ SECTION 1: Hero ══ -->
+    <section class="hero">
+      <img
+        class="hero__img"
+        src={heroImgUrl}
+        alt={heroHeading}
+        loading="eager" decoding="async"
+      />
+      <div class="hero__content">
+        <h1 class="hero__title">{heroHeading}</h1>
+        <p class="hero__sub">{heroSubtext}</p>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 2: Posts ══ -->
+    <section class="posts" data-theme="classic-cream">
+
+      {layout === 'cards'
+        ? (
+          <div class="cards__grid">
+            {displayPosts.map((post, i) => (
+              <article class={`card reveal-fade reveal-delay-${Math.min((i % 3) + 1, 3)}`}>
+                <a href={`/blog/${post.slug.current}`} class="card__img-link" tabindex="-1" aria-hidden="true">
+                  <img
+                    class="card__img"
+                    src={postImgUrl(post)}
+                    alt={post.coverImage?.alt || post.title}
+                    width="900" height="700"
+                    loading="lazy" decoding="async"
+                  />
+                </a>
+                <div class="card__body">
+                  {post.category && <p class="card__category">{post.category}</p>}
+                  <h2 class="card__title">
+                    <a href={`/blog/${post.slug.current}`}>{post.title}</a>
+                  </h2>
+                  {post.excerpt && <p class="card__excerpt">{post.excerpt}</p>}
+                  {post.publishDate && <p class="card__date">{formatDate(post.publishDate)}</p>}
+                </div>
+              </article>
+            ))}
+          </div>
+        )
+        : (
+          <div class="posts__list">
+            {displayPosts.map((post, i) => (
+              <article class={`posts__item ${i % 2 === 1 ? 'posts__item--reversed' : ''}`}>
+                <a href={`/blog/${post.slug.current}`} class="posts__item-inner">
+                  <div class="posts__img-col">
+                    <img
+                      src={postImgUrl(post)}
+                      alt={post.coverImage?.alt || post.title}
+                      loading="lazy" decoding="async"
+                    />
+                  </div>
+                  <div class="posts__content">
+                    {post.category && <p class="posts__category">{post.category}</p>}
+                    <h2 class="posts__title">{post.title}</h2>
+                    {post.excerpt && <p class="posts__excerpt">{post.excerpt}</p>}
+                    {post.publishDate && <p class="posts__date">{formatDate(post.publishDate)}</p>}
+                  </div>
+                </a>
+                {i < displayPosts.length - 1 && <hr class="posts__divider" />}
+              </article>
+            ))}
+          </div>
+        )
+      }
+
+    </section>
+
+  </main>
+</Layout>
+
+<style>
+  /* ══ Hero ══ */
+  .hero {
+    position: relative;
+    height: calc(55vh + 100px);
+    min-height: 460px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+  }
+
+  .hero__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+  }
+
+  .hero__content {
+    position: relative;
+    z-index: 1;
+    padding: 3rem 4rem;
+    text-align: right;
+  }
+
+  .hero__title {
+    font-size: clamp(2.5rem, 6vw, 5.5rem);
+    font-style: normal;
+    color: var(--accent, #8b2635);
+    letter-spacing: -0.01em;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+    text-shadow: 0 1px 4px rgba(255, 255, 255, 0.4);
+  }
+
+  .hero__sub {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text, #1a2744);
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.5);
+  }
+
+  /* ══ List layout ══ */
+  .posts {
+    padding-bottom: 6rem;
+  }
+
+  .posts__list {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 3rem;
+  }
+
+  .posts__item {
+    padding: 4rem 0;
+  }
+
+  .posts__item-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 400px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .posts__item--reversed .posts__img-col { order: 2; }
+  .posts__item--reversed .posts__content { order: 1; }
+
+  .posts__img-col {
+    overflow: hidden;
+  }
+
+  .posts__img-col img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .posts__item-inner:hover .posts__img-col img {
+    transform: scale(1.03);
+  }
+
+  .posts__content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem 4rem;
+    background: var(--bg-alt);
+  }
+
+  .posts__item--reversed .posts__content {
+    padding: 3rem 4rem;
+    background: transparent;
+  }
+
+  .posts__category {
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+  }
+
+  .posts__title {
+    font-size: clamp(1.75rem, 3vw, 2.75rem);
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .posts__excerpt {
+    font-size: 0.9375rem;
+    line-height: 1.78;
+    color: var(--muted);
+  }
+
+  .posts__date {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--muted-light);
+    margin-top: 1.25rem;
+  }
+
+  .posts__divider {
+    margin-top: 0;
+    border-top-color: var(--border);
+  }
+
+  /* ══ Cards layout ══ */
+  .cards__grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem 2rem;
+    align-items: start;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card__img-link {
+    display: block;
+    overflow: hidden;
+  }
+
+  .card__img {
+    width: 100%;
+    aspect-ratio: 9 / 7;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+
+  .card__img-link:hover .card__img {
+    transform: scale(1.03);
+  }
+
+  .card__body {
+    padding: 1.25rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .card__category {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  .card__title {
+    font-size: clamp(1.1rem, 1.5vw, 1.375rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0.25rem 0 0;
+  }
+
+  .card__title a {
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .card__title a:hover { color: var(--accent); }
+
+  .card__excerpt {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--muted);
+    margin: 0.25rem 0 0;
+  }
+
+  .card__date {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--muted-light);
+    margin: 0.5rem 0 0;
+  }
+
+  /* ══ Responsive ══ */
+  @media (max-width: 900px) {
+    .hero__content { padding: 2rem 1.5rem; }
+
+    .posts__list { padding: 0 1.5rem; }
+
+    .posts__item-inner {
+      grid-template-columns: 1fr;
+      min-height: auto;
+    }
+
+    .posts__img-col img { height: 55vw; min-height: 240px; }
+
+    .posts__item--reversed .posts__img-col { order: 0; }
+    .posts__item--reversed .posts__content { order: 0; padding: 2rem 0; background: transparent; }
+    .posts__content { padding: 2rem 0; background: transparent; }
+
+    .cards__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem 1.5rem;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .cards__grid {
+      grid-template-columns: 1fr;
+      padding: 2.5rem 1.25rem;
+    }
+  }
+</style>

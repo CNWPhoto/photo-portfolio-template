@@ -1,3 +1,5 @@
+import {howItWorksVariants} from '../pageLayouts'
+
 export default {
   name: 'processSection',
   title: 'Process Section',
@@ -8,6 +10,14 @@ export default {
     },
   },
   fields: [
+    {
+      name: 'variant',
+      title: 'Layout Style',
+      type: 'string',
+      description: 'Choose how the "How It Works" steps are displayed.',
+      options: {list: howItWorksVariants, layout: 'radio'},
+      initialValue: 'columns',
+    },
     {
       name: 'heading',
       title: 'Main Heading (H2)',

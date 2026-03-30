@@ -1,11 +1,11 @@
 ---
-import SanityImage from '../components/SanityImage.astro';
+import { toHTML } from '@portabletext/to-html';
 
 const { theme = 'classic-cream', siteName = 'Pet Photography' } = Astro.props;
 
 const [_footerRes, _socialRes, _siteRes] = await Promise.all([
   fetch(
-    `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ newsletterEmbed, menu, footerPhoto { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt } }`)}`,
+    `https://hx5xgigp.api.sanity.io/v2023-05-03/data/query/production?query=${encodeURIComponent(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ menu, middleColumn { label, embedCode, note } }`)}`,
     { cache: 'no-store' }
   ),
   fetch(
@@ -21,11 +21,15 @@ const { result: footerData } = await _footerRes.json();
 const { result: socialData } = await _socialRes.json();
 const { result: siteData }   = await _siteRes.json();
 
-const newsletterEmbed  = footerData?.newsletterEmbed || '';
 const photographerName = siteData?.photographerName || siteName;
 
-// Footer portrait photo
-const footerPhoto = footerData?.footerPhoto ?? null;
+// Middle column
+const middleCol       = footerData?.middleColumn ?? null;
+const middleLabel     = middleCol?.label || null;
+const middleEmbed     = middleCol?.embedCode || null;
+const middleNoteRaw   = middleCol?.note || null;
+const middleNoteHTML  = middleNoteRaw ? toHTML(middleNoteRaw) : null;
+const showMiddleCol   = !!(middleEmbed || middleNoteHTML);
 
 // Social links — only include platforms with a URL filled in
 const socialLinks = [
@@ -63,18 +67,12 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="footer" id="contact">
-	<!-- Wordmark: overhangs the section above -->
-	<div class="footer__wordmark-row">
-		<span class="footer__wordmark">{siteName}</span>
-	</div>
-
 	<hr />
 
-	<!-- Columns: left nav columns + right photo + icons -->
+	<!-- Columns: left nav + right wordmark/social -->
 	<div class="footer__cols">
 		<div class="footer__left">
 			<div class="footer__col">
-				<p class="footer__col-label">Menu</p>
 				<ul class="footer__list footer__list--2col">
 					{menuLinks.map(link => (
 						<li><a href={link.href}>{link.label}</a></li>
@@ -82,17 +80,21 @@ const year = new Date().getFullYear();
 				</ul>
 			</div>
 
-			{newsletterEmbed && (
+			{showMiddleCol && (
 				<div class="footer__col">
-					<p class="footer__col-label">Newsletter</p>
-					<Fragment set:html={newsletterEmbed} />
+					{middleLabel && <p class="footer__col-label">{middleLabel}</p>}
+					{middleEmbed
+						? <Fragment set:html={middleEmbed} />
+						: <div class="footer__note"><Fragment set:html={middleNoteHTML} /></div>
+					}
 				</div>
 			)}
 		</div>
 
 		<div class="footer__right">
+			<span class="footer__wordmark">{siteName}</span>
 			{socialLinks.length > 0 && (
-				<div class="footer__social-col">
+				<div class="footer__social-row">
 					{socialLinks.map(link => (
 						<a
 							href={link.url}
@@ -106,12 +108,6 @@ const year = new Date().getFullYear();
 					))}
 				</div>
 			)}
-			<div class="footer__photo-col">
-				{footerPhoto
-					? <SanityImage image={footerPhoto} sizes="180px" class="footer__portrait" displayWidth={180} displayHeight={130} />
-					: <span class="footer__photo-placeholder">Your Photo Here</span>
-				}
-			</div>
 		</div>
 	</div>
 
@@ -132,42 +128,24 @@ const year = new Date().getFullYear();
 		background: var(--bg);
 		color: var(--text);
 		position: relative;
-		padding-top: 3.5rem;
-	}
-
-	/* Wordmark: overhangs the section above */
-	.footer__wordmark-row {
-		position: absolute;
-		top: 0;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		width: 100%;
-		max-width: 1100px;
-		padding: 0 3rem;
-		text-align: right;
-		box-sizing: border-box;
-		pointer-events: none;
 	}
 
 	.footer__wordmark {
 		font-family: var(--font-serif, Georgia, serif);
 		font-style: italic;
-		font-variant: normal;
 		font-weight: 700;
-		font-size: 2rem;
+		font-size: clamp(1.4rem, 2.5vw, 2rem);
 		letter-spacing: 0.01em;
 		white-space: nowrap;
 		color: var(--text);
-		pointer-events: auto;
 	}
 
-	/* Social icons: vertical column beside photo */
-	.footer__social-col {
+	/* Social icons: horizontal row under wordmark */
+	.footer__social-row {
 		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		gap: 10px;
-		padding: 0 1rem 0 0;
+		flex-direction: row;
+		gap: 12px;
+		margin-top: 0.75rem;
 	}
 
 	.footer__social-icon {
@@ -190,13 +168,13 @@ const year = new Date().getFullYear();
 		box-sizing: border-box;
 		display: grid;
 		grid-template-columns: 1fr 280px;
-		align-items: start;
+		align-items: stretch;
 	}
 
-	/* Left: menu pinned to 275px, remaining space for newsletter */
+	/* Left: single col by default, splits if newsletter present */
 	.footer__left {
 		display: grid;
-		grid-template-columns: 275px 1fr;
+		grid-template-columns: 1fr;
 	}
 
 	.footer__left:has(.footer__col:nth-child(2)) {
@@ -204,7 +182,7 @@ const year = new Date().getFullYear();
 	}
 
 	.footer__col {
-		padding: 48px 2rem 56px 0;
+		padding: 2rem 2rem 2rem 0;
 	}
 
 	.footer__col:last-child {
@@ -236,7 +214,7 @@ const year = new Date().getFullYear();
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		column-gap: 1.5rem;
-		row-gap: 0.75rem;
+		row-gap: 0.5rem;
 	}
 
 	.footer__list a {
@@ -251,45 +229,30 @@ const year = new Date().getFullYear();
 		color: var(--accent);
 	}
 
-	/* Right panel — icons + photo side by side */
+	.footer__note {
+		font-size: 0.9375rem;
+		line-height: 1.7;
+		color: var(--muted);
+	}
+
+	.footer__note a {
+		color: var(--accent);
+		text-decoration: none;
+	}
+
+	.footer__note a:hover {
+		text-decoration: underline;
+	}
+
+	/* Right panel — wordmark + social, centered vertically */
 	.footer__right {
 		border-left: 1px solid var(--border);
 		display: flex;
-		flex-direction: row;
-		align-items: center;
-		justify-content: flex-end;
-		overflow: hidden;
-		height: 130px;
-		align-self: center;
-		margin: 2rem 0;
-		padding-left: 1.5rem;
-	}
-
-	.footer__photo-col {
-		height: 130px;
-		width: 180px;
-		flex-shrink: 0;
-		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		background: var(--bg-alt);
-		overflow: hidden;
-	}
-
-	.footer__photo-col :global(.footer__portrait) {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		object-position: center top;
-		display: block;
-	}
-
-	.footer__photo-placeholder {
-		font-family: var(--font-sans);
-		font-size: 0.65rem;
-		letter-spacing: 0.2em;
-		text-transform: uppercase;
-		color: var(--muted);
+		padding: 2.5rem 1.5rem;
+		text-align: center;
 	}
 
 	/* Legal row */
@@ -321,13 +284,6 @@ const year = new Date().getFullYear();
 	}
 
 	@media (max-width: 900px) {
-		.footer__wordmark-row {
-			padding: 0 1.5rem;
-		}
-
-		.footer__social-row {
-			padding: 1.25rem 1.5rem 0;
-		}
 
 		.footer__cols {
 			padding-left: 1.5rem;
@@ -357,13 +313,21 @@ const year = new Date().getFullYear();
 			padding-left: 0;
 		}
 
+		.footer__col {
+			text-align: center;
+		}
+
+		.footer__list--2col {
+			justify-items: center;
+		}
+
 		.footer__right {
 			border-left: none;
 			border-top: 1px solid var(--border);
-			height: 130px;
-			margin: 0;
 			padding-left: 0;
 			justify-content: flex-start;
+			padding-top: 1.5rem;
+			padding-bottom: 1rem;
 		}
 
 		.footer__legal {

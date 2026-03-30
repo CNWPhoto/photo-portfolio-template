@@ -36,6 +36,7 @@ export default {
         {type: 'heroSlider'},
         {type: 'heroCaption'},
         {type: 'welcomeSection'},
+        {type: 'testimonialsSection'},
         {type: 'featuredSection'},
         {type: 'processSection'},
         {type: 'soloHeroImage'},
