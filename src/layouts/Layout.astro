@@ -62,7 +62,6 @@ const FONT_MAP: Record<string, string> = {
   'airy-minimal':      'family=Tenor+Sans&family=Raleway:wght@300;400;500;600;700',
 };
 const fontUrl    = `https://fonts.googleapis.com/css2?${FONT_MAP[fontTheme] ?? FONT_MAP['classic-editorial']}&display=swap`;
-const canonicalUrl = canonicalBase ? `${canonicalBase}${Astro.url.pathname}` : null;
 
 // Text color preset palette — only applied on light themes
 const LIGHT_THEMES = ['classic-cream', 'warm-studio', 'cool-minimal', 'forest-sage'];
@@ -81,6 +80,7 @@ const blogEnabled    = blogConfig?.blogEnabled !== false;
 
 // ── Structured data (JSON-LD @graph) ─────────────────────────────────────────
 const canonicalBase = (seo?.siteUrl || '').replace(/\/$/, '');
+const canonicalUrl  = canonicalBase ? `${canonicalBase}${Astro.url.pathname}` : null;
 const schemaGraph: Record<string, any>[] = [];
 
 if (canonicalBase) {

@@ -25,6 +25,7 @@ const [homepageDoc, testimonials] = await Promise.all([
 			seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
 			"sections": sections[] {
 				_type,
+				enabled,
 				variant,
 				images[] { ..., asset-> },
 				nicheKeyword, tagline,
@@ -54,58 +55,78 @@ const faqSchemaData = rawFaqs?.length
 	? [{ '@type': 'FAQPage', mainEntity: rawFaqs.map((f: any) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) }]
 	: undefined;
 
-const isEnabled = (type: string) => getSection(type)?.enabled !== false;
+// ── Hero (rendered outside <main>) ───────────────────────────────────────────
+const heroSliderSection  = getSection('heroSlider');
+const heroCaptionSection = getSection('heroCaption');
+const showHero           = heroSliderSection?.enabled !== false;
+const showHeroCaption    = heroCaptionSection?.enabled !== false;
+const heroSlider         = heroSliderSection?.images ?? null;
 
-const heroSliderSection   = getSection('heroSlider');
-const heroSlider          = heroSliderSection?.images ?? null;
-const showHero            = heroSliderSection?.enabled !== false;
-const heroCaptionSection  = getSection('heroCaption');
-const heroCaption         = heroCaptionSection ?? null;
-const showHeroCaption     = heroCaptionSection?.enabled !== false;
-const welcomeSection      = isEnabled('welcomeSection')   ? getSection('welcomeSection')   ?? null : null;
-const featuredSection     = isEnabled('featuredSection')  ? getSection('featuredSection')  ?? null : null;
-const processSection      = isEnabled('processSection')   ? getSection('processSection')   ?? null : null;
-const soloHeroImage       = isEnabled('soloHeroImage')    ? getSection('soloHeroImage')    ?? null : null;
-const whyChooseSection    = isEnabled('whyChooseSection') ? getSection('whyChooseSection') ?? null : null;
-const showTestimonials    = isEnabled('testimonialsSection');
-const faqsSection         = getSection('homepageFaqs');
-const faqs                = isEnabled('homepageFaqs') ? (faqsSection?.faqs ?? null) : null;
-
-// Layout variants — read from each section's own variant field
-const introVariant        = welcomeSection?.variant  || 'classic';
-const testimonialsVariant = getSection('testimonialsSection')?.variant || 'slider';
-const portfolioVariant    = featuredSection?.variant  || 'classic';
-const howItWorksVariant   = processSection?.variant   || 'columns';
+// ── WhyChoose pairing ────────────────────────────────────────────────────────
+// soloHeroImage (bg image) + whyChooseSection (text) always render as one unit.
+// We render it when we first encounter either in the section order.
+const soloHeroImageData  = getSection('soloHeroImage');
+const whyChooseSectionData = getSection('whyChooseSection');
+const soloHeroIdx  = homepageSections.findIndex((s: any) => s._type === 'soloHeroImage');
+const whyChooseIdx = homepageSections.findIndex((s: any) => s._type === 'whyChooseSection');
+// Index of first appearance (ignoring disabled)
+const whyChooseTriggerIdx = (() => {
+	const candidates = [soloHeroIdx, whyChooseIdx].filter(i => i !== -1);
+	return candidates.length ? Math.min(...candidates) : -1;
+})();
 ---
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData}>
-	{showHero && <Hero heroImages={heroSlider} heroCaption={showHeroCaption ? heroCaption : null} {urlFor} />}
+	{showHero && <Hero heroImages={heroSlider} heroCaption={showHeroCaption ? heroCaptionSection : null} urlFor={urlFor} />}
 	<main>
-		<!-- Intro -->
-		{welcomeSection && (introVariant === 'centered'
-			? <IntroCentered {welcomeSection} {urlFor} />
-			: <IntroSplit    {welcomeSection} {urlFor} />
-		)}
+		{homepageSections.map((section: any, idx: number) => {
+			// Skip disabled sections
+			if (section.enabled === false) return null;
+			// Hero sections handled above
+			if (section._type === 'heroSlider' || section._type === 'heroCaption') return null;
 
-		<!-- Testimonials -->
-		{showTestimonials && (testimonialsVariant === 'grid'
-			? <TestimonialsGrid   testimonials={testimonials} {urlFor} />
-			: <TestimonialsSlider testimonials={testimonials} {urlFor} />
-		)}
+			if (section._type === 'welcomeSection') {
+				const variant = section.variant || 'classic';
+				return variant === 'centered'
+					? <IntroCentered welcomeSection={section} urlFor={urlFor} />
+					: <IntroSplit    welcomeSection={section} urlFor={urlFor} />;
+			}
 
-		<!-- Portfolio preview -->
-		{featuredSection && (portfolioVariant === 'masonry'
-			? <PortfolioMasonry {featuredSection} {urlFor} />
-			: <PortfolioGrid    {featuredSection} {urlFor} />
-		)}
+			if (section._type === 'testimonialsSection') {
+				const variant = section.variant || 'slider';
+				return variant === 'grid'
+					? <TestimonialsGrid   testimonials={testimonials} urlFor={urlFor} />
+					: <TestimonialsSlider testimonials={testimonials} urlFor={urlFor} />;
+			}
 
-		<!-- How It Works -->
-		{processSection && (howItWorksVariant === 'stacked'
-			? <HowItWorksStacked {processSection} />
-			: <HowItWorksColumns {processSection} />
-		)}
+			if (section._type === 'featuredSection') {
+				const variant = section.variant || 'classic';
+				return variant === 'masonry'
+					? <PortfolioMasonry featuredSection={section} urlFor={urlFor} />
+					: <PortfolioGrid    featuredSection={section} urlFor={urlFor} />;
+			}
 
-		{(soloHeroImage || whyChooseSection) && <WhyChoose theme="dark-editorial" {soloHeroImage} {whyChooseSection} {urlFor} />}
-		{faqs && <FAQs {faqs} />}
+			if (section._type === 'processSection') {
+				const variant = section.variant || 'columns';
+				return variant === 'stacked'
+					? <HowItWorksStacked processSection={section} />
+					: <HowItWorksColumns processSection={section} />;
+			}
+
+			// soloHeroImage + whyChooseSection always render together as one WhyChoose block.
+			// Render at the position of whichever appears first; skip the second.
+			if (section._type === 'soloHeroImage' || section._type === 'whyChooseSection') {
+				if (idx !== whyChooseTriggerIdx) return null;
+				const soloImg = soloHeroImageData?.enabled !== false ? soloHeroImageData : null;
+				const whyChs  = whyChooseSectionData?.enabled !== false ? whyChooseSectionData : null;
+				return <WhyChoose theme="dark-editorial" soloHeroImage={soloImg} whyChooseSection={whyChs} urlFor={urlFor} />;
+			}
+
+			if (section._type === 'homepageFaqs') {
+				return <FAQs faqs={section.faqs ?? null} />;
+			}
+
+			return null;
+		})}
 	</main>
 </Layout>

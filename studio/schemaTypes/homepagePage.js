@@ -32,6 +32,17 @@ export default {
       type: 'array',
       description: 'Add, remove, and drag to reorder sections on the Homepage.',
       group: 'all',
+      initialValue: [
+        {_type: 'heroSlider',         _key: 'heroSlider'},
+        {_type: 'heroCaption',        _key: 'heroCaption'},
+        {_type: 'welcomeSection',     _key: 'welcomeSection'},
+        {_type: 'testimonialsSection',_key: 'testimonialsSection'},
+        {_type: 'featuredSection',    _key: 'featuredSection'},
+        {_type: 'processSection',     _key: 'processSection'},
+        {_type: 'soloHeroImage',      _key: 'soloHeroImage'},
+        {_type: 'whyChooseSection',   _key: 'whyChooseSection'},
+        {_type: 'homepageFaqs',       _key: 'homepageFaqs'},
+      ],
       of: [
         {type: 'heroSlider'},
         {type: 'heroCaption'},
