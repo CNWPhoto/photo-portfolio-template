@@ -13,7 +13,7 @@ export default {
       name: 'slug',
       title: 'URL Slug',
       type: 'slug',
-      description: 'The URL for this post (e.g. "morning-in-the-studio" → /blog/morning-in-the-studio). Click "Generate" to create from the title.',
+      description: 'The URL for this post (e.g. "morning-in-the-studio" → /blog/morning-in-the-studio). Click "Generate" to create from the title. ⚠️ Avoid changing this once the post is live — it will break existing links and hurt your search rankings. If you must change it, set up a 301 redirect from the old URL to the new one in your hosting settings.',
       options: {
         source: 'title',
         maxLength: 96,

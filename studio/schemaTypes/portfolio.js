@@ -24,7 +24,7 @@ export default {
       name: 'slug',
       title: 'Slug',
       type: 'slug',
-      description: 'URL path for this page.',
+      description: 'The URL for this page (e.g. /about). ⚠️ Avoid changing this once the page is live — it will break existing links and hurt your search rankings. If you must change it, set up a 301 redirect from the old URL to the new one in your hosting settings.',
       options: {source: 'pageTitle'},
       group: ['all', 'seo'],
     },
