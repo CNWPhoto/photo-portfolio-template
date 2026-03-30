@@ -6,7 +6,7 @@ const { siteName = 'Pet Photography', blogEnabled = true } = Astro.props;
 
 const client = getClient(false);
 const [footerData, socialData, siteData] = await Promise.all([
-  client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ menu, middleColumn { label, embedCode, note } }`),
+  client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ menu, middleColumn { label, embedCode, note }, legalLinks }`),
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`),
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName }`),
 ]);
@@ -53,6 +53,14 @@ const menuLinks = [
 ].filter(item => item.key === 'blog' ? blogEnabled : true)
  .filter(item => menuDef ? menuDef[item.key]?.enabled !== false : true)
  .map(item => ({ href: item.href, label: menuDef?.[item.key]?.label || item.default }));
+
+const legalLinks = footerData?.legalLinks ?? null;
+const showPrivacy = legalLinks?.privacyPolicy?.enabled && legalLinks?.privacyPolicy?.url;
+const showTerms   = legalLinks?.terms?.enabled && legalLinks?.terms?.url;
+const privacyLabel = legalLinks?.privacyPolicy?.label || 'Privacy Policy';
+const termsLabel   = legalLinks?.terms?.label || 'Terms';
+const privacyUrl   = legalLinks?.privacyPolicy?.url || '#';
+const termsUrl     = legalLinks?.terms?.url || '#';
 
 const year = new Date().getFullYear();
 ---
@@ -107,6 +115,13 @@ const year = new Date().getFullYear();
 	<!-- Copyright -->
 	<div class="footer__legal">
 		<p>&copy; {year} {photographerName}. All rights reserved.</p>
+		{(showPrivacy || showTerms) && (
+			<p>
+				{showPrivacy && <a href={privacyUrl}>{privacyLabel}</a>}
+				{showPrivacy && showTerms && <span> &middot; </span>}
+				{showTerms && <a href={termsUrl}>{termsLabel}</a>}
+			</p>
+		)}
 	</div>
 
 </footer>

@@ -1,5 +1,3 @@
-import {introVariants} from '../pageLayouts'
-
 export default {
   name: 'welcomeSection',
   title: 'Welcome Section',
@@ -10,14 +8,6 @@ export default {
     },
   },
   fields: [
-    {
-      name: 'variant',
-      title: 'Layout Style',
-      type: 'string',
-      description: 'Choose how your bio and profile photo are displayed.',
-      options: {list: introVariants, layout: 'radio'},
-      initialValue: 'classic',
-    },
     {
       name: 'eyebrow',
       title: 'Eyebrow Label',

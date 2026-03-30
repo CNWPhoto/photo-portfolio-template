@@ -1,5 +1,3 @@
-import {portfolioPreviewVariants} from '../pageLayouts'
-
 export default {
   name: 'featuredSection',
   title: 'Featured Section',
@@ -10,14 +8,6 @@ export default {
     },
   },
   fields: [
-    {
-      name: 'variant',
-      title: 'Layout Style',
-      type: 'string',
-      description: 'Choose how the portfolio preview section looks on the homepage.',
-      options: {list: portfolioPreviewVariants, layout: 'radio'},
-      initialValue: 'classic',
-    },
     {
       name: 'imageVertical',
       title: 'Image — Vertical (left)',

@@ -140,5 +140,36 @@ export default {
         },
       ],
     },
+    {
+      name: 'legalLinks',
+      title: 'Legal Links',
+      type: 'object',
+      description: 'Optional Privacy Policy and Terms links shown at the bottom of the footer. Toggle each on and paste in the URL.',
+      options: {collapsible: true, collapsed: false},
+      fields: [
+        {
+          name: 'privacyPolicy',
+          title: 'Privacy Policy',
+          type: 'object',
+          options: {collapsible: false},
+          fields: [
+            {name: 'enabled', title: 'Show link', type: 'boolean', initialValue: false},
+            {name: 'label', title: 'Label', type: 'string', initialValue: 'Privacy Policy'},
+            {name: 'url', title: 'URL', type: 'string', placeholder: '/privacy-policy'},
+          ],
+        },
+        {
+          name: 'terms',
+          title: 'Terms of Service',
+          type: 'object',
+          options: {collapsible: false},
+          fields: [
+            {name: 'enabled', title: 'Show link', type: 'boolean', initialValue: false},
+            {name: 'label', title: 'Label', type: 'string', initialValue: 'Terms'},
+            {name: 'url', title: 'URL', type: 'string', placeholder: '/terms'},
+          ],
+        },
+      ],
+    },
   ],
 }
