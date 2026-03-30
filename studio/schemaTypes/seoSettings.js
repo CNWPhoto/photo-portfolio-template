@@ -4,11 +4,20 @@ export default {
   type: 'document',
   __experimental_actions: ['update', 'publish'], // singleton — no create/delete
   preview: {
-    prepare() {
-      return {title: 'SEO Settings'}
+    select: {title: 'internalTitle'},
+    prepare({title}) {
+      return {title: title || 'SEO Settings'}
     },
   },
   fields: [
+    {
+      name: 'internalTitle',
+      title: 'Title',
+      type: 'string',
+      readOnly: true,
+      initialValue: 'SEO Settings',
+      hidden: true,
+    },
     {
       name: 'seoNote',
       title: 'SEO Settings',
