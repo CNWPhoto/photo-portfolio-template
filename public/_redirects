@@ -1,0 +1,11 @@
+# Redirects for Cloudflare Pages
+# Format: /old-url  /new-url  301
+#
+# Use 301 for permanent redirects (e.g. renamed pages or posts — passes SEO equity)
+# Use 302 for temporary redirects
+#
+# Examples:
+#   /about-us          /about          301
+#   /blog/old-title    /blog/new-title 301
+#
+# Add your redirects below this line:
