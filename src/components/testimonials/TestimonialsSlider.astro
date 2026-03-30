@@ -2,7 +2,7 @@
 import SanityImage from '../../components/SanityImage.astro';
 import { buildSrc, buildSrcset } from '../../lib/image';
 
-const { testimonials: sanityTestimonials, theme, overrides } = Astro.props;
+const { testimonials: sanityTestimonials, theme } = Astro.props;
 
 const testimonials = sanityTestimonials?.length
 	? sanityTestimonials.map((t: any) => ({
@@ -20,7 +20,6 @@ const testimonials = sanityTestimonials?.length
 	class="tslider"
 	id="testimonials"
 	data-theme={theme || undefined}
-	style={overrides?.tsliderQuoteSize ? `--tslider-quote-size: ${overrides.tsliderQuoteSize}` : undefined}
 >
 	<div class="tslider__inner">
 		<div class="tslider__image-col reveal-fade">

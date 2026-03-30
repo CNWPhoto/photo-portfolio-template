@@ -47,25 +47,7 @@ export default {
       name: 'photographerName',
       title: 'Photographer Name',
       type: 'string',
-      description: 'Your display name shown in the About page and site copy.',
-    },
-    {
-      name: 'location',
-      title: 'Location',
-      type: 'string',
-      description: 'City or region shown in site copy (e.g. "Denver, CO" or "Pacific Northwest").',
-    },
-    {
-      name: 'tagline',
-      title: 'Tagline',
-      type: 'string',
-      description: 'A short phrase shown in the hero (e.g. "Capturing the bond between dogs and their people").',
-    },
-    {
-      name: 'specialty',
-      title: 'Specialty',
-      type: 'string',
-      description: 'What you photograph (e.g. "pet photography", "newborn & family", "wedding"). Used in page copy and SEO.',
+      description: 'Your display name shown in the footer copyright.',
     },
     {
       name: 'logoType',
@@ -105,30 +87,6 @@ export default {
       options: { list: fontThemeList },
       initialValue: 'classic-editorial',
       description: 'Applies site-wide — sets heading and body typefaces',
-    },
-    {
-      name: 'typographyOverrides',
-      title: '⚙️ Typography Overrides',
-      description: 'Optional font size adjustments for clients with unusually long or short text. Leave blank to use template defaults. Values must be valid CSS units, e.g. "0.875rem" or "1.1rem".',
-      type: 'object',
-      options: {collapsible: true, collapsed: true},
-      fields: [
-        // ── Welcome / Intro section ──
-        {name: 'isplitBodySize', title: 'Welcome — Body Text Size', description: 'Default: 1rem', type: 'string'},
-        {name: 'isplitEyebrowSize', title: 'Welcome — Eyebrow Label Size', description: 'Default: 0.65rem', type: 'string'},
-        {name: 'isplitLinkSize', title: 'Welcome — CTA Link Size', description: 'Default: 0.875rem', type: 'string'},
-        // ── Hero section ──
-        {name: 'heroHeadingSize', title: 'Hero — Heading Size', description: 'Default: clamp(2.5rem, 5.5vw, 4.25rem)', type: 'string'},
-        {name: 'heroSubSize', title: 'Hero — Subline Size', description: 'Default: 0.75rem', type: 'string'},
-        // ── Testimonials section ──
-        {name: 'tsliderQuoteSize', title: 'Testimonials — Quote Text Size', description: 'Default: 1.25rem', type: 'string'},
-        // ── Why Choose section ──
-        {name: 'whyHeadingSize', title: 'Why Choose — Heading Size', description: 'Default: clamp(2rem, 4vw, 3.25rem)', type: 'string'},
-        {name: 'whyBodySize', title: 'Why Choose — Body Text Size', description: 'Default: 1.0625rem', type: 'string'},
-        // ── FAQs section ──
-        {name: 'faqsQuestionSize', title: 'FAQs — Question Size', description: 'Default: 1.25rem', type: 'string'},
-        {name: 'faqsAnswerSize', title: 'FAQs — Answer Text Size', description: 'Default: 0.9375rem', type: 'string'},
-      ],
     },
     {
       name: 'accentColorOverride',

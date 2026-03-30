@@ -1,7 +1,7 @@
 ---
 import SanityImage from '../../components/SanityImage.astro';
 
-const { welcomeSection, theme, overrides } = Astro.props;
+const { welcomeSection, theme } = Astro.props;
 
 const eyebrow = welcomeSection?.eyebrow || 'Every Session is Unique';
 const bodyText = welcomeSection?.body || 'Dog photography sessions that focus on personality, connection, and comfort.'; // TODO:NICHE
@@ -14,11 +14,6 @@ const ctaLink = welcomeSection?.ctaLink || '/experience';
 	class="isplit"
 	id="about"
 	data-theme={theme || undefined}
-	style={[
-		overrides?.isplitBodySize ? `--isplit-body-size: ${overrides.isplitBodySize}` : '',
-		overrides?.isplitEyebrowSize ? `--isplit-eyebrow-size: ${overrides.isplitEyebrowSize}` : '',
-		overrides?.isplitLinkSize ? `--isplit-link-size: ${overrides.isplitLinkSize}` : '',
-	].filter(Boolean).join('; ') || undefined}
 >
 	<div class="isplit__content">
 		<div class="isplit__text-wrap">

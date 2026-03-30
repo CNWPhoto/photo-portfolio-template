@@ -38,6 +38,19 @@ const publishFormatted = post.publishDate
     })
   : null;
 
+// ── Schema ───────────────────────────────────────────────────────────────────
+const coverImageUrl = post.coverImage?.asset
+	? buildSrc(post.coverImage, 1200)
+	: undefined;
+
+const blogPostingSchema = [{
+	'@type': 'BlogPosting',
+	headline: post.title,
+	...(post.publishDate ? { datePublished: post.publishDate } : {}),
+	...(post.excerpt     ? { description:    post.excerpt     } : {}),
+	...(coverImageUrl    ? { image:           coverImageUrl    } : {}),
+}];
+
 const bodyHTML = post.body
   ? toHTML(post.body, {
       components: {
@@ -68,7 +81,13 @@ const bodyHTML = post.body
   : '';
 ---
 
-<Layout>
+<Layout
+  pageTitle={post.title}
+  seoDescription={post.excerpt || undefined}
+  ogImage={coverImageUrl}
+  breadcrumb={post.title}
+  schemaData={blogPostingSchema}
+>
   <main>
     <article class="post">
       <div class="post__header">

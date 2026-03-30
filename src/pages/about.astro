@@ -104,11 +104,11 @@ const ctaImageBg    = ctaDoc?.imageBackground ?? null;
 const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="About">
 	<main>
 
 		<!-- ══ SECTION 1: Intro Split ══ -->
-		{showIntro && <section class="intro" data-theme="classic-cream">
+		{showIntro && <section class="intro">
 			<div class="intro__image reveal-fade">
 				{introImage ? (
 					<SanityImage
@@ -137,7 +137,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		</section>}
 
 		<!-- ══ SECTION 2: What to Expect ══ -->
-		{showWte && <section class="expect" data-theme="warm-studio">
+		{showWte && <section class="expect">
 			<hr />
 			<div class="expect__inner">
 				<div class="expect__label-col" aria-hidden="true">
@@ -172,7 +172,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		</section>}
 
 		<!-- ══ SECTION 3: Personal Split ══ -->
-		{showPersonal && <section class="personal" data-theme="classic-cream">
+		{showPersonal && <section class="personal">
 			<div class="personal__inner">
 				<div class="personal__text reveal reveal-delay-1">
 					<p class="personal__body">{personalBody1}</p>
@@ -199,7 +199,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		</section>}
 
 		<!-- ══ SECTION 4: Pull Quote ══ -->
-		{showQuote && <section class="pullquote" data-theme="classic-cream">
+		{showQuote && <section class="pullquote">
 			<hr />
 			<div class="pullquote__inner">
 				<blockquote class="pullquote__text reveal reveal-delay-1">
@@ -209,7 +209,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		</section>}
 
 		<!-- ══ SECTION 5: Get in Touch CTA ══ -->
-		{showCta && <section class="cta" data-theme="classic-cream">
+		{showCta && <section class="cta">
 			<hr />
 			<div class="cta__inner">
 				<div class="cta__images">
@@ -333,7 +333,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		font-weight: 500;
 		font-size: clamp(2rem, 3.2vw, 3rem);
 		letter-spacing: 0.05em;
-		color: #1a2744;
+		color: var(--text);
 		writing-mode: horizontal-tb;
 		transform: rotate(-90deg);
 		transform-origin: center center;
@@ -581,7 +581,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		background: var(--text);
 		color: var(--bg);
 		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
 	}
 
 	.cta__caption {

@@ -1,7 +1,7 @@
 ---
 import SanityImage from '../components/SanityImage.astro';
 
-const { heroImages, heroCaption, theme, overrides } = Astro.props;
+const { heroImages, heroCaption, theme } = Astro.props;
 
 const heading = heroCaption?.nicheKeyword || 'Denver Dog Photographer'; // TODO:NICHE
 const tagline  = heroCaption?.tagline      || 'Natural, stress-free dog portraits for your best friend.'; // TODO:NICHE
@@ -10,10 +10,6 @@ const tagline  = heroCaption?.tagline      || 'Natural, stress-free dog portrait
 <section
 	class="hero"
 	data-theme={theme || undefined}
-	style={[
-		overrides?.heroHeadingSize ? `--hero-heading-size: ${overrides.heroHeadingSize}` : '',
-		overrides?.heroSubSize ? `--hero-sub-size: ${overrides.heroSubSize}` : '',
-	].filter(Boolean).join('; ') || undefined}
 >
 	<div class="hero__viewport">
 		<div class="hero__track" id="heroTrack">
@@ -89,7 +85,7 @@ const tagline  = heroCaption?.tagline      || 'Natural, stress-free dog portrait
 		justify-content: center;
 		background: rgba(0, 0, 0, 0.32);
 		border: none;
-		color: #fff;
+		color: var(--white);
 		font-size: 2rem;
 		line-height: 1;
 		cursor: pointer;

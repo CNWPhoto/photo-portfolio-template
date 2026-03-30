@@ -71,7 +71,7 @@ function formatDate(dateStr?: string): string {
 }
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Blog">
   <main>
 
     <!-- ══ SECTION 1: Hero ══ -->
@@ -89,7 +89,7 @@ function formatDate(dateStr?: string): string {
     </section>
 
     <!-- ══ SECTION 2: Posts ══ -->
-    <section class="posts" data-theme="classic-cream">
+    <section class="posts">
 
       {layout === 'cards'
         ? (
@@ -180,7 +180,7 @@ function formatDate(dateStr?: string): string {
   .hero__title {
     font-size: clamp(2.5rem, 6vw, 5.5rem);
     font-style: normal;
-    color: var(--accent, #8b2635);
+    color: var(--accent);
     letter-spacing: -0.01em;
     line-height: 1;
     margin-bottom: 0.75rem;
@@ -193,7 +193,7 @@ function formatDate(dateStr?: string): string {
     font-size: 0.7rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--text, #1a2744);
+    color: var(--text);
     text-shadow: 0 1px 3px rgba(255, 255, 255, 0.5);
   }
 

@@ -1,7 +1,7 @@
 ---
 import { buildSrc } from '../lib/image';
 
-const { soloHeroImage, whyChooseSection, theme, overrides } = Astro.props;
+const { soloHeroImage, whyChooseSection, theme } = Astro.props;
 
 const bgUrl = soloHeroImage?.image ? buildSrc(soloHeroImage.image, 2000) : '';
 
@@ -18,10 +18,6 @@ const caption    = whyChooseSection?.caption    ?? 'Serving Denver, Boulder, and
 	class="why"
 	id="why-choose"
 	data-theme={theme || undefined}
-	style={[
-		overrides?.whyHeadingSize ? `--why-heading-size: ${overrides.whyHeadingSize}` : '',
-		overrides?.whyBodySize ? `--why-body-size: ${overrides.whyBodySize}` : '',
-	].filter(Boolean).join('; ') || undefined}
 >
 	<!-- Fixed background image — section acts as a viewport cutout -->
 	<div class="why__image-full" style={`background-image: url('${bgUrl}')`} aria-hidden="true"></div>
@@ -90,7 +86,7 @@ const caption    = whyChooseSection?.caption    ?? 'Serving Denver, Boulder, and
 		font-style: normal;
 		font-size: 18px;
 		line-height: 1.85;
-		color: rgb(210, 205, 196);
+		color: var(--text);
 		margin-bottom: 1.5rem;
 	}
 

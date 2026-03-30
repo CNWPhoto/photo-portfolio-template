@@ -83,6 +83,12 @@ const nextBody2   = nextSteps?.bodySecond || "I'm happy to answer questions, tal
 const nextCtaText = nextSteps?.ctaText    || 'Get in touch';
 const nextCtaLink = nextSteps?.ctaLink    || '/contact';
 
+// ── Schema ───────────────────────────────────────────────────────────────────
+const faqsForSchema = faqsSec?.faqs?.length ? faqsSec.faqs : null;
+const faqSchemaData = faqsForSchema
+	? [{ '@type': 'FAQPage', mainEntity: faqsForSchema.map((f: any) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) }]
+	: undefined;
+
 // TODO:NICHE — update FAQ answers for your niche
 const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.question, a: f.answer})) : [
   { q: 'How do I book a session?', a: "Simply reach out through the contact form to start the conversation. You'll be guided through the next steps from there." },
@@ -95,7 +101,7 @@ const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.questio
 ];
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Experience" schemaData={faqSchemaData}>
 	<main>
 
 		<!-- ══ SECTION 1: Full-Bleed Hero Image ══ -->
@@ -114,7 +120,7 @@ const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.questio
 		</section>
 
 		<!-- ══ SECTION 2: Intro ══ -->
-		<section class="intro" data-theme="classic-cream">
+		<section class="intro">
 			<div class="intro__inner">
 				<p class="intro__body reveal reveal-delay-1">{introBody1}</p>
 				<p class="intro__body intro__body--bold reveal reveal-delay-2">{introBody2}</p>
@@ -122,7 +128,7 @@ const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.questio
 		</section>
 
 		<!-- ══ SECTION 3: Sessions ══ -->
-		<section class="sessions" data-theme="warm-studio">
+		<section class="sessions">
 			<div class="sessions__inner">
 				<div class="sessions__img-wrap reveal-fade reveal-delay-1">
 					<img
@@ -145,7 +151,7 @@ const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.questio
 		</section>
 
 		<!-- ══ SECTION 4: Artwork / Images ══ -->
-		<section class="artwork" data-theme="classic-cream">
+		<section class="artwork">
 			<div class="artwork__inner">
 				<div class="artwork__content reveal reveal-delay-1">
 					<h2 class="artwork__title">{artworkHeading}</h2>
@@ -186,7 +192,7 @@ const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.questio
 		</section>
 
 		<!-- ══ SECTION 6: FAQs ══ -->
-		<section class="faqs" id="faqs" data-theme="classic-cream">
+		<section class="faqs" id="faqs">
 			<hr />
 			<div class="faqs__inner">
 				<div class="faqs__label-col" aria-hidden="true">
@@ -236,13 +242,21 @@ const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.questio
 <style>
 	/* ══ SECTION 1: Hero ══ */
 	.hero {
-		position: relative;
-		height: 60vh;
-		min-height: 400px;
+		position: sticky;
+		top: 0;
+		z-index: 0;
+		height: 75vh;
 		overflow: hidden;
 		display: flex;
 		align-items: flex-start;
 		justify-content: flex-end;
+	}
+
+	/* Sections scroll over the sticky hero */
+	.intro, .sessions, .artwork, .next, .faqs {
+		position: relative;
+		z-index: 1;
+		background: var(--bg);
 	}
 
 	.hero__img {
@@ -276,7 +290,7 @@ const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.questio
 	.hero__heading {
 		font-size: clamp(2.5rem, 5vw, 4.375rem);
 		font-weight: 700;
-		color: #ffffff;
+		color: var(--white);
 		letter-spacing: -0.01em;
 		margin-bottom: 1.25rem;
 		line-height: 1.15;
@@ -509,7 +523,7 @@ const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.questio
 	.next__overlay {
 		position: absolute;
 		inset: 0;
-		background: rgba(44, 24, 16, 0.5);
+		background: rgba(0, 0, 0, 0.5);
 	}
 
 	.next__box {
@@ -568,7 +582,7 @@ const faqs = faqsSec?.faqs?.length ? faqsSec.faqs.map((f: any) => ({q: f.questio
 		background: var(--text);
 		color: var(--bg);
 		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
 	}
 
 	/* ══ SECTION 6: FAQs ══ */

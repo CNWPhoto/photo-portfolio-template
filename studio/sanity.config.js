@@ -45,6 +45,7 @@ export default defineConfig({
                     singleton(S, 'footerSettings', 'Footer', 'footerSettings'),
                     singleton(S, 'socialSettings', 'Social', 'socialSettings'),
                     singleton(S, 'codeSettings', 'Code', 'codeSettings'),
+                    singleton(S, 'seoSettings', 'SEO', 'seoSettings'),
                   ]),
               ),
 

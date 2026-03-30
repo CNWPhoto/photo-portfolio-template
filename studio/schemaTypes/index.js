@@ -1,4 +1,5 @@
 import seo from './seo'
+import seoSettings from './seoSettings'
 import navSettings from './navSettings'
 import testimonial from './testimonial'
 import portfolio from './portfolio'
@@ -34,7 +35,7 @@ import contactPage from './contactPage'
 import blogPage from './blogPage'
 
 export const schemaTypes = [
-  seo,
+  seo, seoSettings,
   navSettings,
   siteSettings, homepagePage,
   aboutPage,

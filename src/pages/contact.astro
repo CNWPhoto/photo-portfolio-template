@@ -47,7 +47,7 @@ const cf2 = doc?.formSettings?.customField2 ?? null;
 const cf3 = doc?.formSettings?.customField3 ?? null;
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Contact">
   <main>
 
     <!-- ══ SECTION 1: Hero ══ -->
@@ -232,7 +232,7 @@ const cf3 = doc?.formSettings?.customField3 ?? null;
   .hero__heading {
     font-size: clamp(2.875rem, 6.9vw, 5.75rem);
     font-weight: 600;
-    color: #ffffff;
+    color: var(--white);
     letter-spacing: -0.01em;
     margin-bottom: 1rem;
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
@@ -320,7 +320,7 @@ const cf3 = doc?.formSettings?.customField3 ?? null;
 
   .contact__input,
   .contact__textarea {
-    background: #ffffff;
+    background: var(--white);
     border: 1px solid var(--border);
     padding: 0.625rem 0.75rem;
     font-family: var(--font-sans);
@@ -368,7 +368,7 @@ const cf3 = doc?.formSettings?.customField3 ?? null;
     color: var(--bg);
     border-color: var(--text);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
   }
 
   .contact__submit:disabled {
@@ -389,7 +389,7 @@ const cf3 = doc?.formSettings?.customField3 ?? null;
   }
 
   .contact__status--error {
-    color: #c0392b;
+    color: var(--error);
   }
 
   /* ══ Responsive ══ */

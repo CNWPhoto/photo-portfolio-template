@@ -19,7 +19,7 @@ import { getClient, urlFor } from '../lib/sanity.js';
 
 const client = getClient(Astro.locals.isPreview);
 
-const [homepageDoc, testimonials, siteSettings] = await Promise.all([
+const [homepageDoc, testimonials] = await Promise.all([
 	client.fetch(
 		`*[_type == "homepagePage"][0]{
 			pageTitle,
@@ -40,7 +40,6 @@ const [homepageDoc, testimonials, siteSettings] = await Promise.all([
 		}`
 	),
 	client.fetch(`*[_type == "testimonial"] | order(order asc)`),
-	client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0].typographyOverrides`),
 ]);
 
 const homepageSections = homepageDoc?.sections ?? [];
@@ -49,6 +48,12 @@ const getSection = (type: string) => homepageSections.find((s: any) => s._type =
 const seoTitle       = homepageDoc?.seo?.seoTitle       || homepageDoc?.pageTitle || null;
 const seoDescription = homepageDoc?.seo?.seoDescription || null;
 const ogImage        = homepageDoc?.seo?.socialImage?.asset?.url || null;
+
+// ── Schema ───────────────────────────────────────────────────────────────────
+const rawFaqs = getSection('homepageFaqs')?.faqs ?? null;
+const faqSchemaData = rawFaqs?.length
+	? [{ '@type': 'FAQPage', mainEntity: rawFaqs.map((f: any) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) }]
+	: undefined;
 
 const heroSlider      = getSection('heroSlider')?.images ?? null;
 const heroCaption     = getSection('heroCaption') ?? null;
@@ -59,8 +64,6 @@ const soloHeroImage   = getSection('soloHeroImage') ?? null;
 const whyChooseSection = getSection('whyChooseSection') ?? null;
 const faqs            = getSection('homepageFaqs')?.faqs ?? null;
 
-const overrides = siteSettings ?? {};
-
 // Layout variants — read from each section's own variant field
 const introVariant        = welcomeSection?.variant                          || 'classic';
 const testimonialsVariant = getSection('testimonialsSection')?.variant       || 'slider';
@@ -68,19 +71,19 @@ const portfolioVariant    = featuredSection?.variant                         || 
 const howItWorksVariant   = processSection?.variant                          || 'columns';
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
-	<Hero heroImages={heroSlider} {heroCaption} {urlFor} {overrides} />
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData}>
+	<Hero heroImages={heroSlider} {heroCaption} {urlFor} />
 	<main>
 		<!-- Intro -->
 		{introVariant === 'centered'
-			? <IntroCentered {welcomeSection} {urlFor} {overrides} />
-			: <IntroSplit    {welcomeSection} {urlFor} {overrides} />
+			? <IntroCentered {welcomeSection} {urlFor} />
+			: <IntroSplit    {welcomeSection} {urlFor} />
 		}
 
 		<!-- Testimonials -->
 		{testimonialsVariant === 'grid'
-			? <TestimonialsGrid   testimonials={testimonials} {urlFor} {overrides} />
-			: <TestimonialsSlider testimonials={testimonials} {urlFor} {overrides} />
+			? <TestimonialsGrid   testimonials={testimonials} {urlFor} />
+			: <TestimonialsSlider testimonials={testimonials} {urlFor} />
 		}
 
 		<!-- Portfolio preview -->
@@ -91,11 +94,11 @@ const howItWorksVariant   = processSection?.variant                          || 
 
 		<!-- How It Works -->
 		{howItWorksVariant === 'stacked'
-			? <HowItWorksStacked {processSection} theme="warm-studio" />
-			: <HowItWorksColumns {processSection} theme="warm-studio" />
+			? <HowItWorksStacked {processSection} />
+			: <HowItWorksColumns {processSection} />
 		}
 
-		<WhyChoose theme="dark-editorial" {soloHeroImage} {whyChooseSection} {urlFor} {overrides} />
-		<FAQs faqs={faqs} {overrides} />
+		<WhyChoose theme="dark-editorial" {soloHeroImage} {whyChooseSection} {urlFor} />
+		<FAQs faqs={faqs} />
 	</main>
 </Layout>

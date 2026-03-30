@@ -48,8 +48,8 @@ const images = portfolio?.length
 	: fallbackImages;
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage}>
-	<main data-theme="classic-cream">
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Portfolio">
+	<main>
 		<div class="portfolio__header">
 			<p class="portfolio__byline">{byline}</p>
 			<h1 class="portfolio__title">{pageTitle}</h1>

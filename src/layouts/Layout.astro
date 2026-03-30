@@ -7,14 +7,19 @@ interface Props {
   pageTitle?: string;
   seoDescription?: string;
   ogImage?: string;
+  /** Extra schema.org nodes to merge into the page's @graph (FAQPage, BlogPosting, etc.) */
+  schemaData?: Record<string, any>[];
+  /** Human-readable name of the current page — triggers BreadcrumbList generation on non-root paths */
+  breadcrumb?: string;
 }
 
-const { pageTitle, seoDescription, ogImage } = Astro.props;
+const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb } = Astro.props;
 const isPreview = Astro.locals.isPreview ?? false;
 const client = getClient(isPreview);
 
-const [settings, code, nav] = await Promise.all([
+const [settings, seo, code, nav] = await Promise.all([
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon, accentColorOverride }`),
+  client.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState }`),
   client.fetch(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`),
   client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{ navVariant, links[] { label, url, enabled, openInNewTab, isButton } }`),
 ]);
@@ -32,6 +37,64 @@ const faviconUrl  = settings?.favicon?.asset?._ref
 const accentOverride = settings?.accentColorOverride || null;
 const navVariant     = nav?.navVariant || 'classic';
 const navLinks       = nav?.links ?? null;
+
+// ── Structured data (JSON-LD @graph) ─────────────────────────────────────────
+const canonicalBase = (seo?.siteUrl || '').replace(/\/$/, '');
+const schemaGraph: Record<string, any>[] = [];
+
+if (canonicalBase) {
+  // WebSite node — always present when siteUrl is set
+  schemaGraph.push({
+    '@type': 'WebSite',
+    '@id': `${canonicalBase}/#website`,
+    name: siteName,
+    url: canonicalBase,
+  });
+
+  // LocalBusiness / ProfessionalService — photographer
+  const biz: Record<string, any> = {
+    '@type': 'ProfessionalService',
+    '@id': `${canonicalBase}/#business`,
+    name: siteName,
+    url: canonicalBase,
+  };
+  if (seo?.businessPhone) biz.telephone = seo.businessPhone;
+  if (seo?.businessEmail) biz.email      = seo.businessEmail;
+  if (seo?.businessCity || seo?.businessState) {
+    biz.address = {
+      '@type': 'PostalAddress',
+      ...(seo?.businessCity  ? { addressLocality: seo.businessCity  } : {}),
+      ...(seo?.businessState ? { addressRegion:    seo.businessState } : {}),
+    };
+  }
+  if (ogImage) biz.image = ogImage;
+  schemaGraph.push(biz);
+
+  // BreadcrumbList — auto-generated from URL path + breadcrumb label
+  const urlPath = Astro.url.pathname;
+  if (breadcrumb && urlPath && urlPath !== '/') {
+    const segments = urlPath.split('/').filter(Boolean);
+    const crumbs: Record<string, any>[] = [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: canonicalBase },
+    ];
+    if (segments.length > 1) {
+      // e.g. /blog/my-post → Home > Blog > Post Title
+      const parentLabel = segments[0].charAt(0).toUpperCase() + segments[0].slice(1);
+      crumbs.push({ '@type': 'ListItem', position: 2, name: parentLabel, item: `${canonicalBase}/${segments[0]}` });
+      crumbs.push({ '@type': 'ListItem', position: 3, name: breadcrumb,  item: `${canonicalBase}${urlPath}` });
+    } else {
+      crumbs.push({ '@type': 'ListItem', position: 2, name: breadcrumb, item: `${canonicalBase}${urlPath}` });
+    }
+    schemaGraph.push({ '@type': 'BreadcrumbList', itemListElement: crumbs });
+  }
+}
+
+// Merge any page-level schema nodes (FAQPage, BlogPosting, etc.)
+if (schemaData?.length) schemaGraph.push(...schemaData);
+
+const schemaJSON = schemaGraph.length
+  ? JSON.stringify({ '@context': 'https://schema.org', '@graph': schemaGraph })
+  : null;
 
 ---
 
@@ -75,6 +138,7 @@ const navLinks       = nav?.links ?? null;
 				}
 			`} />
 		)}
+		{schemaJSON && <script type="application/ld+json" set:html={schemaJSON} />}
 		{headScripts && <Fragment set:html={headScripts} />}
 	</head>
 	<body data-nav-variant={navVariant}>
@@ -268,6 +332,7 @@ const navLinks       = nav?.links ?? null;
 
 	:root {
 		--white: #ffffff;
+		--error: #c0392b;
 		/*
 		 * Legacy aliases — resolve through var() substitution at compute time.
 		 * Component scoped styles that reference --font-serif / --font-sans
@@ -409,7 +474,7 @@ const navLinks       = nav?.links ?? null;
 	[class*="__submit"]:hover,
 	[class*="__button"]:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(26, 39, 68, 0.18);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
 	}
 
 	/* ── ITALIC / ARROW TEXT LINKS ─────────────────────────────
@@ -431,7 +496,7 @@ const navLinks       = nav?.links ?? null;
 	[class*="__item-inner"]:hover,
 	[class*="__card"]:hover {
 		transform: translateY(-3px);
-		box-shadow: 0 8px 24px rgba(26, 39, 68, 0.12);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 	}
 
 	/* ── SLIDER / CAROUSEL ARROWS ──────────────────────────────
