@@ -4,12 +4,12 @@ import imageUrlBuilder from '@sanity/image-url'
 const config = {
   projectId: 'hx5xgigp',
   dataset: 'production',
-  useCdn: false,
   apiVersion: '2024-01-01',
 }
 
 export const sanityClient = createClient({
   ...config,
+  useCdn: true, // CDN-cached responses for published content — faster, no origin hit
   token: undefined,
   ignoreBrowserTokenWarning: true,
 })

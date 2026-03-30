@@ -51,6 +51,9 @@ const blogPostingSchema = [{
 	...(coverImageUrl    ? { image:           coverImageUrl    } : {}),
 }];
 
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const safeHref = (href: string) => /^(https?:|mailto:|\/)/i.test(href) ? href : '#';
+
 const bodyHTML = post.body
   ? toHTML(post.body, {
       components: {
@@ -58,8 +61,8 @@ const bodyHTML = post.body
           image: ({ value }) => {
             const src = buildSrc(value, 800);
             const srcset = buildSrcset(value, [400, 800, 1200]);
-            const alt = value.alt || '';
-            const caption = value.caption || '';
+            const alt = esc(value.alt || '');
+            const caption = esc(value.caption || '');
             return `<figure class="body-image">
               <img src="${src}" srcset="${srcset}" sizes="(max-width: 900px) 100vw, 60vw" alt="${alt}" loading="lazy" decoding="async" />
               ${caption ? `<figcaption class="body-image__caption">${caption}</figcaption>` : ''}
@@ -74,7 +77,7 @@ const bodyHTML = post.body
         },
         marks: {
           link: ({ children, value }) =>
-            `<a href="${value.href}" target="_blank" rel="noopener noreferrer">${children}</a>`,
+            `<a href="${esc(safeHref(value.href || ''))}" target="_blank" rel="noopener noreferrer">${children}</a>`,
         },
       },
     })

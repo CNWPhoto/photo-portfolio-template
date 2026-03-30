@@ -78,7 +78,7 @@ export default {
       type: 'string',
       options: { list: colorThemeList },
       initialValue: 'classic-cream',
-      description: 'Site-wide colour theme; individual sections can override this',
+      description: 'Site-wide color theme; individual sections can override this',
     },
     {
       name: 'fontTheme',
@@ -89,15 +89,30 @@ export default {
       description: 'Applies site-wide — sets heading and body typefaces',
     },
     {
+      name: 'textColorPreset',
+      title: 'Text Color',
+      type: 'string',
+      description: 'Override the main text color on light-background themes. Leave blank to use the theme default.',
+      options: {
+        list: [
+          {title: 'Theme Default', value: ''},
+          {title: 'Charcoal',      value: 'charcoal'},
+          {title: 'True Black',    value: 'black'},
+          {title: 'Warm Gray',     value: 'warm-gray'},
+          {title: 'Cool Gray',     value: 'cool-gray'},
+        ],
+      },
+    },
+    {
       name: 'accentColorOverride',
-      title: 'Custom Accent Colour',
+      title: 'Custom Accent Color',
       type: 'string',
       description: 'Optional hex color to override the theme accent color e.g. #8b2635',
       validation: (Rule) =>
         Rule.regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
           name: 'hex color',
           invert: false,
-        }).warning('Must be a valid hex colour, e.g. #8b2635'),
+        }).warning('Must be a valid hex color, e.g. #8b2635'),
     },
   ],
 }

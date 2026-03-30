@@ -7,7 +7,7 @@ export default {
       name: 'title',
       title: 'Post Title',
       type: 'string',
-      description: 'The headline for this blog post. Keep it clear and compelling — it appears on the blog listing page and at the top of the post.',
+      description: 'The headline for this blog post. Keep it clear and compelling — it appears on the blog listing page and at the top of the post. Also used as the SEO title for this post.',
     },
     {
       name: 'slug',
@@ -30,7 +30,7 @@ export default {
       title: 'Excerpt',
       type: 'text',
       rows: 3,
-      description: 'A 1–2 sentence summary shown on the blog listing page below the post title. Write something that makes readers want to click.',
+      description: 'A 1–2 sentence summary shown on the blog listing page below the post title. Write something that makes readers want to click. Also used as the SEO meta description for this post.',
     },
     {
       name: 'coverImage',

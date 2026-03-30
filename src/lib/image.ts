@@ -5,7 +5,7 @@
  */
 import { urlFor } from './sanity';
 
-const DEFAULT_WIDTHS = [400, 800, 1200, 1600, 2000];
+const DEFAULT_WIDTHS = [400, 800, 1200, 1600, 2000, 2400];
 
 export function buildSrc(image: any, width = 1200): string {
   if (!image?.asset) return '';

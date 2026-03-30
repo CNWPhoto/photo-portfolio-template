@@ -14,6 +14,14 @@ export default {
   ],
   fields: [
     {
+      name: 'blogEnabled',
+      title: 'Blog Enabled',
+      type: 'boolean',
+      description: 'Turn off to hide the blog from the navigation and footer site-wide.',
+      initialValue: true,
+      group: 'all',
+    },
+    {
       name: 'pageTitle',
       title: 'Page Title',
       type: 'string',

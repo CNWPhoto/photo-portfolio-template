@@ -29,6 +29,7 @@ const fallbackImages = [
 	{ id: '2607546',  alt: 'Dog portrait, candid expression',             w: 800, h: 533  }, // wide
 ].map(({ id, alt, w, h }) => ({
 	src: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${h}&fit=crop`,
+	fullSrc: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1600`,
 	alt, w, h,
 }));
 
@@ -40,12 +41,15 @@ const images = portfolio?.length
 			const displayH = Math.round((displayW / naturalW) * naturalH);
 			return {
 				src: urlFor(img).width(800).auto('format').url(),
+				fullSrc: urlFor(img).width(2000).auto('format').url(),
 				alt: img.alt ?? img.title ?? '',
 				w: displayW,
 				h: displayH,
 			};
 	  })
 	: fallbackImages;
+
+const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 ---
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Portfolio">
@@ -57,12 +61,101 @@ const images = portfolio?.length
 		<div class="portfolio__grid" style={`--gallery-columns: ${galleryColumns}`}>
 			{images.map((img, i) => (
 				<div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
-					<img src={img.src} alt={img.alt} width={img.w} height={img.h} loading="lazy" decoding="async" class="portfolio__img" />
+					<img
+						src={img.src}
+						alt={img.alt}
+						width={img.w}
+						height={img.h}
+						loading="lazy"
+						decoding="async"
+						class="portfolio__img"
+						data-index={i}
+					/>
 				</div>
 			))}
 		</div>
 	</main>
+
+	<!-- Lightbox -->
+	<div class="lb" id="lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Image viewer">
+		<button class="lb__close" id="lb-close" aria-label="Close lightbox">&#x2715;</button>
+		<button class="lb__arrow lb__prev" id="lb-prev" aria-label="Previous image">&#x2039;</button>
+		<div class="lb__img-wrap">
+			<img class="lb__img" id="lb-img" src="" alt="" />
+		</div>
+		<button class="lb__arrow lb__next" id="lb-next" aria-label="Next image">&#x203A;</button>
+	</div>
 </Layout>
+
+<script define:vars={{ lbImages }}>
+	const lb     = document.getElementById('lb');
+	const lbImg  = document.getElementById('lb-img');
+	const lbPrev = document.getElementById('lb-prev');
+	const lbNext = document.getElementById('lb-next');
+	const lbClose = document.getElementById('lb-close');
+
+	let current = 0;
+
+	function open(index) {
+		current = index;
+		show();
+	}
+
+	function show() {
+		const { src, alt } = lbImages[current];
+		// Fade image in once loaded
+		lbImg.style.opacity = '0';
+		lbImg.alt = alt;
+		lbImg.onload = () => { lbImg.style.opacity = '1'; };
+		lbImg.src = src;
+		// Already cached — onload won't fire
+		if (lbImg.complete && lbImg.naturalWidth) lbImg.style.opacity = '1';
+		lb.setAttribute('aria-hidden', 'false');
+		lb.classList.add('lb--open');
+		document.body.style.overflow = 'hidden';
+		lbPrev.style.display = lbImages.length > 1 ? '' : 'none';
+		lbNext.style.display = lbImages.length > 1 ? '' : 'none';
+		// Preload adjacent images
+		[current - 1, current + 1].forEach((i) => {
+			const idx = (i + lbImages.length) % lbImages.length;
+			if (idx !== current) { const pre = new Image(); pre.src = lbImages[idx].src; }
+		});
+	}
+
+	function close() {
+		lb.classList.remove('lb--open');
+		lb.setAttribute('aria-hidden', 'true');
+		document.body.style.overflow = '';
+		// Clear src after fade-out so there's no flash on reopen
+		setTimeout(() => { lbImg.src = ''; }, 300);
+	}
+
+	function prev() { current = (current - 1 + lbImages.length) % lbImages.length; show(); }
+	function next() { current = (current + 1) % lbImages.length; show(); }
+
+	// Open on image click
+	document.querySelectorAll('.portfolio__img').forEach((img) => {
+		img.style.cursor = 'zoom-in';
+		img.addEventListener('click', () => open(Number(img.dataset.index)));
+	});
+
+	lbClose.addEventListener('click', close);
+	lbPrev.addEventListener('click', prev);
+	lbNext.addEventListener('click', next);
+
+	// Click outside image to close
+	lb.addEventListener('click', (e) => {
+		if (e.target === lb) close();
+	});
+
+	// Keyboard
+	document.addEventListener('keydown', (e) => {
+		if (!lb.classList.contains('lb--open')) return;
+		if (e.key === 'Escape')      close();
+		if (e.key === 'ArrowLeft')   prev();
+		if (e.key === 'ArrowRight')  next();
+	});
+</script>
 
 <style>
 	main {
@@ -139,6 +232,90 @@ const images = portfolio?.length
 		transform: scale(1.03);
 	}
 
+	/* ── Lightbox ─────────────────────────────────────────── */
+	.lb {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.92);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.22s ease;
+	}
+
+	.lb--open {
+		opacity: 1;
+		pointer-events: all;
+	}
+
+	.lb__img-wrap {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		max-width: calc(100vw - 140px);
+		max-height: calc(100vh - 60px);
+	}
+
+	.lb__img {
+		display: block;
+		max-width: 100%;
+		max-height: calc(100vh - 60px);
+		object-fit: contain;
+		box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+		transition: opacity 0.25s ease;
+	}
+
+	.lb__close {
+		position: fixed;
+		top: 1.25rem;
+		right: 1.5rem;
+		background: none;
+		border: none;
+		color: rgba(255, 255, 255, 0.8);
+		font-size: 1.5rem;
+		line-height: 1;
+		cursor: pointer;
+		padding: 0.5rem;
+		transition: color 0.18s, transform 0.18s;
+		z-index: 2;
+	}
+
+	.lb__close:hover {
+		color: #fff;
+		transform: scale(1.15);
+	}
+
+	.lb__arrow {
+		position: fixed;
+		top: calc(50% - 26px);
+		background: none;
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		color: rgba(255, 255, 255, 0.8);
+		font-size: 2.5rem;
+		line-height: 1;
+		width: 52px;
+		height: 52px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: border-color 0.18s, color 0.18s, background 0.18s, transform 0.18s;
+		z-index: 2;
+	}
+
+	.lb__arrow:hover {
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.7);
+		color: #fff;
+		transform: scale(1.08);
+	}
+
+	.lb__prev { left: 1.25rem; }
+	.lb__next { right: 1.25rem; }
+
 	@media (max-width: 900px) {
 		.portfolio__header {
 			padding-left: 1.5rem;
@@ -148,6 +325,10 @@ const images = portfolio?.length
 
 		.portfolio__grid {
 			columns: 2;
+		}
+
+		.lb__img-wrap {
+			max-width: calc(100vw - 100px);
 		}
 	}
 
@@ -164,6 +345,19 @@ const images = portfolio?.length
 
 		.portfolio__grid {
 			columns: 1;
+		}
+
+		.lb__arrow {
+			width: 40px;
+			height: 40px;
+			font-size: 2rem;
+		}
+
+		.lb__prev { left: 0.5rem; }
+		.lb__next { right: 0.5rem; }
+
+		.lb__img-wrap {
+			max-width: calc(100vw - 80px);
 		}
 	}
 </style>

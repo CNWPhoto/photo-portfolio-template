@@ -33,7 +33,7 @@ export default {
       title: 'Sub-headline',
       type: 'text',
       rows: 2,
-      description: 'Displayed in accent colour above the list.',
+      description: 'Displayed in accent color above the list.',
       placeholder:
         "The session fee covers the time, care, and preparation that go into creating your dog's photography experience.",
     },

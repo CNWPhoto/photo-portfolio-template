@@ -65,6 +65,7 @@ export default defineConfig({
                     singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
                     singleton(S, 'blogPage', 'Blog', 'blogPage'),
                     singleton(S, 'contactPage', 'Contact', 'contactPage'),
+                    singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
                   ]),
               ),
 

@@ -17,11 +17,12 @@ const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb } = Astro.pro
 const isPreview = Astro.locals.isPreview ?? false;
 const client = getClient(isPreview);
 
-const [settings, seo, code, nav] = await Promise.all([
-  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon, accentColorOverride }`),
+const [settings, seo, code, nav, blogConfig] = await Promise.all([
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, logoType, logoImage, favicon, accentColorOverride, textColorPreset }`),
   client.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState }`),
   client.fetch(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`),
   client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{ navVariant, links[] { label, url, enabled, openInNewTab, isButton } }`),
+  client.fetch(`*[_type == "blogPage" && _id == "blogPage"][0]{ blogEnabled }`),
 ]);
 
 const colorTheme  = settings?.colorTheme || 'classic-cream';
@@ -34,9 +35,23 @@ const bodyScripts = code?.bodyScripts    || '';
 const faviconUrl  = settings?.favicon?.asset?._ref
   ? `https://cdn.sanity.io/images/hx5xgigp/production/${settings.favicon.asset._ref.replace('image-', '').replace(/-([a-z]+)$/, '.$1')}`
   : null;
-const accentOverride = settings?.accentColorOverride || null;
+const accentOverride    = settings?.accentColorOverride || null;
+const textColorPreset   = settings?.textColorPreset || null;
+
+// Text color preset palette — only applied on light themes
+const LIGHT_THEMES = ['classic-cream', 'warm-studio', 'cool-minimal', 'forest-sage'];
+const TEXT_PRESETS: Record<string, { text: string; muted: string; mutedLight: string }> = {
+  'charcoal':  { text: '#2d2d2d', muted: '#5a5a5a', mutedLight: '#9a9a9a' },
+  'black':     { text: '#0d0d0d', muted: '#444444', mutedLight: '#888888' },
+  'warm-gray': { text: '#3a3530', muted: '#6b6560', mutedLight: '#a09a94' },
+  'cool-gray': { text: '#2e3440', muted: '#5c6370', mutedLight: '#9099a6' },
+};
+const textPresetColors = (textColorPreset && LIGHT_THEMES.includes(colorTheme))
+  ? TEXT_PRESETS[textColorPreset] ?? null
+  : null;
 const navVariant     = nav?.navVariant || 'classic';
 const navLinks       = nav?.links ?? null;
+const blogEnabled    = blogConfig?.blogEnabled !== false;
 
 // ── Structured data (JSON-LD @graph) ─────────────────────────────────────────
 const canonicalBase = (seo?.siteUrl || '').replace(/\/$/, '');
@@ -138,6 +153,17 @@ const schemaJSON = schemaGraph.length
 				}
 			`} />
 		)}
+		{textPresetColors && (
+			<style set:html={`
+				:root,
+				html[data-theme='${colorTheme}'],
+				[data-theme='${colorTheme}'] {
+					--text: ${textPresetColors.text} !important;
+					--muted: ${textPresetColors.muted} !important;
+					--muted-light: ${textPresetColors.mutedLight} !important;
+				}
+			`} />
+		)}
 		{schemaJSON && <script type="application/ld+json" set:html={schemaJSON} />}
 		{headScripts && <Fragment set:html={headScripts} />}
 	</head>
@@ -148,9 +174,15 @@ const schemaJSON = schemaGraph.length
 				<a href="/api/disable-preview">Exit preview</a>
 			</div>
 		)}
-		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} navVariant={navVariant} navLinks={navLinks} />
+		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} navVariant={navVariant} navLinks={navLinks} {blogEnabled} />
 		<slot />
-		<Footer {siteName} />
+		<Footer {siteName} {blogEnabled} />
+		<script>
+			// Protect images from casual right-click saving
+			document.addEventListener('contextmenu', (e) => {
+				if (e.target instanceof HTMLImageElement) e.preventDefault();
+			});
+		</script>
 		<script>
 			const observer = new IntersectionObserver((entries) => {
 				entries.forEach(entry => {

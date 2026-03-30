@@ -7,6 +7,7 @@ const {
 	logoImage = null,
 	navVariant = 'classic',
 	navLinks = null,
+	blogEnabled = true,
 } = Astro.props;
 
 const showImageLogo = logoType === 'image' && logoImage;
@@ -20,7 +21,9 @@ const defaultLinks = [
 	{ label: 'Inquire',    url: '/contact',    enabled: true, openInNewTab: false, isButton: true  },
 ];
 
-const links = (navLinks ?? defaultLinks).filter((l: any) => l.enabled !== false);
+const links = (navLinks ?? defaultLinks)
+	.filter((l: any) => l.enabled !== false)
+	.filter((l: any) => blogEnabled || l.url !== '/blog');
 
 // Split variant: divide links evenly left and right of the centered logo
 const isSplit = navVariant === 'split';

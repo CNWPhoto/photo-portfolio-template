@@ -1,0 +1,122 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getClient, urlFor } from '../lib/sanity.js';
+
+const doc = await getClient(false).fetch(
+  `*[_type == "notFoundPage" && _id == "notFoundPage"][0]{
+    image { ..., asset-> },
+    heading,
+    subheading,
+    ctaText,
+    ctaLink
+  }`
+);
+
+const heading    = doc?.heading    || '404';
+const subheading = doc?.subheading || 'Page Not Found';
+const ctaText    = doc?.ctaText    || 'Back to Home';
+const ctaLink    = doc?.ctaLink    || '/';
+
+const imgUrl = doc?.image
+  ? urlFor(doc.image).width(1600).auto('format').url()
+  : 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg?auto=compress&cs=tinysrgb&w=1600';
+---
+
+<Layout pageTitle="404 — Page Not Found">
+  <main>
+    <section class="nf">
+      <img
+        class="nf__img"
+        src={imgUrl}
+        alt=""
+        aria-hidden="true"
+        loading="eager"
+        decoding="sync"
+        fetchpriority="high"
+      />
+      <div class="nf__overlay" aria-hidden="true"></div>
+      <div class="nf__content">
+        <p class="nf__heading">{heading}</p>
+        <p class="nf__sub">{subheading}</p>
+        <a href={ctaLink} class="nf__cta">{ctaText}</a>
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  .nf {
+    position: relative;
+    height: calc(100vh - var(--nav-height, 80px));
+    min-height: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .nf__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  .nf__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.48);
+  }
+
+  .nf__content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .nf__heading {
+    font-family: var(--font-heading);
+    font-style: italic;
+    font-size: clamp(6rem, 20vw, 14rem);
+    font-weight: normal;
+    line-height: 1;
+    color: var(--white);
+    margin: 0 0 0.25em;
+    letter-spacing: -0.02em;
+  }
+
+  .nf__sub {
+    font-family: var(--font-body);
+    font-style: normal;
+    font-size: clamp(0.75rem, 2vw, 0.9rem);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 0 2.5rem;
+  }
+
+  .nf__cta {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-style: normal;
+    font-size: 0.8125rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    padding: 0.85rem 2rem;
+    transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.2s;
+  }
+
+  .nf__cta:hover {
+    background: var(--white);
+    color: var(--text);
+    border-color: var(--white);
+    transform: translateY(-2px);
+  }
+</style>

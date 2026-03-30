@@ -48,5 +48,6 @@ const alt = image.alt ?? '';
   alt={alt}
   loading={loading}
   decoding={loading === 'eager' ? 'sync' : 'async'}
+  fetchpriority={loading === 'eager' ? 'high' : undefined}
   class={className}
 />

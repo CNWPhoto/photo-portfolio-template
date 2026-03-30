@@ -6,7 +6,11 @@ const { soloHeroImage, whyChooseSection, theme } = Astro.props;
 const bgUrl = soloHeroImage?.image ? buildSrc(soloHeroImage.image, 2000) : '';
 
 // Content — Sanity values with hardcoded fallbacks
-const heading    = whyChooseSection?.heading    ?? 'Why Choose\nPet Photography?';
+const headingRaw = whyChooseSection?.heading ?? 'Why Choose\nPet Photography?';
+// Escape HTML entities before injecting <br> so Sanity text can't inject markup
+const heading = headingRaw
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/\n/g, '<br />');
 const bodyFirst  = whyChooseSection?.bodyFirst  ?? 'Working with a photographer who genuinely loves dogs makes all the difference. I understand how dogs move, what makes them light up, and how to draw out the personality that makes yours irreplaceable.';
 const bodySecond = whyChooseSection?.bodySecond ?? 'Sessions are always unhurried, never stressful, and filled with play. My clients return session after session — not just for the images, but for the experience of watching their dog be completely, joyfully themselves.';
 const ctaText    = whyChooseSection?.ctaText    ?? 'Get in Touch';
@@ -26,7 +30,7 @@ const caption    = whyChooseSection?.caption    ?? 'Serving Denver, Boulder, and
 	<hr />
 	<div class="why__inner">
 		<div class="why__heading-col reveal">
-			<h2 class="why__heading" set:html={heading.replace(/\n/g, '<br />')} />
+			<h2 class="why__heading" set:html={heading} />
 		</div>
 
 		<div class="why__content-col reveal reveal-delay-2">

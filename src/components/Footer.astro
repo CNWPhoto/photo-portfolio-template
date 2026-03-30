@@ -1,7 +1,7 @@
 ---
 import { toHTML } from '@portabletext/to-html';
 
-const { theme = 'classic-cream', siteName = 'Pet Photography' } = Astro.props;
+const { siteName = 'Pet Photography', blogEnabled = true } = Astro.props;
 
 const [_footerRes, _socialRes, _siteRes] = await Promise.all([
   fetch(
@@ -60,7 +60,8 @@ const menuLinks = [
   { key: 'portfolio',  href: '/portfolio',   default: 'Portfolio' },
   { key: 'blog',       href: '/blog',        default: 'Blog' },
   { key: 'contact',    href: '/contact',     default: 'Contact' },
-].filter(item => menuDef ? menuDef[item.key]?.enabled !== false : true)
+].filter(item => item.key === 'blog' ? blogEnabled : true)
+ .filter(item => menuDef ? menuDef[item.key]?.enabled !== false : true)
  .map(item => ({ href: item.href, label: menuDef?.[item.key]?.label || item.default }));
 
 const year = new Date().getFullYear();
