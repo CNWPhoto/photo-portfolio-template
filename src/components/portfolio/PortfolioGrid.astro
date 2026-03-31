@@ -134,11 +134,11 @@ const { featuredSection, theme } = Astro.props;
 
 	/* ── Mobile ── */
 	@media (max-width: 900px) {
-		.pgrid__inner       { grid-template-columns: 1fr; padding: 0 1.5rem; }
+		.pgrid__inner       { grid-template-columns: 1fr; grid-template-rows: auto auto; padding: 0 1.5rem; }
 		.pgrid__label-col   { display: none; }
 		.pgrid__images      { height: auto; flex-direction: column; gap: 0.75rem; }
 		.pgrid__img         { height: auto; flex: none; }
 		.pgrid__img :global(.pgrid__img-el) { height: 70vw; }
-		.pgrid__footer      { grid-column: 1; }
+		.pgrid__footer      { grid-column: 1; padding-bottom: 0.5rem; }
 	}
 </style>

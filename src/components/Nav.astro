@@ -93,6 +93,10 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		>
 			<span aria-hidden="true">&times;</span>
 		</button>
+		{showImageLogo
+			? <a href="/" class="nav__overlay-logo nav__overlay-logo--image"><img src={urlFor(logoImage).height(96).auto('format').url()} alt={siteName} class="nav__logo-img" decoding="async" /></a>
+			: <a href="/" class="nav__overlay-logo">{siteName}</a>
+		}
 		<nav aria-label="Mobile navigation">
 			<ul class="nav__overlay-links">
 				{links.map((link: any) => (
@@ -270,6 +274,22 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	.nav__overlay-close:hover {
 		color: var(--text);
 		transform: rotate(90deg);
+	}
+
+	.nav__overlay-logo {
+		font-family: var(--font-serif, Georgia, serif);
+		font-style: normal;
+		font-size: clamp(1.5rem, 5vw, 2rem);
+		font-weight: 700;
+		color: var(--text);
+		text-decoration: none;
+		display: block;
+		margin-bottom: 2.5rem;
+	}
+
+	.nav__overlay-logo--image {
+		display: flex;
+		align-items: center;
 	}
 
 	.nav__overlay-links {
