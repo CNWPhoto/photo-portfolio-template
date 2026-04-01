@@ -11,8 +11,8 @@
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.13",
     "@portabletext/to-html": "^5.0.2",
-    "@sanity/client": "^7.16.0",
-    "@sanity/image-url": "^2.0.3",
+    "@sanity/client": "^7.20.0",
+    "@sanity/image-url": "^2.1.1",
     "astro": "^5.17.1"
   }
 }
