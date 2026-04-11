@@ -1,3 +1,5 @@
+import {sectionsOf, sectionsInsertMenu} from './_shared/sectionsArrayConfig'
+
 export default {
   name: 'homepagePage',
   title: 'Homepage',
@@ -41,21 +43,15 @@ export default {
       description: 'Add, remove, and drag to reorder sections on the Homepage.',
       group: 'all',
       initialValue: [
-        {_type: 'welcomeSection',      _key: 'welcomeSection'},
-        {_type: 'testimonialsSection', _key: 'testimonialsSection'},
-        {_type: 'featuredSection',     _key: 'featuredSection'},
-        {_type: 'processSection',      _key: 'processSection'},
-        {_type: 'whyChooseSection',    _key: 'whyChooseSection'},
-        {_type: 'homepageFaqs',        _key: 'homepageFaqs'},
+        {_type: 'splitSection',            _key: 'splitSection'},
+        {_type: 'testimonialsSection',     _key: 'testimonialsSection'},
+        {_type: 'featuredPortfolioSection', _key: 'featuredPortfolioSection'},
+        {_type: 'stepsSection',            _key: 'stepsSection'},
+        {_type: 'fullBleedImageSection',   _key: 'fullBleedImageSection'},
+        {_type: 'faqSection',              _key: 'faqSection'},
       ],
-      of: [
-        {type: 'welcomeSection'},
-        {type: 'testimonialsSection'},
-        {type: 'featuredSection'},
-        {type: 'processSection'},
-        {type: 'whyChooseSection'},
-        {type: 'homepageFaqs'},
-      ],
+      of: sectionsOf,
+      options: {insertMenu: sectionsInsertMenu},
     },
   ],
 }

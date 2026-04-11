@@ -33,13 +33,29 @@ import contactPage from './contactPage'
 import blogPage from './blogPage'
 import notFoundPage from './notFoundPage'
 import palette from './_shared/palette'
+import ctaLink from './_shared/ctaLink'
 import page from './page'
 import blogCategory from './blogCategory'
 import portfolioCategory from './portfolioCategory'
 import htmlEmbedSection from './htmlEmbedSection'
+import splitSection from './sections/splitSection'
+import fullBleedImageSection from './sections/fullBleedImageSection'
+import richTextSection from './sections/richTextSection'
+import pullQuoteSection from './sections/pullQuoteSection'
+import threeColumnSection from './sections/threeColumnSection'
+import stepsSection from './sections/stepsSection'
+import galleryGridSection from './sections/galleryGridSection'
+import dividerSection from './sections/dividerSection'
+import ctaBandSection from './sections/ctaBandSection'
+import contactFormSection from './sections/contactFormSection'
+import contactInfoSection from './sections/contactInfoSection'
+import faqSection from './sections/faqSection'
+import featuredPortfolioSection from './sections/featuredPortfolioSection'
+import blogTeaserSection from './sections/blogTeaserSection'
 
 export const schemaTypes = [
   palette,
+  ctaLink,
   seo, seoSettings,
   navSettings,
   siteSettings, homepagePage,
@@ -50,7 +66,29 @@ export const schemaTypes = [
   aboutIntroSection, aboutWhatToExpectSection, aboutPersonalSection, aboutQuoteSection, aboutCtaSection,
   contactPage, blogPage, notFoundPage,
   codeSettings, footerSettings, socialSettings,
-  heroSection, welcomeSection, featuredSection, processSection, whyChooseSection, homepageFaqs, testimonialsSection,
+
+  // Unified section catalog (page builder rewrite §2)
+  heroSection,
+  splitSection,
+  fullBleedImageSection,
+  richTextSection,
+  pullQuoteSection,
+  threeColumnSection,
+  stepsSection,
+  galleryGridSection,
+  dividerSection,
+  ctaBandSection,
+  contactFormSection,
+  contactInfoSection,
+  testimonialsSection,
+  faqSection,
+  featuredPortfolioSection,
+  blogTeaserSection,
+
+  // Legacy section types — kept until Phase 12 cleanup so existing
+  // aboutPage / experiencePage / contactPage docs continue to validate.
+  welcomeSection, featuredSection, processSection, whyChooseSection, homepageFaqs,
+
   testimonial, portfolio, blogPost,
   blogCategory, portfolioCategory,
   htmlEmbedSection,

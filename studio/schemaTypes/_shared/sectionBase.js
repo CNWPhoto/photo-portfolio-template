@@ -1,9 +1,12 @@
 // Common fields shared by every section in the unified page builder.
 // Spread into a section schema's fields array via `...sectionBaseFields()`.
+// Pass `withVerticalSideLabel: true` for the four section types that
+// support the optional vertical side-rail label (see spec §17): splitSection,
+// threeColumnSection, faqSection (list variant), featuredPortfolioSection.
 
-export const sectionBaseFields = ({groupName} = {}) => {
+export const sectionBaseFields = ({groupName, withVerticalSideLabel = false} = {}) => {
   const group = groupName ? {group: groupName} : {}
-  return [
+  const fields = [
     {
       name: 'enabled',
       title: 'Enabled',
@@ -48,15 +51,18 @@ export const sectionBaseFields = ({groupName} = {}) => {
         ),
       ...group,
     },
-    {
+  ]
+  if (withVerticalSideLabel) {
+    fields.push({
       name: 'verticalSideLabel',
       title: 'Vertical Side Label',
       type: 'string',
       description:
         'Optional small uppercase label rendered vertically on the side of the section (e.g. "FAQs"). Leave blank to hide.',
       ...group,
-    },
-  ]
+    })
+  }
+  return fields
 }
 
 export default sectionBaseFields

@@ -1,13 +1,9 @@
 import {validatePageSlug} from './_shared/slugValidator'
+import {sectionsOf, sectionsInsertMenu} from './_shared/sectionsArrayConfig'
 
 // Unified page document for the page builder rewrite. Replaces aboutPage,
-// experiencePage, contactPage, and any future free-form page. See
-// docs/page-builder-spec.md §1.
-//
-// NOTE: `sections.of[]` currently lists legacy section types so the schema
-// validates while Phase 3 (new section catalog) is pending. Phase 3 will
-// replace this list with the unified section types and add insertMenu
-// grouping per §2.
+// experiencePage, contactPage, and any future free-form page.
+// See docs/page-builder-spec.md §1.
 
 export default {
   name: 'page',
@@ -51,26 +47,8 @@ export default {
       type: 'array',
       description: 'Add, remove, and drag to reorder sections on this page.',
       group: 'content',
-      of: [
-        {type: 'heroSection'},
-        {type: 'welcomeSection'},
-        {type: 'featuredSection'},
-        {type: 'processSection'},
-        {type: 'whyChooseSection'},
-        {type: 'homepageFaqs'},
-        {type: 'testimonialsSection'},
-        {type: 'aboutIntroSection'},
-        {type: 'aboutPersonalSection'},
-        {type: 'aboutWhatToExpectSection'},
-        {type: 'aboutQuoteSection'},
-        {type: 'aboutCtaSection'},
-        {type: 'experienceHero'},
-        {type: 'experienceIntro'},
-        {type: 'experienceSessions'},
-        {type: 'experienceArtwork'},
-        {type: 'experienceNextSteps'},
-        {type: 'experienceFaqs'},
-      ],
+      of: sectionsOf,
+      options: {insertMenu: sectionsInsertMenu},
     },
     {
       name: 'navigation',
