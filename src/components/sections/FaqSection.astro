@@ -1,0 +1,14 @@
+---
+import { paletteToStyle } from '../../lib/palette.js';
+const { section, isFirst = false, palette } = Astro.props;
+const style = paletteToStyle(palette);
+---
+<section
+  class="section faqSection"
+  data-section-type="faqSection"
+  data-spacing={section?.spacing || 'normal'}
+  data-is-first={isFirst}
+  style={style}
+>
+  <code>[Stub] faqSection</code>
+</section>

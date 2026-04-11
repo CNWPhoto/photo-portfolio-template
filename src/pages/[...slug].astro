@@ -4,28 +4,39 @@ import SectionRenderer from '../components/SectionRenderer.astro';
 import { getClient } from '../lib/sanity.js';
 import { SECTION_PROJECTION, SITE_PALETTES_QUERY } from '../lib/sectionsQuery.js';
 
+const slugParam = Astro.params.slug;
+const slug = Array.isArray(slugParam) ? slugParam.join('/') : (slugParam || '');
+
 const client = getClient(Astro.locals.isPreview);
 
-const [homepageDoc, siteData] = await Promise.all([
-	client.fetch(`*[_type == "homepagePage"][0]{
-		pageTitle,
-		seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
-		hero { ${SECTION_PROJECTION} },
-		"sections": sections[]{ ${SECTION_PROJECTION} }
-	}`),
+const [page, siteData] = await Promise.all([
+	client.fetch(
+		`*[_type == "page" && slug.current == $slug][0]{
+			title,
+			"slug": slug.current,
+			seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+			defaultPalette,
+			navThemeOverHero,
+			"sections": sections[]{ ${SECTION_PROJECTION} }
+		}`,
+		{ slug },
+	),
 	client.fetch(SITE_PALETTES_QUERY),
 ]);
 
+if (!page) {
+	return new Response(null, { status: 404 });
+}
+
 const palettes = siteData?.palettes ?? [];
 const sitePaletteSlug = siteData?.defaultPalette ?? null;
-const pagePaletteSlug = null;
+const pagePaletteSlug = page.defaultPalette ?? null;
 
-const hero = homepageDoc?.hero ?? null;
-const sections = homepageDoc?.sections ?? [];
+const sections = page.sections ?? [];
 
-const seoTitle       = homepageDoc?.seo?.seoTitle       || homepageDoc?.pageTitle || null;
-const seoDescription = homepageDoc?.seo?.seoDescription || null;
-const ogImage        = homepageDoc?.seo?.socialImage?.asset?.url || null;
+const seoTitle       = page.seo?.seoTitle       || page.title || null;
+const seoDescription = page.seo?.seoDescription || null;
+const ogImage        = page.seo?.socialImage?.asset?.url || null;
 
 const faqSection = sections.find((s: any) => s._type === 'faqSection');
 const faqs = faqSection?.faqs ?? null;
@@ -41,21 +52,12 @@ const faqSchemaData = faqs?.length && faqSection?.showSchema !== false
 	: undefined;
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData}>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData} breadcrumb={page.title}>
 	<main>
-		{hero && hero.enabled !== false && (
-			<SectionRenderer
-				section={hero}
-				isFirst={true}
-				pagePaletteSlug={pagePaletteSlug}
-				sitePaletteSlug={sitePaletteSlug}
-				palettes={palettes}
-			/>
-		)}
 		{sections.map((section: any, i: number) => (
 			<SectionRenderer
 				section={section}
-				isFirst={!hero && i === 0}
+				isFirst={i === 0}
 				pagePaletteSlug={pagePaletteSlug}
 				sitePaletteSlug={sitePaletteSlug}
 				palettes={palettes}

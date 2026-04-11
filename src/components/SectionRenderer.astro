@@ -1,0 +1,59 @@
+---
+import HeroSection from './sections/HeroSection.astro';
+import SplitSection from './sections/SplitSection.astro';
+import FullBleedImageSection from './sections/FullBleedImageSection.astro';
+import RichTextSection from './sections/RichTextSection.astro';
+import PullQuoteSection from './sections/PullQuoteSection.astro';
+import ThreeColumnSection from './sections/ThreeColumnSection.astro';
+import StepsSection from './sections/StepsSection.astro';
+import GalleryGridSection from './sections/GalleryGridSection.astro';
+import DividerSection from './sections/DividerSection.astro';
+import CtaBandSection from './sections/CtaBandSection.astro';
+import ContactFormSection from './sections/ContactFormSection.astro';
+import ContactInfoSection from './sections/ContactInfoSection.astro';
+import TestimonialsSection from './sections/TestimonialsSection.astro';
+import FaqSection from './sections/FaqSection.astro';
+import FeaturedPortfolioSection from './sections/FeaturedPortfolioSection.astro';
+import BlogTeaserSection from './sections/BlogTeaserSection.astro';
+import HtmlEmbedSection from './sections/HtmlEmbedSection.astro';
+
+import { resolvePalette } from '../lib/palette.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  pagePaletteSlug?: string | null;
+  sitePaletteSlug?: string | null;
+  palettes?: any[];
+}
+
+const { section, isFirst = false, pagePaletteSlug = null, sitePaletteSlug = null, palettes = [] } = Astro.props;
+
+const componentMap: Record<string, any> = {
+  heroSection: HeroSection,
+  splitSection: SplitSection,
+  fullBleedImageSection: FullBleedImageSection,
+  richTextSection: RichTextSection,
+  pullQuoteSection: PullQuoteSection,
+  threeColumnSection: ThreeColumnSection,
+  stepsSection: StepsSection,
+  galleryGridSection: GalleryGridSection,
+  dividerSection: DividerSection,
+  ctaBandSection: CtaBandSection,
+  contactFormSection: ContactFormSection,
+  contactInfoSection: ContactInfoSection,
+  testimonialsSection: TestimonialsSection,
+  faqSection: FaqSection,
+  featuredPortfolioSection: FeaturedPortfolioSection,
+  blogTeaserSection: BlogTeaserSection,
+  htmlEmbedSection: HtmlEmbedSection,
+};
+
+const Component = section?._type ? componentMap[section._type] : null;
+const enabled = section?.enabled !== false;
+const palette = resolvePalette(section?.palette, pagePaletteSlug, sitePaletteSlug, palettes);
+---
+
+{Component && enabled && (
+  <Component section={section} isFirst={isFirst} palette={palette} />
+)}
