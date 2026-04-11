@@ -1,14 +1,188 @@
 ---
 import { paletteToStyle } from '../../lib/palette.js';
+import { renderHeading } from '../../lib/heading.js';
+import { resolveLink } from '../../lib/links.js';
+import { renderBody } from '../../lib/portableText.js';
+import { buildSrc } from '../../lib/image';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
 const { section, isFirst = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
+
+const FALLBACK_BG =
+  'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg?auto=compress&cs=tinysrgb&w=2000';
+
+const image = section?.image ?? null;
+const bgUrl = image?.asset ? buildSrc(image, 2000) : FALLBACK_BG;
+const lqip = image?.asset?.metadata?.lqip || null;
+
+const eyebrow = section?.eyebrow || '';
+const heading = renderHeading(section?.heading || '');
+const bodyHTML = renderBody(section?.body, { className: 'fullbleed__body' });
+const ctaText = section?.ctaText || '';
+const ctaHref = resolveLink(section?.ctaLink);
+const caption = section?.caption || '';
+const textContainer = section?.textContainer || 'overlay-card';
+const textPosition = section?.textPosition || 'center-center';
+const overlayOpacity = (section?.overlayOpacity ?? 30) / 100;
+const height = section?.height || 'tall';
+const parallax = !!section?.parallax;
+
+const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
+
 <section
-  class="section fullBleedImageSection"
+  class:list={['section', 'fullbleed', `fullbleed--${textContainer}`, `fullbleed--h-${height}`, parallax ? 'fullbleed--parallax' : '']}
   data-section-type="fullBleedImageSection"
   data-spacing={section?.spacing || 'normal'}
-  data-is-first={isFirst}
+  data-text-position={textPosition}
+  id={section?.sectionId || undefined}
   style={style}
 >
-  <code>[Stub] fullBleedImageSection</code>
+  <div
+    class="fullbleed__image"
+    style={`background-image: url('${bgUrl}'); ${lqip ? `background-color: var(--bg);` : ''}`}
+    aria-hidden="true"
+  ></div>
+  <div class="fullbleed__overlay" style={`background: rgba(0,0,0,${overlayOpacity})`} aria-hidden="true"></div>
+
+  <div class="fullbleed__content-wrap">
+    <div class="fullbleed__content reveal reveal-delay-1">
+      {eyebrow && <p class="fullbleed__eyebrow">{eyebrow}</p>}
+      {heading && <HeadingTag class="fullbleed__heading" set:html={heading} />}
+      {bodyHTML && <div class="fullbleed__body-wrap" set:html={bodyHTML} />}
+      {ctaText && ctaHref && (
+        <a class="fullbleed__cta" href={ctaHref}>{ctaText}</a>
+      )}
+      {caption && <p class="fullbleed__caption">{caption}</p>}
+    </div>
+  </div>
 </section>
+
+<style>
+  .fullbleed {
+    position: relative;
+    padding-block: 0;
+    color: var(--text);
+    overflow: hidden;
+  }
+  .fullbleed--h-medium { min-height: 50vh; }
+  .fullbleed--h-tall { min-height: 75vh; }
+  .fullbleed--h-viewport { min-height: 100vh; }
+
+  .fullbleed__image {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .fullbleed--parallax .fullbleed__image {
+    background-attachment: fixed;
+  }
+  .fullbleed__overlay {
+    position: absolute;
+    inset: 0;
+  }
+
+  .fullbleed__content-wrap {
+    position: relative;
+    z-index: 1;
+    min-height: inherit;
+    display: grid;
+    place-items: center;
+    padding: 4rem 1.5rem;
+  }
+  .fullbleed--h-medium .fullbleed__content-wrap { min-height: 50vh; }
+  .fullbleed--h-tall .fullbleed__content-wrap { min-height: 75vh; }
+  .fullbleed--h-viewport .fullbleed__content-wrap { min-height: 100vh; }
+
+  /* nine-point text positioning grid */
+  .fullbleed[data-text-position^='top-'] .fullbleed__content-wrap { align-items: start; }
+  .fullbleed[data-text-position^='bottom-'] .fullbleed__content-wrap { align-items: end; }
+  .fullbleed[data-text-position$='-left'] .fullbleed__content-wrap { justify-items: start; }
+  .fullbleed[data-text-position$='-right'] .fullbleed__content-wrap { justify-items: end; }
+
+  .fullbleed__content {
+    max-width: 640px;
+    text-align: center;
+  }
+
+  /* Overlay card variant: white box on top of the image */
+  .fullbleed--overlay-card .fullbleed__content {
+    background: var(--bg);
+    color: var(--text);
+    padding: 3rem 3rem;
+  }
+
+  /* Inline overlay variant: text directly on the image */
+  .fullbleed--inline-overlay .fullbleed__content {
+    color: var(--white, #fff);
+  }
+  .fullbleed--inline-overlay .fullbleed__heading,
+  .fullbleed--inline-overlay .fullbleed__eyebrow {
+    color: var(--white, #fff);
+  }
+
+  .fullbleed__eyebrow {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1rem;
+  }
+
+  .fullbleed__heading {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    line-height: 1.18;
+    color: var(--text);
+    margin: 0 0 1.25rem;
+    letter-spacing: -0.01em;
+  }
+
+  .fullbleed__body-wrap :global(.fullbleed__body) {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    margin: 0 0 1rem;
+  }
+
+  .fullbleed__cta {
+    display: inline-block;
+    margin-top: 1rem;
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    padding: 0.95rem 2rem;
+    border: 1px solid var(--btn-bg);
+  }
+
+  .fullbleed__caption {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    color: var(--muted-light);
+    font-style: normal;
+    margin: 1.25rem 0 0;
+  }
+
+  @media (max-width: 900px) {
+    .fullbleed--parallax .fullbleed__image {
+      background-attachment: scroll;
+    }
+    .fullbleed--overlay-card .fullbleed__content {
+      padding: 2rem 1.5rem;
+    }
+  }
+</style>

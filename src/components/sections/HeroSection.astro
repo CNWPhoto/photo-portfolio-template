@@ -1,14 +1,358 @@
 ---
+import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
+import { renderHeading } from '../../lib/heading.js';
+import { resolveLink } from '../../lib/links.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
 const { section, isFirst = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
+
+const variant = section?.variant || 'slider';
+const eyebrow = section?.eyebrow || '';
+const heading = renderHeading(section?.heading || '');
+const subheading = section?.subheading || '';
+const ctaText = section?.ctaText || '';
+const ctaHref = resolveLink(section?.ctaLink);
+const textAlignment = section?.textAlignment || 'left';
+const textPosition = section?.textPosition || 'center-left';
+const heightMode = section?.heightMode || 'auto';
+const overlayOpacity = (section?.overlayOpacity ?? 30) / 100;
+const stickyBackground = !!section?.stickyBackground;
+
+const FALLBACK_HERO_IDS = ['1108099', '2253275', '825949', '1805164', '3726314'];
+const pexelsUrl = (id: string, w = 1600) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
+
+const sanityImages = section?.images ?? [];
+const useFallback = sanityImages.length === 0;
+const firstImage = sanityImages[0] ?? null;
+const firstLqip = firstImage?.asset?.metadata?.lqip || null;
+
+const heightClass = `hero--height-${heightMode}`;
+const variantClass = `hero--${variant}`;
+const stickyClass = stickyBackground ? 'hero--sticky' : '';
 ---
+
 <section
-  class="section hero"
+  class:list={['section', 'hero', variantClass, heightClass, stickyClass]}
   data-section-type="heroSection"
   data-spacing={section?.spacing || 'normal'}
-  data-is-first={isFirst}
+  data-text-position={textPosition}
+  data-text-align={textAlignment}
+  id={section?.sectionId || undefined}
   style={style}
 >
-  <code>[Stub] heroSection</code>
+  {variant === 'slider' && (
+    <div class="hero__viewport">
+      <div class="hero__track" data-hero-track>
+        {useFallback
+          ? FALLBACK_HERO_IDS.map((id, i) => (
+              <img
+                src={pexelsUrl(id)}
+                alt=""
+                loading={i === 0 && isFirst ? 'eager' : 'lazy'}
+                fetchpriority={i === 0 && isFirst ? 'high' : undefined}
+                class="hero__img"
+              />
+            ))
+          : sanityImages.map((img: any, i: number) => (
+              <SanityImage
+                image={img}
+                sizes="100vw"
+                loading={i === 0 && isFirst ? 'eager' : 'lazy'}
+                class="hero__img"
+              />
+            ))
+        }
+      </div>
+      <button class="hero__arrow hero__arrow--prev" data-hero-prev aria-label="Previous image">&#8249;</button>
+      <button class="hero__arrow hero__arrow--next" data-hero-next aria-label="Next image">&#8250;</button>
+    </div>
+  )}
+
+  {variant === 'image-full' && (
+    <div
+      class="hero__bg"
+      style={firstLqip ? `background-image:url('${firstLqip}');background-size:cover;background-position:center;` : ''}
+    >
+      {firstImage
+        ? <SanityImage image={firstImage} sizes="100vw" loading={isFirst ? 'eager' : 'lazy'} class="hero__bg-img" />
+        : <img src={pexelsUrl(FALLBACK_HERO_IDS[0], 2000)} alt="" loading={isFirst ? 'eager' : 'lazy'} class="hero__bg-img" />}
+      <div class="hero__overlay" style={`background:rgba(0,0,0,${overlayOpacity})`} aria-hidden="true"></div>
+    </div>
+  )}
+
+  {variant === 'image-right' && (
+    <div class="hero__split">
+      <div class="hero__split-image">
+        {firstImage
+          ? <SanityImage image={firstImage} sizes="(max-width:900px) 100vw, 50vw" loading={isFirst ? 'eager' : 'lazy'} class="hero__split-img" />
+          : <img src={pexelsUrl(FALLBACK_HERO_IDS[0])} alt="" loading={isFirst ? 'eager' : 'lazy'} class="hero__split-img" />}
+      </div>
+    </div>
+  )}
+
+  {(variant === 'image-full' || variant === 'image-right') && (eyebrow || heading || subheading || ctaText) && (
+    <div class:list={['hero__caption', `hero__caption--${variant}`]}>
+      {eyebrow && <p class="hero__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
+      {heading && <h1 class="hero__heading" set:html={heading} />}
+      {subheading && <p class="hero__sub reveal reveal-delay-2">{subheading}</p>}
+      {ctaText && ctaHref && <a class="hero__cta reveal reveal-delay-3" href={ctaHref}>{ctaText}</a>}
+    </div>
+  )}
+
+  {variant === 'slider' && (eyebrow || heading || subheading || ctaText) && (
+    <div class="hero__caption hero__caption--slider">
+      {eyebrow && <p class="hero__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
+      {heading && <h1 class="hero__heading" set:html={heading} />}
+      {subheading && <p class="hero__sub reveal reveal-delay-2">{subheading}</p>}
+      {ctaText && ctaHref && <a class="hero__cta reveal reveal-delay-3" href={ctaHref}>{ctaText}</a>}
+    </div>
+  )}
 </section>
+
+<style>
+  .hero {
+    padding-top: 0;
+    padding-bottom: 0;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  /* Sticky behavior — pin hero while subsequent sections curtain over it */
+  .hero--sticky {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    height: 75vh;
+  }
+
+  /* ── Slider variant — ported from legacy Hero.astro ── */
+  .hero--slider .hero__viewport {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  .hero--slider.hero--height-auto .hero__viewport { height: 55vh; min-height: 380px; }
+  .hero--slider.hero--height-tall .hero__viewport { height: 75vh; min-height: 480px; }
+  .hero--slider.hero--height-fullscreen .hero__viewport { height: 100vh; min-height: 560px; }
+
+  .hero__track {
+    display: flex;
+    gap: 15px;
+    height: 100%;
+    transition: transform 0.5s ease;
+    will-change: transform;
+  }
+
+  .hero__track :global(.hero__img) {
+    height: 100%;
+    width: auto;
+    flex-shrink: 0;
+    display: block;
+    max-width: unset;
+    object-fit: unset;
+  }
+
+  .hero__arrow {
+    position: absolute;
+    top: calc(50% - 24px);
+    z-index: 10;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.32);
+    border: none;
+    color: var(--white, #fff);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+  }
+  .hero__arrow:hover { background: rgba(0, 0, 0, 0.55); }
+  .hero__arrow--prev { left: 1.25rem; }
+  .hero__arrow--next { right: 1.25rem; }
+
+  /* ── image-full variant ── */
+  .hero--image-full .hero__bg {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  .hero--image-full.hero--height-auto .hero__bg { height: 55vh; min-height: 400px; }
+  .hero--image-full.hero--height-tall .hero__bg { height: 75vh; min-height: 480px; }
+  .hero--image-full.hero--height-fullscreen .hero__bg { height: 100vh; min-height: 560px; }
+
+  .hero__bg :global(.hero__bg-img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  .hero__overlay { position: absolute; inset: 0; }
+
+  /* ── image-right variant ── */
+  .hero--image-right .hero__split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 60vh;
+  }
+  .hero--image-right .hero__split-image { overflow: hidden; }
+  .hero--image-right .hero__split-image :global(.hero__split-img) {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+
+  /* ── Captions ── */
+  .hero__caption {
+    text-align: center;
+    padding: 4rem 2rem 4.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .hero__caption--image-full {
+    position: absolute;
+    inset: 0;
+    border-top: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--white, #fff);
+    padding: 2rem;
+    pointer-events: none;
+  }
+  .hero__caption--image-full .hero__cta { pointer-events: auto; }
+  .hero__caption--image-full .hero__heading,
+  .hero__caption--image-full .hero__sub,
+  .hero__caption--image-full .hero__eyebrow {
+    color: var(--white, #fff);
+  }
+  .hero[data-text-align='left'] .hero__caption { text-align: left; }
+  .hero[data-text-align='right'] .hero__caption { text-align: right; }
+
+  .hero__eyebrow {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .hero__heading {
+    font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+    color: var(--text);
+    margin: 0 0 1.25rem;
+    letter-spacing: -0.01em;
+  }
+
+  .hero__sub {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.85rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1.5rem;
+  }
+
+  .hero__cta {
+    display: inline-block;
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    padding: 0.95rem 2rem;
+  }
+
+  /* image-right variant: image left of viewport, caption stacked below */
+  .hero--image-right .hero__caption { border-top: 1px solid var(--border); }
+
+  /* image-right variant on the image side, caption sits on the left text area */
+  /* Simpler: caption renders below the split for now; full overlay variant uses image-full */
+
+  @media (max-width: 900px) {
+    .hero__caption { padding: 3rem 1.25rem 3.5rem; }
+    .hero--image-right .hero__split { grid-template-columns: 1fr; }
+    .hero--image-right .hero__split-image { height: 60vw; min-height: 280px; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll('[data-hero-track]').forEach((trackEl) => {
+      const track = trackEl as HTMLElement;
+      const viewport = track.parentElement as HTMLElement;
+      const section = track.closest('section') as HTMLElement;
+      const prevBtn = section.querySelector('[data-hero-prev]') as HTMLButtonElement | null;
+      const nextBtn = section.querySelector('[data-hero-next]') as HTMLButtonElement | null;
+
+      const NUM_CLONE = 2;
+      const realImgs = Array.from(track.querySelectorAll('img')) as HTMLImageElement[];
+      const NUM_REAL = realImgs.length;
+      if (NUM_REAL < 2) return;
+
+      const clonesBefore = realImgs.slice(-NUM_CLONE).map((img) => img.cloneNode(true) as HTMLImageElement);
+      const clonesAfter = realImgs.slice(0, NUM_CLONE).map((img) => img.cloneNode(true) as HTMLImageElement);
+      clonesBefore.reverse().forEach((cl) => track.prepend(cl));
+      clonesAfter.forEach((cl) => track.append(cl));
+
+      const imgs = Array.from(track.querySelectorAll('img')) as HTMLImageElement[];
+      let current = NUM_CLONE;
+
+      const imageLeft = (i: number) => {
+        let left = 0;
+        for (let j = 0; j < i; j++) left += imgs[j].offsetWidth + 15;
+        return left;
+      };
+      const centerOffset = (i: number) =>
+        imageLeft(i) + imgs[i].offsetWidth / 2 - viewport.offsetWidth / 2;
+
+      const goTo = (i: number) => {
+        current = i;
+        track.style.transition = '';
+        track.style.transform = `translateX(${-centerOffset(current)}px)`;
+      };
+      const silentGoTo = (i: number) => {
+        current = i;
+        track.style.transition = 'none';
+        track.style.transform = `translateX(${-centerOffset(current)}px)`;
+        track.getBoundingClientRect();
+        track.style.transition = '';
+      };
+      const advance = (dir: number) => {
+        current += dir;
+        track.style.transition = 'transform 0.5s ease';
+        track.style.transform = `translateX(${-centerOffset(current)}px)`;
+      };
+
+      track.addEventListener('transitionend', () => {
+        if (current >= NUM_CLONE + NUM_REAL) silentGoTo(current - NUM_REAL);
+        else if (current < NUM_CLONE) silentGoTo(current + NUM_REAL);
+      });
+
+      prevBtn?.addEventListener('click', () => advance(-1));
+      nextBtn?.addEventListener('click', () => advance(1));
+
+      let resizeTimer: ReturnType<typeof setTimeout>;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => goTo(current), 100);
+      });
+      window.addEventListener('load', () => goTo(NUM_CLONE));
+    goTo(NUM_CLONE);
+  });
+</script>

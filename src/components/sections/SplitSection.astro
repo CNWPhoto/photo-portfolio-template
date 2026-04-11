@@ -1,14 +1,195 @@
 ---
+import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
+import { renderHeading } from '../../lib/heading.js';
+import { resolveLink } from '../../lib/links.js';
+import { renderBody } from '../../lib/portableText.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
 const { section, isFirst = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
+
+const FALLBACK_IMG =
+  'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1600';
+
+const imageLayout = section?.imageLayout || 'image-right';
+const eyebrow = section?.eyebrow || '';
+const headingRaw = section?.heading || '';
+const heading = renderHeading(headingRaw);
+const bodyHTML = renderBody(section?.body, { className: 'split__body' });
+const ctaText = section?.ctaText || '';
+const ctaHref = resolveLink(section?.ctaLink);
+const aspect = section?.imageAspectRatio || 'auto';
+const textAlign = section?.textAlignment || 'left';
+const vAlign = section?.verticalAlignment || 'center';
+const mobileOrder = section?.mobileOrder || 'image-first';
+const sideLabel = section?.verticalSideLabel || '';
+
+const image = section?.image ?? null;
+const lqip = isFirst ? image?.asset?.metadata?.lqip || null : null;
+const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
+
 <section
-  class="section splitSection"
+  class:list={['section', 'split', `split--${imageLayout}`, `split--va-${vAlign}`, `split--mo-${mobileOrder}`]}
   data-section-type="splitSection"
   data-spacing={section?.spacing || 'normal'}
-  data-is-first={isFirst}
+  data-text-align={textAlign}
+  data-aspect={aspect}
+  id={section?.sectionId || undefined}
   style={style}
 >
-  <code>[Stub] splitSection</code>
+  {sideLabel && <div class="split__side-label" aria-hidden="true">{sideLabel}</div>}
+
+  <div
+    class="split__image reveal-fade"
+    style={lqip ? `background-image:url('${lqip}');background-size:cover;background-position:center;` : ''}
+  >
+    {image
+      ? <SanityImage
+          image={image}
+          sizes="(max-width: 900px) 100vw, 50vw"
+          loading={isFirst ? 'eager' : 'lazy'}
+          class="split__img"
+        />
+      : <img src={FALLBACK_IMG} alt="" loading="lazy" class="split__img" />}
+  </div>
+
+  <div class="split__content">
+    <div class="split__text-wrap">
+      {eyebrow && <p class="split__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
+      {heading && <HeadingTag class="split__heading" set:html={heading} />}
+      {bodyHTML && <div class="split__body-wrap reveal reveal-delay-2" set:html={bodyHTML} />}
+      {ctaText && ctaHref && (
+        <a class="split__cta reveal reveal-delay-3" href={ctaHref}>{ctaText}</a>
+      )}
+    </div>
+  </div>
 </section>
+
+<style>
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--bg);
+    color: var(--text);
+    position: relative;
+  }
+  .split--image-left { grid-template-areas: 'image content'; }
+  .split--image-right { grid-template-areas: 'content image'; }
+  .split--image-left-full-bleed,
+  .split--image-right-full-bleed { padding-block: 0; }
+  .split--image-left-full-bleed { grid-template-areas: 'image content'; }
+  .split--image-right-full-bleed { grid-template-areas: 'content image'; }
+
+  .split__image {
+    grid-area: image;
+    overflow: hidden;
+    min-height: 480px;
+  }
+  .split__image :global(.split__img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s var(--ease-image);
+  }
+  .split__image:hover :global(.split__img) { transform: scale(1.04); }
+
+  .split[data-aspect='square'] .split__image :global(.split__img) { aspect-ratio: 1 / 1; }
+  .split[data-aspect='portrait-4-5'] .split__image :global(.split__img) { aspect-ratio: 4 / 5; }
+  .split[data-aspect='landscape-3-2'] .split__image :global(.split__img) { aspect-ratio: 3 / 2; }
+
+  .split__content {
+    grid-area: content;
+    display: flex;
+    flex-direction: column;
+    padding: 4rem 4rem;
+    background: var(--bg-alt);
+  }
+  .split--va-top .split__content { justify-content: flex-start; }
+  .split--va-center .split__content { justify-content: center; }
+  .split--va-bottom .split__content { justify-content: flex-end; }
+
+  .split__text-wrap { max-width: 460px; }
+  .split[data-text-align='center'] .split__content { align-items: center; text-align: center; }
+  .split[data-text-align='right'] .split__content { align-items: flex-end; text-align: right; }
+
+  .split__eyebrow {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1.25rem;
+  }
+
+  .split__heading {
+    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    color: var(--text);
+    line-height: 1.2;
+    margin: 0 0 1.5rem;
+  }
+
+  .split__body-wrap :global(.split__body) {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  .split__cta {
+    display: inline-block;
+    margin-top: 1.5rem;
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    padding: 0.95rem 2rem;
+    border: 1px solid var(--btn-bg);
+  }
+
+  .split__side-label {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%) rotate(-90deg);
+    transform-origin: left center;
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted-light);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  @media (max-width: 900px) {
+    .split,
+    .split--image-left,
+    .split--image-right,
+    .split--image-left-full-bleed,
+    .split--image-right-full-bleed {
+      grid-template-columns: 1fr;
+      grid-template-areas: 'image' 'content';
+    }
+    .split--mo-text-first {
+      grid-template-areas: 'content' 'image';
+    }
+    .split__image { min-height: 0; height: 60vw; }
+    .split__content { padding: 2.5rem 1.5rem; align-items: center; text-align: center; }
+    .split__text-wrap { max-width: none; }
+    .split__side-label { display: none; }
+  }
+</style>
