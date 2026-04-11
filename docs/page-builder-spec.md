@@ -1380,19 +1380,25 @@ Ordered for Claude Code execution. Each phase is a commit.
 6. Move `astro.config.mjs` projectId+dataset to env vars (`PUBLIC_SANITY_PROJECT_ID`, `PUBLIC_SANITY_DATASET`) for client portability. **Note**: `src/lib/sanity.js` already reads these env vars with the same hex fallback — `astro.config.mjs` is the only remaining file with hardcoded `hx5xgigp`/`production` strings on the Astro side. Studio side (`studio/sanity.config.js` + `studio/sanity.cli.js`) was migrated to env vars in commit `cfa5ba9`.
 
 ### Phase 2 — Page model + categories + footer (est. 2 hours)
-1. New unified `page` document schema with slug, SEO (reuses existing `seo.js` object), sections, navigation, palette ref, navThemeOverHero.
+1. New unified `page` document schema with slug, SEO (reuses existing `seo.js` object), sections, navigation, palette ref, navThemeOverHero. **Note:** the `sections.of[]` array temporarily lists legacy section types so the schema validates; Phase 3 swaps it to the new section catalog.
 2. Slug validator with reserved-route list (`api`, `blog`, `portfolio`, `preview`, `admin`, `studio`).
 3. `blogCategory` and `portfolioCategory` document types per §11.
 4. Update `blogPost` schema: replace old `category` string with `categories[]` reference array (validation min 1 max 3), description warning about minimal use.
 5. Update `portfolio` doc: add `categories[]` reference array for portfolioCategory.
-6. `notFoundPage` schema rewritten to use the new sections shape.
-7. `homepagePage` schema updated to use the new sections shape.
+6. ~~`notFoundPage` schema rewritten to use the new sections shape.~~ **Deferred to Phase 3** — depends on `fullBleedImageSection` which doesn't exist yet.
+7. ~~`homepagePage` schema updated to use the new sections shape.~~ **Deferred to Phase 3** — depends on the new section types. The current schema is already in the right wrapper shape (top-level `hero`, sections array, groups for content/seo); only the `of[]` contents need swapping in Phase 3.
 8. **`footerSettings.js` rewritten** per §1a: free-form `links[]` array (mirrors navSettings.links shape, no children/dropdowns), `middleColumn.embed` reference to `htmlEmbedSection` (replacing raw `embedCode`), legalLinks preserved.
 9. `htmlEmbedSection` document type per §13a (used by both pages and footer).
 10. Update Studio desk structure for the new layout. Show all the singletons (siteSettings, navSettings, footerSettings, socialSettings, seoSettings, codeSettings, homepagePage, notFoundPage, blogPage, portfolioPage), plus the `page` document type list, plus the categories.
 
 ### Phase 3 — Section schemas (est. 2–2.5 hours)
-Write all section schemas in the catalog (§2). No frontend yet. Include `insertMenu.groups` config to categorize types in the section picker. Section types:
+Write all section schemas in the catalog (§2). No frontend yet. Include `insertMenu.groups` config to categorize types in the section picker. After all section types exist, this phase also picks up the two items deferred from Phase 2:
+
+- **`page.sections.of[]`** is rewritten to reference the new section types (with `insertMenu.groups`), replacing the legacy-section placeholder list from Phase 2.
+- **`homepagePage.sections.of[]`** is rewritten the same way; the wrapper structure (top-level `hero`, content/seo groups) stays as-is.
+- **`notFoundPage`** is rewritten from its current 5 flat fields to a `sections[]` array containing a single `fullBleedImageSection` (per §1 / §15 Phase 11 mapping).
+
+Section types:
 - `heroSection` (with `stickyBackground` field per §17)
 - `splitSection` (with `verticalSideLabel`, `mobileOrder` fields)
 - `fullBleedImageSection` (with `parallax` field)
