@@ -20,7 +20,7 @@ export default {
       title: 'Section Heading',
       type: 'string',
       description: 'Optional heading shown above the testimonials. Leave blank to hide.',
-      placeholder: 'What Our Clients Say',
+      initialValue: 'What Clients Are Saying',
     },
   ],
 }

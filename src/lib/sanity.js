@@ -9,16 +9,21 @@ const config = {
 
 export const sanityClient = createClient({
   ...config,
-  useCdn: true, // CDN-cached responses for published content — faster, no origin hit
+  useCdn: true,
   token: undefined,
   ignoreBrowserTokenWarning: true,
 })
 
 const previewClient = createClient({
   ...config,
+  useCdn: false,
   token: import.meta.env.SANITY_API_READ_TOKEN,
   perspective: 'previewDrafts',
   ignoreBrowserTokenWarning: true,
+  stega: {
+    enabled: true,
+    studioUrl: import.meta.env.SANITY_STUDIO_URL || 'http://localhost:3333',
+  },
 })
 
 export function getClient(isPreview = false) {

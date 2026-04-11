@@ -1,10 +1,17 @@
 ---
 import SanityImage from '../components/SanityImage.astro';
 
-const { heroImages, heroCaption, theme } = Astro.props;
+const { hero, theme } = Astro.props;
 
-const heading = heroCaption?.nicheKeyword || 'Denver Dog Photographer'; // TODO:NICHE
-const tagline  = heroCaption?.tagline      || 'Natural, stress-free dog portraits for your best friend.'; // TODO:NICHE
+const sanityImages = hero?.images ?? [];
+const heading      = hero?.nicheKeyword ?? '';
+const tagline      = hero?.tagline      ?? '';
+
+const FALLBACK_HERO_IDS = ['1108099', '2253275', '825949', '1805164', '3726314'];
+const pexelsUrl = (id: string, w = 1600) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
+
+const useFallback = sanityImages.length === 0;
 ---
 
 <section
@@ -13,14 +20,24 @@ const tagline  = heroCaption?.tagline      || 'Natural, stress-free dog portrait
 >
 	<div class="hero__viewport">
 		<div class="hero__track" id="heroTrack">
-			{heroImages?.length && heroImages.map((img: any, i: number) => (
-				<SanityImage
-					image={img}
-					sizes="100vw"
-					loading={i === 0 ? 'eager' : 'lazy'}
-					class="hero__img"
-				/>
-			))}
+			{useFallback
+				? FALLBACK_HERO_IDS.map((id, i) => (
+					<img
+						src={pexelsUrl(id)}
+						alt=""
+						loading={i === 0 ? 'eager' : 'lazy'}
+						class="hero__img"
+					/>
+				))
+				: sanityImages.map((img: any, i: number) => (
+					<SanityImage
+						image={img}
+						sizes="100vw"
+						loading={i === 0 ? 'eager' : 'lazy'}
+						class="hero__img"
+					/>
+				))
+			}
 		</div>
 
 		<button class="hero__arrow hero__arrow--prev" id="heroPrev" aria-label="Previous image">

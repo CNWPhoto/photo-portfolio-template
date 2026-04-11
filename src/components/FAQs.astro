@@ -1,18 +1,7 @@
 ---
 const { faqs: sanityFaqs, theme } = Astro.props;
 
-// TODO:NICHE — fallback FAQs reference dogs/breeds/treats; update for your niche
-const fallbackFaqs = [
-	{ q: 'What should I bring to the session?', a: "Your dog's favorite treats and a toy or two make a real difference in keeping them engaged and happy. Comfortable shoes are a must for you — we'll be moving around together to find the best light and moments." }, // TODO:NICHE
-	{ q: 'How long does a typical session last?', a: "Most sessions run about 90 minutes. This gives us plenty of time to let your dog settle in, explore the location, and capture a wonderful range of images — all without feeling rushed." },
-	{ q: 'When will I receive my photos?', a: 'Your private online gallery will be ready within three weeks of your session date. Rush delivery within one week is available on request for an additional fee.' },
-	{ q: 'Do you photograph dogs of all breeds and temperaments?', a: "Absolutely. From shy rescues to exuberant puppies, every dog deserves beautiful portraits. Sessions are entirely play-based and follow your dog's lead — there is never any pressure." }, // TODO:NICHE
-];
-
-const faqs =
-	sanityFaqs?.length
-		? sanityFaqs.map((f: any) => ({ q: f.question, a: f.answer }))
-		: fallbackFaqs;
+const faqs = (sanityFaqs ?? []).map((f: any) => ({ q: f.question, a: f.answer }));
 ---
 
 <section

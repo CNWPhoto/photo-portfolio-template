@@ -2,6 +2,7 @@
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
 import { getClient } from '../lib/sanity.js';
+import VisualEditing from '../components/VisualEditing.tsx';
 
 interface Props {
   pageTitle?: string;
@@ -243,6 +244,7 @@ const schemaJSON = schemaGraph.length
 			document.querySelectorAll('.reveal, .reveal-fade').forEach(el => observer.observe(el));
 		</script>
 		{bodyScripts && <Fragment set:html={bodyScripts} />}
+		{isPreview && <VisualEditing client:only="react" />}
 	</body>
 </html>
 

@@ -3,21 +3,17 @@ import Layout from '../../layouts/Layout.astro';
 import { toHTML } from '@portabletext/to-html';
 import SanityImage from '../../components/SanityImage.astro';
 import { buildSrc, buildSrcset } from '../../lib/image';
-import { sanityClient } from '../../lib/sanity.js';
-
-export async function getStaticPaths() {
-  const posts = await sanityClient.fetch(`*[_type == "blogPost" && defined(slug.current)]{ "slug": slug.current }`);
-  return posts.map((post) => ({ params: { slug: post.slug } }));
-}
+import { getClient } from '../../lib/sanity.js';
 
 const { slug } = Astro.params;
+const client = getClient(Astro.locals.isPreview);
 
 const [post, siteSettings] = await Promise.all([
-  sanityClient.fetch(
+  client.fetch(
     `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, _updatedAt, excerpt, coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt }, body, category }`,
     { slug }
   ),
-  sanityClient.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ siteName, photographerName }`),
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ siteName, photographerName }`),
 ]);
 
 if (!post) {

@@ -1,25 +1,15 @@
 ---
 const { processSection, theme } = Astro.props;
 
-// TODO:NICHE — fallback step copy references dogs/treats; update for your niche
-const heading = processSection?.heading || 'Dog Photography Sessions'; // TODO:NICHE
-const tagline  = processSection?.tagline  || 'Simple and relaxed sessions you and your dog will love.'; // TODO:NICHE
-const ctaText  = processSection?.ctaText  || 'Learn How it Works';
-const ctaLink  = processSection?.ctaLink  || '/experience';
+const heading = processSection?.heading ?? '';
+const tagline = processSection?.tagline ?? '';
+const ctaText = processSection?.ctaText ?? '';
+const ctaLink = processSection?.ctaLink ?? '#';
 
 const steps = [
-	{
-		label: processSection?.step1Title || 'Reach Out', // TODO:NICHE
-		body:  processSection?.step1Body  || "Tell me about your dog — their personality, their quirks, what makes them uniquely them. We'll talk through location options, timing, and everything that will make your session perfect.", // TODO:NICHE
-	},
-	{
-		label: processSection?.step2Title || 'Your Session', // TODO:NICHE
-		body:  processSection?.step2Body  || 'Sessions are completely play-based and led by your dog. There are no forced poses, no stiff backdrops — just natural moments, beautiful light, and a whole lot of treats.', // TODO:NICHE
-	},
-	{
-		label: processSection?.step3Title || 'The Images', // TODO:NICHE
-		body:  processSection?.step3Body  || 'Within three weeks, your private online gallery arrives. Choose your favorites for fine art prints, heirloom albums, and high-resolution digital downloads.',
-	},
+	{ label: processSection?.step1Title ?? '', body: processSection?.step1Body ?? '' },
+	{ label: processSection?.step2Title ?? '', body: processSection?.step2Body ?? '' },
+	{ label: processSection?.step3Title ?? '', body: processSection?.step3Body ?? '' },
 ];
 ---
 

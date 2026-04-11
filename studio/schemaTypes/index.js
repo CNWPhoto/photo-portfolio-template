@@ -7,11 +7,9 @@ import blogPost from './blogPost'
 import siteSettings from './siteSettings'
 import homepagePage from './homepagePage'
 import welcomeSection from './sections/welcomeSection'
-import heroSlider from './sections/heroSlider'
-import heroCaption from './sections/heroCaption'
+import heroSection from './sections/heroSection'
 import featuredSection from './sections/featuredSection'
 import processSection from './sections/processSection'
-import soloHeroImage from './sections/soloHeroImage'
 import whyChooseSection from './sections/whyChooseSection'
 import homepageFaqs from './sections/homepageFaqs'
 import testimonialsSection from './sections/testimonialsSection'
@@ -45,6 +43,6 @@ export const schemaTypes = [
   aboutIntroSection, aboutWhatToExpectSection, aboutPersonalSection, aboutQuoteSection, aboutCtaSection,
   contactPage, blogPage, notFoundPage,
   codeSettings, footerSettings, socialSettings,
-  heroSlider, heroCaption, welcomeSection, featuredSection, processSection, soloHeroImage, whyChooseSection, homepageFaqs, testimonialsSection,
+  heroSection, welcomeSection, featuredSection, processSection, whyChooseSection, homepageFaqs, testimonialsSection,
   testimonial, portfolio, blogPost,
 ]

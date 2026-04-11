@@ -3,7 +3,11 @@ import SanityImage from '../../components/SanityImage.astro';
 
 const { galleryImages, theme } = Astro.props;
 
-const displayImages = galleryImages?.length ? galleryImages.slice(0, 6) : [];
+const sanityImages = galleryImages?.length ? galleryImages.slice(0, 6) : [];
+const useFallback = sanityImages.length === 0;
+const FALLBACK_MASONRY_IDS = ['1108099', '2253275', '825949', '1805164', '3726314', '1629781'];
+const pexelsUrl = (id: string, w = 900) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
 ---
 
 <section class="pmasonry" id="portfolio" data-theme={theme || undefined}>
@@ -14,15 +18,22 @@ const displayImages = galleryImages?.length ? galleryImages.slice(0, 6) : [];
 	</div>
 
 	<div class="pmasonry__grid">
-		{displayImages.map((img: any) => (
-			<div class="pmasonry__item">
-				<SanityImage
-					image={img}
-					sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
-					class="pmasonry__img"
-				/>
-			</div>
-		))}
+		{useFallback
+			? FALLBACK_MASONRY_IDS.map((id) => (
+				<div class="pmasonry__item">
+					<img src={pexelsUrl(id)} alt="" class="pmasonry__img" loading="lazy" />
+				</div>
+			))
+			: sanityImages.map((img: any) => (
+				<div class="pmasonry__item">
+					<SanityImage
+						image={img}
+						sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
+						class="pmasonry__img"
+					/>
+				</div>
+			))
+		}
 	</div>
 
 	<div class="pmasonry__footer">
