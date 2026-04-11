@@ -1361,6 +1361,8 @@ Run an unused-export check (`npx knip` or grep for `import.*from.*components/X`)
 
 Ordered for Claude Code execution. Each phase is a commit.
 
+**Before starting: read [`docs/rewrite-rollback.md`](./rewrite-rollback.md)** for the safety net (Sanity dataset backup location, branch model, restore commands). The rewrite happens on the `page-builder-rewrite` branch — do not push to a deploying branch until Phase 13 passes.
+
 ### Phase 1 — Foundation (est. 1–2 hours)
 1. Palette schema in `siteSettings` (data shape only; actual values come from the current CSS variables in §16).
 2. `src/lib/palette.js` helper (`paletteToStyle`, `resolvePalette`).

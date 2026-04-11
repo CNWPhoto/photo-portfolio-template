@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## In-progress: page builder rewrite
+
+A unified page builder rewrite is in progress on the `page-builder-rewrite` branch. **Before touching anything in `studio/schemaTypes/`, `src/pages/`, `src/components/`, or `src/layouts/Layout.astro`**, read these two docs:
+
+1. [`docs/page-builder-spec.md`](./docs/page-builder-spec.md) — full implementation spec, 23 sections, drives Phases 1–13
+2. [`docs/rewrite-rollback.md`](./docs/rewrite-rollback.md) — safety net (Sanity backup location, branch model, restore commands)
+
+The rewrite must NOT be pushed to a deploying branch (`main` or `about-page-builder`) until Phase 13 integration tests pass. The Sanity production dataset is backed up at `~/sanity-backup-2026-04-11.tar.gz` for restore via `npx sanity dataset import`.
+
 ## Project Overview
 
 A photo portfolio website built with **Astro 5** (frontend) and **Sanity v5** (CMS/content backend). The two parts are developed independently in separate directories with separate `package.json` files.
