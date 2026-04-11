@@ -1,3 +1,5 @@
+import {richTextBody} from '../_shared/richTextBody'
+
 export default {
   name: 'welcomeSection',
   title: 'Welcome Section',
@@ -19,43 +21,46 @@ export default {
       name: 'eyebrow',
       title: 'Eyebrow Label',
       type: 'string',
-      description: 'Small label above the body text (e.g. "Welcome"). Leave blank to hide.',
+      description: 'Small label above the body text. Leave blank to hide.',
+      initialValue: 'Every Session is Unique',
     },
+    richTextBody({name: 'bodyRich'}),
     {
       name: 'body',
-      title: 'Body — First Paragraph',
+      title: '(Legacy) Body — First Paragraph',
       type: 'text',
       rows: 4,
-      description: 'Main introductory paragraph shown on the left side of the homepage Welcome section.',
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.body,
     },
     {
       name: 'bodySecondary',
-      title: 'Body — Second Paragraph',
+      title: '(Legacy) Body — Second Paragraph',
       type: 'text',
       rows: 4,
-      description: 'Second paragraph shown below the first.',
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.bodySecondary,
     },
     {
       name: 'ctaText',
       title: 'CTA Link Text',
       type: 'string',
-      description: 'Text for the call-to-action link (e.g. "See the Experience →"). Leave blank to hide the link entirely.',
+      description: 'Text for the call-to-action link. Leave blank to hide the link entirely.',
+      initialValue: 'See the Experience →',
     },
     {
       name: 'ctaLink',
       title: 'CTA Link URL',
       type: 'string',
-      description: 'Where the link points (e.g. "/experience"). Only used if CTA Link Text is set.',
+      description: 'Where the link points. Only used if CTA Link Text is set.',
+      initialValue: '/experience',
     },
     {
       name: 'image',
       title: 'Image',
       type: 'image',
-      description: 'Photo shown on the right side of the Welcome section.',
-      options: {
-        hotspot: true,
-        crop: true,
-      },
+      description: 'Photo shown beside the Welcome section text.',
+      options: {hotspot: true, crop: true},
       fields: [
         {
           name: 'alt',

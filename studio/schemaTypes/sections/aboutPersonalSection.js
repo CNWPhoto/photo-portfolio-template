@@ -1,3 +1,5 @@
+import {richTextBody} from '../_shared/richTextBody'
+
 export default {
   name: 'aboutPersonalSection',
   title: 'Deeper Dive Section',
@@ -28,19 +30,22 @@ export default {
         },
       ],
     },
+    richTextBody(),
     {
       name: 'bodyParagraph1',
-      title: 'Body — Paragraph 1',
+      title: '(Legacy) Body — Paragraph 1',
       type: 'text',
       rows: 3,
-      placeholder: 'Photography found me at a time when I needed it most…',
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.bodyParagraph1,
     },
     {
       name: 'bodyParagraph2',
-      title: 'Body — Paragraph 2',
+      title: '(Legacy) Body — Paragraph 2',
       type: 'text',
       rows: 3,
-      placeholder: 'That sense of attention is something I bring to every session…',
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.bodyParagraph2,
     },
   ],
 }

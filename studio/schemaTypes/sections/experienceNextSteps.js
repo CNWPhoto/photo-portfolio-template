@@ -1,3 +1,5 @@
+import {richTextBody} from '../_shared/richTextBody'
+
 export default {
   name: 'experienceNextSteps',
   title: 'Next Steps',
@@ -35,21 +37,22 @@ export default {
       type: 'string',
       placeholder: 'Get in touch',
     },
+    richTextBody(),
     {
       name: 'bodyFirst',
-      title: 'Body — Paragraph 1',
+      title: '(Legacy) Body — Paragraph 1',
       type: 'text',
       rows: 3,
-      placeholder:
-        'If this experience feels like the right fit for you and your dog, the next step is simply reaching out to start the conversation.',
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.bodyFirst,
     },
     {
       name: 'bodySecond',
-      title: 'Body — Paragraph 2',
+      title: '(Legacy) Body — Paragraph 2',
       type: 'text',
       rows: 3,
-      placeholder:
-        "I'm happy to answer questions, talk through options, and help you decide if this is the right experience for you.",
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.bodySecond,
     },
     {
       name: 'ctaText',

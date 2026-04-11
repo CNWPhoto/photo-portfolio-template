@@ -1,13 +1,18 @@
 ---
 import SanityImage from '../../components/SanityImage.astro';
+import { renderBody, renderParagraphs, isPortableText } from '../../lib/portableText.js';
 
 const { welcomeSection, theme } = Astro.props;
 
-const eyebrow = welcomeSection?.eyebrow || 'Every Session is Unique';
-const bodyText = welcomeSection?.body || 'Dog photography sessions that focus on personality, connection, and comfort.'; // TODO:NICHE
-const bodySecondary = welcomeSection?.bodySecondary || 'Whether you\'re celebrating a new puppy or capturing your dog just as they are now, each session is designed to feel relaxed and fun—for both of you.'; // TODO:NICHE
-const ctaText = welcomeSection?.ctaText || null;
-const ctaLink = welcomeSection?.ctaLink || '/experience';
+const eyebrow = welcomeSection?.eyebrow ?? '';
+const bodyHTML = isPortableText(welcomeSection?.bodyRich)
+	? renderBody(welcomeSection.bodyRich, { className: 'isplit__body' })
+	: renderParagraphs([
+		welcomeSection?.body          ?? '',
+		welcomeSection?.bodySecondary ?? '',
+	], { className: 'isplit__body' });
+const ctaText = welcomeSection?.ctaText ?? '';
+const ctaLink = welcomeSection?.ctaLink ?? '#';
 ---
 
 <section
@@ -18,20 +23,25 @@ const ctaLink = welcomeSection?.ctaLink || '/experience';
 	<div class="isplit__content">
 		<div class="isplit__text-wrap">
 			{eyebrow && <p class="isplit__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
-			<p class="isplit__body reveal reveal-delay-2">{bodyText}</p>
-			<p class="isplit__body reveal reveal-delay-3">{bodySecondary}</p>
+			<div class="isplit__body-wrap reveal reveal-delay-2" set:html={bodyHTML} />
 			{ctaText && <a class="isplit__link reveal reveal-delay-4" href={ctaLink}>{ctaText}</a>}
 		</div>
 	</div>
 
 	<div class="isplit__image reveal-fade">
-		{welcomeSection?.image && (
-			<SanityImage
+		{welcomeSection?.image
+			? <SanityImage
 				image={welcomeSection.image}
 				sizes="(max-width: 900px) 100vw, 50vw"
 				class="isplit__img"
 			/>
-		)}
+			: <img
+				src="https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1200"
+				alt=""
+				class="isplit__img"
+				loading="lazy"
+			/>
+		}
 	</div>
 </section>
 

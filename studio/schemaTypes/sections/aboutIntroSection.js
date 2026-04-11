@@ -1,3 +1,5 @@
+import {richTextBody} from '../_shared/richTextBody'
+
 export default {
   name: 'aboutIntroSection',
   title: 'Intro Section',
@@ -44,19 +46,22 @@ export default {
       description: 'Small uppercase tagline displayed below the heading.',
       placeholder: 'A photographer based in [City], here to help you document your story.',
     },
+    richTextBody(),
     {
       name: 'bodyParagraph1',
-      title: 'Body — Paragraph 1',
+      title: '(Legacy) Body — Paragraph 1',
       type: 'text',
       rows: 3,
-      placeholder: "I've spent the last decade photographing the moments that matter most…",
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.bodyParagraph1,
     },
     {
       name: 'bodyParagraph2',
-      title: 'Body — Paragraph 2',
+      title: '(Legacy) Body — Paragraph 2',
       type: 'text',
       rows: 3,
-      placeholder: 'What started as a personal project became a calling…',
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.bodyParagraph2,
     },
   ],
 }

@@ -1,30 +1,37 @@
 ---
 import SanityImage from '../../components/SanityImage.astro';
+import { renderBody, renderParagraphs, isPortableText } from '../../lib/portableText.js';
 
 const { welcomeSection, theme } = Astro.props;
 
-const eyebrow = welcomeSection?.eyebrow || '';
-const bodyText = welcomeSection?.body || "Every session is crafted entirely around your dog's unique personality. We find the light, the location, and the moments that tell their story — the tilt of a head, a full-speed sprint, a quiet glance."; // TODO:NICHE
-const approachBodyText = welcomeSection?.bodySecondary || 'No forced poses. No rushed timelines. Just you, your dog, and the kind of photography that makes people stop and say "that\'s exactly them."'; // TODO:NICHE
+const eyebrow = welcomeSection?.eyebrow ?? '';
+const bodyHTML = isPortableText(welcomeSection?.bodyRich)
+	? renderBody(welcomeSection.bodyRich, { className: 'icentered__body' })
+	: renderParagraphs([
+		welcomeSection?.body          ?? '',
+		welcomeSection?.bodySecondary ?? '',
+	], { className: 'icentered__body' });
 ---
 
 <section class="icentered" id="about" data-theme={theme || undefined}>
 	<div class="icentered__text">
 		{eyebrow && <p class="icentered__eyebrow">{eyebrow}</p>}
-		<div class="icentered__body-wrap">
-			<p class="icentered__body">{bodyText}</p>
-			<p class="icentered__body">{approachBodyText}</p>
-		</div>
+		<div class="icentered__body-wrap" set:html={bodyHTML} />
 		<a href="/experience" class="icentered__link">Learn about the experience &rarr;</a>
 	</div>
 
 	<div class="icentered__image">
-		{welcomeSection?.image && (
-			<SanityImage
+		{welcomeSection?.image
+			? <SanityImage
 				image={welcomeSection.image}
 				sizes="(max-width: 900px) 100vw, 60vw"
 			/>
-		)}
+			: <img
+				src="https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1400"
+				alt=""
+				loading="lazy"
+			/>
+		}
 	</div>
 </section>
 

@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
 import SanityImage from '../components/SanityImage.astro';
+import { renderBody, renderParagraphs, isPortableText } from '../lib/portableText.js';
 
 const aboutDoc = await getClient(Astro.locals.isPreview).fetch(
 	`*[_type == "aboutPage"][0]{
@@ -11,7 +12,7 @@ const aboutDoc = await getClient(Astro.locals.isPreview).fetch(
 			_type, enabled,
 			// aboutIntroSection
 			image { ..., asset->{ _id, metadata { dimensions { width, height } } } },
-			heading, subtext, bodyParagraph1, bodyParagraph2,
+			heading, subtext, body, bodyParagraph1, bodyParagraph2,
 			// aboutWhatToExpectSection
 			sectionLabel,
 			columns[] {
@@ -82,16 +83,28 @@ const showCta      = useFallback || ctaDoc?.enabled      !== false;
 
 const introHeading = introDoc?.heading       || "Hi, I'm Connor";
 const introSubtext = introDoc?.subtext       || 'A photographer based in [City], here to help you document your story in a way that feels natural and stress-free.';
-const introBody1   = introDoc?.bodyParagraph1 || "I've spent the last decade photographing the moments that matter most — the quiet ones, the joyful ones, the ones you don't even notice are happening until the camera catches them. My approach is unhurried and entirely led by you.";
-const introBody2   = introDoc?.bodyParagraph2 || 'What started as a personal project became a calling. I believe every person, every family, every bond deserves to be documented beautifully — not in a stiff, posed way, but in a way that is completely, unmistakably them.';
+const introFallback1 = "I've spent the last decade photographing the moments that matter most — the quiet ones, the joyful ones, the ones you don't even notice are happening until the camera catches them. My approach is unhurried and entirely led by you.";
+const introFallback2 = 'What started as a personal project became a calling. I believe every person, every family, every bond deserves to be documented beautifully — not in a stiff, posed way, but in a way that is completely, unmistakably them.';
+const introBodyHTML  = isPortableText(introDoc?.body)
+	? renderBody(introDoc.body, { className: 'intro__body' })
+	: renderParagraphs([
+		introDoc?.bodyParagraph1 || introFallback1,
+		introDoc?.bodyParagraph2 || introFallback2,
+	], { className: 'intro__body' });
 const introImage   = introDoc?.image ?? null;
 
 const wteLabel   = wteDoc?.sectionLabel || 'What to Expect';
 const wteColumns = wteDoc?.columns?.length ? wteDoc.columns : fallbackWteColumns;
 
 const personalImage = personalDoc?.image ?? null;
-const personalBody1 = personalDoc?.bodyParagraph1 || 'Photography found me at a time when I needed it most. A camera in hand became a reason to look closely at the world — to slow down, notice the small things, and find beauty in the ordinary.';
-const personalBody2 = personalDoc?.bodyParagraph2 || "That sense of attention is something I bring to every session. I'm not here to manufacture a perfect image. I'm here to find the one that's already there, waiting.";
+const personalFallback1 = 'Photography found me at a time when I needed it most. A camera in hand became a reason to look closely at the world — to slow down, notice the small things, and find beauty in the ordinary.';
+const personalFallback2 = "That sense of attention is something I bring to every session. I'm not here to manufacture a perfect image. I'm here to find the one that's already there, waiting.";
+const personalBodyHTML = isPortableText(personalDoc?.body)
+	? renderBody(personalDoc.body, { className: 'personal__body' })
+	: renderParagraphs([
+		personalDoc?.bodyParagraph1 || personalFallback1,
+		personalDoc?.bodyParagraph2 || personalFallback2,
+	], { className: 'personal__body' });
 
 const quoteText = quoteDoc?.quoteText || 'I believe photographs should feel honest, timeless, and personal.';
 
@@ -130,8 +143,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 				<div class="intro__text-wrap">
 					<h1 class="intro__heading">{introHeading}</h1>
 					<p class="intro__sub reveal reveal-delay-1">{introSubtext}</p>
-					<p class="intro__body reveal reveal-delay-2">{introBody1}</p>
-					<p class="intro__body reveal reveal-delay-3">{introBody2}</p>
+					<div class="intro__body-wrap reveal reveal-delay-2" set:html={introBodyHTML} />
 				</div>
 			</div>
 		</section>}
@@ -174,10 +186,7 @@ const ctaImageFg    = ctaDoc?.imageForeground ?? null;
 		<!-- ══ SECTION 3: Personal Split ══ -->
 		{showPersonal && <section class="personal">
 			<div class="personal__inner">
-				<div class="personal__text reveal reveal-delay-1">
-					<p class="personal__body">{personalBody1}</p>
-					<p class="personal__body">{personalBody2}</p>
-				</div>
+				<div class="personal__text reveal reveal-delay-1" set:html={personalBodyHTML} />
 				<div class="personal__image">
 					{personalImage ? (
 						<SanityImage

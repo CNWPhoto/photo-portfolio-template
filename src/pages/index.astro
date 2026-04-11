@@ -4,7 +4,6 @@ import Hero from '../components/Hero.astro';
 import WhyChoose from '../components/WhyChoose.astro';
 import FAQs from '../components/FAQs.astro';
 
-// Section variants — all imported statically; conditional rendering selects the active one
 import TestimonialsSlider from '../components/testimonials/TestimonialsSlider.astro';
 import TestimonialsGrid from '../components/testimonials/TestimonialsGrid.astro';
 import IntroSplit from '../components/intro/IntroSplit.astro';
@@ -23,13 +22,19 @@ const [homepageDoc, testimonials] = await Promise.all([
 		`*[_type == "homepagePage"][0]{
 			pageTitle,
 			seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+			hero {
+				enabled,
+				images[] { ..., asset-> },
+				nicheKeyword,
+				tagline
+			},
 			"sections": sections[] {
 				_type,
+				_key,
 				enabled,
 				variant,
-				images[] { ..., asset-> },
-				nicheKeyword, tagline,
-				eyebrow, body, bodySecondary, ctaText, ctaLink,
+				backgroundImage { ..., asset-> },
+				eyebrow, bodyRich, body, bodySecondary, ctaText, ctaLink,
 				image { ..., asset-> },
 				imageVertical { ..., asset-> },
 				imageHorizontal { ..., asset-> },
@@ -42,48 +47,26 @@ const [homepageDoc, testimonials] = await Promise.all([
 	client.fetch(`*[_type == "testimonial"] | order(order asc)`),
 ]);
 
+const hero = homepageDoc?.hero ?? null;
+const showHero = hero?.enabled !== false;
 const homepageSections = homepageDoc?.sections ?? [];
-const getSection = (type: string) => homepageSections.find((s: any) => s._type === type);
 
 const seoTitle       = homepageDoc?.seo?.seoTitle       || homepageDoc?.pageTitle || null;
 const seoDescription = homepageDoc?.seo?.seoDescription || null;
 const ogImage        = homepageDoc?.seo?.socialImage?.asset?.url || null;
 
 // ── Schema ───────────────────────────────────────────────────────────────────
-const rawFaqs = getSection('homepageFaqs')?.faqs ?? null;
+const rawFaqs = homepageSections.find((s: any) => s._type === 'homepageFaqs')?.faqs ?? null;
 const faqSchemaData = rawFaqs?.length
 	? [{ '@type': 'FAQPage', mainEntity: rawFaqs.map((f: any) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) }]
 	: undefined;
-
-// ── Hero (rendered outside <main>) ───────────────────────────────────────────
-const heroSliderSection  = getSection('heroSlider');
-const heroCaptionSection = getSection('heroCaption');
-const showHero           = heroSliderSection?.enabled !== false;
-const showHeroCaption    = heroCaptionSection?.enabled !== false;
-const heroSlider         = heroSliderSection?.images ?? null;
-
-// ── WhyChoose pairing ────────────────────────────────────────────────────────
-// soloHeroImage (bg image) + whyChooseSection (text) always render as one unit.
-// We render it when we first encounter either in the section order.
-const soloHeroImageData  = getSection('soloHeroImage');
-const whyChooseSectionData = getSection('whyChooseSection');
-const soloHeroIdx  = homepageSections.findIndex((s: any) => s._type === 'soloHeroImage');
-const whyChooseIdx = homepageSections.findIndex((s: any) => s._type === 'whyChooseSection');
-// Index of first appearance (ignoring disabled)
-const whyChooseTriggerIdx = (() => {
-	const candidates = [soloHeroIdx, whyChooseIdx].filter(i => i !== -1);
-	return candidates.length ? Math.min(...candidates) : -1;
-})();
 ---
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData}>
-	{showHero && <Hero heroImages={heroSlider} heroCaption={showHeroCaption ? heroCaptionSection : null} urlFor={urlFor} />}
+	{showHero && <Hero hero={hero} urlFor={urlFor} />}
 	<main>
-		{homepageSections.map((section: any, idx: number) => {
-			// Skip disabled sections
+		{homepageSections.map((section: any) => {
 			if (section.enabled === false) return null;
-			// Hero sections handled above
-			if (section._type === 'heroSlider' || section._type === 'heroCaption') return null;
 
 			if (section._type === 'welcomeSection') {
 				const variant = section.variant || 'classic';
@@ -113,13 +96,8 @@ const whyChooseTriggerIdx = (() => {
 					: <HowItWorksColumns processSection={section} />;
 			}
 
-			// soloHeroImage + whyChooseSection always render together as one WhyChoose block.
-			// Render at the position of whichever appears first; skip the second.
-			if (section._type === 'soloHeroImage' || section._type === 'whyChooseSection') {
-				if (idx !== whyChooseTriggerIdx) return null;
-				const soloImg = soloHeroImageData?.enabled !== false ? soloHeroImageData : null;
-				const whyChs  = whyChooseSectionData?.enabled !== false ? whyChooseSectionData : null;
-				return <WhyChoose theme="dark-editorial" soloHeroImage={soloImg} whyChooseSection={whyChs} urlFor={urlFor} />;
+			if (section._type === 'whyChooseSection') {
+				return <WhyChoose theme="dark-editorial" whyChooseSection={section} urlFor={urlFor} />;
 			}
 
 			if (section._type === 'homepageFaqs') {

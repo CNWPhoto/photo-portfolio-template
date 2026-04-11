@@ -1,3 +1,5 @@
+import {richTextBody} from '../_shared/richTextBody'
+
 export default {
   name: 'experienceIntro',
   title: 'Intro',
@@ -14,22 +16,22 @@ export default {
       type: 'boolean',
       initialValue: true,
     },
+    richTextBody(),
     {
       name: 'bodyFirst',
-      title: 'First Paragraph',
+      title: '(Legacy) First Paragraph',
       type: 'text',
       rows: 4,
-      placeholder:
-        'Every dog photography session is designed to feel relaxed, dog-led, and pressure-free…',
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.bodyFirst,
     },
     {
       name: 'bodySecond',
-      title: 'Second Paragraph',
+      title: '(Legacy) Second Paragraph',
       type: 'text',
       rows: 3,
-      description: 'Displayed slightly bolder than the first paragraph.',
-      placeholder:
-        "There's no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.",
+      description: 'Legacy field. Move this content into Body above, then clear this field.',
+      hidden: ({parent}) => !parent?.bodySecond,
     },
   ],
 }
