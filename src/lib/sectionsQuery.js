@@ -54,7 +54,8 @@ export const SECTION_PROJECTION = /* groq */ `
   testimonials[]->,
   items[]->,
   specificPosts[]->,
-  filterByCategory->{ "slug": slug.current, name }
+  filterByCategory->{ "slug": slug.current, name },
+  embed->
 `
 
 // Top-level palette query — returns the palettes array and the default

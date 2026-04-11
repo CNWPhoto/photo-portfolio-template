@@ -19,7 +19,7 @@ const DYNAMIC = [
   'featuredPortfolioSection',
   'blogTeaserSection',
 ]
-const EMBED = ['htmlEmbedSection']
+const EMBED = ['htmlEmbedRef']
 
 // Order matters: this is what editors see in the section picker.
 export const SECTION_TYPES = [...HERO, ...LAYOUT, ...CTA, ...DYNAMIC, ...EMBED]

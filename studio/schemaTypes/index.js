@@ -38,6 +38,7 @@ import page from './page'
 import blogCategory from './blogCategory'
 import portfolioCategory from './portfolioCategory'
 import htmlEmbedSection from './htmlEmbedSection'
+import htmlEmbedRef from './_shared/htmlEmbedRef'
 import splitSection from './sections/splitSection'
 import fullBleedImageSection from './sections/fullBleedImageSection'
 import richTextSection from './sections/richTextSection'
@@ -92,4 +93,5 @@ export const schemaTypes = [
   testimonial, portfolio, blogPost,
   blogCategory, portfolioCategory,
   htmlEmbedSection,
+  htmlEmbedRef,
 ]
