@@ -1,6 +1,7 @@
 ---
 import { paletteToStyle } from '../../lib/palette.js';
 import { renderBody } from '../../lib/portableText.js';
+import { getClient } from '../../lib/sanity.js';
 
 interface Props {
   section: any;
@@ -17,6 +18,8 @@ const bodyHTML = renderBody(section?.body, { className: 'contact__body' });
 const mode = section?.mode || 'built-in';
 
 const submitText = section?.submitText || 'Send';
+const successMessage = section?.successMessage || "Thanks — we'll be in touch soon.";
+const errorMessage = section?.errorMessage || 'Something went wrong. Please try again or email us directly.';
 const formFields = section?.formFields?.length
   ? section.formFields
   : [
@@ -28,6 +31,18 @@ const formFields = section?.formFields?.length
 const embedUrl = section?.embedUrl || '';
 const embedHeight = section?.embedHeight || 600;
 const embedTitle = section?.embedTitle || 'Contact form';
+
+// Resolve effective Web3Forms access key: per-section override wins over
+// the site-wide default. Only fetched in built-in mode.
+let effectiveKey = section?.web3formsKeyOverride || '';
+if (mode === 'built-in' && !effectiveKey) {
+  const client = getClient(false);
+  const site = await client.fetch(
+    `*[_type == "siteSettings" && _id == "siteSettings"][0]{ web3formsKey }`,
+  );
+  effectiveKey = site?.web3formsKey || '';
+}
+const isConfigured = mode !== 'built-in' || !!effectiveKey;
 
 const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
@@ -48,8 +63,9 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
       </header>
     )}
 
-    {mode === 'built-in' && (
+    {mode === 'built-in' && isConfigured && (
       <form class="contact__form reveal reveal-delay-1" data-contact-form>
+        <input type="hidden" name="access_key" value={effectiveKey} />
         {/* Honeypot — bots fill, humans don't see */}
         <input type="text" name="botcheck" tabindex="-1" autocomplete="off" class="contact__honeypot" aria-hidden="true" />
 
@@ -85,9 +101,22 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
           </div>
         ))}
 
-        <button type="submit" class="contact__submit">{submitText}</button>
+        <button
+          type="submit"
+          class="contact__submit"
+          data-submit-text={submitText}
+          data-success-message={successMessage}
+          data-error-message={errorMessage}
+        >{submitText}</button>
         <p class="contact__status" data-contact-status aria-live="polite"></p>
       </form>
+    )}
+
+    {mode === 'built-in' && !isConfigured && (
+      <div class="contact__notice">
+        <p><strong>Contact form not configured.</strong></p>
+        <p>Add a Web3Forms access key in Site Settings (or override on this section) to enable submissions. Free signup at <a href="https://web3forms.com" target="_blank" rel="noopener noreferrer">web3forms.com</a>.</p>
+      </div>
     )}
 
     {mode === 'embed' && embedUrl && (
@@ -100,14 +129,58 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
         />
       </div>
     )}
-
-    {mode === 'built-in' && !section?.web3formsKeyOverride && (
-      <p class="contact__notice" data-contact-key-warning hidden>
-        Form not configured. Add a Web3Forms access key in Site Settings to enable submissions.
-      </p>
-    )}
   </div>
 </section>
+
+<script>
+  // Web3Forms submission handler. POSTs FormData directly to web3forms.com
+  // — no backend route, no server env vars. Honeypot field name is "botcheck".
+  // The submit button carries success/error message data attrs so each
+  // section can carry its own copy.
+  document.querySelectorAll<HTMLFormElement>('[data-contact-form]').forEach((form) => {
+    const status = form.querySelector('[data-contact-status]') as HTMLElement | null;
+    const submitBtn = form.querySelector('[type="submit"]') as HTMLButtonElement | null;
+    if (!status || !submitBtn) return;
+
+    const submitText = submitBtn.dataset.submitText || 'Send';
+    const successMessage = submitBtn.dataset.successMessage || 'Thanks — we\'ll be in touch soon.';
+    const errorMessage = submitBtn.dataset.errorMessage || 'Something went wrong. Please try again or email us directly.';
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      status.textContent = '';
+      status.removeAttribute('data-state');
+
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          body: new FormData(form),
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          form.style.display = 'none';
+          status.textContent = successMessage;
+          status.setAttribute('data-state', 'success');
+        } else {
+          throw new Error(json.message || 'Submission failed');
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitText;
+        status.textContent = errorMessage;
+        status.setAttribute('data-state', 'error');
+      }
+    });
+  });
+</script>
 
 <style>
   .contact {
