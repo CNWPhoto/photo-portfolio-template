@@ -9,8 +9,8 @@ export default defineConfig({
   adapter: cloudflare(),
   integrations: [
     sanity({
-      projectId: 'hx5xgigp',
-      dataset: 'production',
+      projectId: process.env.PUBLIC_SANITY_PROJECT_ID || 'hx5xgigp',
+      dataset: process.env.PUBLIC_SANITY_DATASET || 'production',
       useCdn: false,
       apiVersion: '2024-01-01',
       stega: {

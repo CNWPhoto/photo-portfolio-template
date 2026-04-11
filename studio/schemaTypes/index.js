@@ -32,8 +32,10 @@ import aboutCtaSection from './sections/aboutCtaSection'
 import contactPage from './contactPage'
 import blogPage from './blogPage'
 import notFoundPage from './notFoundPage'
+import palette from './_shared/palette'
 
 export const schemaTypes = [
+  palette,
   seo, seoSettings,
   navSettings,
   siteSettings, homepagePage,
