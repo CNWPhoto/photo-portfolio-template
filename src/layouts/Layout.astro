@@ -14,9 +14,10 @@ interface Props {
   updatedAt?: string;    // ISO date — article:modified_time
   prevUrl?: string;      // blog pagination rel="prev"
   nextUrl?: string;      // blog pagination rel="next"
+  robots?: string;       // override robots meta (e.g. "noindex, follow" for category pages)
 }
 
-const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb, publishDate, updatedAt, prevUrl, nextUrl } = Astro.props;
+const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb, publishDate, updatedAt, prevUrl, nextUrl, robots } = Astro.props;
 const isPreview = Astro.locals.isPreview ?? false;
 const client = getClient(isPreview);
 
@@ -182,6 +183,7 @@ const schemaJSON = schemaGraph.length
 		{prevUrl && <link rel="prev" href={prevUrl} />}
 		{nextUrl && <link rel="next" href={nextUrl} />}
 		{isPreview && <meta name="robots" content="noindex, nofollow" />}
+		{!isPreview && robots && <meta name="robots" content={robots} />}
 		<meta property="og:title" content={pageTitle ? `${pageTitle} | ${siteName}` : siteName} />
 		{seoDescription && <meta property="og:description" content={seoDescription} />}
 		{ogImage && <meta property="og:image" content={ogImage} />}

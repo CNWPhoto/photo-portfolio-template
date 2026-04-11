@@ -10,7 +10,12 @@ const client = getClient(Astro.locals.isPreview);
 
 const [post, siteSettings] = await Promise.all([
   client.fetch(
-    `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, _updatedAt, excerpt, coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt }, body, category }`,
+    `*[_type == "blogPost" && slug.current == $slug][0]{
+      title, publishDate, _updatedAt, excerpt,
+      coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt },
+      body,
+      "categories": categories[]->{ name, "slug": slug.current }
+    }`,
     { slug }
   ),
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ siteName, photographerName }`),
@@ -111,7 +116,15 @@ const bodyHTML = post.body
   <main>
     <article class="post">
       <div class="post__header">
-        {post.category && <p class="post__category">{post.category}</p>}
+        {post.categories?.length > 0 && (
+          <ul class="post__categories">
+            {post.categories.map((c: any) => (
+              <li>
+                <a class="post__category" href={`/blog/category/${c.slug}`}>{c.name}</a>
+              </li>
+            ))}
+          </ul>
+        )}
         <h1 class="post__title">{post.title}</h1>
         {publishFormatted && <p class="post__date">{publishFormatted}</p>}
         <hr class="post__rule" />
@@ -145,13 +158,29 @@ const bodyHTML = post.body
     margin-bottom: 2.5rem;
   }
 
+  .post__categories {
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
   .post__category {
+    display: inline-block;
     font-family: var(--font-sans, system-ui, sans-serif);
     font-size: 0.7rem;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--accent);
-    margin-bottom: 1.25rem;
+    text-decoration: none;
+    border: 1px solid var(--accent);
+    padding: 0.35rem 0.75rem;
+    transition: background 0.2s, color 0.2s;
+  }
+  .post__category:hover {
+    background: var(--accent);
+    color: var(--btn-text);
   }
 
   .post__title {
