@@ -110,19 +110,13 @@ export default {
                 'Optional. Only visible in the Studio — used to identify this image (e.g. "Luna at Red Rocks").',
             },
             {
-              name: 'category',
-              title: 'Category',
-              type: 'string',
-              description: 'Used to filter images on the Portfolio page.',
-              options: {
-                list: [
-                  {title: 'Portrait', value: 'portrait'},
-                  {title: 'Lifestyle', value: 'lifestyle'},
-                  {title: 'Detail', value: 'detail'},
-                  {title: 'Family', value: 'family'},
-                  {title: 'Other', value: 'other'},
-                ],
-              },
+              name: 'categories',
+              title: 'Categories',
+              type: 'array',
+              description:
+                'Keep categories minimal. 1–2 per image is best. Used to filter images on the Portfolio page and to drive category landing pages.',
+              of: [{type: 'reference', to: [{type: 'portfolioCategory'}]}],
+              validation: (Rule) => Rule.max(3),
             },
           ],
         },

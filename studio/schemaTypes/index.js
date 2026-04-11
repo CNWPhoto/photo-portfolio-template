@@ -33,12 +33,17 @@ import contactPage from './contactPage'
 import blogPage from './blogPage'
 import notFoundPage from './notFoundPage'
 import palette from './_shared/palette'
+import page from './page'
+import blogCategory from './blogCategory'
+import portfolioCategory from './portfolioCategory'
+import htmlEmbedSection from './htmlEmbedSection'
 
 export const schemaTypes = [
   palette,
   seo, seoSettings,
   navSettings,
   siteSettings, homepagePage,
+  page,
   aboutPage,
   experiencePage,
   experienceHero, experienceIntro, experienceSessions, experienceArtwork, experienceNextSteps, experienceFaqs,
@@ -47,4 +52,6 @@ export const schemaTypes = [
   codeSettings, footerSettings, socialSettings,
   heroSection, welcomeSection, featuredSection, processSection, whyChooseSection, homepageFaqs, testimonialsSection,
   testimonial, portfolio, blogPost,
+  blogCategory, portfolioCategory,
+  htmlEmbedSection,
 ]

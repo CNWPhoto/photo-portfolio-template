@@ -51,20 +51,17 @@ export default {
       ],
     },
     {
-      name: 'category',
-      title: 'Category',
-      type: 'string',
-      description: 'Choose the category that best fits this post. Shown as a label above the title.',
+      name: 'categories',
+      title: 'Categories',
+      type: 'array',
+      description:
+        'Keep categories minimal. 1–2 per post is best. Don\'t use categories for keyword stuffing — it dilutes SEO and confuses readers.',
+      of: [{type: 'reference', to: [{type: 'blogCategory'}]}],
       options: {
-        list: [
-          {title: 'On Location', value: 'On Location'},
-          {title: 'Portraits', value: 'Portraits'},
-          {title: 'Behind the Scenes', value: 'Behind the Scenes'},
-          {title: 'Tips & Advice', value: 'Tips & Advice'},
-          {title: 'Client Stories', value: 'Client Stories'},
-        ],
-        allowInput: true,
+        // allow inline creation of new categories from the picker
+        disableNew: false,
       },
+      validation: (Rule) => Rule.min(1).max(3),
     },
     {
       name: 'body',

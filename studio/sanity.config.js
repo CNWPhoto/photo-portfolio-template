@@ -66,6 +66,8 @@ export default defineConfig({
                     singleton(S, 'blogPage', 'Blog', 'blogPage'),
                     singleton(S, 'contactPage', 'Contact', 'contactPage'),
                     singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
+                    S.divider(),
+                    S.documentTypeListItem('page').title('Custom Pages'),
                   ]),
               ),
 
@@ -76,6 +78,22 @@ export default defineConfig({
 
             // ── Blog ─────────────────────────────────────────────────────
             S.documentTypeListItem('blogPost').title('📝 Blog Posts'),
+
+            // ── Categories ────────────────────────────────────────────────
+            S.listItem()
+              .title('🏷 Categories')
+              .id('categoriesGroup')
+              .child(
+                S.list()
+                  .title('Categories')
+                  .items([
+                    S.documentTypeListItem('blogCategory').title('Blog Categories'),
+                    S.documentTypeListItem('portfolioCategory').title('Portfolio Categories'),
+                  ]),
+              ),
+
+            // ── HTML Embeds ───────────────────────────────────────────────
+            S.documentTypeListItem('htmlEmbedSection').title('🧩 HTML Embeds'),
 
           ]),
     }),
