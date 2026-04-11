@@ -1,14 +1,237 @@
 ---
+import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
-const { section, isFirst = false, palette } = Astro.props;
+import { getClient } from '../../lib/sanity.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
+const { section, palette } = Astro.props;
 const style = paletteToStyle(palette);
+
+const eyebrow = section?.eyebrow || '';
+const heading = section?.heading || 'What Clients Are Saying';
+const layout = section?.layout || 'slider';
+const source = section?.source || 'all';
+const maxCount = section?.maxCount || 12;
+
+let testimonials: any[] = [];
+if (source === 'pickSpecific' && section?.testimonials?.length) {
+  testimonials = section.testimonials;
+} else {
+  const client = getClient(false);
+  testimonials = await client.fetch(
+    `*[_type == "testimonial"] | order(order asc)[0...$max]{
+      _id, testimonial, client,
+      image { ..., asset->{ _id, metadata { dimensions { width, height } } } }
+    }`,
+    { max: maxCount },
+  );
+}
+testimonials = testimonials || [];
 ---
+
 <section
-  class="section testimonialsSection"
+  class:list={['section', 'testi', `testi--${layout}`]}
   data-section-type="testimonialsSection"
   data-spacing={section?.spacing || 'normal'}
-  data-is-first={isFirst}
+  id={section?.sectionId || undefined}
   style={style}
 >
-  <code>[Stub] testimonialsSection</code>
+  <div class="testi__inner">
+    {(eyebrow || heading) && (
+      <header class="testi__header">
+        {eyebrow && <p class="testi__eyebrow">{eyebrow}</p>}
+        {heading && <h2 class="testi__heading">{heading}</h2>}
+      </header>
+    )}
+
+    {layout === 'slider' && testimonials.length > 0 && (
+      <div class="testi__slider" data-testi-slider>
+        <div class="testi__track" data-testi-track>
+          {testimonials.map((t) => (
+            <article class="testi__item">
+              {t?.image?.asset && (
+                <div class="testi__photo">
+                  <SanityImage image={t.image} sizes="120px" loading="lazy" class="testi__img" />
+                </div>
+              )}
+              <blockquote class="testi__quote">&ldquo;{t?.testimonial}&rdquo;</blockquote>
+              {t?.client && <p class="testi__client">— {t.client}</p>}
+            </article>
+          ))}
+        </div>
+        {testimonials.length > 1 && (
+          <>
+            <button class="testi__arrow testi__arrow--prev" data-testi-prev aria-label="Previous">&#8249;</button>
+            <button class="testi__arrow testi__arrow--next" data-testi-next aria-label="Next">&#8250;</button>
+          </>
+        )}
+      </div>
+    )}
+
+    {layout === 'grid' && (
+      <div class="testi__grid">
+        {testimonials.map((t, i) => (
+          <article class:list={['testi__card', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
+            {t?.image?.asset && (
+              <div class="testi__photo">
+                <SanityImage image={t.image} sizes="120px" loading="lazy" class="testi__img" />
+              </div>
+            )}
+            <blockquote class="testi__quote">&ldquo;{t?.testimonial}&rdquo;</blockquote>
+            {t?.client && <p class="testi__client">— {t.client}</p>}
+          </article>
+        ))}
+      </div>
+    )}
+
+    {layout === 'single-featured' && testimonials[0] && (
+      <article class="testi__featured reveal">
+        {testimonials[0].image?.asset && (
+          <div class="testi__photo testi__photo--lg">
+            <SanityImage image={testimonials[0].image} sizes="180px" loading="lazy" class="testi__img" />
+          </div>
+        )}
+        <blockquote class="testi__quote testi__quote--lg">&ldquo;{testimonials[0].testimonial}&rdquo;</blockquote>
+        {testimonials[0].client && <p class="testi__client">— {testimonials[0].client}</p>}
+      </article>
+    )}
+  </div>
 </section>
+
+<style>
+  .testi {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .testi__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-inline: 1.5rem;
+  }
+  .testi__header { text-align: center; margin-bottom: 2.5rem; }
+  .testi__eyebrow {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+  .testi__heading {
+    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  /* ── Slider ── */
+  .testi__slider { position: relative; overflow: hidden; }
+  .testi__track {
+    display: flex;
+    transition: transform 0.5s ease;
+    will-change: transform;
+  }
+  .testi__track > .testi__item {
+    flex: 0 0 100%;
+    padding: 0 4rem;
+    text-align: center;
+  }
+  .testi__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .testi__arrow--prev { left: 0; }
+  .testi__arrow--next { right: 0; }
+
+  /* ── Grid ── */
+  .testi__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+  .testi__card {
+    background: var(--bg-alt);
+    padding: 2rem 1.75rem;
+    text-align: center;
+  }
+
+  /* ── Single featured ── */
+  .testi__featured {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  /* Shared item bits */
+  .testi__photo {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 1.25rem;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  .testi__photo--lg { width: 144px; height: 144px; }
+  .testi__photo :global(.testi__img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .testi__quote {
+    font-style: italic;
+    font-size: 1.15rem;
+    line-height: 1.65;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+  .testi__quote--lg { font-size: 1.4rem; }
+  .testi__client {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.8rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  @media (max-width: 720px) {
+    .testi__track > .testi__item { padding: 0 1.5rem; }
+    .testi__arrow { display: none; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll('[data-testi-slider]').forEach((sliderEl) => {
+    const slider = sliderEl as HTMLElement;
+    const track = slider.querySelector('[data-testi-track]') as HTMLElement | null;
+    if (!track) return;
+    const prev = slider.querySelector('[data-testi-prev]') as HTMLButtonElement | null;
+    const next = slider.querySelector('[data-testi-next]') as HTMLButtonElement | null;
+    const items = track.querySelectorAll('.testi__item');
+    if (items.length < 2) return;
+
+    let current = 0;
+    const goTo = (i: number) => {
+      current = (i + items.length) % items.length;
+      track.style.transform = `translateX(${-current * 100}%)`;
+    };
+    prev?.addEventListener('click', () => goTo(current - 1));
+    next?.addEventListener('click', () => goTo(current + 1));
+  });
+</script>

@@ -1,14 +1,213 @@
 ---
+import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
+import { resolveLink } from '../../lib/links.js';
+import { getClient } from '../../lib/sanity.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
 const { section, isFirst = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
+
+const eyebrow = section?.eyebrow || '';
+const heading = section?.heading || '';
+const layout = section?.layout || 'masonry';
+const source = section?.source || 'latest';
+const itemCount = section?.itemCount || 6;
+const showCategory = !!section?.showCategory;
+const ctaText = section?.ctaText || '';
+const ctaHref = resolveLink(section?.ctaLink) || '/portfolio';
+const sideLabel = section?.verticalSideLabel || '';
+
+// The portfolio singleton holds an `images[]` array — pull from there.
+const client = getClient(false);
+const portfolio = await client.fetch(
+  `*[_type == "portfolio" && _id == "portfolio"][0]{
+    images[] {
+      _key, alt, title,
+      "categories": categories[]->{ "slug": slug.current, name },
+      ...,
+      asset->{ _id, metadata { dimensions { width, height, aspectRatio }, lqip } }
+    }
+  }`,
+);
+const allImages = (portfolio?.images || []) as any[];
+
+let images: any[] = [];
+if (source === 'pickSpecific' && section?.items?.length) {
+  images = section.items.map((it: any) => it).slice(0, itemCount);
+} else {
+  let pool = allImages;
+  if (section?.filterByCategory?.slug) {
+    pool = pool.filter((img) =>
+      (img.categories || []).some((c: any) => c?.slug === section.filterByCategory.slug),
+    );
+  }
+  images = pool.slice(0, itemCount);
+}
+
+const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
+
 <section
-  class="section featuredPortfolioSection"
+  class:list={['section', 'featured', `featured--${layout}`]}
   data-section-type="featuredPortfolioSection"
   data-spacing={section?.spacing || 'normal'}
-  data-is-first={isFirst}
+  id={section?.sectionId || undefined}
   style={style}
 >
-  <code>[Stub] featuredPortfolioSection</code>
+  {sideLabel && <div class="featured__side-label" aria-hidden="true">{sideLabel}</div>}
+
+  <div class="featured__inner">
+    {(eyebrow || heading) && (
+      <header class="featured__header">
+        {eyebrow && <p class="featured__eyebrow">{eyebrow}</p>}
+        {heading && <HeadingTag class="featured__heading">{heading}</HeadingTag>}
+      </header>
+    )}
+
+    <div class="featured__grid">
+      {images.map((img, i) => {
+        const lqip = i < 3 ? img?.asset?.metadata?.lqip || null : null;
+        return (
+          <figure class="featured__item">
+            <div
+              class="featured__item-inner"
+              style={lqip ? `background-image:url('${lqip}');background-size:cover;background-position:center;` : ''}
+            >
+              <SanityImage
+                image={img}
+                sizes="(max-width:900px) 100vw, 33vw"
+                loading={i < 3 ? 'eager' : 'lazy'}
+                class="featured__img"
+              />
+            </div>
+            {showCategory && img?.categories?.[0]?.name && (
+              <figcaption class="featured__cat">{img.categories[0].name}</figcaption>
+            )}
+          </figure>
+        );
+      })}
+    </div>
+
+    {ctaText && (
+      <div class="featured__cta-wrap reveal">
+        <a class="featured__cta" href={ctaHref}>{ctaText}</a>
+      </div>
+    )}
+  </div>
 </section>
+
+<style>
+  .featured {
+    background: var(--bg);
+    color: var(--text);
+    position: relative;
+  }
+  .featured__inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-inline: 1.5rem;
+  }
+  .featured__header { text-align: center; margin-bottom: 2.5rem; }
+  .featured__eyebrow {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+  .featured__heading {
+    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .featured__grid {
+    display: grid;
+    gap: 1rem;
+  }
+  .featured--grid-3 .featured__grid { grid-template-columns: repeat(3, 1fr); }
+  .featured--grid-4 .featured__grid { grid-template-columns: repeat(4, 1fr); }
+  .featured--masonry .featured__grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-flow: dense;
+  }
+  .featured--masonry .featured__item:nth-child(4n+1) { grid-row: span 2; }
+  .featured--carousel .featured__grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .featured__item { margin: 0; }
+  .featured__item-inner {
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+  }
+  .featured--masonry .featured__item-inner { aspect-ratio: 4 / 5; }
+  .featured--masonry .featured__item:nth-child(4n+1) .featured__item-inner { aspect-ratio: 4 / 6; }
+
+  .featured__item-inner :global(.featured__img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s var(--ease-image);
+  }
+  .featured__item-inner:hover :global(.featured__img) { transform: scale(1.04); }
+
+  .featured__cat {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  .featured__cta-wrap { margin-top: 3rem; text-align: center; }
+  .featured__cta {
+    display: inline-block;
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    padding: 0.95rem 2rem;
+  }
+
+  .featured__side-label {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%) rotate(-90deg);
+    transform-origin: left center;
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted-light);
+    pointer-events: none;
+  }
+
+  @media (max-width: 900px) {
+    .featured--grid-3 .featured__grid,
+    .featured--grid-4 .featured__grid,
+    .featured--masonry .featured__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .featured--masonry .featured__item:nth-child(4n+1) { grid-row: span 1; }
+    .featured__side-label { display: none; }
+  }
+  @media (max-width: 560px) {
+    .featured__grid { grid-template-columns: 1fr !important; }
+  }
+</style>
