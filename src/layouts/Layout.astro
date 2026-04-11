@@ -24,7 +24,17 @@ const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, photographerName, logoType, logoImage, favicon, accentColorOverride, textColorPreset }`),
   client.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState, priceRange, areaServed, twitterHandle }`),
   client.fetch(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`),
-  client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{ navVariant, links[] { label, url, enabled, openInNewTab, isButton } }`),
+  client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{
+    navVariant,
+    links[] {
+      label, url, enabled, openInNewTab, isButton, linkType,
+      "internalRef": internalRef->{ "slug": slug.current },
+      children[] {
+        label, url, openInNewTab, linkType,
+        "internalRef": internalRef->{ "slug": slug.current }
+      }
+    }
+  }`),
   client.fetch(`*[_type == "blogPage" && _id == "blogPage"][0]{ blogEnabled }`),
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok }`),
 ]);

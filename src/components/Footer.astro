@@ -6,20 +6,28 @@ const { siteName = 'Pet Photography', blogEnabled = true } = Astro.props;
 
 const client = getClient(false);
 const [footerData, socialData, siteData] = await Promise.all([
-  client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{ menu, middleColumn { label, embedCode, note }, legalLinks }`),
+  client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{
+    links[] { label, url, enabled, openInNewTab },
+    middleColumn {
+      enabled, label, note,
+      "embed": embed->{ name, rawHtml, containerWidth, containerHeight }
+    },
+    legalLinks
+  }`),
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`),
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName }`),
 ]);
 
 const photographerName = siteData?.photographerName || siteName;
 
-// Middle column
-const middleCol       = footerData?.middleColumn ?? null;
-const middleLabel     = middleCol?.label || null;
-const middleEmbed     = middleCol?.embedCode || null;
-const middleNoteRaw   = middleCol?.note || null;
-const middleNoteHTML  = middleNoteRaw ? toHTML(middleNoteRaw) : null;
-const showMiddleCol   = !!(middleEmbed || middleNoteHTML);
+// Middle column — embed reference takes priority over the text note
+const middleCol      = footerData?.middleColumn ?? null;
+const middleEnabled  = middleCol?.enabled !== false;
+const middleLabel    = middleCol?.label || null;
+const middleEmbed    = middleCol?.embed?.rawHtml || null;
+const middleNoteRaw  = middleCol?.note || null;
+const middleNoteHTML = middleNoteRaw ? toHTML(middleNoteRaw) : null;
+const showMiddleCol  = middleEnabled && !!(middleEmbed || middleNoteHTML);
 
 // Social links — only include platforms with a URL filled in
 const socialLinks = [
@@ -41,18 +49,24 @@ const icons: Record<string, string> = {
 };
 const defaultIcon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
 
-// Menu links — fall back to showing all pages with default labels
-const menuDef = footerData?.menu;
-const menuLinks = [
-  { key: 'home',       href: '/',            default: 'Home' },
-  { key: 'about',      href: '/about',       default: 'About' },
-  { key: 'experience', href: '/experience',  default: 'Experience' },
-  { key: 'portfolio',  href: '/portfolio',   default: 'Portfolio' },
-  { key: 'blog',       href: '/blog',        default: 'Blog' },
-  { key: 'contact',    href: '/contact',     default: 'Contact' },
-].filter(item => item.key === 'blog' ? blogEnabled : true)
- .filter(item => menuDef ? menuDef[item.key]?.enabled !== false : true)
- .map(item => ({ href: item.href, label: menuDef?.[item.key]?.label || item.default }));
+// Free-form footer links. When the editor hasn't configured any yet,
+// fall back to the same default set the legacy footer used so a fresh
+// install renders sensibly out of the box.
+const defaultFooterLinks = [
+  { label: 'Home',       href: '/' },
+  { label: 'About',      href: '/about' },
+  { label: 'Experience', href: '/experience' },
+  { label: 'Portfolio',  href: '/portfolio' },
+  { label: 'Blog',       href: '/blog' },
+  { label: 'Contact',    href: '/contact' },
+];
+
+const configuredLinks = (footerData?.links ?? [])
+  .filter((l: any) => l.enabled !== false)
+  .map((l: any) => ({ label: l.label, href: l.url, openInNewTab: !!l.openInNewTab }));
+
+const menuLinks = (configuredLinks.length > 0 ? configuredLinks : defaultFooterLinks)
+  .filter((l: any) => blogEnabled || l.href !== '/blog');
 
 const legalLinks = footerData?.legalLinks ?? null;
 const showPrivacy = legalLinks?.privacyPolicy?.enabled && legalLinks?.privacyPolicy?.url;
@@ -73,8 +87,14 @@ const year = new Date().getFullYear();
 		<div class="footer__left">
 			<div class="footer__col">
 				<ul class="footer__list footer__list--2col">
-					{menuLinks.map(link => (
-						<li><a href={link.href}>{link.label}</a></li>
+					{menuLinks.map((link: any) => (
+						<li>
+							<a
+								href={link.href}
+								target={link.openInNewTab ? '_blank' : undefined}
+								rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+							>{link.label}</a>
+						</li>
 					))}
 				</ul>
 			</div>
