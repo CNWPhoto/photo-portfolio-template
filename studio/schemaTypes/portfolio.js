@@ -1,3 +1,5 @@
+import {imageSizeWarning, altTextWarning} from './_shared/imageValidation'
+
 export default {
   name: 'portfolio',
   title: 'Portfolio',
@@ -88,6 +90,7 @@ export default {
         {
           type: 'image',
           options: {hotspot: true, crop: true},
+          validation: imageSizeWarning,
           preview: {
             select: {title: 'title', subtitle: 'category', media: 'asset'},
             prepare({title, subtitle, media}) {
@@ -101,6 +104,7 @@ export default {
               type: 'string',
               description:
                 'Describe the image for accessibility and SEO (e.g. "Black lab splashing through a mountain stream").',
+              validation: altTextWarning,
             },
             {
               name: 'title',

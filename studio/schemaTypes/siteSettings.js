@@ -1,3 +1,5 @@
+import {imageSizeWarning} from './_shared/imageValidation'
+
 const colorThemeList = [
   { title: 'Classic Cream', value: 'classic-cream' },
   { title: 'Warm Studio', value: 'warm-studio' },
@@ -61,8 +63,9 @@ export default {
       title: 'Logo Image',
       type: 'image',
       description:
-        'Upload your logo. Recommended size: 400 × 120px or similar horizontal format, 2× resolution for retina. PNG with transparent background preferred.',
+        'Upload your logo. Recommended size: 400 × 120px or similar horizontal format, 2× resolution for retina. PNG with transparent background preferred. Keep file size under 5MB.',
       hidden: ({document}) => document?.logoType !== 'image',
+      validation: imageSizeWarning,
     },
     {
       name: 'favicon',

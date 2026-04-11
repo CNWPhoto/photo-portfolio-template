@@ -12,7 +12,7 @@ const [post, siteSettings] = await Promise.all([
   client.fetch(
     `*[_type == "blogPost" && slug.current == $slug][0]{
       title, publishDate, _updatedAt, excerpt,
-      coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt },
+      coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio }, lqip } }, alt },
       body,
       "categories": categories[]->{ name, "slug": slug.current }
     }`,
@@ -131,7 +131,12 @@ const bodyHTML = post.body
       </div>
 
       {post.coverImage && (
-        <div class="post__cover">
+        <div
+          class="post__cover"
+          style={post.coverImage?.asset?.metadata?.lqip
+            ? `background-image:url('${post.coverImage.asset.metadata.lqip}');background-size:cover;background-position:center;`
+            : ''}
+        >
           <SanityImage
             image={post.coverImage}
             sizes="(max-width: 900px) 100vw, 60vw"

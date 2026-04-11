@@ -32,7 +32,7 @@ if (source === 'pickSpecific' && section?.specificPosts?.length) {
   posts = await client.fetch(
     `*[_type == "blogPost" && defined(slug.current)] | order(publishDate desc)[0...$max]{
       _id, title, "slug": slug.current, publishDate, excerpt,
-      coverImage { ..., asset->{ _id, metadata { dimensions { width, height } } } },
+      coverImage { ..., asset->{ _id, metadata { dimensions { width, height }, lqip } } },
       "categories": categories[]->{ name, "slug": slug.current }
     }`,
     { max: postCount },
@@ -68,11 +68,17 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     )}
 
     <div class="blogteaser__grid">
-      {posts.map((post, i) => (
+      {posts.map((post, i) => {
+        const isCard = layout === 'cards';
+        const lqip = isCard ? post?.coverImage?.asset?.metadata?.lqip || null : null;
+        return (
         <article class:list={['blogteaser__card', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
           <a href={`/blog/${post.slug}`} class="blogteaser__card-link">
             {post?.coverImage?.asset && (
-              <div class="blogteaser__img-wrap">
+              <div
+                class="blogteaser__img-wrap"
+                style={lqip ? `background-image:url('${lqip}');background-size:cover;background-position:center;` : ''}
+              >
                 <SanityImage
                   image={post.coverImage}
                   sizes="(max-width:900px) 100vw, 33vw"
@@ -95,7 +101,8 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
             </div>
           </a>
         </article>
-      ))}
+        );
+      })}
     </div>
 
     {ctaText && (

@@ -17,6 +17,7 @@ interface Props {
   widths?: number[];
   displayWidth?: number;
   displayHeight?: number;
+  quality?: number;
 }
 
 const {
@@ -27,12 +28,17 @@ const {
   widths,
   displayWidth,
   displayHeight,
+  quality,
 } = Astro.props;
 
 if (!image?.asset) return;
 
-const src    = buildSrc(image);
-const srcset = buildSrcset(image, widths);
+// Above-fold images (loading="eager") render at quality 85 by default for
+// visible sharpness. Lazy images stay at 80. An explicit quality prop wins.
+const effectiveQuality = quality ?? (loading === 'eager' ? 85 : 80);
+
+const src    = buildSrc(image, 1200, effectiveQuality);
+const srcset = buildSrcset(image, widths, effectiveQuality);
 const { width, height } = getDimensions(image);
 const attrWidth  = displayWidth  ?? Math.min(width, 1200);
 const attrHeight = displayHeight ?? Math.round((attrWidth / width) * height);

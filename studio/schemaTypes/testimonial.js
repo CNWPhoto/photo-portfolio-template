@@ -1,3 +1,5 @@
+import {imageSizeWarning, altTextWarning} from './_shared/imageValidation'
+
 export default {
   name: 'testimonial',
   title: 'Testimonial',
@@ -27,7 +29,7 @@ export default {
       name: 'image',
       title: 'Image',
       type: 'image',
-      description: 'A portrait photo of the client or their subject. Vertical images work best.',
+      description: 'A portrait photo of the client or their subject. Vertical images work best. Keep file size under 5MB for best load times.',
       options: {
         hotspot: true,
         crop: true,
@@ -38,8 +40,10 @@ export default {
           title: 'Alt Text',
           type: 'string',
           description: 'Describe the photo for accessibility.',
+          validation: altTextWarning,
         },
       ],
+      validation: imageSizeWarning,
     },
     {
       name: 'order',

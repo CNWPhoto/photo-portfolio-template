@@ -1,3 +1,5 @@
+import {imageSizeWarning, altTextWarning} from './_shared/imageValidation'
+
 export default {
   name: 'blogPost',
   title: 'Blog Post',
@@ -36,7 +38,7 @@ export default {
       name: 'coverImage',
       title: 'Cover Image',
       type: 'image',
-      description: 'The main image for this post. Shown at the top of the post page and on the blog listing. Landscape images work best.',
+      description: 'The main image for this post. Shown at the top of the post page and on the blog listing. Landscape images work best. Resize to 2500–3000px on the long edge before uploading; keep file size under 5MB.',
       options: {
         hotspot: true,
         crop: true,
@@ -47,8 +49,10 @@ export default {
           title: 'Alt Text',
           type: 'string',
           description: 'Describe the image for accessibility and SEO (e.g. "Two dogs playing fetch at Wash Park in Denver").',
+          validation: altTextWarning,
         },
       ],
+      validation: imageSizeWarning,
     },
     {
       name: 'categories',
@@ -126,12 +130,14 @@ export default {
         {
           type: 'image',
           options: {hotspot: true},
+          validation: imageSizeWarning,
           fields: [
             {
               name: 'alt',
               type: 'string',
               title: 'Alt text',
               description: 'Describe the image for accessibility and SEO',
+              validation: altTextWarning,
             },
             {
               name: 'caption',
