@@ -18,7 +18,6 @@ const [homepageDoc, siteData] = await Promise.all([
 
 const palettes = siteData?.palettes ?? [];
 const sitePaletteSlug = siteData?.defaultPalette ?? null;
-const pagePaletteSlug = null;
 
 const hero = homepageDoc?.hero ?? null;
 const sections = homepageDoc?.sections ?? [];
@@ -47,7 +46,6 @@ const faqSchemaData = faqs?.length && faqSection?.showSchema !== false
 			<SectionRenderer
 				section={hero}
 				isFirst={true}
-				pagePaletteSlug={pagePaletteSlug}
 				sitePaletteSlug={sitePaletteSlug}
 				palettes={palettes}
 			/>
@@ -56,7 +54,6 @@ const faqSchemaData = faqs?.length && faqSection?.showSchema !== false
 			<SectionRenderer
 				section={section}
 				isFirst={!hero && i === 0}
-				pagePaletteSlug={pagePaletteSlug}
 				sitePaletteSlug={sitePaletteSlug}
 				palettes={palettes}
 			/>

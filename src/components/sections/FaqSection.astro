@@ -36,10 +36,17 @@ const faqs = (section?.faqs || []).map((f: any) => ({
         {faqs.map((faq: any, i: number) => (
           <div class:list={['faqs__item', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
             {layout === 'accordion' ? (
-              <details class="faqs__details">
-                <summary class="faqs__question">{faq.q}</summary>
-                <div class="faqs__answer" set:html={faq.aHTML} />
-              </details>
+              <>
+                <button
+                  class="faqs__question faqs__question--accordion"
+                  aria-expanded="false"
+                  aria-controls={`faq-answer-${i}`}
+                >
+                  {faq.q}
+                  <span class="faqs__icon" aria-hidden="true">+</span>
+                </button>
+                <div class="faqs__answer faqs__answer--accordion" id={`faq-answer-${i}`} role="region" set:html={faq.aHTML} />
+              </>
             ) : (
               <>
                 <h3 class="faqs__question">{faq.q}</h3>
@@ -96,11 +103,15 @@ const faqs = (section?.faqs || []).map((f: any) => ({
   }
 
   .faqs__item {
+    border-top: 1px solid var(--border);
+  }
+  .faqs__item:last-child { border-bottom: 1px solid var(--border); }
+
+  [data-layout='flat-list'] .faqs__item {
     padding: 2.5rem 0;
+    border-top: none;
     border-bottom: 1px solid var(--border);
   }
-
-  .faqs__item:first-child { border-top: none; }
 
   .faqs__question {
     font-size: 1.5rem;
@@ -111,20 +122,53 @@ const faqs = (section?.faqs || []).map((f: any) => ({
     cursor: default;
   }
 
-  .faqs__details > summary {
-    list-style: none;
+  .faqs__question--accordion {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1.5rem 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
     cursor: pointer;
+    font-family: var(--font-heading, var(--font-serif));
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.406rem;
+    color: var(--text);
+    text-align: left;
+    line-height: 1.4;
+    transition: color 0.2s;
   }
-  .faqs__details > summary::-webkit-details-marker { display: none; }
-  .faqs__details[open] > summary { margin-bottom: 1.25rem; }
+  .faqs__question--accordion:hover { color: var(--accent); }
+
+  .faqs__icon {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: var(--accent);
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+    line-height: 1;
+  }
+  .faqs__item--open .faqs__icon { transform: rotate(45deg); }
+
+  .faqs__answer--accordion {
+    display: none;
+    padding-bottom: 1.75rem;
+  }
+  .faqs__item--open .faqs__answer--accordion { display: block; }
 
   .faqs__answer :global(p),
   .faqs__answer :global(blockquote) {
     margin: 0 0 0.75rem;
-    padding: 0 0 0 1.75rem;
+    padding: 0 0 0 1.25rem;
     border-left: 2px solid var(--accent);
     font-style: normal;
-    font-size: 1.125rem;
+    font-size: 1.172rem;
     line-height: 1.78;
     color: var(--muted);
   }
@@ -147,3 +191,20 @@ const faqs = (section?.faqs || []).map((f: any) => ({
     }
   }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.faqs__question--accordion').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faqs__item');
+      const isOpen = item?.classList.contains('faqs__item--open');
+      document.querySelectorAll('.faqs__item--open').forEach((el) => {
+        el.classList.remove('faqs__item--open');
+        el.querySelector('.faqs__question--accordion')?.setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen && item) {
+        item.classList.add('faqs__item--open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+</script>

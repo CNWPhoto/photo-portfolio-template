@@ -24,9 +24,14 @@ const client = getClient(isPreview);
 
 const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{
-    colorTheme, fontTheme, siteName, photographerName, logoType, logoImage, favicon,
+    fontTheme, siteName, photographerName, logoType, logoImage, favicon,
     accentColorOverride, textColorPreset, defaultPalette,
-    "palettes": palettes[]{ "slug": slug.current, bg }
+    "palettes": palettes[]{
+      "slug": slug.current,
+      bg, bgAlt, surface, text, textMuted, textMutedLight,
+      accent, accentDark, border, sectionAlt, sectionDark,
+      sectionDarkText, btnBg, btnText
+    }
   }`),
   client.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState, priceRange, areaServed, twitterHandle }`),
   client.fetch(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`),
@@ -45,7 +50,7 @@ const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok }`),
 ]);
 
-const colorTheme  = settings?.colorTheme || 'classic-cream';
+const colorTheme  = settings?.defaultPalette || 'classic-cream';
 const fontTheme   = settings?.fontTheme  || 'classic-editorial';
 const siteName    = settings?.siteName   || 'Pet Photography';
 const logoType    = settings?.logoType   || 'text';
@@ -61,17 +66,40 @@ const textColorPreset   = settings?.textColorPreset || null;
 const twitterHandle     = seo?.twitterHandle ? seo.twitterHandle.replace(/^@/, '') : null;
 const sameAs            = [social?.instagram, social?.facebook, social?.youtube, social?.tiktok].filter(Boolean);
 
-// Resolve theme-color meta from siteSettings.palettes data. Falls back to
-// Classic Cream when palettes haven't been seeded yet or are misconfigured.
-const palettesArr = (settings?.palettes ?? []) as Array<{ slug?: string; bg?: string }>;
+// Resolve the active palette from siteSettings and emit its tokens as
+// :root CSS variables so nav, footer, body, and any element outside a
+// section inherits the correct theme.
+const palettesArr = (settings?.palettes ?? []) as Array<Record<string, string>>;
 const activePaletteSlug = settings?.defaultPalette || colorTheme || null;
-let themeColor = '#f5f3ef';
-if (activePaletteSlug && palettesArr.length) {
-  const match = palettesArr.find((p) => p?.slug === activePaletteSlug);
-  if (match?.bg) themeColor = match.bg;
-} else if (palettesArr[0]?.bg) {
-  themeColor = palettesArr[0].bg;
-}
+const activePalette =
+  (activePaletteSlug && palettesArr.find((p) => p?.slug === activePaletteSlug)) ||
+  palettesArr[0] ||
+  null;
+
+const themeColor = activePalette?.bg || '#f5f3ef';
+
+const PALETTE_TO_VAR: Array<[string, string]> = [
+  ['bg', '--bg'],
+  ['bgAlt', '--bg-alt'],
+  ['surface', '--surface'],
+  ['text', '--text'],
+  ['textMuted', '--muted'],
+  ['textMutedLight', '--muted-light'],
+  ['accent', '--accent'],
+  ['accentDark', '--accent-dark'],
+  ['border', '--border'],
+  ['sectionAlt', '--section-alt'],
+  ['sectionDark', '--section-dark'],
+  ['sectionDarkText', '--section-dark-text'],
+  ['btnBg', '--btn-bg'],
+  ['btnText', '--btn-text'],
+];
+const rootPaletteCss = activePalette
+  ? `:root {\n${PALETTE_TO_VAR
+      .map(([key, cssVar]) => (activePalette[key] ? `  ${cssVar}: ${activePalette[key]};` : null))
+      .filter(Boolean)
+      .join('\n')}\n}`
+  : '';
 
 const FONT_MAP: Record<string, string> = {
   'classic-editorial': 'family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Jost:wght@300;400;500;600;700',
@@ -213,6 +241,7 @@ const schemaJSON = schemaGraph.length
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link href={fontUrl} rel="stylesheet" />
+		{rootPaletteCss && <style set:html={rootPaletteCss} />}
 		{accentOverride && (
 			<style set:html={`
 				:root, [data-theme] {

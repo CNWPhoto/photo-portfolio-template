@@ -39,6 +39,19 @@ export default {
       type: 'ctaLink',
     },
     imageField({name: 'backgroundImage', title: 'Background Image'}),
+    imageField({
+      name: 'foregroundImage',
+      title: 'Foreground Image',
+      description: 'Portrait overlay photo (only used in Overlapping Images layout).',
+      hidden: ({parent}) => parent?.layout !== 'overlapping-images',
+    }),
+    {
+      name: 'caption',
+      title: 'Caption',
+      type: 'string',
+      description: 'Small text below the button (e.g. "Serving Denver and surrounding areas.").',
+      hidden: ({parent}) => parent?.layout !== 'overlapping-images',
+    },
     {
       name: 'layout',
       title: 'Layout',
@@ -47,6 +60,7 @@ export default {
         list: [
           {title: 'Centered', value: 'centered'},
           {title: 'Split (text left, CTA right)', value: 'split-text-left-cta-right'},
+          {title: 'Overlapping Images', value: 'overlapping-images'},
         ],
         layout: 'radio',
       },

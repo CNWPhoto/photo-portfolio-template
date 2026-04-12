@@ -183,7 +183,17 @@ const horizontalImage =
       grid-template-rows: auto auto;
       padding: 0 1.5rem;
     }
-    .pgrid__label-col { display: none; }
+    .pgrid__label-col {
+      display: flex;
+      justify-content: center;
+      padding-bottom: 1.5rem;
+    }
+    .pgrid__label {
+      writing-mode: horizontal-tb;
+      transform: none;
+      font-size: clamp(1.6rem, 6vw, 2.25rem);
+      text-align: center;
+    }
     .pgrid__images {
       height: auto;
       flex-direction: column;
@@ -192,5 +202,6 @@ const horizontalImage =
     .pgrid__img { height: auto; flex: none; }
     .pgrid__img :global(.pgrid__img-el) { height: 70vw; }
     .pgrid__footer { grid-column: 1; padding-bottom: 0.5rem; }
+    .pgrid__cta { display: block; text-align: center; width: 100%; }
   }
 </style>

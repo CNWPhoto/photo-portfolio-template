@@ -20,6 +20,13 @@ export const SECTION_PROJECTION = /* groq */ `
       metadata { dimensions { width, height, aspectRatio }, lqip }
     }
   },
+  foregroundImage {
+    ...,
+    asset->{
+      _id,
+      metadata { dimensions { width, height, aspectRatio }, lqip }
+    }
+  },
   images[] {
     ...,
     asset->{

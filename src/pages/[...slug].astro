@@ -15,7 +15,6 @@ const [page, siteData] = await Promise.all([
 			title,
 			"slug": slug.current,
 			seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
-			defaultPalette,
 			navThemeOverHero,
 			"sections": sections[]{ ${SECTION_PROJECTION} }
 		}`,
@@ -30,7 +29,6 @@ if (!page) {
 
 const palettes = siteData?.palettes ?? [];
 const sitePaletteSlug = siteData?.defaultPalette ?? null;
-const pagePaletteSlug = page.defaultPalette ?? null;
 
 const sections = page.sections ?? [];
 
@@ -58,7 +56,6 @@ const faqSchemaData = faqs?.length && faqSection?.showSchema !== false
 			<SectionRenderer
 				section={section}
 				isFirst={i === 0}
-				pagePaletteSlug={pagePaletteSlug}
 				sitePaletteSlug={sitePaletteSlug}
 				palettes={palettes}
 			/>

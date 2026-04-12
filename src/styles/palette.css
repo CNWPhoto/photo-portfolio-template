@@ -8,21 +8,8 @@
    ══════════════════════════════════════════════════ */
 
 :root {
-  /* Palette tokens — fallback to Classic Cream */
-  --bg: #f5f3ef;
-  --bg-alt: #edeae4;
-  --surface: #edeae4;
-  --text: #1a2744;
-  --muted: #4a5568;
-  --muted-light: #8a94a6;
-  --accent: #8b2635;
-  --accent-dark: #6b1c28;
-  --border: #d4cfc6;
-  --section-alt: #edeae4;
-  --section-dark: #1a2744;
-  --section-dark-text: #f5f3ef;
-  --btn-bg: #8b2635;
-  --btn-text: #ffffff;
+  /* Color palette tokens are emitted dynamically by Layout.astro from
+     siteSettings.palettes — see Layout.astro rootPaletteCss. */
   --white: #ffffff;
 
   /* Easing tokens — replace scattered cubic-bezier literals */

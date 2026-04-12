@@ -16,11 +16,21 @@ export const sectionBaseFields = ({groupName, withVerticalSideLabel = false} = {
       ...group,
     },
     {
-      name: 'palette',
-      title: 'Palette Override',
+      name: 'backgroundTone',
+      title: 'Background Tone',
       type: 'string',
       description:
-        'Optional: enter a palette slug from Site Settings (e.g. "warm-studio") to override the page default for this section. Leave blank to inherit.',
+        'Which background shade from the site palette this section uses. Light is the default page background; Alt is a slightly darker shade; Dark is the full dark section color.',
+      options: {
+        list: [
+          {title: 'Light (default)', value: 'default'},
+          {title: 'Alt (subtle darker)', value: 'alt'},
+          {title: 'Dark', value: 'dark'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'default',
       ...group,
     },
     {

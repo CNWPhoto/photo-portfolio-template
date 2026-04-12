@@ -15,14 +15,13 @@ export const GET: APIRoute = async () => {
     `*[_type == "siteSettings" && _id == "siteSettings"][0]{
       siteName,
       defaultPalette,
-      colorTheme,
       "palettes": palettes[]{ "slug": slug.current, bg }
     }`,
   );
 
   const siteName = settings?.siteName || 'Photo Portfolio';
   const palettes: Array<{ slug?: string; bg?: string }> = settings?.palettes || [];
-  const activeSlug = settings?.defaultPalette || settings?.colorTheme || null;
+  const activeSlug = settings?.defaultPalette || null;
 
   let themeColor = FALLBACK_BG;
   if (activeSlug && palettes.length) {

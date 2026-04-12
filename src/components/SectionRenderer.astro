@@ -17,17 +17,16 @@ import FeaturedPortfolioSection from './sections/FeaturedPortfolioSection.astro'
 import BlogTeaserSection from './sections/BlogTeaserSection.astro';
 import HtmlEmbedSection from './sections/HtmlEmbedSection.astro';
 
-import { resolvePalette } from '../lib/palette.js';
+import { resolvePalette, applyBackgroundTone } from '../lib/palette.js';
 
 interface Props {
   section: any;
   isFirst?: boolean;
-  pagePaletteSlug?: string | null;
   sitePaletteSlug?: string | null;
   palettes?: any[];
 }
 
-const { section, isFirst = false, pagePaletteSlug = null, sitePaletteSlug = null, palettes = [] } = Astro.props;
+const { section, isFirst = false, sitePaletteSlug = null, palettes = [] } = Astro.props;
 
 const componentMap: Record<string, any> = {
   heroSection: HeroSection,
@@ -51,7 +50,8 @@ const componentMap: Record<string, any> = {
 
 const Component = section?._type ? componentMap[section._type] : null;
 const enabled = section?.enabled !== false;
-const palette = resolvePalette(section?.palette, pagePaletteSlug, sitePaletteSlug, palettes);
+const basePalette = resolvePalette(null, null, sitePaletteSlug, palettes);
+const palette = applyBackgroundTone(basePalette, section?.backgroundTone);
 ---
 
 {Component && enabled && (

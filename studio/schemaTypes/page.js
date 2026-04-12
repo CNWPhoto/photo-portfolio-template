@@ -13,7 +13,6 @@ export default {
     {name: 'content', title: 'Content', default: true},
     {name: 'seo', title: 'SEO'},
     {name: 'navigation', title: 'Navigation'},
-    {name: 'theme', title: 'Theme'},
   ],
   fields: [
     {
@@ -80,14 +79,6 @@ export default {
       ],
     },
     {
-      name: 'defaultPalette',
-      title: 'Default Palette',
-      type: 'string',
-      description:
-        'Optional palette slug (e.g. "warm-studio") to override the site default for sections on this page.',
-      group: 'theme',
-    },
-    {
       name: 'navThemeOverHero',
       title: 'Nav Theme Over Hero',
       type: 'string',
@@ -103,7 +94,7 @@ export default {
         direction: 'horizontal',
       },
       initialValue: 'auto',
-      group: 'theme',
+      group: 'navigation',
     },
   ],
   preview: {

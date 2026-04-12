@@ -76,29 +76,20 @@ export default {
       options: {accept: 'image/png,image/svg+xml,image/x-icon,image/jpeg'},
     },
     {
-      name: 'colorTheme',
-      title: 'Default Colour Theme (legacy)',
-      type: 'string',
-      options: { list: colorThemeList },
-      initialValue: 'classic-cream',
-      description:
-        'Legacy alias for the default palette slug. Kept during the page-builder rewrite — superseded by Default Palette below.',
-    },
-    {
       name: 'palettes',
       title: 'Color Palettes',
       type: 'array',
       description:
-        'Color palettes available across the site. Sections inherit the default palette unless they override it. Add or edit freely — palette slugs are referenced by other settings.',
+        'Color palettes available across the site. Edit the hex values to customize, or add new palettes.',
       of: [{type: 'palette'}],
     },
     {
       name: 'defaultPalette',
       title: 'Default Palette',
       type: 'string',
-      description:
-        'Slug of the palette to use site-wide by default (e.g. "classic-cream"). Must match a palette slug in the list above.',
+      options: { list: colorThemeList },
       initialValue: 'classic-cream',
+      description: 'Site-wide color theme. Applies to every section on every page.',
     },
     {
       name: 'fontTheme',

@@ -27,29 +27,53 @@ const bodyHTML = isPortableText(section?.body)
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink) || '#';
 const caption = section?.caption || '';
+const eyebrow = section?.eyebrow || '';
+const textContainer = section?.textContainer || 'default';
+const overlayOpacity = (section?.overlayOpacity ?? 30) / 100;
+const height = section?.height || 'tall';
+
+const isOverlayCard = textContainer === 'overlay-card';
 ---
 
-<section
-  class="why"
-  data-section-type="fullBleedImageSection"
-  id={section?.sectionId || 'why-choose'}
-  style={style}
->
-  <div class="why__image-full" style={`background-image: url('${bgUrl}')`} aria-hidden="true"></div>
-
-  <hr />
-  <div class="why__inner">
-    <div class="why__heading-col reveal">
-      {headingHTML && <h2 class="why__heading" set:html={headingHTML} />}
+{isOverlayCard ? (
+  <section
+    class:list={['fbi', `fbi--${height}`]}
+    data-section-type="fullBleedImageSection"
+    id={section?.sectionId || undefined}
+    style={style}
+  >
+    <div class="fbi__bg" data-parallax-bg style={`background-image:url('${bgUrl}')`} aria-hidden="true"></div>
+    <div class="fbi__overlay" style={`background:rgba(0,0,0,${overlayOpacity})`} aria-hidden="true"></div>
+    <div class="fbi__box">
+      {eyebrow && <p class="fbi__label reveal reveal-delay-1">{eyebrow}</p>}
+      {headingHTML && <h2 class="fbi__heading reveal reveal-delay-2" set:html={headingHTML} />}
+      {bodyHTML && <div class="fbi__body-wrap reveal reveal-delay-3" set:html={bodyHTML} />}
+      {ctaText && ctaHref && <a href={ctaHref} class="fbi__btn reveal reveal-delay-4">{ctaText}</a>}
     </div>
+  </section>
+) : (
+  <section
+    class="why"
+    data-section-type="fullBleedImageSection"
+    id={section?.sectionId || 'why-choose'}
+    style={style}
+  >
+    <div class="why__image-full" style={`background-image: url('${bgUrl}')`} aria-hidden="true"></div>
 
-    <div class="why__content-col reveal reveal-delay-2">
-      {bodyHTML && <div set:html={bodyHTML} />}
-      {ctaText && ctaHref && <a href={ctaHref} class="why__cta">{ctaText}</a>}
-      {caption && <p class="why__caption">{caption}</p>}
+    <hr />
+    <div class="why__inner">
+      <div class="why__heading-col reveal">
+        {headingHTML && <h2 class="why__heading" set:html={headingHTML} />}
+      </div>
+
+      <div class="why__content-col reveal reveal-delay-2">
+        {bodyHTML && <div set:html={bodyHTML} />}
+        {ctaText && ctaHref && <a href={ctaHref} class="why__cta">{ctaText}</a>}
+        {caption && <p class="why__caption">{caption}</p>}
+      </div>
     </div>
-  </div>
-</section>
+  </section>
+)}
 
 <style>
   .why {
@@ -142,4 +166,111 @@ const caption = section?.caption || '';
       padding: 4rem 1.5rem 5rem;
     }
   }
+
+  /* ── Overlay Card variant (legacy Next Steps) ── */
+  .fbi {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 !important;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+  .fbi--medium { min-height: 520px; }
+  .fbi--tall { min-height: 680px; }
+  .fbi--viewport { min-height: 100vh; }
+
+  .fbi__bg {
+    position: absolute;
+    inset: -100px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    will-change: transform;
+  }
+  .fbi__overlay {
+    position: absolute;
+    inset: 0;
+  }
+
+  .fbi__box {
+    position: relative;
+    z-index: 1;
+    background: var(--bg);
+    max-width: 460px;
+    margin: 4rem 0 4rem 6vw;
+    padding: 3.5rem;
+  }
+  .fbi__label {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .fbi__heading {
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.01em;
+  }
+  .fbi__body-wrap :global(.why__body),
+  .fbi__body-wrap :global(p) {
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 1.82;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+  }
+  .fbi__body-wrap :global(p:last-child) {
+    margin-bottom: 2rem;
+  }
+  .fbi__btn {
+    display: inline-block;
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--text);
+    padding: 0.7rem 1.75rem;
+  }
+
+  @media (max-width: 900px) {
+    .fbi__box {
+      margin: 3rem 1.5rem;
+      padding: 2.5rem 2rem;
+      max-width: none;
+    }
+  }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-parallax-bg]').forEach((bg) => {
+    const section = bg.closest('section');
+    if (!section || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const update = () => {
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (rect.bottom < 0 || rect.top > vh) return;
+      const progress = (vh - rect.top) / (vh + rect.height);
+      const shift = (progress - 0.5) * 200;
+      bg.style.transform = `translateY(${shift}px)`;
+    };
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => { update(); ticking = false; });
+        ticking = true;
+      }
+    }, { passive: true });
+    update();
+  });
+</script>

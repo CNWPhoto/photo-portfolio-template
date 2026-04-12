@@ -32,21 +32,43 @@ export function paletteToStyle(palette) {
   return decls.length ? decls.join(';') : undefined
 }
 
-// Walks the palette resolution order and returns the first match.
-// 1. explicit section palette slug, 2. page default, 3. site default.
-export function resolvePalette(sectionPaletteSlug, pagePaletteSlug, sitePaletteSlug, allPalettes) {
+// Returns the site-wide palette. Palettes are site-wide only — no page or
+// section overrides. Set via siteSettings.defaultPalette in Studio.
+export function resolvePalette(_unused1, _unused2, sitePaletteSlug, allPalettes) {
   if (!Array.isArray(allPalettes) || allPalettes.length === 0) return null
   const findBySlug = (slug) => {
     if (!slug) return null
     return allPalettes.find((p) => (p?.slug?.current || p?.slug) === slug) || null
   }
-  return (
-    findBySlug(sectionPaletteSlug) ||
-    findBySlug(pagePaletteSlug) ||
-    findBySlug(sitePaletteSlug) ||
-    allPalettes[0] ||
-    null
-  )
+  return findBySlug(sitePaletteSlug) || allPalettes[0] || null
+}
+
+// Derives a tone-shifted palette from the base palette. Sections can pick
+// which background shade they want (default / alt / dark) without changing
+// the underlying palette. Returns a new palette object with the relevant
+// color tokens swapped so section components can keep reading var(--bg) etc.
+export function applyBackgroundTone(palette, tone) {
+  if (!palette || !tone || tone === 'default') return palette
+  if (tone === 'alt') {
+    return {
+      ...palette,
+      bg: palette.bgAlt || palette.bg,
+      bgAlt: palette.surface || palette.bgAlt,
+    }
+  }
+  if (tone === 'dark') {
+    return {
+      ...palette,
+      bg: palette.sectionDark || palette.text,
+      bgAlt: palette.sectionDark || palette.text,
+      surface: palette.sectionDark || palette.text,
+      text: palette.sectionDarkText || palette.bg,
+      textMuted: palette.sectionDarkText || palette.bg,
+      textMutedLight: palette.sectionDarkText || palette.bg,
+      border: palette.sectionDarkText || palette.border,
+    }
+  }
+  return palette
 }
 
 // Relative-luminance check on the palette's background color.
