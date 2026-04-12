@@ -6,11 +6,21 @@ import type { APIRoute } from 'astro'
 // @sanity/preview-url-secret or the Sanity client fails at module-load time
 // (which on Cloudflare Workers causes the whole route to be unavailable).
 
-export const GET: APIRoute = async ({ request, cookies, redirect }) => {
-  const token = import.meta.env.SANITY_API_READ_TOKEN
+export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
+  // Read token from multiple sources in priority order:
+  // 1. Cloudflare runtime env (secrets, set via CF Pages dashboard)
+  // 2. import.meta.env (build-time bundled, for local dev and Vercel)
+  // 3. process.env (Node fallback)
+  const runtimeEnv = (locals as any)?.runtime?.env ?? {}
+  const token =
+    runtimeEnv.SANITY_API_READ_TOKEN ||
+    import.meta.env.SANITY_API_READ_TOKEN ||
+    (typeof process !== 'undefined' ? process.env?.SANITY_API_READ_TOKEN : undefined)
+
   if (!token) {
     return new Response(
-      'Preview mode is not configured. SANITY_API_READ_TOKEN is not set on this deployment.',
+      'Preview mode is not configured. SANITY_API_READ_TOKEN is not set on this deployment. ' +
+        'On Cloudflare Pages, make sure it is set as a runtime env var or secret and the site has been redeployed.',
       { status: 500 },
     )
   }
