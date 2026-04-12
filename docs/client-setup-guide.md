@@ -191,6 +191,38 @@ Sanity manage → **API → CORS Origins** (check "Allow credentials" on all):
 - `https://clientdomain.com`
 - `https://www.clientdomain.com`
 
+**1.6 — Seed the dataset with starter content**
+
+New Sanity projects start empty. Run the seed script to populate the client's
+dataset with the full template content: siteSettings, nav, footer, homepage,
+about/experience/contact pages, and all the seeded sections with the correct
+background tones, text alignment, and layout variants that match the template
+design out of the box.
+
+1. In `studio/sanity.config.js`, confirm `projectId` is still set to the
+   client's project (from step 1.2)
+2. Run the seed:
+   ```sh
+   cd studio
+   npm run seed
+   ```
+3. The script creates documents non-destructively — it skips any doc ID that
+   already exists. If you need to reset the dataset to template defaults at
+   any point, use `npm run seed:replace` (overwrites existing docs).
+4. Open the client's Studio and confirm you see populated homepage, about,
+   experience, contact pages with all sections in the correct order.
+5. Revert `studio/sanity.config.js` back to template values so client-specific
+   IDs don't get committed.
+
+> **What's in the seed:** 5 default palettes (Classic Cream, Warm Studio, Dark
+> Editorial, Cool Minimal, Forest Sage), site settings pointing at the default
+> palette, nav links, footer links, homepage with hero + 6 content sections,
+> About page (intro, what-to-expect, personal, quote, CTA), Experience page
+> (hero, intro, sessions, artwork, next steps, FAQ), Contact page (hero, form),
+> 404 page, plus default blog and portfolio categories. All sections are
+> pre-configured with the correct `backgroundTone` (alt/default) and
+> `textAlignment` so the out-of-box look matches the template demo.
+
 ---
 
 ### PHASE 2 — Cloudflare Pages
@@ -312,28 +344,57 @@ Submit a test message on the live contact page and confirm delivery.
 
 ### PHASE 5 — Initial Content Setup
 
-Walk through the Studio with the client or fill it yourself before handoff:
+The seed script (Phase 1.6) already populated everything with template defaults.
+This phase is where you (or the client) replace the placeholder content with
+real copy and images.
 
 **Site Settings**
-- [ ] Site & Theme — name, color, font, logo, accent
-- [ ] Navigation — links, variant
-- [ ] Footer — social links, copyright, privacy/terms
-- [ ] Social — Instagram, Facebook, YouTube, TikTok
-- [ ] SEO — site URL (must include `https://`), phone, city/state, Twitter
+- [ ] Site Name, Photographer Name, Logo (text or image upload), Favicon
+- [ ] **Default Palette** — pick one of the 5 built-in palettes from the
+      dropdown (Classic Cream, Warm Studio, Dark Editorial, Cool Minimal,
+      Forest Sage). This applies site-wide to every page and section. You
+      can also edit the hex values of any palette in the Palettes array to
+      create a fully custom color scheme.
+- [ ] **Font Theme** — pick one of the 6 typography pairings
+- [ ] **Accent Color Override** — optional single-color tweak without changing the palette
 
-**Pages**
-- [ ] Homepage — hero, section order, toggles
-- [ ] About — bio, headshot
-- [ ] Experience / Pricing — packages, FAQs
-- [ ] Portfolio — gallery images
-- [ ] Blog — enable/disable, first post if ready
-- [ ] Contact — hero, heading, info text, form key
-- [ ] 404 — message and CTA
+**Navigation & Footer**
+- [ ] Nav Settings — links, variant (classic/centered/split/transparent), dropdown children
+- [ ] Footer Settings — free-form links, optional middle column HTML embed, legal links
+- [ ] Social Settings — Instagram, Facebook, YouTube, TikTok
+- [ ] SEO Settings — site URL (must include `https://`), business phone, city/state, Twitter handle
+
+**Pages** (all sections have a `Background Tone` field: Light / Alt / Dark)
+- [ ] Homepage — hero images, customize welcome/testimonials/featured/steps/CTA/FAQ sections
+- [ ] About page — intro copy, headshot, what-to-expect columns, personal split, quote, CTA images
+- [ ] Experience page — hero, sessions, artwork, next-steps CTA, FAQs
+- [ ] Contact page — hero, info heading/body, Web3Forms key
+- [ ] 404 page — background image, heading, CTA
+- [ ] Portfolio index — upload portfolio images, assign categories
+- [ ] Blog index — enable/disable, optional page title + SEO
+
+**Creating new pages** — editors can add custom pages via the "Pages" list in
+Studio. Each new page gets the full section library (17 section types) to pick
+from. Reserved slugs (`blog`, `portfolio`, `api`, etc.) are rejected by the
+slug validator.
 
 **Content**
 - [ ] 3–5 testimonials
-- [ ] Portfolio images uploaded
+- [ ] Portfolio images uploaded (with categories assigned)
+- [ ] Blog categories + portfolio categories added if custom ones needed
 - [ ] First blog post drafted (optional)
+
+> **Palette tip:** If the client wants a custom color scheme, edit the hex
+> values of a palette in the Palettes array (e.g., rename "Classic Cream" to
+> their brand name and change the hex values). No code changes needed — all
+> sections consume palette tokens as CSS variables.
+
+> **Background tone tip:** Every section has a `Background Tone` field with
+> three options. "Default" uses the palette's main background. "Alt" uses the
+> slightly darker variant (good for visual separation between adjacent
+> sections). "Dark" uses the full dark section color with light text (good
+> for dramatic breaks). The seed ships with several sections pre-configured
+> to `alt` tone for visual rhythm out of the box.
 
 ---
 
