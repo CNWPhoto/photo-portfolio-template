@@ -1,4 +1,5 @@
 import { createClient } from '@sanity/client'
+import { createClient as createStegaClient } from '@sanity/client/stega'
 import imageUrlBuilder from '@sanity/image-url'
 
 // Base config — project ID and dataset come from PUBLIC_ env vars so they
@@ -42,11 +43,15 @@ function createPreviewClient(runtimeEnv) {
   const token = readEnv(runtimeEnv, 'SANITY_API_READ_TOKEN')
   const studioUrl = readEnv(runtimeEnv, 'SANITY_STUDIO_URL') || 'http://localhost:3333'
 
-  return createClient({
+  // Use the stega-enabled subpath export (@sanity/client/stega) so rendered
+  // text is encoded with invisible markers that link back to the source
+  // document. Without this subpath, stega config in the main createClient
+  // is silently ignored and visual editing overlays don't appear.
+  return createStegaClient({
     ...baseConfig,
     useCdn: false,
     token,
-    perspective: 'previewDrafts',
+    perspective: 'drafts',
     ignoreBrowserTokenWarning: true,
     stega: {
       enabled: true,
