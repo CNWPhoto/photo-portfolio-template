@@ -1,46 +1,43 @@
+import {sectionsOf, sectionsInsertMenu} from './_shared/sectionsArrayConfig'
+
+// 404 page. Migrated from flat fields (image/heading/subheading/ctaText/ctaLink)
+// to the unified sections shape so it shares the same renderer as the rest
+// of the site. The seed script populates a single fullBleedImageSection
+// matching the previous default. See docs/page-builder-spec.md §1, §15 Phase 11.
+
 export default {
   name: 'notFoundPage',
   title: '404 Page',
   type: 'document',
-  __experimental_actions: ['update', 'publish'], // singleton — no create/delete
+  __experimental_actions: ['update', 'publish'],
   preview: {
     prepare() {
       return {title: '404 Page'}
     },
   },
+  groups: [
+    {name: 'content', title: 'Content', default: true},
+    {name: 'seo', title: 'SEO'},
+  ],
   fields: [
     {
-      name: 'image',
-      title: 'Background Image',
-      type: 'image',
-      description: 'Full-bleed image displayed behind the 404 text.',
-      options: {hotspot: true},
+      name: 'seo',
+      title: 'SEO',
+      type: 'seo',
+      group: 'seo',
     },
     {
-      name: 'heading',
-      title: 'Heading',
-      type: 'string',
-      description: 'Large text displayed over the image. Defaults to "404".',
-      initialValue: '404',
-    },
-    {
-      name: 'subheading',
-      title: 'Sub-headline',
-      type: 'string',
-      description: 'Smaller text below the heading. Defaults to "Page Not Found".',
-      initialValue: 'Page Not Found',
-    },
-    {
-      name: 'ctaText',
-      title: 'Button Text',
-      type: 'string',
-      initialValue: 'Back to Home',
-    },
-    {
-      name: 'ctaLink',
-      title: 'Button Link',
-      type: 'string',
-      initialValue: '/',
+      name: 'sections',
+      title: 'Sections',
+      type: 'array',
+      description:
+        'The 404 page is built from sections like any other page. The default seed contains a single full-bleed image with a heading, subheading, and a "Back to home" button.',
+      group: 'content',
+      initialValue: [
+        {_type: 'fullBleedImageSection', _key: 'notFoundFullBleed'},
+      ],
+      of: sectionsOf,
+      options: {insertMenu: sectionsInsertMenu},
     },
   ],
 }

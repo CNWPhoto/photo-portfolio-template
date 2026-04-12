@@ -1,0 +1,65 @@
+---
+import { paletteToStyle } from '../../lib/palette.js';
+
+interface Props {
+  section: any;
+  palette?: any;
+}
+
+const { section, palette } = Astro.props;
+const style = paletteToStyle(palette);
+
+const label = section?.label || '';
+const dividerStyle = section?.style || 'line';
+---
+
+<section
+  class:list={['section', 'divider', `divider--${dividerStyle}`]}
+  data-section-type="dividerSection"
+  data-spacing={section?.spacing || 'compact'}
+  id={section?.sectionId || undefined}
+  style={style}
+>
+  <div class="divider__inner">
+    <span class="divider__line" aria-hidden="true"></span>
+    {label && <span class="divider__label">{label}</span>}
+    <span class="divider__line" aria-hidden="true"></span>
+  </div>
+</section>
+
+<style>
+  .divider {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .divider__inner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+  .divider__line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .divider__label {
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .divider--dots .divider__line {
+    background: none;
+    background-image: radial-gradient(circle, var(--border) 1px, transparent 1.5px);
+    background-size: 8px 1px;
+    background-repeat: repeat-x;
+    background-position: center;
+    height: 2px;
+  }
+  .divider--ornament .divider__label::before { content: '\\002767'; margin-right: 0.5rem; color: var(--accent); }
+  .divider--ornament .divider__label::after  { content: '\\002767'; margin-left: 0.5rem;  color: var(--accent); }
+</style>

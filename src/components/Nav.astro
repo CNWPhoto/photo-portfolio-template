@@ -1,5 +1,6 @@
 ---
 import { urlFor } from '../lib/sanity.js';
+import { resolveLink } from '../lib/links.js';
 
 const {
 	siteName = 'Pet Photography',
@@ -14,16 +15,26 @@ const showImageLogo = logoType === 'image' && logoImage;
 
 // Default links used when nothing is configured in Sanity yet
 const defaultLinks = [
-	{ label: 'Experience', url: '/experience', enabled: true, openInNewTab: false, isButton: false },
-	{ label: 'Portfolio',  url: '/portfolio',  enabled: true, openInNewTab: false, isButton: false },
-	{ label: 'About',      url: '/about',      enabled: true, openInNewTab: false, isButton: false },
-	{ label: 'Blog',       url: '/blog',       enabled: true, openInNewTab: false, isButton: false },
-	{ label: 'Inquire',    url: '/contact',    enabled: true, openInNewTab: false, isButton: true  },
+	{ label: 'Experience', url: '/experience', enabled: true, openInNewTab: false, isButton: false, linkType: 'external' },
+	{ label: 'Portfolio',  url: '/portfolio',  enabled: true, openInNewTab: false, isButton: false, linkType: 'external' },
+	{ label: 'About',      url: '/about',      enabled: true, openInNewTab: false, isButton: false, linkType: 'external' },
+	{ label: 'Blog',       url: '/blog',       enabled: true, openInNewTab: false, isButton: false, linkType: 'external' },
+	{ label: 'Inquire',    url: '/contact',    enabled: true, openInNewTab: false, isButton: true,  linkType: 'external' },
 ];
+
+// Normalize each link: compute resolved href, normalize children
+const normalizeLink = (l: any) => {
+	const href = resolveLink(l) || l?.url || '#';
+	const children = Array.isArray(l?.children)
+		? l.children.map((c: any) => ({ ...c, href: resolveLink(c) || c?.url || '#' }))
+		: [];
+	return { ...l, href, children, hasChildren: children.length > 0 };
+};
 
 const links = (navLinks ?? defaultLinks)
 	.filter((l: any) => l.enabled !== false)
-	.filter((l: any) => blogEnabled || l.url !== '/blog');
+	.filter((l: any) => blogEnabled || (l?.url !== '/blog' && l?.internalRef?.slug !== 'blog'))
+	.map(normalizeLink);
 
 // Split variant: divide links evenly left and right of the centered logo
 const isSplit = navVariant === 'split';
@@ -38,13 +49,40 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 			<nav aria-label="Main navigation left" class="nav__left-nav">
 				<ul class="nav__links nav__links--left">
 					{leftLinks.map((link: any) => (
-						<li>
-							<a
-								href={link.url}
-								class={link.isButton ? 'nav__inquire' : ''}
-								target={link.openInNewTab ? '_blank' : undefined}
-								rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
-							>{link.label}</a>
+						<li class:list={['nav__item', link.hasChildren && 'nav__item--has-dropdown']}>
+							{link.hasChildren ? (
+								<>
+									<button
+										type="button"
+										class="nav__link nav__dropdown-trigger"
+										aria-haspopup="true"
+										aria-expanded="false"
+										data-nav-dropdown
+									>
+										{link.label}
+										<span class="nav__caret" aria-hidden="true">&#9662;</span>
+									</button>
+									<ul class="nav__dropdown" role="menu">
+										{link.children.map((c: any) => (
+											<li role="none">
+												<a
+													role="menuitem"
+													href={c.href}
+													target={c.openInNewTab ? '_blank' : undefined}
+													rel={c.openInNewTab ? 'noopener noreferrer' : undefined}
+												>{c.label}</a>
+											</li>
+										))}
+									</ul>
+								</>
+							) : (
+								<a
+									href={link.href}
+									class={link.isButton ? 'nav__link nav__inquire' : 'nav__link'}
+									target={link.openInNewTab ? '_blank' : undefined}
+									rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+								>{link.label}</a>
+							)}
 						</li>
 					))}
 				</ul>
@@ -57,13 +95,40 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		<nav aria-label="Main navigation">
 			<ul class={`nav__links${isSplit ? ' nav__links--right' : ''}`}>
 				{rightLinks.map((link: any) => (
-					<li>
-						<a
-							href={link.url}
-							class={link.isButton ? 'nav__inquire' : ''}
-							target={link.openInNewTab ? '_blank' : undefined}
-							rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
-						>{link.label}</a>
+					<li class:list={['nav__item', link.hasChildren && 'nav__item--has-dropdown']}>
+						{link.hasChildren ? (
+							<>
+								<button
+									type="button"
+									class="nav__link nav__dropdown-trigger"
+									aria-haspopup="true"
+									aria-expanded="false"
+									data-nav-dropdown
+								>
+									{link.label}
+									<span class="nav__caret" aria-hidden="true">&#9662;</span>
+								</button>
+								<ul class="nav__dropdown" role="menu">
+									{link.children.map((c: any) => (
+										<li role="none">
+											<a
+												role="menuitem"
+												href={c.href}
+												target={c.openInNewTab ? '_blank' : undefined}
+												rel={c.openInNewTab ? 'noopener noreferrer' : undefined}
+											>{c.label}</a>
+										</li>
+									))}
+								</ul>
+							</>
+						) : (
+							<a
+								href={link.href}
+								class={link.isButton ? 'nav__link nav__inquire' : 'nav__link'}
+								target={link.openInNewTab ? '_blank' : undefined}
+								rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+							>{link.label}</a>
+						)}
 					</li>
 				))}
 			</ul>
@@ -102,11 +167,24 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 				{links.map((link: any) => (
 					<li>
 						<a
-							href={link.url}
+							href={link.href}
 							class={link.isButton ? 'nav__overlay-inquire' : ''}
 							target={link.openInNewTab ? '_blank' : undefined}
 							rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
 						>{link.label}</a>
+						{link.hasChildren && (
+							<ul class="nav__overlay-sublinks">
+								{link.children.map((c: any) => (
+									<li>
+										<a
+											href={c.href}
+											target={c.openInNewTab ? '_blank' : undefined}
+											rel={c.openInNewTab ? 'noopener noreferrer' : undefined}
+										>{c.label}</a>
+									</li>
+								))}
+							</ul>
+						)}
 					</li>
 				))}
 			</ul>
@@ -162,8 +240,14 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		display: flex;
 		align-items: center;
 		gap: 2.5rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
 	}
 
+	.nav__item { position: relative; }
+
+	.nav__links .nav__link,
 	.nav__links a {
 		font-family: var(--font-body, system-ui, sans-serif);
 		font-style: normal;
@@ -172,14 +256,22 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		color: var(--text);
 		text-decoration: none;
 		letter-spacing: 0.1em;
-		transition: color 0.2s, color 0.3s;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		transition: color 0.2s;
 	}
 
+	.nav__links .nav__link:not(.nav__inquire),
 	.nav__links a:not(.nav__inquire) {
 		position: relative;
-		transition: color 0.2s, transform 0.2s;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
 	}
 
+	.nav__links .nav__link:not(.nav__inquire)::after,
 	.nav__links a:not(.nav__inquire)::after {
 		content: '';
 		position: absolute;
@@ -191,12 +283,70 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		transition: width 0.25s ease;
 	}
 
+	.nav__links .nav__link:not(.nav__inquire):hover,
 	.nav__links a:not(.nav__inquire):hover {
 		color: var(--accent);
-		transform: translateY(-1px);
 	}
 
+	.nav__links .nav__link:not(.nav__inquire):hover::after,
 	.nav__links a:not(.nav__inquire):hover::after { width: 100%; }
+
+	.nav__caret {
+		font-size: 0.65em;
+		line-height: 1;
+		transition: transform 0.2s;
+	}
+	.nav__item--has-dropdown .nav__dropdown-trigger[aria-expanded='true'] .nav__caret {
+		transform: rotate(180deg);
+	}
+
+	/* ── Dropdown panel ─────────────────────── */
+	.nav__dropdown {
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		transform: translate(-50%, 8px);
+		min-width: 200px;
+		background: var(--bg);
+		border: 1px solid var(--border);
+		box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+		padding: 0.75rem 0;
+		margin: 0;
+		list-style: none;
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		z-index: 110;
+		transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+	}
+	.nav__item--has-dropdown:hover .nav__dropdown,
+	.nav__item--has-dropdown .nav__dropdown-trigger[aria-expanded='true'] + .nav__dropdown {
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transform: translate(-50%, 0);
+	}
+	.nav__dropdown li { display: block; }
+	.nav__dropdown a {
+		display: block;
+		padding: 0.6rem 1.25rem;
+		font-size: 0.95rem;
+		letter-spacing: 0.06em;
+		color: var(--text);
+		text-decoration: none;
+		white-space: nowrap;
+		transition: background 0.2s, color 0.2s;
+	}
+	.nav__dropdown a:hover {
+		background: var(--bg-alt);
+		color: var(--accent);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.nav__dropdown {
+			transition: opacity 0.01s, visibility 0.01s;
+			transform: translate(-50%, 0);
+		}
+	}
 
 	.nav__inquire {
 		color: var(--accent) !important;
@@ -329,6 +479,28 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		color: var(--accent) !important;
 	}
 
+	/* Mobile sub-links inside the hamburger overlay */
+	.nav__overlay-sublinks {
+		list-style: none;
+		margin: 0 0 0.75rem 1.25rem;
+		padding: 0;
+	}
+	.nav__overlay-sublinks li { border: none; }
+	.nav__overlay-sublinks a {
+		display: block;
+		font-family: var(--font-body, system-ui, sans-serif);
+		font-style: normal;
+		font-size: 1rem;
+		letter-spacing: 0.08em;
+		padding: 0.5rem 0 0.5rem 1rem;
+		border-left: 1px solid var(--border);
+		color: var(--muted);
+	}
+	.nav__overlay-sublinks a:hover {
+		color: var(--accent);
+		padding-left: 1.25rem;
+	}
+
 	/* ═══════════════════════════════════════
 	   VARIANT: CENTERED
 	   Logo centered at top, links centered below
@@ -374,11 +546,13 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 
 	/* transparent state: white text/bars so it reads over hero imagery */
 	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__logo,
-	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a {
+	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a,
+	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links .nav__link {
 		color: var(--white);
 	}
 
-	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a:not(.nav__inquire)::after {
+	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a:not(.nav__inquire)::after,
+	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links .nav__link:not(.nav__inquire)::after {
 		background-color: var(--white);
 	}
 
@@ -623,4 +797,32 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	});
 
 	overlay.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+
+	// ── Desktop dropdown menus ────────────────────────────────────────
+	// Hover already toggles via CSS; this script handles click + ARIA +
+	// keyboard. ESC closes the open dropdown, clicking outside closes,
+	// and pressing Enter/Space on the trigger toggles open state.
+	const dropdownTriggers = navHeader.querySelectorAll<HTMLButtonElement>('[data-nav-dropdown]');
+
+	function closeAllDropdowns() {
+		dropdownTriggers.forEach((t) => t.setAttribute('aria-expanded', 'false'));
+	}
+
+	dropdownTriggers.forEach((trigger) => {
+		trigger.addEventListener('click', (e) => {
+			e.stopPropagation();
+			const expanded = trigger.getAttribute('aria-expanded') === 'true';
+			closeAllDropdowns();
+			trigger.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+		});
+	});
+
+	document.addEventListener('click', (e) => {
+		const target = e.target as HTMLElement;
+		if (!target.closest('.nav__item--has-dropdown')) closeAllDropdowns();
+	});
+
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') closeAllDropdowns();
+	});
 </script>

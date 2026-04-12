@@ -1,0 +1,210 @@
+---
+import { paletteToStyle } from '../../lib/palette.js';
+import { renderBody, isPortableText } from '../../lib/portableText.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
+const { section, palette } = Astro.props;
+const style = paletteToStyle(palette);
+
+const sideLabel = section?.verticalSideLabel || 'FAQs';
+const layout = section?.layout || 'flat-list';
+const faqs = (section?.faqs || []).map((f: any) => ({
+  q: f?.question || '',
+  aHTML: isPortableText(f?.answer) ? renderBody(f.answer) : '',
+}));
+---
+
+<section
+  class="faqs"
+  data-section-type="faqSection"
+  data-layout={layout}
+  id={section?.sectionId || 'faqs'}
+  style={style}
+>
+  <div class="faqs__inner">
+    <div class="faqs__label-col" aria-hidden="true">
+      <span class="faqs__label">{sideLabel}</span>
+    </div>
+
+    <div class="faqs__content">
+      <div class="faqs__list">
+        {faqs.map((faq: any, i: number) => (
+          <div class:list={['faqs__item', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
+            {layout === 'accordion' ? (
+              <>
+                <button
+                  class="faqs__question faqs__question--accordion"
+                  aria-expanded="false"
+                  aria-controls={`faq-answer-${i}`}
+                >
+                  {faq.q}
+                  <span class="faqs__icon" aria-hidden="true">+</span>
+                </button>
+                <div class="faqs__answer faqs__answer--accordion" id={`faq-answer-${i}`} role="region" set:html={faq.aHTML} />
+              </>
+            ) : (
+              <>
+                <h3 class="faqs__question">{faq.q}</h3>
+                <div class="faqs__answer" set:html={faq.aHTML} />
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .faqs {
+    padding-top: 0 !important;
+    padding-bottom: 7rem !important;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .faqs__inner {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    padding: 5rem 3rem 0;
+    max-width: 1100px;
+    margin: 0 auto;
+    gap: 2rem;
+  }
+
+  /* Rotated label */
+  .faqs__label-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .faqs__label {
+    font-family: var(--font-serif, var(--font-heading));
+    font-style: italic;
+    font-size: clamp(2rem, 3.5vw, 3.25rem);
+    letter-spacing: 0.1em;
+    color: var(--border);
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .faqs__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .faqs__item {
+    border-top: 1px solid var(--border);
+  }
+  .faqs__item:last-child { border-bottom: 1px solid var(--border); }
+
+  [data-layout='flat-list'] .faqs__item {
+    padding: 2.5rem 0;
+    border-top: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .faqs__question {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text);
+    margin: 0 0 1.25rem;
+    letter-spacing: -0.01em;
+    cursor: default;
+  }
+
+  .faqs__question--accordion {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1.5rem 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+    font-family: var(--font-heading, var(--font-serif));
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.406rem;
+    color: var(--text);
+    text-align: left;
+    line-height: 1.4;
+    transition: color 0.2s;
+  }
+  .faqs__question--accordion:hover { color: var(--accent); }
+
+  .faqs__icon {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: var(--accent);
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+    line-height: 1;
+  }
+  .faqs__item--open .faqs__icon { transform: rotate(45deg); }
+
+  .faqs__answer--accordion {
+    display: none;
+    padding-bottom: 1.75rem;
+  }
+  .faqs__item--open .faqs__answer--accordion { display: block; }
+
+  .faqs__answer :global(p),
+  .faqs__answer :global(blockquote) {
+    margin: 0 0 0.75rem;
+    padding: 0 0 0 1.25rem;
+    border-left: 2px solid var(--accent);
+    font-style: normal;
+    font-size: 1.172rem;
+    line-height: 1.78;
+    color: var(--muted);
+  }
+
+  @media (max-width: 768px) {
+    .faqs__inner {
+      grid-template-columns: 1fr;
+      padding: 0 1.5rem 0;
+    }
+
+    .faqs__label-col {
+      padding-top: 3rem;
+    }
+
+    .faqs__label {
+      writing-mode: horizontal-tb;
+      transform: none;
+      font-size: clamp(1.6rem, 6vw, 2.25rem);
+      text-align: center;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.faqs__question--accordion').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faqs__item');
+      const isOpen = item?.classList.contains('faqs__item--open');
+      document.querySelectorAll('.faqs__item--open').forEach((el) => {
+        el.classList.remove('faqs__item--open');
+        el.querySelector('.faqs__question--accordion')?.setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen && item) {
+        item.classList.add('faqs__item--open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+</script>

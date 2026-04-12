@@ -3,21 +3,22 @@ import Layout from '../../layouts/Layout.astro';
 import { toHTML } from '@portabletext/to-html';
 import SanityImage from '../../components/SanityImage.astro';
 import { buildSrc, buildSrcset } from '../../lib/image';
-import { sanityClient } from '../../lib/sanity.js';
-
-export async function getStaticPaths() {
-  const posts = await sanityClient.fetch(`*[_type == "blogPost" && defined(slug.current)]{ "slug": slug.current }`);
-  return posts.map((post) => ({ params: { slug: post.slug } }));
-}
+import { getClient } from '../../lib/sanity.js';
 
 const { slug } = Astro.params;
+const client = getClient(Astro.locals.isPreview);
 
 const [post, siteSettings] = await Promise.all([
-  sanityClient.fetch(
-    `*[_type == "blogPost" && slug.current == $slug][0]{ title, publishDate, _updatedAt, excerpt, coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }, alt }, body, category }`,
+  client.fetch(
+    `*[_type == "blogPost" && slug.current == $slug][0]{
+      title, publishDate, _updatedAt, excerpt,
+      coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio }, lqip } }, alt },
+      body,
+      "categories": categories[]->{ name, "slug": slug.current }
+    }`,
     { slug }
   ),
-  sanityClient.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ siteName, photographerName }`),
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ siteName, photographerName }`),
 ]);
 
 if (!post) {
@@ -115,14 +116,27 @@ const bodyHTML = post.body
   <main>
     <article class="post">
       <div class="post__header">
-        {post.category && <p class="post__category">{post.category}</p>}
+        {post.categories?.length > 0 && (
+          <ul class="post__categories">
+            {post.categories.map((c: any) => (
+              <li>
+                <a class="post__category" href={`/blog/category/${c.slug}`}>{c.name}</a>
+              </li>
+            ))}
+          </ul>
+        )}
         <h1 class="post__title">{post.title}</h1>
         {publishFormatted && <p class="post__date">{publishFormatted}</p>}
         <hr class="post__rule" />
       </div>
 
       {post.coverImage && (
-        <div class="post__cover">
+        <div
+          class="post__cover"
+          style={post.coverImage?.asset?.metadata?.lqip
+            ? `background-image:url('${post.coverImage.asset.metadata.lqip}');background-size:cover;background-position:center;`
+            : ''}
+        >
           <SanityImage
             image={post.coverImage}
             sizes="(max-width: 900px) 100vw, 60vw"
@@ -149,13 +163,29 @@ const bodyHTML = post.body
     margin-bottom: 2.5rem;
   }
 
+  .post__categories {
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
   .post__category {
+    display: inline-block;
     font-family: var(--font-sans, system-ui, sans-serif);
     font-size: 0.7rem;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--accent);
-    margin-bottom: 1.25rem;
+    text-decoration: none;
+    border: 1px solid var(--accent);
+    padding: 0.35rem 0.75rem;
+    transition: background 0.2s, color 0.2s;
+  }
+  .post__category:hover {
+    background: var(--accent);
+    color: var(--btn-text);
   }
 
   .post__title {

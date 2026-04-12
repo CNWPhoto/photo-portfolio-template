@@ -1,0 +1,218 @@
+---
+import SanityImage from '../SanityImage.astro';
+import { paletteToStyle } from '../../lib/palette.js';
+import { resolveLink } from '../../lib/links.js';
+import { getClient } from '../../lib/sanity.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
+const { section, isFirst = false, palette } = Astro.props;
+const style = paletteToStyle(palette);
+
+const eyebrow = section?.eyebrow || '';
+const heading = section?.heading || '';
+const layout = section?.layout || 'grid-3';
+const source = section?.source || 'latest';
+const postCount = section?.postCount || 3;
+const showCategory = section?.showCategory !== false;
+const showExcerpt = section?.showExcerpt !== false;
+const showDate = section?.showDate !== false;
+const ctaText = section?.ctaText || '';
+const ctaHref = resolveLink(section?.ctaLink) || '/blog';
+
+const client = getClient(false);
+let posts: any[] = [];
+if (source === 'pickSpecific' && section?.specificPosts?.length) {
+  posts = section.specificPosts;
+} else {
+  posts = await client.fetch(
+    `*[_type == "blogPost" && defined(slug.current)] | order(publishDate desc)[0...$max]{
+      _id, title, "slug": slug.current, publishDate, excerpt,
+      coverImage { ..., asset->{ _id, metadata { dimensions { width, height }, lqip } } },
+      "categories": categories[]->{ name, "slug": slug.current }
+    }`,
+    { max: postCount },
+  );
+}
+posts = posts || [];
+
+const dateFmt = (d: string | undefined) => {
+  if (!d) return '';
+  try {
+    return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  } catch {
+    return d;
+  }
+};
+
+const HeadingTag = isFirst ? 'h1' : 'h2';
+---
+
+<section
+  class:list={['section', 'blogteaser', `blogteaser--${layout}`]}
+  data-section-type="blogTeaserSection"
+  data-spacing={section?.spacing || 'normal'}
+  id={section?.sectionId || undefined}
+  style={style}
+>
+  <div class="blogteaser__inner">
+    {(eyebrow || heading) && (
+      <header class="blogteaser__header">
+        {eyebrow && <p class="blogteaser__eyebrow">{eyebrow}</p>}
+        {heading && <HeadingTag class="blogteaser__heading">{heading}</HeadingTag>}
+      </header>
+    )}
+
+    <div class="blogteaser__grid">
+      {posts.map((post, i) => {
+        const isCard = layout === 'cards';
+        const lqip = isCard ? post?.coverImage?.asset?.metadata?.lqip || null : null;
+        return (
+        <article class:list={['blogteaser__card', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
+          <a href={`/blog/${post.slug}`} class="blogteaser__card-link">
+            {post?.coverImage?.asset && (
+              <div
+                class="blogteaser__img-wrap"
+                style={lqip ? `background-image:url('${lqip}');background-size:cover;background-position:center;` : ''}
+              >
+                <SanityImage
+                  image={post.coverImage}
+                  sizes="(max-width:900px) 100vw, 33vw"
+                  loading="lazy"
+                  class="blogteaser__img"
+                />
+              </div>
+            )}
+            <div class="blogteaser__body">
+              {showCategory && post?.categories?.[0]?.name && (
+                <p class="blogteaser__cat">{post.categories[0].name}</p>
+              )}
+              <h3 class="blogteaser__title">{post.title}</h3>
+              {showDate && post?.publishDate && (
+                <p class="blogteaser__date">{dateFmt(post.publishDate)}</p>
+              )}
+              {showExcerpt && post?.excerpt && (
+                <p class="blogteaser__excerpt">{post.excerpt}</p>
+              )}
+            </div>
+          </a>
+        </article>
+        );
+      })}
+    </div>
+
+    {ctaText && (
+      <div class="blogteaser__cta-wrap reveal">
+        <a class="blogteaser__cta" href={ctaHref}>{ctaText}</a>
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .blogteaser {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .blogteaser__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-inline: 1.5rem;
+  }
+  .blogteaser__header { text-align: center; margin-bottom: 2.5rem; }
+  .blogteaser__eyebrow {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+  .blogteaser__heading {
+    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .blogteaser__grid {
+    display: grid;
+    gap: 2rem;
+  }
+  .blogteaser--grid-3 .blogteaser__grid { grid-template-columns: repeat(3, 1fr); }
+  .blogteaser--horizontal-list .blogteaser__grid { grid-template-columns: 1fr; }
+  .blogteaser--cards .blogteaser__grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+  .blogteaser__card { background: var(--bg); }
+  .blogteaser__card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .blogteaser__img-wrap {
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    margin-bottom: 1.25rem;
+  }
+  .blogteaser__img-wrap :global(.blogteaser__img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s var(--ease-image);
+  }
+  .blogteaser__card:hover .blogteaser__img-wrap :global(.blogteaser__img) {
+    transform: scale(1.04);
+  }
+
+  .blogteaser__cat {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.5rem;
+  }
+  .blogteaser__title {
+    font-size: 1.35rem;
+    line-height: 1.3;
+    color: var(--text);
+    margin: 0 0 0.5rem;
+  }
+  .blogteaser__date {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: var(--muted-light);
+    margin: 0 0 0.75rem;
+  }
+  .blogteaser__excerpt {
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .blogteaser__cta-wrap { margin-top: 3rem; text-align: center; }
+  .blogteaser__cta {
+    display: inline-block;
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    padding: 0.95rem 2rem;
+  }
+
+  @media (max-width: 900px) {
+    .blogteaser--grid-3 .blogteaser__grid { grid-template-columns: 1fr; }
+  }
+</style>

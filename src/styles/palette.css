@@ -1,0 +1,51 @@
+/* ══════════════════════════════════════════════════
+   Universal CSS Tokens
+   See docs/page-builder-spec.md §3c for the contract.
+   Section components inherit palette tokens from
+   inline custom properties set on each <section>;
+   the :root values below are fallbacks (Classic Cream)
+   used by un-wrapped contexts (404, modals, etc.).
+   ══════════════════════════════════════════════════ */
+
+:root {
+  /* Color palette tokens are emitted dynamically by Layout.astro from
+     siteSettings.palettes — see Layout.astro rootPaletteCss. */
+  --white: #ffffff;
+
+  /* Easing tokens — replace scattered cubic-bezier literals */
+  --ease-image: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Spacing tokens — desktop */
+  --section-pad-compact: 3rem;
+  --section-pad-normal: 6rem;
+  --section-pad-spacious: 9rem;
+}
+
+/* Spacing tokens — mobile */
+@media (max-width: 900px) {
+  :root {
+    --section-pad-compact: 2rem;
+    --section-pad-normal: 4rem;
+    --section-pad-spacious: 6rem;
+  }
+}
+
+/* Sticky hero curtain effect — all siblings after a sticky hero need to
+   stack above it and carry their own opaque background. See spec §17. */
+.hero--sticky ~ * {
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+}
+
+/* Per-section spacing applied via [data-spacing] attr on <section> */
+section[data-spacing='compact'] {
+  padding-block: var(--section-pad-compact);
+}
+section[data-spacing='normal'] {
+  padding-block: var(--section-pad-normal);
+}
+section[data-spacing='spacious'] {
+  padding-block: var(--section-pad-spacious);
+}

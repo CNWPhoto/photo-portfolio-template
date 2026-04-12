@@ -1,3 +1,5 @@
+import {imageSizeWarning} from './_shared/imageValidation'
+
 const colorThemeList = [
   { title: 'Classic Cream', value: 'classic-cream' },
   { title: 'Warm Studio', value: 'warm-studio' },
@@ -61,8 +63,9 @@ export default {
       title: 'Logo Image',
       type: 'image',
       description:
-        'Upload your logo. Recommended size: 400 × 120px or similar horizontal format, 2× resolution for retina. PNG with transparent background preferred.',
+        'Upload your logo. Recommended size: 400 × 120px or similar horizontal format, 2× resolution for retina. PNG with transparent background preferred. Keep file size under 5MB.',
       hidden: ({document}) => document?.logoType !== 'image',
+      validation: imageSizeWarning,
     },
     {
       name: 'favicon',
@@ -73,12 +76,20 @@ export default {
       options: {accept: 'image/png,image/svg+xml,image/x-icon,image/jpeg'},
     },
     {
-      name: 'colorTheme',
-      title: 'Default Colour Theme',
+      name: 'palettes',
+      title: 'Color Palettes',
+      type: 'array',
+      description:
+        'Color palettes available across the site. Edit the hex values to customize, or add new palettes.',
+      of: [{type: 'palette'}],
+    },
+    {
+      name: 'defaultPalette',
+      title: 'Default Palette',
       type: 'string',
       options: { list: colorThemeList },
       initialValue: 'classic-cream',
-      description: 'Site-wide color theme; individual sections can override this',
+      description: 'Site-wide color theme. Applies to every section on every page.',
     },
     {
       name: 'fontTheme',
@@ -102,6 +113,13 @@ export default {
           {title: 'Cool Gray',     value: 'cool-gray'},
         ],
       },
+    },
+    {
+      name: 'web3formsKey',
+      title: 'Web3Forms Access Key',
+      type: 'string',
+      description:
+        'Free contact-form backend. Sign up at https://web3forms.com (no account required) and paste the access key here. Used by every Contact Form section unless one overrides it. Leave blank to disable submissions.',
     },
     {
       name: 'accentColorOverride',

@@ -1,0 +1,132 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getClient, urlFor } from '../../../lib/sanity.js';
+
+const { slug } = Astro.params;
+const client = getClient(Astro.locals.isPreview);
+
+const [category, portfolio] = await Promise.all([
+  client.fetch(
+    `*[_type == "portfolioCategory" && slug.current == $slug][0]{ name, description }`,
+    { slug },
+  ),
+  client.fetch(
+    `*[_type == "portfolio" && _id == "portfolio"][0]{
+      galleryColumns,
+      "images": images[$slug in categories[]->slug.current]{
+        _key, alt, title,
+        ...,
+        asset->{ _id, metadata { dimensions { width, height, aspectRatio } } }
+      }
+    }`,
+    { slug },
+  ),
+]);
+
+if (!category) {
+  return new Response(null, { status: 404 });
+}
+
+const images = (portfolio?.images || []).map((img: any) => {
+  const naturalW = img.asset?.metadata?.dimensions?.width ?? 1200;
+  const naturalH = img.asset?.metadata?.dimensions?.height ?? 800;
+  const displayW = Math.min(naturalW, 800);
+  const displayH = Math.round((displayW / naturalW) * naturalH);
+  return {
+    src: urlFor(img).width(800).auto('format').url(),
+    alt: img.alt ?? img.title ?? '',
+    w: displayW,
+    h: displayH,
+  };
+});
+
+const galleryColumns = portfolio?.galleryColumns || 3;
+const pageTitle = `${category.name} — Portfolio Category`;
+---
+
+<Layout
+  pageTitle={pageTitle}
+  seoDescription={category.description || `Portfolio images in the ${category.name} category.`}
+  breadcrumb={category.name}
+  robots="noindex, follow"
+>
+  <main class="pcat">
+    <header class="pcat__header">
+      <p class="pcat__crumb"><a href="/portfolio">Portfolio</a> &rsaquo; Category</p>
+      <h1 class="pcat__title">{category.name}</h1>
+      {category.description && <p class="pcat__desc">{category.description}</p>}
+    </header>
+
+    {images.length === 0 ? (
+      <p class="pcat__empty">No images in this category yet.</p>
+    ) : (
+      <div class="pcat__grid" style={`--gallery-columns: ${galleryColumns}`}>
+        {images.map((img: any, i: number) => (
+          <div class={`pcat__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
+            <img
+              src={img.src}
+              alt={img.alt}
+              width={img.w}
+              height={img.h}
+              loading="lazy"
+              decoding="async"
+              class="pcat__img"
+            />
+          </div>
+        ))}
+      </div>
+    )}
+  </main>
+</Layout>
+
+<style>
+  .pcat {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+  }
+  .pcat__header { margin-bottom: 3rem; }
+  .pcat__crumb {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.75rem;
+  }
+  .pcat__crumb a { color: var(--accent); text-decoration: none; }
+  .pcat__title {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    margin: 0 0 0.75rem;
+  }
+  .pcat__desc {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0;
+  }
+  .pcat__empty {
+    color: var(--muted);
+    font-style: italic;
+  }
+  .pcat__grid {
+    column-count: var(--gallery-columns, 3);
+    column-gap: 1rem;
+  }
+  .pcat__item {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .pcat__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 0.6s var(--ease-image);
+  }
+  .pcat__item:hover .pcat__img { transform: scale(1.03); }
+
+  @media (max-width: 900px) { .pcat__grid { column-count: 2; } }
+  @media (max-width: 560px) { .pcat__grid { column-count: 1; } }
+</style>

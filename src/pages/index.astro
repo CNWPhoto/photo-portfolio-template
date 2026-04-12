@@ -1,132 +1,62 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Hero from '../components/Hero.astro';
-import WhyChoose from '../components/WhyChoose.astro';
-import FAQs from '../components/FAQs.astro';
-
-// Section variants — all imported statically; conditional rendering selects the active one
-import TestimonialsSlider from '../components/testimonials/TestimonialsSlider.astro';
-import TestimonialsGrid from '../components/testimonials/TestimonialsGrid.astro';
-import IntroSplit from '../components/intro/IntroSplit.astro';
-import IntroCentered from '../components/intro/IntroCentered.astro';
-import PortfolioGrid from '../components/portfolio/PortfolioGrid.astro';
-import PortfolioMasonry from '../components/portfolio/PortfolioMasonry.astro';
-import HowItWorksColumns from '../components/howitworks/HowItWorksColumns.astro';
-import HowItWorksStacked from '../components/howitworks/HowItWorksStacked.astro';
-
-import { getClient, urlFor } from '../lib/sanity.js';
+import SectionRenderer from '../components/SectionRenderer.astro';
+import { getClient } from '../lib/sanity.js';
+import { SECTION_PROJECTION, SITE_PALETTES_QUERY } from '../lib/sectionsQuery.js';
 
 const client = getClient(Astro.locals.isPreview);
 
-const [homepageDoc, testimonials] = await Promise.all([
-	client.fetch(
-		`*[_type == "homepagePage"][0]{
-			pageTitle,
-			seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
-			"sections": sections[] {
-				_type,
-				enabled,
-				variant,
-				images[] { ..., asset-> },
-				nicheKeyword, tagline,
-				eyebrow, body, bodySecondary, ctaText, ctaLink,
-				image { ..., asset-> },
-				imageVertical { ..., asset-> },
-				imageHorizontal { ..., asset-> },
-				heading, step1Title, step1Body, step2Title, step2Body, step3Title, step3Body,
-				bodyFirst, bodySecond, caption,
-				faqs[] { question, answer }
-			}
-		}`
-	),
-	client.fetch(`*[_type == "testimonial"] | order(order asc)`),
+const [homepageDoc, siteData] = await Promise.all([
+	client.fetch(`*[_type == "homepagePage"][0]{
+		pageTitle,
+		seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+		hero { ${SECTION_PROJECTION} },
+		"sections": sections[]{ ${SECTION_PROJECTION} }
+	}`),
+	client.fetch(SITE_PALETTES_QUERY),
 ]);
 
-const homepageSections = homepageDoc?.sections ?? [];
-const getSection = (type: string) => homepageSections.find((s: any) => s._type === type);
+const palettes = siteData?.palettes ?? [];
+const sitePaletteSlug = siteData?.defaultPalette ?? null;
+
+const hero = homepageDoc?.hero ?? null;
+const sections = homepageDoc?.sections ?? [];
 
 const seoTitle       = homepageDoc?.seo?.seoTitle       || homepageDoc?.pageTitle || null;
 const seoDescription = homepageDoc?.seo?.seoDescription || null;
 const ogImage        = homepageDoc?.seo?.socialImage?.asset?.url || null;
 
-// ── Schema ───────────────────────────────────────────────────────────────────
-const rawFaqs = getSection('homepageFaqs')?.faqs ?? null;
-const faqSchemaData = rawFaqs?.length
-	? [{ '@type': 'FAQPage', mainEntity: rawFaqs.map((f: any) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) }]
+const faqSection = sections.find((s: any) => s._type === 'faqSection');
+const faqs = faqSection?.faqs ?? null;
+const faqSchemaData = faqs?.length && faqSection?.showSchema !== false
+	? [{
+		'@type': 'FAQPage',
+		mainEntity: faqs.map((f: any) => ({
+			'@type': 'Question',
+			name: f.question,
+			acceptedAnswer: { '@type': 'Answer', text: f.answer },
+		})),
+	}]
 	: undefined;
-
-// ── Hero (rendered outside <main>) ───────────────────────────────────────────
-const heroSliderSection  = getSection('heroSlider');
-const heroCaptionSection = getSection('heroCaption');
-const showHero           = heroSliderSection?.enabled !== false;
-const showHeroCaption    = heroCaptionSection?.enabled !== false;
-const heroSlider         = heroSliderSection?.images ?? null;
-
-// ── WhyChoose pairing ────────────────────────────────────────────────────────
-// soloHeroImage (bg image) + whyChooseSection (text) always render as one unit.
-// We render it when we first encounter either in the section order.
-const soloHeroImageData  = getSection('soloHeroImage');
-const whyChooseSectionData = getSection('whyChooseSection');
-const soloHeroIdx  = homepageSections.findIndex((s: any) => s._type === 'soloHeroImage');
-const whyChooseIdx = homepageSections.findIndex((s: any) => s._type === 'whyChooseSection');
-// Index of first appearance (ignoring disabled)
-const whyChooseTriggerIdx = (() => {
-	const candidates = [soloHeroIdx, whyChooseIdx].filter(i => i !== -1);
-	return candidates.length ? Math.min(...candidates) : -1;
-})();
 ---
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData}>
-	{showHero && <Hero heroImages={heroSlider} heroCaption={showHeroCaption ? heroCaptionSection : null} urlFor={urlFor} />}
 	<main>
-		{homepageSections.map((section: any, idx: number) => {
-			// Skip disabled sections
-			if (section.enabled === false) return null;
-			// Hero sections handled above
-			if (section._type === 'heroSlider' || section._type === 'heroCaption') return null;
-
-			if (section._type === 'welcomeSection') {
-				const variant = section.variant || 'classic';
-				return variant === 'centered'
-					? <IntroCentered welcomeSection={section} urlFor={urlFor} />
-					: <IntroSplit    welcomeSection={section} urlFor={urlFor} />;
-			}
-
-			if (section._type === 'testimonialsSection') {
-				const variant = section.variant || 'slider';
-				return variant === 'grid'
-					? <TestimonialsGrid   testimonials={testimonials} urlFor={urlFor} />
-					: <TestimonialsSlider testimonials={testimonials} urlFor={urlFor} />;
-			}
-
-			if (section._type === 'featuredSection') {
-				const variant = section.variant || 'classic';
-				return variant === 'masonry'
-					? <PortfolioMasonry featuredSection={section} urlFor={urlFor} />
-					: <PortfolioGrid    featuredSection={section} urlFor={urlFor} />;
-			}
-
-			if (section._type === 'processSection') {
-				const variant = section.variant || 'columns';
-				return variant === 'stacked'
-					? <HowItWorksStacked processSection={section} />
-					: <HowItWorksColumns processSection={section} />;
-			}
-
-			// soloHeroImage + whyChooseSection always render together as one WhyChoose block.
-			// Render at the position of whichever appears first; skip the second.
-			if (section._type === 'soloHeroImage' || section._type === 'whyChooseSection') {
-				if (idx !== whyChooseTriggerIdx) return null;
-				const soloImg = soloHeroImageData?.enabled !== false ? soloHeroImageData : null;
-				const whyChs  = whyChooseSectionData?.enabled !== false ? whyChooseSectionData : null;
-				return <WhyChoose theme="dark-editorial" soloHeroImage={soloImg} whyChooseSection={whyChs} urlFor={urlFor} />;
-			}
-
-			if (section._type === 'homepageFaqs') {
-				return <FAQs faqs={section.faqs ?? null} />;
-			}
-
-			return null;
-		})}
+		{hero && hero.enabled !== false && (
+			<SectionRenderer
+				section={hero}
+				isFirst={true}
+				sitePaletteSlug={sitePaletteSlug}
+				palettes={palettes}
+			/>
+		)}
+		{sections.map((section: any, i: number) => (
+			<SectionRenderer
+				section={section}
+				isFirst={!hero && i === 0}
+				sitePaletteSlug={sitePaletteSlug}
+				palettes={palettes}
+			/>
+		))}
 	</main>
 </Layout>

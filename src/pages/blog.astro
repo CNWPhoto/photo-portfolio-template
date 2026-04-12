@@ -40,7 +40,8 @@ const skip         = (safePage - 1) * postsPerPage;
 
 const posts = await client.fetch(
   `*[_type == "blogPost"] | order(publishDate desc) [$skip...$end]{
-    _id, title, slug, publishDate, excerpt, category,
+    _id, title, slug, publishDate, excerpt,
+    "categories": categories[]->{ name, "slug": slug.current },
     coverImage { ..., asset-> }
   }`,
   { skip, end: skip + postsPerPage },
@@ -51,22 +52,23 @@ const blogSlug = pageDoc?.slug?.current || 'blog';
 const prevUrl = safePage > 1 ? `/${blogSlug}?page=${safePage - 1}` : null;
 const nextUrl = safePage < totalPages ? `/${blogSlug}?page=${safePage + 1}` : null;
 
+type Category = { name: string; slug: string };
 type Post = {
   _id: string;
   title: string;
   slug: { current: string };
   publishDate?: string;
   excerpt?: string;
-  category?: string;
+  categories?: Category[];
   coverImage?: any;
   _fallbackImg?: string;
 };
 
 const fallbackPosts: Post[] = [
-  { _id: 'f1', title: 'Captured High in the Mountains',  slug: { current: '#' }, category: 'On Location',       excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
-  { _id: 'f2', title: 'Swimming with Spot',              slug: { current: '#' }, category: 'Portraits',          excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
-  { _id: 'f3', title: 'Rocky on the Ridgetop',           slug: { current: '#' }, category: 'On Location',       excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
-  { _id: 'f4', title: 'A Morning in the Studio',         slug: { current: '#' }, category: 'Behind the Scenes', excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
+  { _id: 'f1', title: 'Captured High in the Mountains',  slug: { current: '#' }, categories: [{ name: 'On Location', slug: 'on-location' }],       excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
+  { _id: 'f2', title: 'Swimming with Spot',              slug: { current: '#' }, categories: [{ name: 'Portraits', slug: 'portraits' }],            excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
+  { _id: 'f3', title: 'Rocky on the Ridgetop',           slug: { current: '#' }, categories: [{ name: 'On Location', slug: 'on-location' }],       excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
+  { _id: 'f4', title: 'A Morning in the Studio',         slug: { current: '#' }, categories: [{ name: 'Behind the Scenes', slug: 'behind-the-scenes' }], excerpt: 'Your blog post description will automatically pull into here for whatever you write — simple as that.', _fallbackImg: 'https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop' },
 ];
 
 const sanityPosts: Post[] = posts ?? [];
@@ -118,7 +120,9 @@ function formatDate(dateStr?: string): string {
                   />
                 </a>
                 <div class="card__body">
-                  {post.category && <p class="card__category">{post.category}</p>}
+                  {post.categories?.[0] && (
+                    <a class="card__category" href={`/blog/category/${post.categories[0].slug}`}>{post.categories[0].name}</a>
+                  )}
                   <h2 class="card__title">
                     <a href={`/blog/${post.slug.current}`}>{post.title}</a>
                   </h2>
@@ -142,7 +146,9 @@ function formatDate(dateStr?: string): string {
                     />
                   </div>
                   <div class="posts__content">
-                    {post.category && <p class="posts__category">{post.category}</p>}
+                    {post.categories?.[0] && (
+                      <p class="posts__category">{post.categories[0].name}</p>
+                    )}
                     <h2 class="posts__title">{post.title}</h2>
                     {post.excerpt && <p class="posts__excerpt">{post.excerpt}</p>}
                     {post.publishDate && <p class="posts__date">{formatDate(post.publishDate)}</p>}

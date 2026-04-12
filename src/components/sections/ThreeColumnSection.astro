@@ -1,0 +1,242 @@
+---
+import SanityImage from '../SanityImage.astro';
+import { paletteToStyle } from '../../lib/palette.js';
+import { renderHeading } from '../../lib/heading.js';
+import { renderBody } from '../../lib/portableText.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
+const { section, isFirst = false, palette } = Astro.props;
+const style = paletteToStyle(palette);
+
+const FALLBACK_IDS = ['1108099', '2253275', '825949'];
+const fallbackUrl = (id: string) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800`;
+
+const eyebrow = section?.eyebrow || '';
+const heading = renderHeading(section?.heading || '');
+const variant = section?.variant || 'image-cards';
+const alignment = section?.alignment || 'left';
+const sideLabel = section?.verticalSideLabel || '';
+const columns = (section?.columns || []).slice(0, 3);
+while (columns.length < 3) columns.push({});
+
+const HeadingTag = isFirst ? 'h1' : 'h2';
+---
+
+<section
+  class:list={['section', 'threecol', `threecol--${variant}`]}
+  data-section-type="threeColumnSection"
+  data-spacing={section?.spacing || 'normal'}
+  data-alignment={alignment}
+  id={section?.sectionId || undefined}
+  style={style}
+>
+  <div class="threecol__outer">
+    {sideLabel && (
+      <div class="threecol__label-col" aria-hidden="true">
+        <span class="threecol__side-label">{sideLabel}</span>
+      </div>
+    )}
+
+    <div class="threecol__inner">
+      {(eyebrow || heading) && (
+        <div class="threecol__head">
+          {eyebrow && <p class="threecol__eyebrow">{eyebrow}</p>}
+          {heading && <HeadingTag class="threecol__heading" set:html={heading} />}
+        </div>
+      )}
+
+      <div class="threecol__grid">
+        {columns.map((col: any, i: number) => {
+          const colImg = col?.image ?? null;
+          const colBody = renderBody(col?.body, { className: 'threecol__col-body' });
+          const delayClass = `reveal-delay-${i + 1}`;
+          return (
+            <div class:list={['threecol__col', 'reveal', delayClass]}>
+              {variant === 'image-cards' && (
+                <div class="threecol__img-wrap">
+                  {colImg
+                    ? <SanityImage image={colImg} sizes="288px" loading="lazy" class="threecol__img" />
+                    : <img src={fallbackUrl(FALLBACK_IDS[i])} alt="" loading="lazy" class="threecol__img" />}
+                </div>
+              )}
+              {variant === 'icon-cards' && col?.icon && (
+                <div class="threecol__icon" aria-hidden="true">{col.icon}</div>
+              )}
+              {variant === 'numbered-steps' && (
+                <div class="threecol__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</div>
+              )}
+              {col?.title && <h3 class="threecol__title">{col.title}</h3>}
+              {colBody && <div class="threecol__body" set:html={colBody} />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .threecol {
+    background: var(--bg);
+    color: var(--text);
+    position: relative;
+    padding: 0 0 6rem;
+  }
+
+  .threecol__outer {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    padding: 0 3rem;
+    max-width: 1265px;
+    margin: 0 auto;
+    gap: 2rem;
+  }
+  .threecol:not(:has(.threecol__label-col)) .threecol__outer {
+    grid-template-columns: 1fr;
+  }
+
+  .threecol__label-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .threecol__side-label {
+    font-family: var(--font-heading, var(--font-serif));
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(2rem, 3.2vw, 3rem);
+    letter-spacing: 0.05em;
+    color: var(--text);
+    writing-mode: horizontal-tb;
+    transform: rotate(-90deg);
+    transform-origin: center center;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .threecol__inner {
+    padding: 0;
+  }
+  .threecol__head { margin-bottom: 3rem; text-align: center; }
+  .threecol[data-alignment='left'] .threecol__head { text-align: left; }
+
+  .threecol__eyebrow {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+  .threecol__heading {
+    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    line-height: 1.2;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .threecol__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+    padding-top: 5rem;
+  }
+
+  .threecol__col {
+    display: flex;
+    flex-direction: column;
+  }
+  .threecol[data-alignment='center'] .threecol__col {
+    text-align: center;
+    align-items: center;
+  }
+
+  .threecol__img-wrap {
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    height: 288px;
+    width: 288px;
+    max-width: 100%;
+  }
+  .threecol__img-wrap img,
+  .threecol__img-wrap :global(.threecol__img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s var(--ease-image);
+  }
+  .threecol__img-wrap:hover img,
+  .threecol__img-wrap:hover :global(.threecol__img) { transform: scale(1.04); }
+
+  .threecol__icon {
+    font-size: 2.25rem;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+  }
+  .threecol__num {
+    font-family: var(--font-heading, var(--font-serif));
+    font-style: italic;
+    font-size: 3.25rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+  .threecol__title {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.84rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-dark, var(--accent));
+    font-weight: 600;
+    margin: 0 0 1rem;
+    text-align: center;
+  }
+  .threecol__body :global(p),
+  .threecol__body :global(.threecol__col-body) {
+    font-size: 0.9375rem;
+    line-height: 1.78;
+    color: var(--muted);
+    margin: 0 0 0.75rem;
+  }
+
+  @media (max-width: 900px) {
+    .threecol__outer {
+      grid-template-columns: 1fr;
+      padding: 0 1.5rem;
+    }
+    .threecol__label-col {
+      overflow: visible;
+      padding-top: 3rem;
+    }
+    .threecol__side-label {
+      writing-mode: horizontal-tb;
+      transform: none;
+      font-size: clamp(1.6rem, 6vw, 2.25rem);
+      text-align: center;
+    }
+    .threecol__grid {
+      grid-template-columns: 1fr;
+      padding-top: 2rem;
+    }
+    .threecol__col {
+      align-items: center;
+      text-align: center;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .threecol__img-wrap {
+      width: 280px;
+      height: 280px;
+    }
+  }
+</style>

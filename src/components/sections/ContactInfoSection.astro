@@ -1,0 +1,145 @@
+---
+import { paletteToStyle } from '../../lib/palette.js';
+import { renderBody } from '../../lib/portableText.js';
+import { getClient } from '../../lib/sanity.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
+const { section, isFirst = false, palette } = Astro.props;
+const style = paletteToStyle(palette);
+
+const client = getClient(false);
+const social = await client.fetch(
+  `*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom, contactEmail, contactPhone }`,
+);
+
+const heading = section?.heading || '';
+const bodyHTML = renderBody(section?.body, { className: 'cinfo__body' });
+const layout = section?.layout || 'card';
+
+const showEmail = section?.showEmail !== false;
+const showPhone = !!section?.showPhone;
+const showSocial = section?.showSocial !== false;
+const showMap = !!section?.showMap;
+const mapEmbedUrl = section?.mapEmbedUrl || '';
+
+const email = section?.emailOverride || social?.contactEmail || '';
+const phone = section?.phoneOverride || social?.contactPhone || '';
+
+const socialLinks = [
+  social?.instagram && { label: 'Instagram', url: social.instagram },
+  social?.facebook && { label: 'Facebook', url: social.facebook },
+  social?.youtube && { label: 'YouTube', url: social.youtube },
+  social?.tiktok && { label: 'TikTok', url: social.tiktok },
+  social?.custom?.label && social?.custom?.url && { label: social.custom.label, url: social.custom.url },
+].filter(Boolean) as { label: string; url: string }[];
+
+const HeadingTag = isFirst ? 'h1' : 'h2';
+---
+
+<section
+  class:list={['section', 'cinfo', `cinfo--${layout}`]}
+  data-section-type="contactInfoSection"
+  data-spacing={section?.spacing || 'normal'}
+  id={section?.sectionId || undefined}
+  style={style}
+>
+  <div class="cinfo__inner">
+    <div class="cinfo__card reveal">
+      {heading && <HeadingTag class="cinfo__heading">{heading}</HeadingTag>}
+      {bodyHTML && <div class="cinfo__body-wrap" set:html={bodyHTML} />}
+
+      <ul class="cinfo__list">
+        {showEmail && email && (
+          <li class="cinfo__item">
+            <span class="cinfo__label">Email</span>
+            <a class="cinfo__link" href={`mailto:${email}`}>{email}</a>
+          </li>
+        )}
+        {showPhone && phone && (
+          <li class="cinfo__item">
+            <span class="cinfo__label">Phone</span>
+            <a class="cinfo__link" href={`tel:${phone.replace(/[^0-9+]/g, '')}`}>{phone}</a>
+          </li>
+        )}
+        {showSocial && socialLinks.length > 0 && (
+          <li class="cinfo__item">
+            <span class="cinfo__label">Social</span>
+            <span class="cinfo__socials">
+              {socialLinks.map((s) => (
+                <a class="cinfo__link" href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a>
+              ))}
+            </span>
+          </li>
+        )}
+      </ul>
+
+      {showMap && mapEmbedUrl && (
+        <div class="cinfo__map">
+          <iframe src={mapEmbedUrl} title="Map" loading="lazy" />
+        </div>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .cinfo {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .cinfo__inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-inline: 1.5rem;
+  }
+  .cinfo--card .cinfo__card {
+    background: var(--bg-alt);
+    padding: 2.5rem 2rem;
+    border: 1px solid var(--border);
+  }
+  .cinfo__heading {
+    font-size: clamp(1.5rem, 2.75vw, 2.25rem);
+    margin: 0 0 1rem;
+  }
+  .cinfo__body-wrap :global(p) {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--muted);
+    margin: 0 0 1rem;
+  }
+  .cinfo__list {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .cinfo__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .cinfo__label {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .cinfo__link {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 1.05rem;
+  }
+  .cinfo__socials { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+  .cinfo__map { margin-top: 2rem; aspect-ratio: 16 / 9; }
+  .cinfo__map iframe { width: 100%; height: 100%; border: 0; display: block; }
+</style>

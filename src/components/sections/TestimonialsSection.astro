@@ -1,0 +1,253 @@
+---
+import { paletteToStyle } from '../../lib/palette.js';
+import { getClient } from '../../lib/sanity.js';
+import { buildSrc, buildSrcset } from '../../lib/image';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
+const { section, palette } = Astro.props;
+const style = paletteToStyle(palette);
+
+const source = section?.source || 'all';
+const maxCount = section?.maxCount || 12;
+
+let raw: any[] = [];
+if (source === 'pickSpecific' && section?.testimonials?.length) {
+  raw = section.testimonials;
+} else {
+  const client = getClient(false);
+  raw = await client.fetch(
+    `*[_type == "testimonial"] | order(order asc)[0...$max]{
+      _id, testimonial, client,
+      image { ..., asset->{ _id, metadata { dimensions { width, height } } } }
+    }`,
+    { max: maxCount },
+  );
+}
+raw = raw || [];
+
+const testimonials = raw.map((t: any) => ({
+  image: t?.image ?? null,
+  photoSrc: t?.image ? buildSrc(t.image, 800) : '',
+  photoSrcset: t?.image ? buildSrcset(t.image, [400, 800, 1200]) : '',
+  photoAlt: t?.image?.alt ?? '',
+  quote: t?.testimonial ?? '',
+  client: t?.client ?? '',
+}));
+
+const first = testimonials[0] ?? null;
+---
+
+<section
+  class="tslider"
+  data-section-type="testimonialsSection"
+  id={section?.sectionId || 'testimonials'}
+  style={style}
+>
+  <div class="tslider__inner">
+    <div class="tslider__image-col reveal-fade">
+      <div class="tslider__image-wrap" data-tslider-img-wrap>
+        {first?.image && (
+          <img
+            src={first.photoSrc}
+            srcset={first.photoSrcset}
+            sizes="(max-width: 900px) 30vw, 200px"
+            alt={first.photoAlt}
+            class="tslider__img"
+            loading="lazy"
+          />
+        )}
+      </div>
+    </div>
+
+    <div class="tslider__content reveal reveal-delay-2">
+      <blockquote class="tslider__quote" data-tslider-quote>
+        &ldquo;{first?.quote}&rdquo;
+      </blockquote>
+      <p class="tslider__attribution" data-tslider-client>{first?.client}</p>
+
+      {testimonials.length > 1 && (
+        <div class="tslider__nav">
+          <span class="tslider__count">
+            <span data-tslider-idx>1</span> / {testimonials.length}
+          </span>
+          <button class="tslider__arrow" data-tslider-prev aria-label="Previous testimonial">&#8592;</button>
+          <button class="tslider__arrow" data-tslider-next aria-label="Next testimonial">&#8594;</button>
+        </div>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .tslider {
+    padding: 0 !important;
+    margin-top: 100px;
+    margin-bottom: 100px;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .tslider__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 150px;
+  }
+
+  .tslider__image-col { flex-shrink: 0; }
+
+  .tslider__image-wrap {
+    width: 300px;
+    height: 450px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .tslider__image-wrap :global(.tslider__img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    transition: opacity 0.4s ease;
+  }
+
+  .tslider__content {
+    max-width: 480px;
+  }
+
+  .tslider__quote {
+    font-style: italic;
+    font-size: 1.25rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin: 0 0 2rem;
+    transition: opacity 0.3s ease;
+  }
+
+  .tslider__attribution {
+    font-style: normal;
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.8125rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .tslider__nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .tslider__count {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    color: var(--muted-light);
+    margin-right: auto;
+  }
+
+  .tslider__arrow {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 1rem;
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, transform 0.18s;
+  }
+  .tslider__arrow:hover:not(:disabled) { border-color: var(--text); }
+  .tslider__arrow:disabled { opacity: 0.3; cursor: default; }
+
+  @media (max-width: 900px) {
+    .tslider__inner {
+      flex-direction: column;
+      align-items: center;
+      gap: 2.5rem;
+      padding: 0 1.5rem;
+    }
+    .tslider__image-col { width: 100%; display: flex; justify-content: center; }
+    .tslider__image-wrap { width: 80%; height: 90vw; max-height: 500px; }
+    .tslider__content { max-width: none; width: 80%; }
+  }
+</style>
+
+<script is:inline define:vars={{ testimonials }}>
+  document.querySelectorAll('[data-section-type="testimonialsSection"]').forEach((section) => {
+    const imgWrap  = section.querySelector('[data-tslider-img-wrap]');
+    const quoteEl  = section.querySelector('[data-tslider-quote]');
+    const clientEl = section.querySelector('[data-tslider-client]');
+    const idxEl    = section.querySelector('[data-tslider-idx]');
+    const prevBtn  = section.querySelector('[data-tslider-prev]');
+    const nextBtn  = section.querySelector('[data-tslider-next]');
+    if (!quoteEl || !clientEl) return;
+
+    const data = testimonials;
+    if (!data || data.length < 2) return;
+
+    let idx = 0;
+
+    function render(i) {
+      const t = data[i];
+      if (!t) return;
+
+      quoteEl.style.opacity = '0';
+      if (imgWrap) imgWrap.style.opacity = '0';
+
+      setTimeout(function() {
+        if (imgWrap) {
+          if (t.photoSrc) {
+            let imgEl = imgWrap.querySelector('img');
+            if (!imgEl) {
+              imgEl = document.createElement('img');
+              imgEl.className = 'tslider__img';
+              imgWrap.appendChild(imgEl);
+            }
+            imgEl.src = t.photoSrc;
+            imgEl.srcset = t.photoSrcset || '';
+            imgEl.sizes = '(max-width: 900px) 30vw, 200px';
+            imgEl.alt = t.photoAlt || '';
+          } else {
+            const imgEl = imgWrap.querySelector('img');
+            if (imgEl) imgEl.remove();
+          }
+          imgWrap.style.opacity = '1';
+        }
+        quoteEl.textContent = '\u201C' + t.quote + '\u201D';
+        clientEl.textContent = t.client;
+        if (idxEl) idxEl.textContent = String(i + 1);
+        quoteEl.style.opacity = '1';
+      }, 280);
+
+      if (prevBtn) prevBtn.disabled = i === 0;
+      if (nextBtn) nextBtn.disabled = i === data.length - 1;
+    }
+
+    if (prevBtn) prevBtn.addEventListener('click', function() {
+      if (idx > 0) { idx--; render(idx); }
+    });
+    if (nextBtn) nextBtn.addEventListener('click', function() {
+      if (idx < data.length - 1) { idx++; render(idx); }
+    });
+
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = data.length <= 1;
+  });
+</script>

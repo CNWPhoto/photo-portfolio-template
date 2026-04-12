@@ -1,0 +1,344 @@
+---
+import { paletteToStyle } from '../../lib/palette.js';
+import { renderBody } from '../../lib/portableText.js';
+import { getClient } from '../../lib/sanity.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
+const { section, isFirst = false, palette } = Astro.props;
+const style = paletteToStyle(palette);
+
+const eyebrow = section?.eyebrow || '';
+const heading = section?.heading || '';
+const bodyHTML = renderBody(section?.body, { className: 'contact__body' });
+const mode = section?.mode || 'built-in';
+
+const submitText = section?.submitText || 'Send';
+const successMessage = section?.successMessage || "Thanks — we'll be in touch soon.";
+const errorMessage = section?.errorMessage || 'Something went wrong. Please try again or email us directly.';
+const formFields = section?.formFields?.length
+  ? section.formFields
+  : [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'message', label: 'Message', type: 'textarea', required: true },
+    ];
+
+const embedUrl = section?.embedUrl || '';
+const embedHeight = section?.embedHeight || 600;
+const embedTitle = section?.embedTitle || 'Contact form';
+
+// Resolve effective Web3Forms access key: per-section override wins over
+// the site-wide default. Only fetched in built-in mode.
+let effectiveKey = section?.web3formsKeyOverride || '';
+if (mode === 'built-in' && !effectiveKey) {
+  const client = getClient(false);
+  const site = await client.fetch(
+    `*[_type == "siteSettings" && _id == "siteSettings"][0]{ web3formsKey }`,
+  );
+  effectiveKey = site?.web3formsKey || '';
+}
+const isConfigured = mode !== 'built-in' || !!effectiveKey;
+
+const HeadingTag = isFirst ? 'h1' : 'h2';
+---
+
+<section
+  class:list={['section', 'contact', `contact--${mode}`]}
+  data-section-type="contactFormSection"
+  data-spacing={section?.spacing || 'normal'}
+  id={section?.sectionId || undefined}
+  style={style}
+>
+  <hr />
+  <div class="contact__inner">
+    {(eyebrow || heading || bodyHTML) && (
+      <div class="contact__info">
+        {eyebrow && <p class="contact__eyebrow reveal">{eyebrow}</p>}
+        {heading && <HeadingTag class="contact__heading reveal reveal-delay-1">{heading}</HeadingTag>}
+        {bodyHTML && <div class="contact__intro" set:html={bodyHTML} />}
+      </div>
+    )}
+
+    {mode === 'built-in' && isConfigured && (
+      <form class="contact__form reveal reveal-delay-1" data-contact-form>
+        <input type="hidden" name="access_key" value={effectiveKey} />
+        {/* Honeypot — bots fill, humans don't see */}
+        <input type="text" name="botcheck" tabindex="-1" autocomplete="off" class="contact__honeypot" aria-hidden="true" />
+
+        {formFields.map((field: any) => (
+          <div class="contact__field">
+            <label class="contact__label" for={`cf-${field.name}`}>
+              {field.label}{field.required && <span class="contact__required" aria-hidden="true"> *</span>}
+            </label>
+            {field.type === 'textarea' ? (
+              <textarea
+                id={`cf-${field.name}`}
+                name={field.name}
+                required={!!field.required}
+                rows="6"
+                class="contact__input contact__input--textarea"
+              />
+            ) : field.type === 'select' ? (
+              <select id={`cf-${field.name}`} name={field.name} required={!!field.required} class="contact__input">
+                <option value="">Select…</option>
+                {(field.options || []).map((opt: string) => (
+                  <option value={opt}>{opt}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                id={`cf-${field.name}`}
+                name={field.name}
+                type={field.type || 'text'}
+                required={!!field.required}
+                class="contact__input"
+              />
+            )}
+          </div>
+        ))}
+
+        <button
+          type="submit"
+          class="contact__submit"
+          data-submit-text={submitText}
+          data-success-message={successMessage}
+          data-error-message={errorMessage}
+        >{submitText}</button>
+        <p class="contact__status" data-contact-status aria-live="polite"></p>
+      </form>
+    )}
+
+    {mode === 'built-in' && !isConfigured && (
+      <div class="contact__notice">
+        <p><strong>Contact form not configured.</strong></p>
+        <p>Add a Web3Forms access key in Site Settings (or override on this section) to enable submissions. Free signup at <a href="https://web3forms.com" target="_blank" rel="noopener noreferrer">web3forms.com</a>.</p>
+      </div>
+    )}
+
+    {mode === 'embed' && embedUrl && (
+      <div class="contact__embed reveal reveal-delay-1">
+        <iframe
+          src={embedUrl}
+          title={embedTitle}
+          style={`width:100%;height:${embedHeight}px;border:0;`}
+          loading="lazy"
+        />
+      </div>
+    )}
+  </div>
+</section>
+
+<script>
+  // Web3Forms submission handler. POSTs FormData directly to web3forms.com
+  // — no backend route, no server env vars. Honeypot field name is "botcheck".
+  // The submit button carries success/error message data attrs so each
+  // section can carry its own copy.
+  document.querySelectorAll<HTMLFormElement>('[data-contact-form]').forEach((form) => {
+    const status = form.querySelector('[data-contact-status]') as HTMLElement | null;
+    const submitBtn = form.querySelector('[type="submit"]') as HTMLButtonElement | null;
+    if (!status || !submitBtn) return;
+
+    const submitText = submitBtn.dataset.submitText || 'Send';
+    const successMessage = submitBtn.dataset.successMessage || 'Thanks — we\'ll be in touch soon.';
+    const errorMessage = submitBtn.dataset.errorMessage || 'Something went wrong. Please try again or email us directly.';
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      status.textContent = '';
+      status.removeAttribute('data-state');
+
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          body: new FormData(form),
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          form.style.display = 'none';
+          status.textContent = successMessage;
+          status.setAttribute('data-state', 'success');
+        } else {
+          throw new Error(json.message || 'Submission failed');
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitText;
+        status.textContent = errorMessage;
+        status.setAttribute('data-state', 'error');
+      }
+    });
+  });
+</script>
+
+<style>
+  .contact {
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: 7rem !important;
+  }
+  .contact__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: start;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 5.5rem 3rem 0;
+  }
+
+  .contact__info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+  }
+  .contact__eyebrow {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+  .contact__heading {
+    font-family: var(--font-heading, var(--font-serif));
+    font-style: normal;
+    font-weight: 600;
+    font-size: clamp(1.75rem, 3vw, 2.75rem);
+    color: var(--accent);
+    line-height: 1.25;
+    margin: 0 0 1.25rem;
+    letter-spacing: -0.04em;
+  }
+  .contact__intro :global(p),
+  .contact__intro :global(.contact__body) {
+    font-size: 0.9375rem;
+    line-height: 1.78;
+    color: var(--muted);
+    white-space: pre-line;
+    margin: 0 0 0.75rem;
+  }
+
+  .contact__form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .contact__honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  .contact__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .contact__label {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .contact__required { color: var(--accent); }
+  .contact__input {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.9375rem;
+    color: var(--text);
+    background: var(--white, #fff);
+    border: 1px solid var(--border);
+    padding: 0.625rem 0.75rem;
+    width: 100%;
+    transition: border-color 0.2s;
+    resize: none;
+  }
+  .contact__input::placeholder { color: var(--muted-light); }
+  .contact__input:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+  .contact__input--textarea {
+    resize: none;
+    min-height: 150px;
+    line-height: 1.7;
+  }
+
+  .contact__submit {
+    width: 100%;
+    margin-top: 0.5rem;
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: none;
+    border: 1px solid var(--accent);
+    padding: 0.9rem 1.75rem;
+    cursor: pointer;
+    transition: background 0.25s, color 0.25s, border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+  }
+  .contact__submit:hover:not(:disabled) {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  }
+  .contact__submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .contact__status {
+    margin: 0;
+    min-height: 1.5em;
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+  .contact__status[data-state='success'] { color: var(--accent); font-size: 1.1rem; }
+  .contact__status[data-state='error']   { color: #c0392b; }
+
+  .contact__notice {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .contact__embed iframe {
+    display: block;
+  }
+
+  @media (max-width: 900px) {
+    .contact__info { max-width: 100%; }
+    .contact__inner {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+</style>

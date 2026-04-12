@@ -1,0 +1,55 @@
+---
+import { paletteToStyle } from '../../lib/palette.js';
+
+interface Props {
+  section: any;
+  isFirst?: boolean;
+  palette?: any;
+}
+
+const { section, palette } = Astro.props;
+const style = paletteToStyle(palette);
+
+// `section` is an htmlEmbedRef wrapper with a dereferenced `embed` field
+// pointing at an htmlEmbedSection document.
+const embed = section?.embed ?? null;
+const rawHtml = embed?.rawHtml || '';
+const containerWidth = embed?.containerWidth || 'default';
+const containerHeight = embed?.containerHeight || null;
+const heightStyle = containerHeight ? `min-height:${containerHeight}px;` : '';
+---
+
+<section
+  class:list={['section', 'embed', `embed--${containerWidth}`]}
+  data-section-type="htmlEmbedSection"
+  data-spacing={section?.spacing || 'normal'}
+  id={section?.sectionId || undefined}
+  style={style}
+>
+  <div class="embed__inner" style={heightStyle}>
+    {rawHtml
+      ? <Fragment set:html={rawHtml} />
+      : <p class="embed__placeholder">HTML Embed not configured. Pick an embed in Studio.</p>}
+  </div>
+</section>
+
+<style>
+  .embed {
+    background: var(--bg);
+    color: var(--text);
+  }
+  .embed__inner {
+    margin: 0 auto;
+    padding-inline: 1.5rem;
+  }
+  .embed--narrow .embed__inner { max-width: 600px; }
+  .embed--default .embed__inner { max-width: 760px; }
+  .embed--wide .embed__inner { max-width: 1100px; }
+  .embed--full .embed__inner { max-width: none; padding-inline: 0; }
+
+  .embed__placeholder {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+</style>

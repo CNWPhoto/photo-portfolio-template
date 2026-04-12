@@ -1,19 +1,29 @@
 import type { APIRoute } from 'astro'
+import { validatePreviewUrl } from '@sanity/preview-url-secret'
+import { getClient } from '../../lib/sanity.js'
 
-export const GET: APIRoute = ({ request, cookies, redirect }) => {
-  const url = new URL(request.url)
-  const secret = url.searchParams.get('secret')
-  const rawRedirect = url.searchParams.get('redirect') || '/'
-  // Only allow relative paths — block open-redirect to external URLs
-  const redirectTo = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/'
+// Sanity Presentation generates an ephemeral `sanity-preview-secret` per open
+// and we validate it by round-tripping to the Sanity API with our viewer token.
+const tokenClient = getClient(false).withConfig({
+  token: import.meta.env.SANITY_API_READ_TOKEN,
+  useCdn: false,
+})
 
-  const previewSecret = import.meta.env.SANITY_PREVIEW_SECRET
+export const GET: APIRoute = async ({ request, cookies, redirect }) => {
+  const { isValid, redirectTo = '/' } = await validatePreviewUrl(
+    tokenClient,
+    request.url,
+  )
 
-  if (!previewSecret || secret !== previewSecret) {
+  if (!isValid) {
     return new Response('Invalid preview secret', { status: 401 })
   }
 
-  cookies.set('__sanity_preview_secret', secret, {
+  // Only allow relative paths — block open-redirect to external URLs
+  const safeRedirect =
+    redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/'
+
+  cookies.set('__sanity_preview', 'true', {
     path: '/',
     httpOnly: true,
     sameSite: 'none',
@@ -21,5 +31,5 @@ export const GET: APIRoute = ({ request, cookies, redirect }) => {
     maxAge: 60 * 60,
   })
 
-  return redirect(redirectTo, 307)
+  return redirect(safeRedirect, 307)
 }

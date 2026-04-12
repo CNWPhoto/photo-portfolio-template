@@ -14,8 +14,8 @@ export default defineConfig({
   name: 'default',
   title: 'photo-portfolio-template',
 
-  projectId: 'hx5xgigp',
-  dataset: 'production',
+  projectId: process.env.SANITY_STUDIO_PROJECT_ID || 'hx5xgigp',
+  dataset: process.env.SANITY_STUDIO_DATASET || 'production',
 
   plugins: [
     presentationTool({
@@ -60,12 +60,11 @@ export default defineConfig({
                   .title('Pages')
                   .items([
                     singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
-                    singleton(S, 'aboutPage', 'About Page', 'aboutPage'),
-                    singleton(S, 'experiencePage', 'Experience', 'experiencePage'),
                     singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
                     singleton(S, 'blogPage', 'Blog', 'blogPage'),
-                    singleton(S, 'contactPage', 'Contact', 'contactPage'),
                     singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
+                    S.divider(),
+                    S.documentTypeListItem('page').title('Pages'),
                   ]),
               ),
 
@@ -76,6 +75,22 @@ export default defineConfig({
 
             // ── Blog ─────────────────────────────────────────────────────
             S.documentTypeListItem('blogPost').title('📝 Blog Posts'),
+
+            // ── Categories ────────────────────────────────────────────────
+            S.listItem()
+              .title('🏷 Categories')
+              .id('categoriesGroup')
+              .child(
+                S.list()
+                  .title('Categories')
+                  .items([
+                    S.documentTypeListItem('blogCategory').title('Blog Categories'),
+                    S.documentTypeListItem('portfolioCategory').title('Portfolio Categories'),
+                  ]),
+              ),
+
+            // ── HTML Embeds ───────────────────────────────────────────────
+            S.documentTypeListItem('htmlEmbedSection').title('🧩 HTML Embeds'),
 
           ]),
     }),

@@ -1,7 +1,9 @@
 ---
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
+import '../styles/palette.css';
 import { getClient } from '../lib/sanity.js';
+import VisualEditing from '../components/VisualEditing.tsx';
 
 interface Props {
   pageTitle?: string;
@@ -13,22 +15,42 @@ interface Props {
   updatedAt?: string;    // ISO date — article:modified_time
   prevUrl?: string;      // blog pagination rel="prev"
   nextUrl?: string;      // blog pagination rel="next"
+  robots?: string;       // override robots meta (e.g. "noindex, follow" for category pages)
 }
 
-const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb, publishDate, updatedAt, prevUrl, nextUrl } = Astro.props;
+const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb, publishDate, updatedAt, prevUrl, nextUrl, robots } = Astro.props;
 const isPreview = Astro.locals.isPreview ?? false;
 const client = getClient(isPreview);
 
 const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
-  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ colorTheme, fontTheme, siteName, photographerName, logoType, logoImage, favicon, accentColorOverride, textColorPreset }`),
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{
+    fontTheme, siteName, photographerName, logoType, logoImage, favicon,
+    accentColorOverride, textColorPreset, defaultPalette,
+    "palettes": palettes[]{
+      "slug": slug.current,
+      bg, bgAlt, surface, text, textMuted, textMutedLight,
+      accent, accentDark, border, sectionAlt, sectionDark,
+      sectionDarkText, btnBg, btnText
+    }
+  }`),
   client.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState, priceRange, areaServed, twitterHandle }`),
   client.fetch(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`),
-  client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{ navVariant, links[] { label, url, enabled, openInNewTab, isButton } }`),
+  client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{
+    navVariant,
+    links[] {
+      label, url, enabled, openInNewTab, isButton, linkType,
+      "internalRef": internalRef->{ "slug": slug.current },
+      children[] {
+        label, url, openInNewTab, linkType,
+        "internalRef": internalRef->{ "slug": slug.current }
+      }
+    }
+  }`),
   client.fetch(`*[_type == "blogPage" && _id == "blogPage"][0]{ blogEnabled }`),
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok }`),
 ]);
 
-const colorTheme  = settings?.colorTheme || 'classic-cream';
+const colorTheme  = settings?.defaultPalette || 'classic-cream';
 const fontTheme   = settings?.fontTheme  || 'classic-editorial';
 const siteName    = settings?.siteName   || 'Pet Photography';
 const logoType    = settings?.logoType   || 'text';
@@ -44,14 +66,40 @@ const textColorPreset   = settings?.textColorPreset || null;
 const twitterHandle     = seo?.twitterHandle ? seo.twitterHandle.replace(/^@/, '') : null;
 const sameAs            = [social?.instagram, social?.facebook, social?.youtube, social?.tiktok].filter(Boolean);
 
-const THEME_BG: Record<string, string> = {
-  'classic-cream':  '#f5f3ef',
-  'warm-studio':    '#fdf6ee',
-  'dark-editorial': '#1a1a1a',
-  'cool-minimal':   '#f8f9fa',
-  'forest-sage':    '#f2f4f0',
-};
-const themeColor = THEME_BG[colorTheme] ?? '#f5f3ef';
+// Resolve the active palette from siteSettings and emit its tokens as
+// :root CSS variables so nav, footer, body, and any element outside a
+// section inherits the correct theme.
+const palettesArr = (settings?.palettes ?? []) as Array<Record<string, string>>;
+const activePaletteSlug = settings?.defaultPalette || colorTheme || null;
+const activePalette =
+  (activePaletteSlug && palettesArr.find((p) => p?.slug === activePaletteSlug)) ||
+  palettesArr[0] ||
+  null;
+
+const themeColor = activePalette?.bg || '#f5f3ef';
+
+const PALETTE_TO_VAR: Array<[string, string]> = [
+  ['bg', '--bg'],
+  ['bgAlt', '--bg-alt'],
+  ['surface', '--surface'],
+  ['text', '--text'],
+  ['textMuted', '--muted'],
+  ['textMutedLight', '--muted-light'],
+  ['accent', '--accent'],
+  ['accentDark', '--accent-dark'],
+  ['border', '--border'],
+  ['sectionAlt', '--section-alt'],
+  ['sectionDark', '--section-dark'],
+  ['sectionDarkText', '--section-dark-text'],
+  ['btnBg', '--btn-bg'],
+  ['btnText', '--btn-text'],
+];
+const rootPaletteCss = activePalette
+  ? `:root {\n${PALETTE_TO_VAR
+      .map(([key, cssVar]) => (activePalette[key] ? `  ${cssVar}: ${activePalette[key]};` : null))
+      .filter(Boolean)
+      .join('\n')}\n}`
+  : '';
 
 const FONT_MAP: Record<string, string> = {
   'classic-editorial': 'family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Jost:wght@300;400;500;600;700',
@@ -171,6 +219,7 @@ const schemaJSON = schemaGraph.length
 		{prevUrl && <link rel="prev" href={prevUrl} />}
 		{nextUrl && <link rel="next" href={nextUrl} />}
 		{isPreview && <meta name="robots" content="noindex, nofollow" />}
+		{!isPreview && robots && <meta name="robots" content={robots} />}
 		<meta property="og:title" content={pageTitle ? `${pageTitle} | ${siteName}` : siteName} />
 		{seoDescription && <meta property="og:description" content={seoDescription} />}
 		{ogImage && <meta property="og:image" content={ogImage} />}
@@ -192,6 +241,7 @@ const schemaJSON = schemaGraph.length
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link href={fontUrl} rel="stylesheet" />
+		{rootPaletteCss && <style set:html={rootPaletteCss} />}
 		{accentOverride && (
 			<style set:html={`
 				:root, [data-theme] {
@@ -243,6 +293,7 @@ const schemaJSON = schemaGraph.length
 			document.querySelectorAll('.reveal, .reveal-fade').forEach(el => observer.observe(el));
 		</script>
 		{bodyScripts && <Fragment set:html={bodyScripts} />}
+		{isPreview && <VisualEditing client:only="react" />}
 	</body>
 </html>
 
@@ -289,121 +340,6 @@ const schemaJSON = schemaGraph.length
 	html[data-font='airy-minimal'] {
 		--font-heading: 'Tenor Sans', Georgia, serif;
 		--font-body: 'Raleway', system-ui, sans-serif;
-	}
-
-	/* ══════════════════════════════════════════════════
-	   COLOUR THEMES
-	   Default applied via data-theme on <html>.
-	   Individual sections can override with their own data-theme.
-	   All components consume: --bg, --bg-alt, --text,
-	   --accent, --accent-dark, --muted, --muted-light, --border.
-	   --surface aliases --bg-alt within a themed section.
-	══════════════════════════════════════════════════ */
-
-	/* Theme 1: Classic Cream (site default)
-	   html[data-theme] specificity (0,1,1) beats :root (0,1,0) so the
-	   active theme always wins regardless of stylesheet order. Plain
-	   [data-theme] selectors are kept alongside so section-level
-	   overrides (e.g. <section data-theme="warm-studio">) still work. */
-	:root,
-	html[data-theme='classic-cream'],
-	[data-theme='classic-cream'] {
-		--bg: #f5f3ef;
-		--text: #1a2744;
-		--accent: #8b2635;
-		--surface: #edeae4;
-		--bg-alt: #edeae4;
-		--accent-dark: #6b1c28;
-		--muted: #4a5568;
-		--muted-light: #8a94a6;
-		--border: #d4cfc6;
-		--section-alt: #edeae4;
-		--section-dark: #1a2744;
-		--section-dark-text: #f5f3ef;
-		--btn-bg: #8b2635;
-		--btn-text: #ffffff;
-	}
-
-	/* Theme 2: Warm Studio */
-	html[data-theme='warm-studio'],
-	[data-theme='warm-studio'] {
-		--bg: #fdf6ee;
-		--text: #2c1810;
-		--accent: #c9702a;
-		--surface: #f5ead9;
-		--bg-alt: #f5ead9;
-		--accent-dark: #a85a20;
-		--muted: #6b4c3b;
-		--muted-light: #a88070;
-		--border: #e8d5c0;
-		--section-alt: #f5ead9;
-		--section-dark: #2c1810;
-		--section-dark-text: #fdf6ee;
-		--btn-bg: #c9702a;
-		--btn-text: #ffffff;
-	}
-
-	/* Theme 3: Dark Editorial */
-	html[data-theme='dark-editorial'],
-	[data-theme='dark-editorial'] {
-		--bg: #1a1a1a;
-		--text: #f0ede8;
-		--accent: #c9a96e;
-		--surface: #252525;
-		--bg-alt: #252525;
-		--accent-dark: #a8895a;
-		--muted: #a0998e;
-		--muted-light: #6b645c;
-		--border: #3a3a3a;
-		--section-alt: #252525;
-		--section-dark: #111111;
-		--section-dark-text: #f0ede8;
-		--btn-bg: #c9a96e;
-		--btn-text: #1a1a1a;
-	}
-
-	/* Theme 4: Cool Minimal */
-	html[data-theme='cool-minimal'],
-	[data-theme='cool-minimal'] {
-		--bg: #f8f9fa;
-		--text: #1c2b3a;
-		--accent: #4a7c9e;
-		--surface: #eef1f4;
-		--bg-alt: #eef1f4;
-		--accent-dark: #3a6480;
-		--muted: #4a5e6e;
-		--muted-light: #8a99a6;
-		--border: #d0d8de;
-		--section-alt: #eef1f4;
-		--section-dark: #1c2b3a;
-		--section-dark-text: #f8f9fa;
-		--btn-bg: #4a7c9e;
-		--btn-text: #ffffff;
-	}
-
-	/* Theme 5: Forest Sage */
-	html[data-theme='forest-sage'],
-	[data-theme='forest-sage'] {
-		--bg: #f2f4f0;
-		--text: #1e2d1f;
-		--accent: #5a7a4e;
-		--surface: #e4ebe0;
-		--bg-alt: #e4ebe0;
-		--accent-dark: #456040;
-		--muted: #4a5e4b;
-		--muted-light: #8a9e8b;
-		--border: #ccd6c8;
-		--section-alt: #e4ebe0;
-		--section-dark: #1e2d1f;
-		--section-dark-text: #f2f4f0;
-		--btn-bg: #5a7a4e;
-		--btn-text: #ffffff;
-	}
-
-	/* Any themed element gets its own background/color scope */
-	[data-theme] {
-		background: var(--bg);
-		color: var(--text);
 	}
 
 	/* ══════════════════════════════════════════════════
