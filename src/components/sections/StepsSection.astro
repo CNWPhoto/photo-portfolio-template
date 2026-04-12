@@ -1,8 +1,7 @@
 ---
-import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { resolveLink } from '../../lib/links.js';
-import { renderBody } from '../../lib/portableText.js';
+import { renderBody, isPortableText } from '../../lib/portableText.js';
 
 interface Props {
   section: any;
@@ -10,172 +9,160 @@ interface Props {
   palette?: any;
 }
 
-const { section, isFirst = false, palette } = Astro.props;
+const { section, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 const eyebrow = section?.eyebrow || '';
 const heading = section?.heading || '';
-const variant = section?.variant || 'stacked';
-const steps = section?.steps || [];
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink);
+const steps = section?.steps || [];
 
-const HeadingTag = isFirst ? 'h1' : 'h2';
+// Render each step body once
+const stepsRendered = steps.map((step: any, i: number) => ({
+  number: step?.stepNumber || String(i + 1).padStart(2, '0'),
+  title: step?.title || '',
+  bodyHTML: isPortableText(step?.body) ? renderBody(step.body, { className: 'hcols__step-body' }) : '',
+}));
 ---
 
 <section
-  class:list={['section', 'steps', `steps--${variant}`]}
+  class="hcols"
   data-section-type="stepsSection"
-  data-spacing={section?.spacing || 'normal'}
-  id={section?.sectionId || undefined}
+  id={section?.sectionId || 'how-it-works'}
   style={style}
 >
-  <div class="steps__inner">
-    {(eyebrow || heading) && (
-      <div class="steps__head">
-        {eyebrow && <p class="steps__eyebrow">{eyebrow}</p>}
-        {heading && <HeadingTag class="steps__heading">{heading}</HeadingTag>}
-      </div>
-    )}
+  <hr />
+  <div class="hcols__inner">
+    <div class="hcols__header">
+      {heading && <h2 class="hcols__heading">{heading}</h2>}
+      {eyebrow && <p class="hcols__sub">{eyebrow}</p>}
+    </div>
 
-    <ol class="steps__list">
-      {steps.map((step: any, i: number) => {
-        const stepNumber = step?.stepNumber || String(i + 1).padStart(2, '0');
-        const stepBody = renderBody(step?.body, { className: 'steps__body' });
-        const delayClass = `reveal-delay-${Math.min(i + 1, 5)}`;
-        return (
-          <li class:list={['steps__item', 'reveal', delayClass]}>
-            <div class="steps__num" aria-hidden="true">{stepNumber}</div>
-            <div class="steps__content">
-              {step?.title && <h3 class="steps__title">{step.title}</h3>}
-              {stepBody && <div class="steps__body-wrap" set:html={stepBody} />}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+    <div class="hcols__steps">
+      {stepsRendered.map((step) => (
+        <div class="hcols__step">
+          <div class="hcols__step-rule" />
+          <p class="hcols__step-num">{step.number}</p>
+          <h3 class="hcols__step-label">{step.title}</h3>
+          {step.bodyHTML && <div class="hcols__step-body-wrap" set:html={step.bodyHTML} />}
+        </div>
+      ))}
+    </div>
 
     {ctaText && ctaHref && (
-      <div class="steps__cta-wrap reveal reveal-delay-3">
-        <a class="steps__cta" href={ctaHref}>{ctaText}</a>
+      <div class="hcols__footer">
+        <a href={ctaHref} class="hcols__link">{ctaText} &rarr;</a>
       </div>
     )}
   </div>
 </section>
 
 <style>
-  .steps {
+  .hcols {
+    padding-top: 0 !important;
+    padding-bottom: 7rem !important;
     background: var(--bg);
     color: var(--text);
   }
-  .steps__inner {
+
+  .hcols__inner {
     max-width: 1100px;
     margin: 0 auto;
-    padding-inline: 1.5rem;
+    padding: 0 3rem;
+    text-align: center;
   }
-  .steps__head { text-align: center; margin-bottom: 3rem; }
-  .steps__eyebrow {
+
+  .hcols__header { padding: 5.5rem 0 4.5rem; }
+
+  .hcols__heading {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    color: var(--text);
+    margin: 0 0 1.25rem;
+    letter-spacing: -0.01em;
+  }
+
+  .hcols__sub {
+    font-size: 1.0625rem;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .hcols__sub em {
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.95em;
+    color: var(--accent);
+  }
+
+  .hcols__steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+    text-align: left;
+  }
+
+  .hcols__step { padding-top: 2rem; }
+
+  .hcols__step-rule {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 1.75rem;
+  }
+
+  .hcols__step-num {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+
+  .hcols__step-label {
     font-family: var(--font-sans, var(--font-body));
     font-style: normal;
     font-size: 0.7rem;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--accent);
-    margin: 0 0 0.85rem;
-  }
-  .steps__heading {
-    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
-    line-height: 1.2;
     color: var(--text);
-    margin: 0;
+    margin: 0 0 1.25rem;
+    font-weight: 600;
   }
 
-  .steps__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  /* ── Stacked variant ── */
-  .steps--stacked .steps__list {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-  .steps--stacked .steps__item {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 1.5rem;
-    align-items: start;
-  }
-
-  /* ── Timeline variant ── */
-  .steps--timeline .steps__list {
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
-    border-left: 2px solid var(--accent);
-    padding-left: 2rem;
-    margin-left: 1rem;
-  }
-  .steps--timeline .steps__item { position: relative; }
-  .steps--timeline .steps__num {
-    position: absolute;
-    left: -3.5rem;
-    top: 0;
-  }
-
-  /* ── Horizontal cards variant ── */
-  .steps--horizontal-cards .steps__list {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-  }
-  .steps--horizontal-cards .steps__item {
-    background: var(--bg-alt);
-    padding: 2rem 1.75rem;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .steps__num {
-    font-family: var(--font-heading, var(--font-serif));
-    font-style: italic;
-    font-size: 2.5rem;
-    line-height: 1;
-    color: var(--accent);
-  }
-  .steps__title {
-    font-size: 1.35rem;
-    line-height: 1.3;
-    color: var(--text);
+  .hcols__step-body-wrap :global(.hcols__step-body),
+  .hcols__step-body-wrap :global(p) {
+    font-style: normal;
+    font-size: 0.9375rem;
+    line-height: 1.78;
+    color: var(--muted);
     margin: 0 0 0.75rem;
   }
-  .steps__body-wrap :global(.steps__body),
-  .steps__body-wrap :global(p) {
+
+  .hcols__footer {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    text-align: right;
+  }
+
+  .hcols__link {
+    font-style: italic;
     font-size: 1rem;
-    line-height: 1.75;
-    color: var(--muted);
-    margin: 0 0 0.6rem;
-  }
-
-  .steps__cta-wrap { margin-top: 3rem; text-align: center; }
-  .steps__cta {
-    display: inline-block;
-    font-family: var(--font-sans, var(--font-body));
-    font-style: normal;
-    font-size: 0.75rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    color: var(--accent);
     text-decoration: none;
-    color: var(--btn-text);
-    background: var(--btn-bg);
-    padding: 0.95rem 2rem;
+    letter-spacing: 0.01em;
   }
 
-  @media (max-width: 900px) {
-    .steps--horizontal-cards .steps__list { grid-template-columns: 1fr; }
+  .hcols__link:hover { opacity: 0.7; }
+
+  @media (max-width: 768px) {
+    .hcols__inner { padding: 0 1.5rem; }
+    .hcols__steps { grid-template-columns: 1fr; gap: 2rem; }
+    .hcols__footer { text-align: center; }
   }
 </style>

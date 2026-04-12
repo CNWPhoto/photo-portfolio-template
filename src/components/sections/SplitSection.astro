@@ -1,9 +1,8 @@
 ---
 import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
-import { renderHeading } from '../../lib/heading.js';
 import { resolveLink } from '../../lib/links.js';
-import { renderBody } from '../../lib/portableText.js';
+import { renderBody, isPortableText } from '../../lib/portableText.js';
 
 interface Props {
   section: any;
@@ -15,152 +14,153 @@ const { section, isFirst = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 const FALLBACK_IMG =
-  'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1600';
+  'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1200';
 
 const imageLayout = section?.imageLayout || 'image-right';
 const eyebrow = section?.eyebrow || '';
-const headingRaw = section?.heading || '';
-const heading = renderHeading(headingRaw);
-const bodyHTML = renderBody(section?.body, { className: 'split__body' });
+const heading = section?.heading || '';
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink);
-const aspect = section?.imageAspectRatio || 'auto';
-const textAlign = section?.textAlignment || 'left';
-const vAlign = section?.verticalAlignment || 'center';
-const mobileOrder = section?.mobileOrder || 'image-first';
 const sideLabel = section?.verticalSideLabel || '';
 
+const bodyHTML = isPortableText(section?.body)
+  ? renderBody(section.body, { className: 'isplit__body' })
+  : '';
+
 const image = section?.image ?? null;
-const lqip = isFirst ? image?.asset?.metadata?.lqip || null : null;
-const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
 
 <section
-  class:list={['section', 'split', `split--${imageLayout}`, `split--va-${vAlign}`, `split--mo-${mobileOrder}`]}
+  class:list={['isplit', `isplit--${imageLayout}`]}
   data-section-type="splitSection"
-  data-spacing={section?.spacing || 'normal'}
-  data-text-align={textAlign}
-  data-aspect={aspect}
   id={section?.sectionId || undefined}
   style={style}
 >
-  {sideLabel && <div class="split__side-label" aria-hidden="true">{sideLabel}</div>}
+  {sideLabel && <div class="isplit__side-label" aria-hidden="true">{sideLabel}</div>}
 
-  <div
-    class="split__image reveal-fade"
-    style={lqip ? `background-image:url('${lqip}');background-size:cover;background-position:center;` : ''}
-  >
+  <div class="isplit__content">
+    <div class="isplit__text-wrap">
+      {eyebrow && <p class="isplit__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
+      {heading && <h2 class="isplit__heading">{heading}</h2>}
+      {bodyHTML && <div class="isplit__body-wrap reveal reveal-delay-2" set:html={bodyHTML} />}
+      {ctaText && ctaHref && (
+        <a class="isplit__link reveal reveal-delay-4" href={ctaHref}>{ctaText}</a>
+      )}
+    </div>
+  </div>
+
+  <div class="isplit__image reveal-fade">
     {image
       ? <SanityImage
           image={image}
           sizes="(max-width: 900px) 100vw, 50vw"
           loading={isFirst ? 'eager' : 'lazy'}
-          class="split__img"
+          class="isplit__img"
         />
-      : <img src={FALLBACK_IMG} alt="" loading="lazy" class="split__img" />}
-  </div>
-
-  <div class="split__content">
-    <div class="split__text-wrap">
-      {eyebrow && <p class="split__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
-      {heading && <HeadingTag class="split__heading" set:html={heading} />}
-      {bodyHTML && <div class="split__body-wrap reveal reveal-delay-2" set:html={bodyHTML} />}
-      {ctaText && ctaHref && (
-        <a class="split__cta reveal reveal-delay-3" href={ctaHref}>{ctaText}</a>
-      )}
-    </div>
+      : <img src={FALLBACK_IMG} alt="" class="isplit__img" loading="lazy" />
+    }
   </div>
 </section>
 
 <style>
-  .split {
+  .isplit {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    min-height: 550px;
+    padding: 0 !important;
+    border-top: 1px solid var(--border);
     background: var(--bg);
     color: var(--text);
     position: relative;
   }
-  .split--image-left { grid-template-areas: 'image content'; }
-  .split--image-right { grid-template-areas: 'content image'; }
-  .split--image-left-full-bleed,
-  .split--image-right-full-bleed { padding-block: 0; }
-  .split--image-left-full-bleed { grid-template-areas: 'image content'; }
-  .split--image-right-full-bleed { grid-template-areas: 'content image'; }
 
-  .split__image {
-    grid-area: image;
+  /* image-right (default) — text on the left, image on the right */
+  .isplit--image-right .isplit__content { order: 1; }
+  .isplit--image-right .isplit__image   { order: 2; }
+  /* image-left — image on the left, text on the right */
+  .isplit--image-left .isplit__image    { order: 1; }
+  .isplit--image-left .isplit__content  { order: 2; }
+  .isplit--image-left .isplit__content { align-items: flex-start; }
+  .isplit--image-left .isplit__text-wrap { text-align: left; padding-right: 0; padding-left: 75px; }
+  .isplit--image-left .isplit__eyebrow,
+  .isplit--image-left .isplit__body,
+  .isplit--image-left .isplit__link { text-align: left; }
+
+  .isplit__image {
     overflow: hidden;
-    min-height: 480px;
+    height: 100%;
   }
-  .split__image :global(.split__img) {
+
+  .isplit__image :global(.isplit__img) {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     display: block;
     transition: transform 0.6s var(--ease-image);
   }
-  .split__image:hover :global(.split__img) { transform: scale(1.04); }
+  .isplit__image:hover :global(.isplit__img) { transform: scale(1.04); }
 
-  .split[data-aspect='square'] .split__image :global(.split__img) { aspect-ratio: 1 / 1; }
-  .split[data-aspect='portrait-4-5'] .split__image :global(.split__img) { aspect-ratio: 4 / 5; }
-  .split[data-aspect='landscape-3-2'] .split__image :global(.split__img) { aspect-ratio: 3 / 2; }
-
-  .split__content {
-    grid-area: content;
+  .isplit__content {
     display: flex;
     flex-direction: column;
-    padding: 4rem 4rem;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 60px 64px;
     background: var(--bg-alt);
   }
-  .split--va-top .split__content { justify-content: flex-start; }
-  .split--va-center .split__content { justify-content: center; }
-  .split--va-bottom .split__content { justify-content: flex-end; }
 
-  .split__text-wrap { max-width: 460px; }
-  .split[data-text-align='center'] .split__content { align-items: center; text-align: center; }
-  .split[data-text-align='right'] .split__content { align-items: flex-end; text-align: right; }
+  .isplit__text-wrap {
+    max-width: 440px;
+    text-align: right;
+    padding-right: 75px;
+  }
 
-  .split__eyebrow {
+  .isplit__eyebrow {
     font-family: var(--font-sans, var(--font-body));
     font-style: normal;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--accent);
-    margin: 0 0 1.25rem;
+    margin-bottom: 20px;
+    text-align: right;
   }
 
-  .split__heading {
+  .isplit__heading {
     font-size: clamp(1.85rem, 3.5vw, 2.85rem);
     color: var(--text);
     line-height: 1.2;
-    margin: 0 0 1.5rem;
+    margin: 0 0 1.25rem;
+    text-align: right;
   }
 
-  .split__body-wrap :global(.split__body) {
-    font-size: 1.05rem;
-    line-height: 1.85;
+  .isplit__body-wrap :global(.isplit__body) {
+    font-size: 1.32rem;
+    line-height: 1.43;
     color: var(--text);
-    margin: 0 0 1rem;
+    margin-bottom: 1.5rem;
+    text-align: right;
   }
 
-  .split__cta {
-    display: inline-block;
-    margin-top: 1.5rem;
-    font-family: var(--font-sans, var(--font-body));
+  .isplit__body-wrap :global(.isplit__body em) {
     font-style: normal;
-    font-size: 0.75rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    text-decoration: none;
-    color: var(--btn-text);
-    background: var(--btn-bg);
-    padding: 0.95rem 2rem;
-    border: 1px solid var(--btn-bg);
+    color: var(--accent);
   }
 
-  .split__side-label {
+  .isplit__link {
+    display: block;
+    font-style: italic;
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+    color: var(--accent);
+    text-decoration: none;
+    margin-top: 1.5rem;
+    text-align: right;
+  }
+
+  .isplit__side-label {
     position: absolute;
     top: 50%;
     left: 1rem;
@@ -176,20 +176,25 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   }
 
   @media (max-width: 900px) {
-    .split,
-    .split--image-left,
-    .split--image-right,
-    .split--image-left-full-bleed,
-    .split--image-right-full-bleed {
-      grid-template-columns: 1fr;
-      grid-template-areas: 'image' 'content';
+    .isplit { grid-template-columns: 1fr; min-height: 0; }
+    .isplit--image-right .isplit__image,
+    .isplit--image-left .isplit__image { order: -1; height: 60vw; min-height: 240px; }
+    .isplit__content {
+      padding: 4rem 2rem;
+      align-items: center;
+      text-align: center;
     }
-    .split--mo-text-first {
-      grid-template-areas: 'content' 'image';
+    .isplit__text-wrap,
+    .isplit--image-left .isplit__text-wrap {
+      max-width: none;
+      padding-right: 0;
+      padding-left: 0;
+      text-align: center;
     }
-    .split__image { min-height: 0; height: 60vw; }
-    .split__content { padding: 2.5rem 1.5rem; align-items: center; text-align: center; }
-    .split__text-wrap { max-width: none; }
-    .split__side-label { display: none; }
+    .isplit__eyebrow,
+    .isplit__heading,
+    .isplit__body-wrap :global(.isplit__body),
+    .isplit__link { text-align: center; }
+    .isplit__side-label { display: none; }
   }
 </style>

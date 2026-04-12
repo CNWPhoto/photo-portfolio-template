@@ -2,7 +2,7 @@
 import { paletteToStyle } from '../../lib/palette.js';
 import { renderHeading } from '../../lib/heading.js';
 import { resolveLink } from '../../lib/links.js';
-import { renderBody } from '../../lib/portableText.js';
+import { renderBody, isPortableText } from '../../lib/portableText.js';
 import { buildSrc } from '../../lib/image';
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
   palette?: any;
 }
 
-const { section, isFirst = false, palette } = Astro.props;
+const { section, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 const FALLBACK_BG =
@@ -19,170 +19,127 @@ const FALLBACK_BG =
 
 const image = section?.image ?? null;
 const bgUrl = image?.asset ? buildSrc(image, 2000) : FALLBACK_BG;
-const lqip = image?.asset?.metadata?.lqip || null;
 
-const eyebrow = section?.eyebrow || '';
-const heading = renderHeading(section?.heading || '');
-const bodyHTML = renderBody(section?.body, { className: 'fullbleed__body' });
+const headingHTML = renderHeading(section?.heading || '');
+const bodyHTML = isPortableText(section?.body)
+  ? renderBody(section.body, { className: 'why__body' })
+  : '';
 const ctaText = section?.ctaText || '';
-const ctaHref = resolveLink(section?.ctaLink);
+const ctaHref = resolveLink(section?.ctaLink) || '#';
 const caption = section?.caption || '';
-const textContainer = section?.textContainer || 'overlay-card';
-const textPosition = section?.textPosition || 'center-center';
-const overlayOpacity = (section?.overlayOpacity ?? 30) / 100;
-const height = section?.height || 'tall';
-const parallax = !!section?.parallax;
-
-const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
 
 <section
-  class:list={['section', 'fullbleed', `fullbleed--${textContainer}`, `fullbleed--h-${height}`, parallax ? 'fullbleed--parallax' : '']}
+  class="why"
   data-section-type="fullBleedImageSection"
-  data-spacing={section?.spacing || 'normal'}
-  data-text-position={textPosition}
-  id={section?.sectionId || undefined}
+  id={section?.sectionId || 'why-choose'}
   style={style}
 >
-  <div
-    class="fullbleed__image"
-    style={`background-image: url('${bgUrl}'); ${lqip ? `background-color: var(--bg);` : ''}`}
-    aria-hidden="true"
-  ></div>
-  <div class="fullbleed__overlay" style={`background: rgba(0,0,0,${overlayOpacity})`} aria-hidden="true"></div>
+  <div class="why__image-full" style={`background-image: url('${bgUrl}')`} aria-hidden="true"></div>
 
-  <div class="fullbleed__content-wrap">
-    <div class="fullbleed__content reveal reveal-delay-1">
-      {eyebrow && <p class="fullbleed__eyebrow">{eyebrow}</p>}
-      {heading && <HeadingTag class="fullbleed__heading" set:html={heading} />}
-      {bodyHTML && <div class="fullbleed__body-wrap" set:html={bodyHTML} />}
-      {ctaText && ctaHref && (
-        <a class="fullbleed__cta" href={ctaHref}>{ctaText}</a>
-      )}
-      {caption && <p class="fullbleed__caption">{caption}</p>}
+  <hr />
+  <div class="why__inner">
+    <div class="why__heading-col reveal">
+      {headingHTML && <h2 class="why__heading" set:html={headingHTML} />}
+    </div>
+
+    <div class="why__content-col reveal reveal-delay-2">
+      {bodyHTML && <div set:html={bodyHTML} />}
+      {ctaText && ctaHref && <a href={ctaHref} class="why__cta">{ctaText}</a>}
+      {caption && <p class="why__caption">{caption}</p>}
     </div>
   </div>
 </section>
 
 <style>
-  .fullbleed {
-    position: relative;
-    padding-block: 0;
+  .why {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    background: var(--bg);
     color: var(--text);
-    overflow: hidden;
   }
-  .fullbleed--h-medium { min-height: 50vh; }
-  .fullbleed--h-tall { min-height: 75vh; }
-  .fullbleed--h-viewport { min-height: 100vh; }
 
-  .fullbleed__image {
-    position: absolute;
-    inset: 0;
+  /* Section acts as a viewport cutout; image is pinned in place */
+  .why__image-full {
+    width: 100%;
+    height: 65vh;
+    min-height: 420px;
+    background-attachment: fixed;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
   }
-  .fullbleed--parallax .fullbleed__image {
-    background-attachment: fixed;
-  }
-  .fullbleed__overlay {
-    position: absolute;
-    inset: 0;
-  }
 
-  .fullbleed__content-wrap {
-    position: relative;
-    z-index: 1;
-    min-height: inherit;
+  /* Two-column text section below the image */
+  .why__inner {
     display: grid;
-    place-items: center;
-    padding: 4rem 1.5rem;
-  }
-  .fullbleed--h-medium .fullbleed__content-wrap { min-height: 50vh; }
-  .fullbleed--h-tall .fullbleed__content-wrap { min-height: 75vh; }
-  .fullbleed--h-viewport .fullbleed__content-wrap { min-height: 100vh; }
-
-  /* nine-point text positioning grid */
-  .fullbleed[data-text-position^='top-'] .fullbleed__content-wrap { align-items: start; }
-  .fullbleed[data-text-position^='bottom-'] .fullbleed__content-wrap { align-items: end; }
-  .fullbleed[data-text-position$='-left'] .fullbleed__content-wrap { justify-items: start; }
-  .fullbleed[data-text-position$='-right'] .fullbleed__content-wrap { justify-items: end; }
-
-  .fullbleed__content {
-    max-width: 640px;
-    text-align: center;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 6rem 3rem 7rem;
+    align-items: start;
   }
 
-  /* Overlay card variant: white box on top of the image */
-  .fullbleed--overlay-card .fullbleed__content {
-    background: var(--bg);
+  .why__heading-col {
+    border-left: 2px solid var(--accent);
+    padding-left: 1.5rem;
+  }
+
+  .why__heading {
+    font-size: clamp(2rem, 4vw, 3.25rem);
     color: var(--text);
-    padding: 3rem 3rem;
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    margin: 0;
   }
 
-  /* Inline overlay variant: text directly on the image */
-  .fullbleed--inline-overlay .fullbleed__content {
-    color: var(--white, #fff);
-  }
-  .fullbleed--inline-overlay .fullbleed__heading,
-  .fullbleed--inline-overlay .fullbleed__eyebrow {
-    color: var(--white, #fff);
+  .why__content-col { padding-top: 0.5rem; }
+
+  .why__content-col :global(.why__body),
+  .why__content-col :global(p) {
+    font-style: normal;
+    font-size: 18px;
+    line-height: 1.85;
+    color: var(--text);
+    margin: 0 0 1.5rem;
   }
 
-  .fullbleed__eyebrow {
+  .why__cta {
+    display: inline-block;
     font-family: var(--font-sans, var(--font-body));
     font-style: normal;
     font-size: 0.7rem;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--accent);
-    margin: 0 0 1rem;
-  }
-
-  .fullbleed__heading {
-    font-size: clamp(2rem, 4vw, 3.25rem);
-    line-height: 1.18;
     color: var(--text);
-    margin: 0 0 1.25rem;
-    letter-spacing: -0.01em;
-  }
-
-  .fullbleed__body-wrap :global(.fullbleed__body) {
-    font-size: 1.05rem;
-    line-height: 1.85;
-    margin: 0 0 1rem;
-  }
-
-  .fullbleed__cta {
-    display: inline-block;
-    margin-top: 1rem;
-    font-family: var(--font-sans, var(--font-body));
-    font-style: normal;
-    font-size: 0.75rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
     text-decoration: none;
-    color: var(--btn-text);
-    background: var(--btn-bg);
-    padding: 0.95rem 2rem;
-    border: 1px solid var(--btn-bg);
+    border: 1px solid var(--text);
+    padding: 0.8rem 1.75rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.75rem;
   }
 
-  .fullbleed__caption {
+  .why__cta:hover {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  .why__caption {
     font-family: var(--font-sans, var(--font-body));
     font-size: 0.8125rem;
     letter-spacing: 0.04em;
     color: var(--muted-light);
     font-style: normal;
-    margin: 1.25rem 0 0;
+    margin: 0;
   }
 
   @media (max-width: 900px) {
-    .fullbleed--parallax .fullbleed__image {
-      background-attachment: scroll;
-    }
-    .fullbleed--overlay-card .fullbleed__content {
-      padding: 2rem 1.5rem;
+    .why__image-full { background-attachment: scroll; }
+    .why__inner {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+      padding: 4rem 1.5rem 5rem;
     }
   }
 </style>

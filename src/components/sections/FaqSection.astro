@@ -1,7 +1,6 @@
 ---
 import { paletteToStyle } from '../../lib/palette.js';
-import { renderHeading } from '../../lib/heading.js';
-import { renderBody } from '../../lib/portableText.js';
+import { renderBody, isPortableText } from '../../lib/portableText.js';
 
 interface Props {
   section: any;
@@ -9,172 +8,142 @@ interface Props {
   palette?: any;
 }
 
-const { section, isFirst = false, palette } = Astro.props;
+const { section, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
-const eyebrow = section?.eyebrow || '';
-const heading = renderHeading(section?.heading || 'Frequently Asked Questions');
-const layout = section?.layout || 'accordion';
-const sideLabel = section?.verticalSideLabel || '';
-const faqs = section?.faqs || [];
-
-const HeadingTag = isFirst ? 'h1' : 'h2';
+const sideLabel = section?.verticalSideLabel || 'FAQs';
+const layout = section?.layout || 'flat-list';
+const faqs = (section?.faqs || []).map((f: any) => ({
+  q: f?.question || '',
+  aHTML: isPortableText(f?.answer) ? renderBody(f.answer) : '',
+}));
 ---
 
 <section
-  class:list={['section', 'faq', `faq--${layout}`]}
+  class="faqs"
   data-section-type="faqSection"
-  data-spacing={section?.spacing || 'normal'}
-  id={section?.sectionId || undefined}
+  data-layout={layout}
+  id={section?.sectionId || 'faqs'}
   style={style}
 >
-  {sideLabel && layout === 'flat-list' && <div class="faq__side-label" aria-hidden="true">{sideLabel}</div>}
+  <div class="faqs__inner">
+    <div class="faqs__label-col" aria-hidden="true">
+      <span class="faqs__label">{sideLabel}</span>
+    </div>
 
-  <div class="faq__inner">
-    {(eyebrow || heading) && (
-      <header class="faq__header">
-        {eyebrow && <p class="faq__eyebrow">{eyebrow}</p>}
-        {heading && <HeadingTag class="faq__heading" set:html={heading} />}
-      </header>
-    )}
-
-    {layout === 'accordion' && (
-      <ul class="faq__list">
-        {faqs.map((f: any, i: number) => (
-          <li class:list={['faq__item', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
-            <details class="faq__details">
-              <summary class="faq__question">{f.question}</summary>
-              <div class="faq__answer" set:html={renderBody(f.answer, { className: 'faq__a' })} />
-            </details>
-          </li>
-        ))}
-      </ul>
-    )}
-
-    {layout === 'two-column' && (
-      <div class="faq__two-col">
-        {faqs.map((f: any, i: number) => (
-          <article class:list={['faq__col-item', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
-            <h3 class="faq__question">{f.question}</h3>
-            <div class="faq__answer" set:html={renderBody(f.answer, { className: 'faq__a' })} />
-          </article>
+    <div class="faqs__content">
+      <div class="faqs__list">
+        {faqs.map((faq: any, i: number) => (
+          <div class:list={['faqs__item', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
+            {layout === 'accordion' ? (
+              <details class="faqs__details">
+                <summary class="faqs__question">{faq.q}</summary>
+                <div class="faqs__answer" set:html={faq.aHTML} />
+              </details>
+            ) : (
+              <>
+                <h3 class="faqs__question">{faq.q}</h3>
+                <div class="faqs__answer" set:html={faq.aHTML} />
+              </>
+            )}
+          </div>
         ))}
       </div>
-    )}
-
-    {layout === 'flat-list' && (
-      <div class="faq__flat">
-        {faqs.map((f: any, i: number) => (
-          <article class:list={['faq__flat-item', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
-            <h3 class="faq__question">{f.question}</h3>
-            <div class="faq__answer" set:html={renderBody(f.answer, { className: 'faq__a' })} />
-          </article>
-        ))}
-      </div>
-    )}
+    </div>
   </div>
 </section>
 
 <style>
-  .faq {
+  .faqs {
+    padding-top: 0 !important;
+    padding-bottom: 7rem !important;
     background: var(--bg);
     color: var(--text);
-    position: relative;
-  }
-  .faq__inner {
-    max-width: 900px;
-    margin: 0 auto;
-    padding-inline: 1.5rem;
-  }
-  .faq__header { text-align: center; margin-bottom: 2.5rem; }
-  .faq__eyebrow {
-    font-family: var(--font-sans, var(--font-body));
-    font-style: normal;
-    font-size: 0.7rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin: 0 0 0.85rem;
-  }
-  .faq__heading {
-    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
-    line-height: 1.2;
-    margin: 0;
   }
 
-  /* ── Accordion ── */
-  .faq__list { list-style: none; margin: 0; padding: 0; }
-  .faq__item { border-bottom: 1px solid var(--border); }
-  .faq__details { padding: 1.25rem 0; }
-  .faq__details > summary {
+  .faqs__inner {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    padding: 5rem 3rem 0;
+    max-width: 1100px;
+    margin: 0 auto;
+    gap: 2rem;
+  }
+
+  /* Rotated label */
+  .faqs__label-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .faqs__label {
+    font-family: var(--font-serif, var(--font-heading));
+    font-style: italic;
+    font-size: clamp(2rem, 3.5vw, 3.25rem);
+    letter-spacing: 0.1em;
+    color: var(--border);
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .faqs__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .faqs__item {
+    padding: 2.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .faqs__item:first-child { border-top: none; }
+
+  .faqs__question {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text);
+    margin: 0 0 1.25rem;
+    letter-spacing: -0.01em;
+    cursor: default;
+  }
+
+  .faqs__details > summary {
     list-style: none;
     cursor: pointer;
-    font-size: 1.1rem;
-    color: var(--text);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
   }
-  .faq__details > summary::-webkit-details-marker { display: none; }
-  .faq__details > summary::after {
-    content: '+';
-    color: var(--accent);
-    font-size: 1.5rem;
-    line-height: 1;
-    transition: transform 0.2s;
-  }
-  .faq__details[open] > summary::after { transform: rotate(45deg); }
-  .faq__answer {
-    padding-top: 0.75rem;
+  .faqs__details > summary::-webkit-details-marker { display: none; }
+  .faqs__details[open] > summary { margin-bottom: 1.25rem; }
+
+  .faqs__answer :global(p),
+  .faqs__answer :global(blockquote) {
+    margin: 0 0 0.75rem;
+    padding: 0 0 0 1.75rem;
+    border-left: 2px solid var(--accent);
+    font-style: normal;
+    font-size: 1.125rem;
+    line-height: 1.78;
     color: var(--muted);
-    line-height: 1.7;
   }
 
-  /* ── Two-column ── */
-  .faq__two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem 3rem;
-  }
-  .faq__col-item .faq__question {
-    font-size: 1.1rem;
-    color: var(--text);
-    margin: 0 0 0.5rem;
-  }
+  @media (max-width: 768px) {
+    .faqs__inner {
+      grid-template-columns: 1fr;
+      padding: 0 1.5rem 0;
+    }
 
-  /* ── Flat list ── */
-  .faq__flat-item {
-    margin-bottom: 2rem;
-  }
-  .faq__flat-item .faq__question {
-    font-size: 1.15rem;
-    color: var(--text);
-    margin: 0 0 0.5rem;
-  }
-  .faq__answer :global(.faq__a),
-  .faq__answer :global(p) {
-    margin: 0 0 0.6rem;
-    color: var(--muted);
-    line-height: 1.75;
-  }
+    .faqs__label-col {
+      padding-top: 3rem;
+    }
 
-  .faq__side-label {
-    position: absolute;
-    top: 50%;
-    left: 1rem;
-    transform: translateY(-50%) rotate(-90deg);
-    transform-origin: left center;
-    font-family: var(--font-sans, var(--font-body));
-    font-size: 0.65rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--muted-light);
-    pointer-events: none;
-  }
-
-  @media (max-width: 720px) {
-    .faq__two-col { grid-template-columns: 1fr; }
-    .faq__side-label { display: none; }
+    .faqs__label {
+      writing-mode: horizontal-tb;
+      transform: none;
+      font-size: clamp(1.6rem, 6vw, 2.25rem);
+      text-align: center;
+    }
   }
 </style>

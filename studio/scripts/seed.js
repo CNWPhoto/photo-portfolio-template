@@ -230,7 +230,7 @@ docs.push({
     ctaLink: ctaInternal(ID.contact),
     textAlignment: 'center',
     textPosition: 'center-center',
-    heightMode: 'tall',
+    heightMode: 'auto',
     overlayOpacity: 30,
     nicheKeyword: 'Pet Photography',
     images: [],
