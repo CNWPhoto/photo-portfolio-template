@@ -60,14 +60,11 @@ export default defineConfig({
                   .title('Pages')
                   .items([
                     singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
-                    singleton(S, 'aboutPage', 'About Page', 'aboutPage'),
-                    singleton(S, 'experiencePage', 'Experience', 'experiencePage'),
                     singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
                     singleton(S, 'blogPage', 'Blog', 'blogPage'),
-                    singleton(S, 'contactPage', 'Contact', 'contactPage'),
                     singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
                     S.divider(),
-                    S.documentTypeListItem('page').title('Custom Pages'),
+                    S.documentTypeListItem('page').title('Pages'),
                   ]),
               ),
 
