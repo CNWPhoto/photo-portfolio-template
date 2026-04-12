@@ -74,14 +74,50 @@ const image = section?.image ?? null;
     position: relative;
   }
 
+  /* ── Contained variants (image-left / image-right) ── */
+  .isplit--image-left,
+  .isplit--image-right {
+    grid-template-columns: 500px 1fr;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    border-top: none;
+    min-height: 0;
+    align-items: center;
+  }
+  .isplit--image-left .isplit__image,
+  .isplit--image-right .isplit__image {
+    min-height: 0;
+    aspect-ratio: 10 / 11;
+    padding: 50px 0 50px 3rem;
+  }
+  .isplit--image-right .isplit__image { padding: 50px 3rem 50px 0; }
+  .isplit--image-left .isplit__content,
+  .isplit--image-right .isplit__content {
+    background: transparent;
+    padding: 4rem 5rem 4rem 5rem;
+  }
+
+  /* ── Full-bleed variants (edge-to-edge, legacy IntroSplit look) ── */
+  .isplit--image-left-full-bleed,
+  .isplit--image-right-full-bleed {
+    grid-template-columns: 1fr 1fr;
+  }
+
   /* image-right (default) — text on the left, image on the right */
   .isplit--image-right .isplit__content { order: 1; }
   .isplit--image-right .isplit__image   { order: 2; }
+  .isplit--image-right-full-bleed .isplit__content { order: 1; }
+  .isplit--image-right-full-bleed .isplit__image   { order: 2; }
   /* image-left — image on the left, text on the right */
   .isplit--image-left .isplit__image    { order: 1; }
   .isplit--image-left .isplit__content  { order: 2; }
-  .isplit--image-left .isplit__content { align-items: flex-start; }
-  .isplit--image-left .isplit__text-wrap { text-align: left; padding-right: 0; padding-left: 75px; }
+  .isplit--image-left-full-bleed .isplit__image    { order: 1; }
+  .isplit--image-left-full-bleed .isplit__content  { order: 2; }
+  .isplit--image-left .isplit__content,
+  .isplit--image-left-full-bleed .isplit__content { align-items: flex-start; }
+  .isplit--image-left .isplit__text-wrap,
+  .isplit--image-left-full-bleed .isplit__text-wrap { text-align: left; padding-right: 0; padding-left: 0; }
   .isplit--image-left .isplit__eyebrow,
   .isplit--image-left .isplit__body,
   .isplit--image-left .isplit__link { text-align: left; }
@@ -119,30 +155,42 @@ const image = section?.image ?? null;
   .isplit__eyebrow {
     font-family: var(--font-sans, var(--font-body));
     font-style: normal;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--accent);
+    line-height: 1.7;
     margin-bottom: 20px;
-    text-align: right;
   }
 
+  /* Full-bleed variants keep right-aligned text (legacy IntroSplit) */
+  .isplit--image-right-full-bleed .isplit__eyebrow { text-align: right; }
+
   .isplit__heading {
-    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    font-size: clamp(2.1rem, 4.2vw, 3.78rem);
     color: var(--text);
-    line-height: 1.2;
-    margin: 0 0 1.25rem;
-    text-align: right;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    margin: 0 0 2rem;
   }
 
   .isplit__body-wrap :global(.isplit__body) {
+    font-size: 1.0625rem;
+    line-height: 1.82;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+
+  /* Full-bleed variants: larger italic body, right-aligned */
+  .isplit--image-right-full-bleed .isplit__body-wrap :global(.isplit__body),
+  .isplit--image-left-full-bleed .isplit__body-wrap :global(.isplit__body) {
     font-size: 1.32rem;
     line-height: 1.43;
     color: var(--text);
-    margin-bottom: 1.5rem;
     text-align: right;
   }
+  .isplit--image-left-full-bleed .isplit__body-wrap :global(.isplit__body) { text-align: left; }
 
   .isplit__body-wrap :global(.isplit__body em) {
     font-style: normal;
@@ -157,8 +205,10 @@ const image = section?.image ?? null;
     color: var(--accent);
     text-decoration: none;
     margin-top: 1.5rem;
-    text-align: right;
   }
+
+  /* Full-bleed: right-aligned link */
+  .isplit--image-right-full-bleed .isplit__link { text-align: right; }
 
   .isplit__side-label {
     position: absolute;

@@ -238,7 +238,7 @@ docs.push({
   sections: [
     sectionBase({
       _key: 'homeSplit', _type: 'splitSection',
-      imageLayout: 'image-right',
+      imageLayout: 'image-right-full-bleed',
       eyebrow: 'Every Session is Unique',
       heading: 'Welcome',
       body: bodyText(
@@ -338,7 +338,7 @@ docs.push({
   ],
 })
 
-// ── About page ────────────────────────────────────────────────────────
+// ── About page — content ported from legacy about.astro fallbacks ────
 docs.push({
   _id: ID.about,
   _type: 'page',
@@ -349,69 +349,71 @@ docs.push({
     sectionBase({
       _key: 'aboutIntro', _type: 'splitSection',
       imageLayout: 'image-left',
-      eyebrow: 'About',
-      heading: 'Meet the photographer',
+      heading: "Hi, I'm Connor",
+      eyebrow: 'A photographer based in Denver, here to help you document your story in a way that feels natural and stress-free.',
       body: bodyText(
-        'I\'m a photographer who fell in love with capturing dogs the way their people see them — full of personality, light, and life.',
-        'Every session is built around the dog. No two are the same.',
+        "I've spent the last decade photographing the moments that matter most — the quiet ones, the joyful ones, the ones you don't even notice are happening until the camera catches them. My approach is unhurried and entirely led by you.",
+        'What started as a personal project became a calling. I believe every person, every family, every bond deserves to be documented beautifully — not in a stiff, posed way, but in a way that is completely, unmistakably them.',
       ),
-      ctaText: 'Book a Session',
-      ctaLink: ctaInternal(ID.contact),
       imageAspectRatio: 'auto',
-    }),
-    sectionBase({
-      _key: 'aboutPersonal', _type: 'splitSection',
-      imageLayout: 'image-right',
-      eyebrow: 'My Story',
-      heading: 'Why dogs?',
-      body: bodyText(
-        'I grew up with dogs and never lost the urge to follow them around with a camera.',
-        'After years of shooting weddings and editorial work, I narrowed in on what I love most — and that\'s where this studio came from.',
-      ),
+      textAlignment: 'left',
+      verticalAlignment: 'center',
+      mobileOrder: 'image-first',
     }),
     sectionBase({
       _key: 'aboutExpect', _type: 'threeColumnSection',
-      eyebrow: 'What to Expect',
-      heading: 'A simple process',
-      variant: 'numbered-steps',
       verticalSideLabel: 'What to Expect',
-      alignment: 'center',
+      variant: 'image-cards',
+      alignment: 'left',
       columns: [
         {
           _key: 'c1', _type: 'columnItem',
-          title: 'Honest moments',
-          body: bodyText('No forced poses. We let your dog be themselves.'),
+          title: 'Subject-Led Sessions',
+          body: bodyText('Every session moves at your pace. There are no forced poses or rigid shot lists — just space for you to be yourself while I follow the light and the moments as they unfold.'),
         },
         {
           _key: 'c2', _type: 'columnItem',
-          title: 'Beautiful light',
-          body: bodyText('We schedule for golden hour and flattering natural light.'),
+          title: 'Calm Supportive Direction',
+          body: bodyText("I'll gently guide you through the session so you never feel unsure of what to do. Most people tell me they forget the camera is there — that's exactly the point."),
         },
         {
           _key: 'c3', _type: 'columnItem',
-          title: 'Hand-edited galleries',
-          body: bodyText('Every photo is carefully edited — no filters, no shortcuts.'),
+          title: 'Connection',
+          body: bodyText('The best photographs come from real connection. I invest time before every session getting to know you so that what we create together feels personal, not generic.'),
         },
       ],
     }),
     sectionBase({
+      _key: 'aboutPersonal', _type: 'splitSection',
+      imageLayout: 'image-right',
+      body: bodyText(
+        "Photography found me at a time when I needed it most. A camera in hand became a reason to look closely at the world — to slow down, notice the small things, and find beauty in the ordinary.",
+        "That sense of attention is something I bring to every session. I'm not here to manufacture a perfect image. I'm here to find the one that's already there, waiting.",
+      ),
+      textAlignment: 'left',
+      verticalAlignment: 'center',
+    }),
+    sectionBase({
       _key: 'aboutQuote', _type: 'pullQuoteSection',
-      quote: 'These photos brought me to tears. You captured exactly who she is.',
-      attribution: 'Sarah M.',
+      quote: 'I believe photographs should feel honest, timeless, and personal.',
       variant: 'centered',
     }),
     sectionBase({
-      _key: 'aboutCta', _type: 'ctaBandSection',
-      heading: 'Ready to plan a session?',
-      body: 'Tell us about your dog and we\'ll find a time that works.',
-      ctaText: 'Get in Touch',
+      _key: 'aboutCta', _type: 'fullBleedImageSection',
+      heading: "Let's Do This!",
+      body: bodyText("If you're ready to have photographs that actually look and feel like you, I'd love to hear from you. Get in touch and let's start planning something special."),
+      ctaText: 'Get In Touch',
       ctaLink: ctaInternal(ID.contact),
-      layout: 'centered',
+      caption: 'Serving Denver and surrounding areas.',
+      textContainer: 'overlay-card',
+      textPosition: 'center-center',
+      height: 'medium',
+      overlayOpacity: 40,
     }),
   ],
 })
 
-// ── Experience page ──────────────────────────────────────────────────
+// ── Experience page — content ported from legacy experience.astro ────
 docs.push({
   _id: ID.experience,
   _type: 'page',
@@ -422,21 +424,20 @@ docs.push({
     sectionBase({
       _key: 'expHero', _type: 'heroSection',
       variant: 'image-full',
-      heading: 'The Experience',
-      subheading: 'Every session, start to finish',
+      heading: 'The Experience & Investment',
+      subheading: 'What working together looks like, from your session to finished artwork.',
       heightMode: 'tall',
       stickyBackground: true,
       textAlignment: 'center',
       textPosition: 'center-center',
-      overlayOpacity: 35,
+      overlayOpacity: 40,
       images: [],
     }),
     sectionBase({
       _key: 'expIntro', _type: 'richTextSection',
-      heading: 'How a session unfolds',
       body: bodyText(
-        'From the first inquiry to the final gallery, every step is designed to feel relaxed and unhurried.',
-        'You\'ll know what to expect at every stage — and your dog will too.',
+        "Every dog photography session is designed to feel relaxed, dog-led, and pressure-free. From planning your session to choosing your final images, you'll be guided through each step so the experience feels easy and enjoyable for both you and your dog.",
+        "There's no need for perfect behavior or posing — the focus is on creating space for natural moments to unfold.",
       ),
       maxWidth: 'narrow',
       textAlignment: 'center',
@@ -444,36 +445,42 @@ docs.push({
     sectionBase({
       _key: 'expSessions', _type: 'splitSection',
       imageLayout: 'image-left',
-      eyebrow: 'Sessions',
-      heading: 'On-location sessions',
+      heading: 'Sessions',
+      eyebrow: "The session fee covers the time, care, and preparation that go into creating your dog's photography experience.",
       body: bodyText(
-        '60 to 90 minutes at a location that flatters your dog and the light.',
-        'Includes a hand-edited gallery of 30+ images, delivered within two weeks.',
+        'Pre-session guidance to help you feel prepared. A relaxed, unhurried photo session. A curated online gallery to view and select your images.',
+        'Session fee begins at $XXX. Artwork and images purchased separately.',
       ),
       ctaText: 'Inquire',
       ctaLink: ctaInternal(ID.contact),
+      textAlignment: 'left',
+      verticalAlignment: 'center',
     }),
     sectionBase({
       _key: 'expArtwork', _type: 'splitSection',
       imageLayout: 'image-right',
-      eyebrow: 'Artwork',
-      heading: 'Prints and wall art',
+      heading: 'Artwork / Images',
       body: bodyText(
-        'Optional fine-art prints, framed canvases, and albums available after your session.',
-        'We\'ll walk you through options together so you can pick what fits your space.',
+        "After your session, you'll select your favorite images from an online gallery. A variety of digital image and artwork options are available, allowing you to choose how you'd like to enjoy your photos.",
+        "You're never locked into a one-size-fits-all package — selections are flexible and based on what matters most to you.",
       ),
+      textAlignment: 'left',
+      verticalAlignment: 'center',
     }),
     sectionBase({
       _key: 'expNext', _type: 'fullBleedImageSection',
       eyebrow: 'Next Steps',
       heading: 'Ready when you are',
-      body: bodyText('Reach out and tell us about your dog. We\'ll go from there.'),
+      body: bodyText(
+        'Sound like what you\'ve been looking for? I\'d love to hear from you.',
+        'Reach out and tell me about your dog — we\'ll go from there.',
+      ),
       ctaText: 'Inquire',
       ctaLink: ctaInternal(ID.contact),
       textContainer: 'overlay-card',
       textPosition: 'center-center',
       height: 'medium',
-      overlayOpacity: 35,
+      overlayOpacity: 40,
     }),
     sectionBase({
       _key: 'expFaq', _type: 'faqSection',
@@ -483,17 +490,22 @@ docs.push({
       faqs: [
         {
           _key: 'efaq1', _type: 'faqItem',
-          question: 'Where do you shoot?',
-          answer: bodyText('Outdoor locations within an hour of the studio. We\'ll suggest a few based on your dog\'s comfort level.'),
+          question: 'How long is a session?',
+          answer: bodyText('Most sessions run 60–90 minutes. We never rush — we finish when we have what we need.'),
         },
         {
           _key: 'efaq2', _type: 'faqItem',
-          question: 'What\'s included?',
-          answer: bodyText('A 60–90 minute session, location scouting, hand-edited digital gallery of 30+ images.'),
+          question: 'Where do sessions take place?',
+          answer: bodyText("Outdoor locations within an hour of the studio. We'll suggest a few based on your dog's comfort level and the time of year."),
         },
         {
           _key: 'efaq3', _type: 'faqItem',
-          question: 'Do you offer prints?',
+          question: 'What if my dog is shy or reactive?',
+          answer: bodyText("We have plenty of experience with anxious dogs. We'll plan a quiet, low-traffic location and go at their pace."),
+        },
+        {
+          _key: 'efaq4', _type: 'faqItem',
+          question: 'Do you offer prints and albums?',
           answer: bodyText('Yes — fine art prints, framed canvases, and albums are available as add-ons after your session.'),
         },
       ],
@@ -501,7 +513,7 @@ docs.push({
   ],
 })
 
-// ── Contact page ──────────────────────────────────────────────────────
+// ── Contact page — content ported from legacy contact.astro ──────────
 docs.push({
   _id: ID.contact,
   _type: 'page',
@@ -510,28 +522,29 @@ docs.push({
   navThemeOverHero: 'auto',
   sections: [
     sectionBase({
+      _key: 'contactHero', _type: 'heroSection',
+      variant: 'image-full',
+      heading: 'Inquire',
+      subheading: "I'd love to hear about your subject and what you're hoping to capture — just fill out the form below and I'll get back to you within 24–48 hours.",
+      heightMode: 'auto',
+      textAlignment: 'center',
+      textPosition: 'center-center',
+      overlayOpacity: 45,
+      images: [],
+    }),
+    sectionBase({
       _key: 'contactForm', _type: 'contactFormSection',
-      eyebrow: 'Get in Touch',
-      heading: 'Tell us about your dog',
-      body: bodyText('Fill out the form and we\'ll get back to you within a couple of days.'),
+      heading: "I can't wait to meet you and your pup(s)!",
+      body: bodyText("If you'd rather email directly, you can reach me at yourname@domain.com or find me on Instagram @YourHandle."),
       mode: 'built-in',
-      submitText: 'Send',
-      successMessage: "Thanks — we'll be in touch soon.",
+      submitText: 'Send Message',
+      successMessage: "Thank you! I'll be in touch soon.",
       errorMessage: 'Something went wrong. Please try again or email us directly.',
       formFields: [
         {_key: 'ff1', _type: 'formField', name: 'name',    label: 'Name',    type: 'text',     required: true},
         {_key: 'ff2', _type: 'formField', name: 'email',   label: 'Email',   type: 'email',    required: true},
         {_key: 'ff3', _type: 'formField', name: 'message', label: 'Message', type: 'textarea', required: true},
       ],
-    }),
-    sectionBase({
-      _key: 'contactInfo', _type: 'contactInfoSection',
-      heading: 'Other ways to reach us',
-      layout: 'card',
-      showEmail: true,
-      showPhone: false,
-      showSocial: true,
-      showMap: false,
     }),
   ],
 })

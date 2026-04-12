@@ -44,6 +44,14 @@
   }
 }
 
+/* Sticky hero curtain effect — all siblings after a sticky hero need to
+   stack above it and carry their own opaque background. See spec §17. */
+.hero--sticky ~ * {
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+}
+
 /* Per-section spacing applied via [data-spacing] attr on <section> */
 section[data-spacing='compact'] {
   padding-block: var(--section-pad-compact);
