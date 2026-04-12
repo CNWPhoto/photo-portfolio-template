@@ -5,13 +5,13 @@
   "main": "package.json",
   "license": "UNLICENSED",
   "scripts": {
-    "dev": "sanity dev",
-    "start": "sanity start",
-    "build": "sanity build",
-    "deploy": "sanity deploy",
-    "deploy-graphql": "sanity graphql deploy",
-    "seed": "sanity exec scripts/seed.js --with-user-token",
-    "seed:replace": "sanity exec scripts/seed.js --with-user-token -- --replace"
+    "dev": "dotenv -e .env -- sanity dev",
+    "start": "dotenv -e .env -- sanity start",
+    "build": "dotenv -e .env -- sanity build",
+    "deploy": "dotenv -e .env -- sanity deploy",
+    "deploy-graphql": "dotenv -e .env -- sanity graphql deploy",
+    "seed": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token",
+    "seed:replace": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token -- --replace"
   },
   "keywords": [
     "sanity"
@@ -26,6 +26,7 @@
   "devDependencies": {
     "@sanity/eslint-config-studio": "^6.0.0",
     "@types/react": "^19.1",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.28",
     "prettier": "^3.5",
     "typescript": "^5.8"
