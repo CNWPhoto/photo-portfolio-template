@@ -20,7 +20,7 @@ interface Props {
 
 const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb, publishDate, updatedAt, prevUrl, nextUrl, robots } = Astro.props;
 const isPreview = Astro.locals.isPreview ?? false;
-const client = getClient(isPreview);
+const client = getClient(isPreview, (Astro.locals as any).runtime?.env);
 
 const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{

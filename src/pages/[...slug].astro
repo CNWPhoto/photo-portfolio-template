@@ -7,7 +7,7 @@ import { SECTION_PROJECTION, SITE_PALETTES_QUERY } from '../lib/sectionsQuery.js
 const slugParam = Astro.params.slug;
 const slug = Array.isArray(slugParam) ? slugParam.join('/') : (slugParam || '');
 
-const client = getClient(Astro.locals.isPreview);
+const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 
 const [page, siteData] = await Promise.all([
 	client.fetch(

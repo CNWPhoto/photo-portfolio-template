@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
 
-const client = getClient(Astro.locals.isPreview);
+const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 const currentPage = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10));
 
 const [pageDoc, totalCount] = await Promise.all([

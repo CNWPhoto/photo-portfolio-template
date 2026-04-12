@@ -6,7 +6,7 @@ import { buildSrc, buildSrcset } from '../../lib/image';
 import { getClient } from '../../lib/sanity.js';
 
 const { slug } = Astro.params;
-const client = getClient(Astro.locals.isPreview);
+const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 
 const [post, siteSettings] = await Promise.all([
   client.fetch(
