@@ -155,21 +155,44 @@ Repeat for each care plan client with their name suffix.
 
 **1.2 — Deploy the Sanity Studio**
 
-Each client needs their own Studio pointed at their own Sanity project.
+Each client needs their own Studio pointed at their own Sanity project, and
+its Presentation preview must be wired to their live Cloudflare URL so the
+"visual editing" iframe loads the actual deployed site.
 
-1. Open `studio/sanity.config.js` locally
-2. Change `projectId` to the client's project ID
-3. Change `title` to the client's name
-4. Deploy:
+1. Create `studio/.env` locally with the client's values (this file is
+   gitignored — don't commit):
+   ```env
+   SANITY_STUDIO_PROJECT_ID=<clientProjectId>
+   SANITY_STUDIO_DATASET=production
+   SANITY_STUDIO_HOST=smith-photography
+   SANITY_STUDIO_PREVIEW_URL=https://smithphotography.com
+   ```
+   - `SANITY_STUDIO_HOST` picks the `<host>.sanity.studio` subdomain —
+     must be globally unique across all Sanity Studios.
+   - `SANITY_STUDIO_PREVIEW_URL` is the Astro site origin that
+     Presentation mode will load in its iframe. Use the `*.pages.dev`
+     URL until the custom domain is connected, then switch to the
+     custom domain.
+2. Update `studio/sanity.config.js` `title` to the client's brand name.
+3. Deploy:
    ```sh
    cd studio
    npm run deploy
    ```
-5. Studio URL will be: `https://smith-photography.sanity.studio`
-6. Share with the client
+   All `npm run` scripts auto-load `studio/.env` via `dotenv-cli`, so the
+   env vars above are baked into the build automatically. No shell exports
+   needed.
+4. Studio URL will be: `https://smith-photography.sanity.studio`
+5. Share with the client
 
-> After deploying, revert `studio/sanity.config.js` to template values.
-> Do not commit client-specific project IDs to the repo.
+> **Heads up:** If you change `SANITY_STUDIO_PREVIEW_URL` later (e.g., switch
+> from `*.pages.dev` to the final domain), you must re-run `npm run deploy`
+> to rebuild and push the updated value. It's a build-time bundled value, not
+> runtime.
+
+> After deploying, revert `studio/sanity.config.js` `title` to template
+> values. Do not commit client-specific env values — they live in
+> `studio/.env` which is gitignored.
 
 **1.3 — Create a Sanity API Read Token**
 
@@ -285,12 +308,21 @@ In the CF Pages project → Settings → Environment Variables → Production:
 |---|---|
 | `PUBLIC_SANITY_PROJECT_ID` | Client's Sanity project ID |
 | `PUBLIC_SANITY_DATASET` | `production` |
-| `SANITY_API_READ_TOKEN` | Viewer token from Phase 1.3 |
+| `SANITY_API_READ_TOKEN` | Viewer token from Phase 1.3 — required for preview mode to validate Presentation's ephemeral secret |
 | `SANITY_PREVIEW_SECRET` | Secret from Phase 1.4 |
-| `SANITY_STUDIO_PREVIEW_URL` | `https://clientdomain.com` |
+| `SANITY_STUDIO_URL` | `https://<client-slug>.sanity.studio` — tells the Astro site which Studio origin can iframe it (enables click-to-edit overlays via stega) |
 
 > For care plan clients on the Action deploy, env vars are set in GitHub
 > Secrets and injected at build time — you don't set them in CF directly.
+
+> **Important:** `SANITY_API_READ_TOKEN` must be set, or Sanity Presentation
+> mode will not activate — clicking edit overlays in Studio won't work,
+> drafts won't render, and images referenced from unpublished docs won't
+> load. If the client complains "Studio preview shows nothing" or "I can't
+> edit from the preview", check this env var first.
+
+> After setting env vars, trigger a redeploy in CF Pages (Deployments →
+> latest → Retry deployment) so the new values bake into the bundle.
 
 ---
 
