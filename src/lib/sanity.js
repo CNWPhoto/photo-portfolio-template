@@ -12,10 +12,11 @@ const baseConfig = {
 }
 
 // Published-content client — no token needed, safe to pre-build and reuse
-// across requests. Served from the CDN for performance.
+// across requests. useCdn is off so edits propagate immediately; Cloudflare
+// Pages SSR responses aren't edge-cached by default, so this stays fast.
 export const sanityClient = createClient({
   ...baseConfig,
-  useCdn: true,
+  useCdn: false,
   token: undefined,
   ignoreBrowserTokenWarning: true,
 })

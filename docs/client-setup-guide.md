@@ -173,7 +173,23 @@ its Presentation preview must be wired to their live Cloudflare URL so the
      Presentation mode will load in its iframe. Use the `*.pages.dev`
      URL until the custom domain is connected, then switch to the
      custom domain.
-2. Update `studio/sanity.config.js` `title` to the client's brand name.
+2. Update `studio/sanity.config.js`:
+   - `title` to the client's brand name.
+   - `presentationTool.allowOrigins` array to the client's domains. Presentation
+     blocks navigation to any origin not in this list, so it must include every
+     URL the iframe will ever load — typically `http://localhost:4321` (for
+     local dev), the `*.pages.dev` preview URL, and the final custom domain.
+     Example:
+     ```js
+     presentationTool({
+       allowOrigins: [
+         'http://localhost:4321',
+         'https://smith-photography.pages.dev',
+         'https://smithphotography.com',
+       ],
+       // ...previewUrl config
+     }),
+     ```
 3. Deploy:
    ```sh
    cd studio

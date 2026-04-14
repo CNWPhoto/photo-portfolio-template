@@ -4,6 +4,7 @@ import Nav from '../components/Nav.astro';
 import '../styles/palette.css';
 import { getClient } from '../lib/sanity.js';
 import VisualEditing from '../components/VisualEditing.tsx';
+import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
   pageTitle?: string;
@@ -68,9 +69,11 @@ const sameAs            = [social?.instagram, social?.facebook, social?.youtube,
 
 // Resolve the active palette from siteSettings and emit its tokens as
 // :root CSS variables so nav, footer, body, and any element outside a
-// section inherits the correct theme.
-const palettesArr = (settings?.palettes ?? []) as Array<Record<string, string>>;
-const activePaletteSlug = settings?.defaultPalette || colorTheme || null;
+// section inherits the correct theme. Values are stega-cleaned: the
+// preview client injects invisible Unicode markers into every string,
+// and those markers break CSS parsing when inlined as hex colors.
+const palettesArr = stegaClean((settings?.palettes ?? [])) as Array<Record<string, string>>;
+const activePaletteSlug = stegaClean(settings?.defaultPalette) || colorTheme || null;
 const activePalette =
   (activePaletteSlug && palettesArr.find((p) => p?.slug === activePaletteSlug)) ||
   palettesArr[0] ||

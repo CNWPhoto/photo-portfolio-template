@@ -19,6 +19,10 @@ export default defineConfig({
 
   plugins: [
     presentationTool({
+      allowOrigins: [
+        'http://localhost:4321',
+        'https://cnw-photo-demo.pages.dev',
+      ],
       previewUrl: {
         origin: process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:4321',
         preview: '/',

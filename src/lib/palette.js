@@ -1,6 +1,8 @@
 // Palette helpers for the page builder.
 // See docs/page-builder-spec.md §3.
 
+import { stegaClean } from '@sanity/client/stega'
+
 // Maps a palette object's field names to the CSS custom property names that
 // section components consume. Order is stable for deterministic output.
 const PALETTE_TO_VAR = [
@@ -21,26 +23,36 @@ const PALETTE_TO_VAR = [
 ]
 
 // Returns an inline `style` attribute string of CSS custom properties for the
-// given palette object, or undefined when no palette is provided.
+// given palette object, or undefined when no palette is provided. Values are
+// stega-cleaned because the preview client injects invisible Unicode markers
+// into every string, and those markers break CSS parsing when inlined.
 export function paletteToStyle(palette) {
   if (!palette) return undefined
+  const clean = stegaClean(palette)
   const decls = []
   for (const [key, cssVar] of PALETTE_TO_VAR) {
-    const value = palette[key]
+    const value = clean[key]
     if (value) decls.push(`${cssVar}:${value}`)
   }
   return decls.length ? decls.join(';') : undefined
 }
 
 // Returns the site-wide palette. Palettes are site-wide only — no page or
-// section overrides. Set via siteSettings.defaultPalette in Studio.
+// section overrides. Set via siteSettings.defaultPalette in Studio. The
+// returned palette is stega-cleaned so downstream consumers (CSS vars,
+// luminance checks, tone shifts) get plain string values.
 export function resolvePalette(_unused1, _unused2, sitePaletteSlug, allPalettes) {
   if (!Array.isArray(allPalettes) || allPalettes.length === 0) return null
+  const cleanSlug = stegaClean(sitePaletteSlug)
   const findBySlug = (slug) => {
     if (!slug) return null
-    return allPalettes.find((p) => (p?.slug?.current || p?.slug) === slug) || null
+    return allPalettes.find((p) => {
+      const pSlug = stegaClean(p?.slug?.current || p?.slug)
+      return pSlug === slug
+    }) || null
   }
-  return findBySlug(sitePaletteSlug) || allPalettes[0] || null
+  const found = findBySlug(cleanSlug) || allPalettes[0] || null
+  return found ? stegaClean(found) : null
 }
 
 // Derives a tone-shifted palette from the base palette. Sections can pick
