@@ -34,6 +34,35 @@ npm run build      # Build Studio
 npm run deploy     # Deploy Studio to Sanity's hosted URL
 ```
 
+## Local vs Hosted Studio — Two Studios, Different Purposes
+
+There are effectively **two Sanity Studios** running against the same dataset,
+and they have different jobs. Keeping them straight is the #1 source of
+confusion when editing content or debugging Presentation.
+
+| Studio | URL | Started by | Iframes | Purpose |
+|---|---|---|---|---|
+| **Local** | `localhost:3333` | `cd studio && npm run dev` | whatever `studio/.env` says (usually `localhost:4321`) | Code development — test unpushed Astro changes in Presentation before deploying |
+| **Hosted** | `<project>.sanity.studio` | `cd studio && npm run deploy` | whatever `studio/.env` held at *deploy time* (baked in) | Client-facing content editing — points at the deployed Cloudflare site |
+
+### Key rules
+
+1. **`studio/.env` is for local Studio only.** It's gitignored. `SANITY_STUDIO_PREVIEW_URL` inside it controls which origin local Studio's iframe loads.
+2. **Hosted Studio is built once per deploy.** Its preview URL is baked in from `studio/.env` at the moment `npm run deploy` runs. Editing `.env` afterwards does **not** change what the hosted Studio points at.
+3. **Before running `npm run deploy`, flip `.env` to the production URL:**
+   ```env
+   SANITY_STUDIO_PREVIEW_URL=https://cnw-photo-demo.pages.dev
+   ```
+   Otherwise the hosted Studio will try to load `localhost:4321` from whoever's using it, which won't work.
+4. **After `npm run deploy`, flip `.env` back to `http://localhost:4321`** so local Studio keeps iframing local Astro for continued dev.
+5. **`presentationTool.allowOrigins`** in `sanity.config.js` must list every origin either Studio might iframe — local + all deployed domains. If you see "Blocked preview URL" warnings, add the origin there.
+
+### Deploying Astro vs deploying Studio
+
+These are **separate** deploy steps:
+- **Astro** auto-deploys on `git push` via Cloudflare Pages. No manual step.
+- **Sanity Studio** is deployed manually per-client via `cd studio && npm run deploy`. Only re-run when Studio code/schema/config changes — not needed for content edits.
+
 ## Architecture
 
 ### Two-App Structure
