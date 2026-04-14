@@ -2,6 +2,7 @@
 import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { resolveLink } from '../../lib/links.js';
+import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
   section: any;
@@ -12,17 +13,23 @@ interface Props {
 const { section, isFirst = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
-const variant = section?.variant || 'slider';
+// Control fields used in class names, CSS attribute selectors, and JS
+// equality checks must be stega-cleaned — the preview client injects
+// invisible Unicode markers into every string, which silently break
+// `variant === 'image-full'` comparisons and `[data-text-position='top-right']`
+// selectors. Content fields (heading, subheading, eyebrow, ctaText) keep
+// their markers so visual-editing overlays still work.
+const variant = stegaClean(section?.variant) || 'slider';
 const eyebrow = section?.eyebrow || '';
 const heading = section?.heading || section?.nicheKeyword || '';
 const subheading = section?.subheading || '';
 const ctaText = section?.ctaText || '';
-const ctaHref = resolveLink(section?.ctaLink);
-const heightMode = section?.heightMode || 'auto';
+const ctaHref = stegaClean(resolveLink(section?.ctaLink));
+const heightMode = stegaClean(section?.heightMode) || 'auto';
 const stickyBackground = !!section?.stickyBackground;
 const overlayOpacity = (section?.overlayOpacity ?? 30) / 100;
-const textPosition = section?.textPosition || 'center-center';
-const textAlignment = section?.textAlignment || 'center';
+const textPosition = stegaClean(section?.textPosition) || 'center-center';
+const textAlignment = stegaClean(section?.textAlignment) || 'center';
 
 const FALLBACK_HERO_IDS = ['1108099', '2253275', '825949', '1805164', '3726314'];
 const pexelsUrl = (id: string, w = 1600) =>
@@ -38,7 +45,7 @@ const firstImage = sanityImages[0] ?? null;
   data-section-type="heroSection"
   data-text-align={textAlignment}
   data-text-position={textPosition}
-  id={section?.sectionId || undefined}
+  id={stegaClean(section?.sectionId) || undefined}
   style={style}
 >
   {variant === 'slider' && (

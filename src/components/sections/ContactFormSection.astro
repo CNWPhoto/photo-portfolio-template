@@ -2,6 +2,7 @@
 import { paletteToStyle } from '../../lib/palette.js';
 import { renderBody } from '../../lib/portableText.js';
 import { getClient } from '../../lib/sanity.js';
+import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
   section: any;
@@ -15,20 +16,23 @@ const style = paletteToStyle(palette);
 const eyebrow = section?.eyebrow || '';
 const heading = section?.heading || '';
 const bodyHTML = renderBody(section?.body, { className: 'contact__body' });
-const mode = section?.mode || 'built-in';
+// `mode` drives `.contact--${mode}` class + equality checks below, so it
+// must be stega-cleaned. Content fields (heading/eyebrow/submitText) keep
+// their markers for click-to-edit overlays.
+const mode = stegaClean(section?.mode) || 'built-in';
 
 const submitText = section?.submitText || 'Send';
 const successMessage = section?.successMessage || "Thanks — we'll be in touch soon.";
 const errorMessage = section?.errorMessage || 'Something went wrong. Please try again or email us directly.';
 const formFields = section?.formFields?.length
-  ? section.formFields
+  ? stegaClean(section.formFields)
   : [
       { name: 'name', label: 'Name', type: 'text', required: true },
       { name: 'email', label: 'Email', type: 'email', required: true },
       { name: 'message', label: 'Message', type: 'textarea', required: true },
     ];
 
-const embedUrl = section?.embedUrl || '';
+const embedUrl = stegaClean(section?.embedUrl) || '';
 const embedHeight = section?.embedHeight || 600;
 const embedTitle = section?.embedTitle || 'Contact form';
 

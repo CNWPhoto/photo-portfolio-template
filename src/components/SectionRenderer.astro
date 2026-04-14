@@ -18,6 +18,7 @@ import BlogTeaserSection from './sections/BlogTeaserSection.astro';
 import HtmlEmbedSection from './sections/HtmlEmbedSection.astro';
 
 import { resolvePalette, applyBackgroundTone } from '../lib/palette.js';
+import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
   section: any;
@@ -26,7 +27,23 @@ interface Props {
   palettes?: any[];
 }
 
-const { section, isFirst = false, sitePaletteSlug = null, palettes = [] } = Astro.props;
+// Clean the entire section object of stega markers before passing it down
+// to any section component. The preview client injects invisible Unicode
+// markers into every string field so Presentation can overlay click-to-edit;
+// those markers silently break:
+//   - `variant === 'image-full'` equality checks
+//   - class:list template literals like `hero--${variant}`
+//   - CSS attribute selectors like `[data-text-position='top-right']`
+//   - URL strings used in href/src attributes
+//   - palette hex values inlined into CSS custom properties
+// Cleaning at this choke point ensures every section renders reliably
+// regardless of preview/published mode. Tradeoff: click-to-edit overlays
+// on section text content stop working — editors use the Studio document
+// panel instead. That's an acceptable cost compared to pages silently
+// disappearing in preview mode (hard to debug, looks like a total failure).
+const { isFirst = false, sitePaletteSlug = null, palettes = [] } = Astro.props;
+const rawSection = Astro.props.section;
+const section = rawSection ? stegaClean(rawSection) : rawSection;
 
 const componentMap: Record<string, any> = {
   heroSection: HeroSection,

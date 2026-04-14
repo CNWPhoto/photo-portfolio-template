@@ -51,29 +51,37 @@ const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok }`),
 ]);
 
-const colorTheme  = settings?.defaultPalette || 'classic-cream';
-const fontTheme   = settings?.fontTheme  || 'classic-editorial';
-const siteName    = settings?.siteName   || 'Pet Photography';
-const logoType    = settings?.logoType   || 'text';
-const logoImage   = settings?.logoImage  ?? null;
-const headScripts = code?.headScripts    || '';
-const bodyScripts = code?.bodyScripts    || '';
-const faviconUrl  = settings?.favicon?.asset?._ref
-  ? `https://cdn.sanity.io/images/hx5xgigp/production/${settings.favicon.asset._ref.replace('image-', '').replace(/-([a-z]+)$/, '.$1')}`
-  : null;
-const photographerName  = settings?.photographerName || siteName;
-const accentOverride    = settings?.accentColorOverride || null;
-const textColorPreset   = settings?.textColorPreset || null;
-const twitterHandle     = seo?.twitterHandle ? seo.twitterHandle.replace(/^@/, '') : null;
-const sameAs            = [social?.instagram, social?.facebook, social?.youtube, social?.tiktok].filter(Boolean);
+// Every query result in preview mode is stega-contaminated — invisible
+// markers inside string fields break map lookups (FONT_MAP[fontTheme]),
+// array inclusion checks (LIGHT_THEMES.includes(colorTheme)), equality
+// checks (logoType === 'image'), and CSS parsing (hex values). Clean the
+// whole settings/seo/code/social objects up front so every downstream
+// consumer just sees plain strings. Nav is cleaned separately below so
+// it can stay close to where it's used.
+const cleanSettings = settings ? stegaClean(settings) : null;
+const cleanSeo = seo ? stegaClean(seo) : null;
+const cleanCode = code ? stegaClean(code) : null;
+const cleanSocial = social ? stegaClean(social) : null;
 
-// Resolve the active palette from siteSettings and emit its tokens as
-// :root CSS variables so nav, footer, body, and any element outside a
-// section inherits the correct theme. Values are stega-cleaned: the
-// preview client injects invisible Unicode markers into every string,
-// and those markers break CSS parsing when inlined as hex colors.
-const palettesArr = stegaClean((settings?.palettes ?? [])) as Array<Record<string, string>>;
-const activePaletteSlug = stegaClean(settings?.defaultPalette) || colorTheme || null;
+const colorTheme  = cleanSettings?.defaultPalette || 'classic-cream';
+const fontTheme   = cleanSettings?.fontTheme  || 'classic-editorial';
+const siteName    = cleanSettings?.siteName   || 'Pet Photography';
+const logoType    = cleanSettings?.logoType   || 'text';
+const logoImage   = cleanSettings?.logoImage  ?? null;
+const headScripts = cleanCode?.headScripts    || '';
+const bodyScripts = cleanCode?.bodyScripts    || '';
+const faviconUrl  = cleanSettings?.favicon?.asset?._ref
+  ? `https://cdn.sanity.io/images/hx5xgigp/production/${cleanSettings.favicon.asset._ref.replace('image-', '').replace(/-([a-z]+)$/, '.$1')}`
+  : null;
+const photographerName  = cleanSettings?.photographerName || siteName;
+const accentOverride    = cleanSettings?.accentColorOverride || null;
+const textColorPreset   = cleanSettings?.textColorPreset || null;
+const twitterHandle     = cleanSeo?.twitterHandle ? cleanSeo.twitterHandle.replace(/^@/, '') : null;
+const sameAs            = [cleanSocial?.instagram, cleanSocial?.facebook, cleanSocial?.youtube, cleanSocial?.tiktok].filter(Boolean);
+
+// Palettes were already cleaned by cleanSettings above; keep the same alias.
+const palettesArr = (cleanSettings?.palettes ?? []) as Array<Record<string, string>>;
+const activePaletteSlug = cleanSettings?.defaultPalette || colorTheme || null;
 const activePalette =
   (activePaletteSlug && palettesArr.find((p) => p?.slug === activePaletteSlug)) ||
   palettesArr[0] ||
@@ -125,12 +133,17 @@ const TEXT_PRESETS: Record<string, { text: string; muted: string; mutedLight: st
 const textPresetColors = (textColorPreset && LIGHT_THEMES.includes(colorTheme))
   ? TEXT_PRESETS[textColorPreset] ?? null
   : null;
-const navVariant     = nav?.navVariant || 'classic';
-const navLinks       = nav?.links ?? null;
+// Nav + site settings go through the preview client in Presentation mode,
+// so every string carries stega markers that break class names, CSS attribute
+// selectors, and equality checks (e.g. `navVariant === 'centered'`). Clean
+// the whole nav object — links are used for hrefs, labels, and type checks.
+const cleanNav = nav ? stegaClean(nav) : null;
+const navVariant     = cleanNav?.navVariant || 'classic';
+const navLinks       = cleanNav?.links ?? null;
 const blogEnabled    = blogConfig?.blogEnabled !== false;
 
 // ── Structured data (JSON-LD @graph) ─────────────────────────────────────────
-const canonicalBase = (seo?.siteUrl || '').replace(/\/$/, '');
+const canonicalBase = (cleanSeo?.siteUrl || '').replace(/\/$/, '');
 const canonicalUrl  = canonicalBase ? `${canonicalBase}${Astro.url.pathname}` : null;
 const schemaGraph: Record<string, any>[] = [];
 
@@ -150,18 +163,18 @@ if (canonicalBase) {
     name: siteName,
     url: canonicalBase,
   };
-  if (seo?.businessPhone) biz.telephone = seo.businessPhone;
-  if (seo?.businessEmail) biz.email      = seo.businessEmail;
-  if (seo?.businessCity || seo?.businessState) {
+  if (cleanSeo?.businessPhone) biz.telephone = cleanSeo.businessPhone;
+  if (cleanSeo?.businessEmail) biz.email      = cleanSeo.businessEmail;
+  if (cleanSeo?.businessCity || cleanSeo?.businessState) {
     biz.address = {
       '@type': 'PostalAddress',
-      ...(seo?.businessCity  ? { addressLocality: seo.businessCity  } : {}),
-      ...(seo?.businessState ? { addressRegion:    seo.businessState } : {}),
+      ...(cleanSeo?.businessCity  ? { addressLocality: cleanSeo.businessCity  } : {}),
+      ...(cleanSeo?.businessState ? { addressRegion:    cleanSeo.businessState } : {}),
     };
   }
   if (ogImage) biz.image = ogImage;
-  if (seo?.priceRange) biz.priceRange = seo.priceRange;
-  if (seo?.areaServed) biz.areaServed = seo.areaServed.split(',').map((s: string) => s.trim()).filter(Boolean);
+  if (cleanSeo?.priceRange) biz.priceRange = cleanSeo.priceRange;
+  if (cleanSeo?.areaServed) biz.areaServed = cleanSeo.areaServed.split(',').map((s: string) => s.trim()).filter(Boolean);
   if (sameAs.length)   biz.sameAs     = sameAs;
   schemaGraph.push(biz);
 

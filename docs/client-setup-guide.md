@@ -6,6 +6,32 @@ from Sanity to Cloudflare to live domain. Follow the steps in order.
 
 ---
 
+## New Client Quick Checklist
+
+Fast-path summary of the full guide below. Follow in order; detail for each step
+is in the linked phase.
+
+- [ ] **Sanity project created** — new project, `production` dataset ([Phase 1.1](#phase-1--sanity-cms))
+- [ ] **`studio/.env` set to client values** — project ID, dataset, host, **prod preview URL** ([Phase 1.2](#phase-1--sanity-cms))
+- [ ] **`sanity.config.js` updated** — `title` and `presentationTool.allowOrigins` (localhost + prod domain) ([Phase 1.2](#phase-1--sanity-cms))
+- [ ] **Studio deployed** — `cd studio && npm run deploy` (bakes preview URL at build time) ([Phase 1.2](#phase-1--sanity-cms))
+- [ ] **API read token created** ([Phase 1.3](#phase-1--sanity-cms))
+- [ ] **Preview secret generated** ([Phase 1.4](#phase-1--sanity-cms))
+- [ ] **CORS origins added** — localhost, `*.pages.dev`, client domain ([Phase 1.5](#phase-1--sanity-cms))
+- [ ] **Dataset seeded** — `cd studio && npm run seed` populates template content ([Phase 1.6](#phase-1--sanity-cms))
+- [ ] **Cloudflare Pages project connected** — care plan vs one-time path ([Phase 2](#phase-2--cloudflare-pages))
+- [ ] **Cloudflare env vars set** — project ID, dataset, token, preview secret, studio URL ([Phase 2](#phase-2--cloudflare-pages))
+- [ ] **Custom domain wired + DNS propagated** ([Phase 3](#phase-3--domain-setup))
+- [ ] **`SANITY_STUDIO_PREVIEW_URL` flipped to custom domain** — re-run `npm run deploy` ([Phase 3.3](#phase-3--domain-setup))
+- [ ] **Web3Forms contact key added** ([Phase 4](#phase-4--contact-form-web3forms))
+- [ ] **Client content added** — photos, copy, palette, nav, SEO ([Phase 5](#phase-5--initial-content-setup))
+- [ ] **Pre-launch checklist passed** — SEO, favicons, analytics, forms ([Phase 6](#phase-6--pre-launch-checklist))
+- [ ] **`studio/.env` flipped back to `http://localhost:4321`** — so your local dev keeps working
+
+> **Critical rule:** `SANITY_STUDIO_PREVIEW_URL` in `studio/.env` is baked into the hosted Studio at build time. Before every `npm run deploy`, make sure it's set to the **client's production URL** (not your localhost). After deploying, flip it back to `http://localhost:4321` so your local Studio continues iframing your local Astro dev. See `CLAUDE.md` → "Local vs Hosted Studio" for the full explanation.
+
+---
+
 ## Business Model Overview
 
 There are two client tiers. Choose before starting setup.
