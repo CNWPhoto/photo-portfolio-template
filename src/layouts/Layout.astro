@@ -309,7 +309,13 @@ const schemaJSON = schemaGraph.length
 			document.querySelectorAll('.reveal, .reveal-fade').forEach(el => observer.observe(el));
 		</script>
 		{bodyScripts && <Fragment set:html={bodyScripts} />}
-		{isPreview && <VisualEditing client:only="react" />}
+		{/* VisualEditing is mounted unconditionally — the @sanity/visual-editing
+		    package detects whether it's inside a Sanity Studio iframe and
+		    stays inert on public visits, so there's no harm in shipping the
+		    small bundle to everyone. Gating on `isPreview` broke the
+		    "Documents on this page" panel whenever the preview cookie failed
+		    to round-trip (e.g. browser blocked a cross-site cookie). */}
+		<VisualEditing client:only="react" />
 	</body>
 </html>
 
