@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import SanityImage from '../components/SanityImage.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
 
 const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
@@ -42,7 +43,7 @@ const posts = await client.fetch(
   `*[_type == "blogPost"] | order(publishDate desc) [$skip...$end]{
     _id, title, slug, publishDate, excerpt,
     "categories": categories[]->{ name, "slug": slug.current },
-    coverImage { ..., asset-> }
+    coverImage { ..., asset->{ _id, url, metadata { dimensions { width, height }, lqip } } }
   }`,
   { skip, end: skip + postsPerPage },
   { cache: 'no-store' }
@@ -74,9 +75,26 @@ const fallbackPosts: Post[] = [
 const sanityPosts: Post[] = posts ?? [];
 const displayPosts: Post[] = sanityPosts.length ? sanityPosts : fallbackPosts;
 
+// Pre-cropped 3:2 single URL — used only for the fallback Pexels case
+// (Sanity posts use postCardSrcset below for a full responsive ladder).
 function postImgUrl(post: Post): string {
-  if (post.coverImage) return urlFor(post.coverImage).width(900).height(700).fit('crop').auto('format').url();
-  return post._fallbackImg ?? 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=900&h=700&fit=crop';
+  if (post.coverImage) return urlFor(post.coverImage).width(900).height(600).fit('crop').auto('format').quality(80).url();
+  return post._fallbackImg ?? 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=900&h=600&fit=crop';
+}
+
+// Responsive srcset ladder for the cards-grid variant: five widths each
+// server-side cropped to a 3:2 aspect ratio so mobile doesn't download
+// the desktop-sized image and vice versa. Sanity serves the cropped
+// rendition directly from its CDN as WebP/AVIF via `auto('format')`.
+const CARD_WIDTHS = [400, 600, 900, 1200, 1600];
+function postCardSrcset(image: any): string {
+  if (!image?.asset) return '';
+  return CARD_WIDTHS
+    .map((w) => {
+      const h = Math.round((w * 2) / 3);
+      return `${urlFor(image).width(w).height(h).fit('crop').auto('format').quality(80).url()} ${w}w`;
+    })
+    .join(', ');
 }
 
 function formatDate(dateStr?: string): string {
@@ -90,12 +108,21 @@ function formatDate(dateStr?: string): string {
 
     <!-- ══ SECTION 1: Hero ══ -->
     <section class="hero">
-      <img
-        class="hero__img"
-        src={heroImgUrl}
-        alt={heroHeading}
-        loading="eager" decoding="async" fetchpriority="high"
-      />
+      {pageDoc?.heroImage?.asset ? (
+        <SanityImage
+          image={pageDoc.heroImage}
+          sizes="100vw"
+          loading="eager"
+          class="hero__img"
+        />
+      ) : (
+        <img
+          class="hero__img"
+          src={heroImgUrl}
+          alt={heroHeading}
+          loading="eager" decoding="async" fetchpriority="high"
+        />
+      )}
       <div class="hero__content">
         <h1 class="hero__title">{heroHeading}</h1>
         <p class="hero__sub">{heroSubtext}</p>
@@ -114,8 +141,10 @@ function formatDate(dateStr?: string): string {
                   <img
                     class="card__img"
                     src={postImgUrl(post)}
+                    srcset={post.coverImage ? postCardSrcset(post.coverImage) : undefined}
+                    sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
                     alt={post.coverImage?.alt || post.title}
-                    width="900" height="700"
+                    width="900" height="600"
                     loading="lazy" decoding="async"
                   />
                 </a>
@@ -139,11 +168,19 @@ function formatDate(dateStr?: string): string {
               <article class={`posts__item ${i % 2 === 1 ? 'posts__item--reversed' : ''}`}>
                 <a href={`/blog/${post.slug.current}`} class="posts__item-inner">
                   <div class="posts__img-col">
-                    <img
-                      src={postImgUrl(post)}
-                      alt={post.coverImage?.alt || post.title}
-                      loading="lazy" decoding="async"
-                    />
+                    {post.coverImage?.asset ? (
+                      <SanityImage
+                        image={post.coverImage}
+                        sizes="(max-width: 900px) 100vw, 50vw"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <img
+                        src={postImgUrl(post)}
+                        alt={post.coverImage?.alt || post.title}
+                        loading="lazy" decoding="async"
+                      />
+                    )}
                   </div>
                   <div class="posts__content">
                     {post.categories?.[0] && (
@@ -193,7 +230,12 @@ function formatDate(dateStr?: string): string {
     justify-content: flex-end;
   }
 
-  .hero__img {
+  /* :global() bypasses Astro's scoped-CSS rewrite so the <img> rendered
+     by the SanityImage child component (which lives in its own scope)
+     picks up this rule. Without :global(), the hero img renders at its
+     natural 1200×800 size without position/object-fit and pushes to
+     the left of the hero container. */
+  .hero :global(.hero__img) {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -260,7 +302,10 @@ function formatDate(dateStr?: string): string {
     overflow: hidden;
   }
 
-  .posts__img-col img {
+  /* :global(img) because the SanityImage child component emits the img
+     in its own scope — without :global() the list-layout images render
+     at their natural source size and stretch the column. */
+  .posts__img-col :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -268,7 +313,7 @@ function formatDate(dateStr?: string): string {
     transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
-  .posts__item-inner:hover .posts__img-col img {
+  .posts__item-inner:hover .posts__img-col :global(img) {
     transform: scale(1.03);
   }
 
@@ -337,14 +382,21 @@ function formatDate(dateStr?: string): string {
     flex-direction: column;
   }
 
+  /* Aspect ratio lives on the wrapper (not the <img>) so it's reliably
+     applied regardless of the image's HTML width/height attributes.
+     3:2 is the classic landscape photo format — same ratio as most
+     DSLR sensors. Was 9:7 which is barely-landscape and rendered as
+     almost square / slightly tall depending on the browser's handling
+     of aspect-ratio on replaced elements. */
   .card__img-link {
     display: block;
     overflow: hidden;
+    aspect-ratio: 3 / 2;
   }
 
   .card__img {
     width: 100%;
-    aspect-ratio: 9 / 7;
+    height: 100%;
     object-fit: cover;
     display: block;
     transition: transform 0.4s ease;
@@ -410,7 +462,7 @@ function formatDate(dateStr?: string): string {
       min-height: auto;
     }
 
-    .posts__img-col img { height: 55vw; min-height: 240px; }
+    .posts__img-col :global(img) { height: 55vw; min-height: 240px; }
 
     .posts__item--reversed .posts__img-col { order: 0; }
     .posts__item--reversed .posts__content { order: 0; padding: 2rem 0; background: transparent; }

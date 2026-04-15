@@ -154,6 +154,14 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     text-decoration: none;
   }
 
+  /* Body text padding for the 3-column grid variant so category, title,
+     date, and excerpt don't bump the card's left/right edges. Scoped
+     to grid-3 only so the horizontal-list and cards variants keep
+     their existing flush layout. */
+  .blogteaser--grid-3 .blogteaser__body {
+    padding: 0 1.25rem 1.25rem;
+  }
+
   .blogteaser__img-wrap {
     overflow: hidden;
     aspect-ratio: 4 / 3;
