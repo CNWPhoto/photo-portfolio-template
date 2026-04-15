@@ -81,12 +81,14 @@ const image = section?.image ?? null;
     max-width: 1100px;
     margin-left: auto;
     margin-right: auto;
+    padding-left: clamp(1.5rem, 4vw, 3rem) !important;
+    padding-right: clamp(1.5rem, 4vw, 3rem) !important;
     border-top: none;
     min-height: 0;
     align-items: center;
   }
   .isplit--image-left {
-    grid-template-columns: 500px 1fr;
+    grid-template-columns: minmax(0, 500px) 1fr;
   }
   .isplit--image-right {
     grid-template-columns: 1fr 1fr;
@@ -133,14 +135,14 @@ const image = section?.image ?? null;
   }
   .isplit--image-right-full-bleed {
     display: grid;
-    grid-template-columns: minmax(0, 550px) 1fr;
-    gap: 5rem;
+    grid-template-columns: 45fr 55fr;
+    gap: 0;
     max-width: none;
     margin: 0;
     min-height: 680px;
     max-height: 680px;
     align-items: center;
-    padding: 0 0 0 max(3rem, calc((100vw - 1100px) / 2 + 3rem)) !important;
+    padding: 0 !important;
     border-top: none;
   }
   .isplit--image-right-full-bleed .isplit__image {
@@ -153,10 +155,12 @@ const image = section?.image ?? null;
   }
   .isplit--image-right-full-bleed .isplit__image :global(.isplit__img) {
     height: 100%;
+    width: 100%;
+    object-fit: cover;
   }
   .isplit--image-right-full-bleed .isplit__content {
     background: transparent;
-    padding: 100px 3rem 100px 0;
+    padding: 100px 5rem 100px max(3rem, calc((100vw - 1100px) / 2 + 3rem));
     align-items: flex-start;
   }
   .isplit--image-right-full-bleed .isplit__text-wrap {
@@ -362,8 +366,10 @@ const image = section?.image ?? null;
     .isplit--image-right .isplit__image {
       order: 1;
     }
-    .isplit__content {
-      padding: 4rem 2rem;
+    .isplit__content,
+    .isplit--image-left .isplit__content,
+    .isplit--image-right .isplit__content {
+      padding: 3rem 1.5rem;
       align-items: center;
       text-align: center;
     }
