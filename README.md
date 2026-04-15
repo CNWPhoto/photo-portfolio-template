@@ -173,16 +173,13 @@ Form submissions will be delivered to whatever email was used in step 2. If the 
 
 ### Niche forking
 
-This template is built for pet photography but works for any photographer niche. Search for `TODO:NICHE` in the codebase to find copy that needs updating per client:
+All site content (headings, body copy, images, nav, footer, testimonials, FAQs, etc.) lives in Sanity — there is almost nothing niche-specific hardcoded in the Astro components anymore. To reskin the template for a different photography niche (wedding, family, real estate, etc.) you should **not** need to edit any component files. Instead:
 
-- Studio name/logo: `Nav.astro`, `Footer.astro`
-- Hero fallback images: `Hero.astro`
-- Intro bio fallback: `Intro.astro`
-- Testimonial fallback quotes: `Testimonials.astro`
-- Featured section label: `FeaturedDogs.astro`
-- How It Works copy: `HowItWorks.astro`
-- Why Choose copy: `WhyChoose.astro`
-- FAQ fallbacks: `FAQs.astro`
+1. Update the Sanity `siteSettings` document (site name, photographer name, logo, palette, font theme) in Studio.
+2. Create/edit the page documents (homepage, portfolio, about, etc.) — all sections are composed visually in Sanity via the section builder.
+3. Upload the client's real photos to the gallery / hero / featured portfolio sections.
+
+The only remaining niche markers in code are tagged with `TODO:NICHE` — run `git grep 'TODO:NICHE'` to see them. Today these are limited to a couple of generic fallback strings in `src/pages/blog.astro` that only render if Sanity is empty, so they're safe to leave untouched for most clients.
 
 ### Local development commands
 
@@ -200,5 +197,5 @@ For your own development work — clients never need these.
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Start Studio at localhost:3334 |
+| `npm run dev` | Start Studio at localhost:3333 |
 | `npm run deploy` | Deploy Studio to Sanity's hosted URL |

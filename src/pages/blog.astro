@@ -30,8 +30,11 @@ const ogImage        = pageDoc?.seo?.socialImage?.asset?.url || null;
 const heroImgUrl  = pageDoc?.heroImage
   ? urlFor(pageDoc.heroImage).width(1600).auto('format').url()
   : 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg?auto=compress&cs=tinysrgb&w=1600';
-const heroHeading = pageDoc?.heroHeading || 'Dog Tails'; // TODO:NICHE
-const heroSubtext = pageDoc?.heroSubtext || 'Dogs, Love, and Tails of Photography'; // TODO:NICHE
+// Niche-neutral fallbacks — these only render when the client hasn't
+// populated pageDoc.heroHeading / heroSubtext yet. Left generic so
+// forking the template doesn't require editing this file per client.
+const heroHeading = pageDoc?.heroHeading || 'The Journal';
+const heroSubtext = pageDoc?.heroSubtext || 'Notes from behind the lens';
 
 const layout       = pageDoc?.layout       || 'list';
 const postsPerPage = pageDoc?.postsPerPage || 12;

@@ -54,9 +54,12 @@ const ctaAnchor = (anchor) => ({
   anchor,
 })
 
+// The `spacing` field was removed from sectionBaseFields site-wide (see
+// docs/deferred-features.md #9) so it's no longer included in seed data.
+// Sanity would silently ignore the orphaned attribute, but writing it
+// would create a mismatch between seeded docs and the current schema.
 const sectionBase = (overrides = {}) => ({
   enabled: true,
-  spacing: 'normal',
   ...overrides,
 })
 
