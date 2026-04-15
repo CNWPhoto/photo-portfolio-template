@@ -1,12 +1,6 @@
 import {imageSizeWarning} from './_shared/imageValidation'
-
-const colorThemeList = [
-  { title: 'Classic Cream', value: 'classic-cream' },
-  { title: 'Warm Studio', value: 'warm-studio' },
-  { title: 'Dark Editorial', value: 'dark-editorial' },
-  { title: 'Cool Minimal', value: 'cool-minimal' },
-  { title: 'Forest Sage', value: 'forest-sage' },
-]
+import HexColorInput from '../components/HexColorInput'
+import PaletteSelectInput from '../components/PaletteSelectInput'
 
 const fontThemeList = [
   { title: 'Classic Editorial', value: 'classic-editorial' },
@@ -87,9 +81,9 @@ export default {
       name: 'defaultPalette',
       title: 'Default Palette',
       type: 'string',
-      options: { list: colorThemeList },
+      components: {input: PaletteSelectInput},
       initialValue: 'classic-cream',
-      description: 'Site-wide color theme. Applies to every section on every page.',
+      description: 'Site-wide color theme. Pick from the palettes defined above — new palettes appear here automatically.',
     },
     {
       name: 'fontTheme',
@@ -126,6 +120,7 @@ export default {
       title: 'Custom Accent Color',
       type: 'string',
       description: 'Optional hex color to override the theme accent color e.g. #8b2635',
+      components: {input: HexColorInput},
       validation: (Rule) =>
         Rule.regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
           name: 'hex color',

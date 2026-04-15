@@ -16,7 +16,11 @@ export default {
     },
   },
   fields: [
-    ...sectionBaseFields(),
+    // Hero opts out of the shared `spacing` field — its height is already
+    // controlled by `heightMode` (auto/tall/fullscreen), so a second knob
+    // for top/bottom padding only confused editors. Tracked in
+    // docs/deferred-features.md for possible future rework.
+    ...sectionBaseFields({withSpacing: false}),
     {
       name: 'variant',
       title: 'Variant',

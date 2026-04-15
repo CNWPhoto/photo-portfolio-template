@@ -40,6 +40,8 @@ function readEnv(runtimeEnv, key) {
 // whatever runtime env is available. This is the only way to get secrets
 // working on Cloudflare Pages, where env vars set via the dashboard are
 // runtime-only by default.
+const PREVIEW_FETCH_TIMEOUT_MS = 6000
+
 function createPreviewClient(runtimeEnv) {
   const token = readEnv(runtimeEnv, 'SANITY_API_READ_TOKEN')
   const studioUrl = readEnv(runtimeEnv, 'SANITY_STUDIO_URL') || 'http://localhost:3333'
@@ -48,7 +50,7 @@ function createPreviewClient(runtimeEnv) {
   // text is encoded with invisible markers that link back to the source
   // document. Without this subpath, stega config in the main createClient
   // is silently ignored and visual editing overlays don't appear.
-  return createStegaClient({
+  const client = createStegaClient({
     ...baseConfig,
     useCdn: false,
     token,
@@ -59,6 +61,26 @@ function createPreviewClient(runtimeEnv) {
       studioUrl,
     },
   })
+
+  // Wrap .fetch with a per-query timeout. Preview pages run a parallel
+  // Promise.all of many uncached drafts queries; if one stalls (Sanity
+  // rate-limit, network blip, slow GROQ), the whole page hangs and editors
+  // see 30s+ refresh delays. On timeout we resolve to null so callers fall
+  // back to their existing optional-chaining defaults instead of erroring.
+  const originalFetch = client.fetch.bind(client)
+  client.fetch = async (query, params, options = {}) => {
+    const signal = options.signal || AbortSignal.timeout(PREVIEW_FETCH_TIMEOUT_MS)
+    try {
+      return await originalFetch(query, params, { ...options, signal })
+    } catch (err) {
+      if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+        console.warn('[sanity] preview fetch timed out:', String(query).slice(0, 80))
+        return null
+      }
+      throw err
+    }
+  }
+  return client
 }
 
 // Returns a client for either preview or published mode.

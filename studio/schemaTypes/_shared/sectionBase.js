@@ -4,7 +4,7 @@
 // support the optional vertical side-rail label (see spec §17): splitSection,
 // threeColumnSection, faqSection (list variant), featuredPortfolioSection.
 
-export const sectionBaseFields = ({groupName, withVerticalSideLabel = false} = {}) => {
+export const sectionBaseFields = ({groupName, withVerticalSideLabel = false, withSpacing = true} = {}) => {
   const group = groupName ? {group: groupName} : {}
   const fields = [
     {
@@ -33,22 +33,26 @@ export const sectionBaseFields = ({groupName, withVerticalSideLabel = false} = {
       initialValue: 'default',
       ...group,
     },
-    {
-      name: 'spacing',
-      title: 'Spacing',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Compact', value: 'compact'},
-          {title: 'Normal', value: 'normal'},
-          {title: 'Spacious', value: 'spacious'},
-        ],
-        layout: 'radio',
-        direction: 'horizontal',
-      },
-      initialValue: 'normal',
-      ...group,
-    },
+    ...(withSpacing
+      ? [
+          {
+            name: 'spacing',
+            title: 'Spacing',
+            type: 'string',
+            options: {
+              list: [
+                {title: 'Compact', value: 'compact'},
+                {title: 'Normal', value: 'normal'},
+                {title: 'Spacious', value: 'spacious'},
+              ],
+              layout: 'radio',
+              direction: 'horizontal',
+            },
+            initialValue: 'normal',
+            ...group,
+          },
+        ]
+      : []),
     {
       name: 'sectionId',
       title: 'Anchor ID',

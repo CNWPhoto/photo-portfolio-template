@@ -1,11 +1,27 @@
 ---
 import { toHTML } from '@portabletext/to-html';
 import { getClient } from '../lib/sanity.js';
+import { stegaClean } from '@sanity/client/stega';
+import { createDataAttribute } from '@sanity/visual-editing/create-data-attribute';
 
 const { siteName = 'Pet Photography', blogEnabled = true } = Astro.props;
 
-const client = getClient(false);
-const [footerData, socialData, siteData] = await Promise.all([
+// In Sanity Presentation mode, attach a data-sanity attribute to the
+// footer root so editors get a click-to-edit overlay that opens
+// footerSettings. Pairs with the logo (siteSettings) and nav header
+// (navSettings) data-sanity attributes in Nav.astro.
+const isPreview = Astro.locals.isPreview ?? false;
+const footerSanityAttr = isPreview
+  ? createDataAttribute({ id: 'footerSettings', type: 'footerSettings', path: 'links' }).toString()
+  : null;
+
+// Use the preview client when the editor is in Presentation mode so draft
+// edits to footerSettings / socialSettings / siteSettings (e.g. the
+// photographer name in the copyright line) appear in the iframe without
+// having to publish. Stega-clean the results below so the draft markers
+// don't create extra click-to-edit overlays on every footer link.
+const client = getClient(isPreview, (Astro.locals as any).runtime?.env);
+const [footerDataRaw, socialDataRaw, siteDataRaw] = await Promise.all([
   client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{
     links[] { label, url, enabled, openInNewTab },
     middleColumn {
@@ -17,6 +33,10 @@ const [footerData, socialData, siteData] = await Promise.all([
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`),
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName }`),
 ]);
+
+const footerData = footerDataRaw ? stegaClean(footerDataRaw) : null;
+const socialData = socialDataRaw ? stegaClean(socialDataRaw) : null;
+const siteData   = siteDataRaw ? stegaClean(siteDataRaw) : null;
 
 const photographerName = siteData?.photographerName || siteName;
 
@@ -79,7 +99,7 @@ const termsUrl     = legalLinks?.terms?.url || '#';
 const year = new Date().getFullYear();
 ---
 
-<footer class="footer" id="contact">
+<footer class="footer" id="contact" data-sanity={footerSanityAttr}>
 	<hr />
 
 	<!-- Columns: left nav + right wordmark/social -->

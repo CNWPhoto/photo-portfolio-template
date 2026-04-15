@@ -1,6 +1,7 @@
 ---
 import { urlFor } from '../lib/sanity.js';
 import { resolveLink } from '../lib/links.js';
+import { createDataAttribute } from '@sanity/visual-editing/create-data-attribute';
 
 const {
 	siteName = 'Pet Photography',
@@ -10,6 +11,19 @@ const {
 	navLinks = null,
 	blogEnabled = true,
 } = Astro.props;
+
+// In Sanity Presentation mode, attach data-sanity attributes to the logo
+// and the nav root so editors get click-to-edit overlays for siteSettings
+// (logo → siteName) and navSettings (header → links). These are the only
+// two click targets in the nav region — overlays elsewhere are suppressed
+// because every other string flows through stegaClean() in Layout.astro.
+const isPreview = Astro.locals.isPreview ?? false;
+const logoSanityAttr = isPreview
+	? createDataAttribute({ id: 'siteSettings', type: 'siteSettings', path: 'siteName' }).toString()
+	: null;
+const navSanityAttr = isPreview
+	? createDataAttribute({ id: 'navSettings', type: 'navSettings', path: 'links' }).toString()
+	: null;
 
 const showImageLogo = logoType === 'image' && logoImage;
 
@@ -43,7 +57,7 @@ const leftLinks  = isSplit ? links.slice(0, splitMid) : [];
 const rightLinks = isSplit ? links.slice(splitMid)    : links;
 ---
 
-<header class="nav" data-variant={navVariant}>
+<header class="nav" data-variant={navVariant} data-sanity={navSanityAttr}>
 	<div class="nav__inner">
 		{isSplit && (
 			<nav aria-label="Main navigation left" class="nav__left-nav">
@@ -89,8 +103,8 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 			</nav>
 		)}
 		{showImageLogo
-			? <a href="/" class="nav__logo nav__logo--image"><img src={urlFor(logoImage).height(96).auto('format').url()} alt={siteName} class="nav__logo-img" decoding="async" /></a>
-			: <a href="/" class="nav__logo">{siteName}</a>
+			? <a href="/" class="nav__logo nav__logo--image" data-sanity={logoSanityAttr}><img src={urlFor(logoImage).height(96).auto('format').url()} alt={siteName} class="nav__logo-img" decoding="async" /></a>
+			: <a href="/" class="nav__logo" data-sanity={logoSanityAttr}>{siteName}</a>
 		}
 		<nav aria-label="Main navigation">
 			<ul class={`nav__links${isSplit ? ' nav__links--right' : ''}`}>

@@ -50,35 +50,6 @@ export default {
       options: {insertMenu: sectionsInsertMenu},
     },
     {
-      name: 'navigation',
-      title: 'Navigation',
-      type: 'object',
-      group: 'navigation',
-      options: {collapsible: false},
-      fields: [
-        {
-          name: 'showInNav',
-          title: 'Show in main nav',
-          type: 'boolean',
-          initialValue: false,
-          description:
-            'When enabled, this page will be auto-listed in the main nav. Most clients prefer to manage nav links manually in Navigation settings — leave this off and add the link there.',
-        },
-        {
-          name: 'navLabel',
-          title: 'Nav Label',
-          type: 'string',
-          description: 'Optional. Falls back to the internal title.',
-        },
-        {
-          name: 'navOrder',
-          title: 'Nav Order',
-          type: 'number',
-          description: 'Lower numbers appear first.',
-        },
-      ],
-    },
-    {
       name: 'navThemeOverHero',
       title: 'Nav Theme Over Hero',
       type: 'string',

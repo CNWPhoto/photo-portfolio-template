@@ -3,7 +3,6 @@ import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
 import '../styles/palette.css';
 import { getClient } from '../lib/sanity.js';
-import VisualEditing from '../components/VisualEditing.tsx';
 import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
@@ -62,6 +61,7 @@ const cleanSettings = settings ? stegaClean(settings) : null;
 const cleanSeo = seo ? stegaClean(seo) : null;
 const cleanCode = code ? stegaClean(code) : null;
 const cleanSocial = social ? stegaClean(social) : null;
+
 
 const colorTheme  = cleanSettings?.defaultPalette || 'classic-cream';
 const fontTheme   = cleanSettings?.fontTheme  || 'classic-editorial';
@@ -306,16 +306,26 @@ const schemaJSON = schemaGraph.length
 					}
 				});
 			}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-			document.querySelectorAll('.reveal, .reveal-fade').forEach(el => observer.observe(el));
+			function bindReveals() {
+				document.querySelectorAll('.reveal, .reveal-fade').forEach(el => {
+					if (!el.classList.contains('revealed')) observer.observe(el);
+				});
+			}
+			bindReveals();
+			// Visual editing fetch-and-swap replaces <main> in place, so the
+			// freshly inserted nodes need a fresh observer pass.
+			document.addEventListener('visual-editing:swapped', bindReveals);
 		</script>
 		{bodyScripts && <Fragment set:html={bodyScripts} />}
-		{/* VisualEditing is mounted unconditionally — the @sanity/visual-editing
-		    package detects whether it's inside a Sanity Studio iframe and
-		    stays inert on public visits, so there's no harm in shipping the
-		    small bundle to everyone. Gating on `isPreview` broke the
-		    "Documents on this page" panel whenever the preview cookie failed
-		    to round-trip (e.g. browser blocked a cross-site cookie). */}
-		<VisualEditing client:only="react" />
+		{/* Visual editing bridge — iframe-gated so the @sanity/visual-editing
+		    bundle is never loaded for public visitors. Detection by parent
+		    frame is more reliable than the preview cookie (which can be
+		    blocked by browser cross-site cookie policies). */}
+		<script>
+			if (window.self !== window.top) {
+				import('../lib/visualEditingBridge.js').then((m) => m.mount());
+			}
+		</script>
 	</body>
 </html>
 
@@ -588,6 +598,7 @@ const schemaJSON = schemaGraph.length
 		text-decoration: underline;
 		font-weight: 600;
 	}
+
 
 	/* ══════════════════════════════════════════════════
 	   TRANSPARENT NAV — HERO PULL-UP

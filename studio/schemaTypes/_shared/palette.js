@@ -3,6 +3,8 @@
 // Field names mirror the CSS variable contract in src/styles/palette.css and
 // the legacy [data-theme] block in src/layouts/Layout.astro.
 
+import HexColorInput from '../../components/HexColorInput'
+
 const hexColor = (Rule) =>
   Rule.regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
     name: 'hex color',
@@ -15,6 +17,7 @@ const colorField = (name, title, description) => ({
   type: 'string',
   description,
   validation: hexColor,
+  components: {input: HexColorInput},
 })
 
 export const palette = {

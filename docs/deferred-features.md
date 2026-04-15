@@ -127,7 +127,19 @@ Web3Forms routing is configured via the access key, not a destination email fiel
 
 ---
 
-## 9. Full-Bleed Image — Parallax Schema Description
+## 9. Hero — Spacing Control
+
+**Status:** removed (was schema-only)
+**Section:** `heroSection`
+**Schema field:** `spacing` (was: radio `compact` / `normal` / `spacious`)
+**Schema file:** `studio/schemaTypes/sections/heroSection.js` (opts out of `sectionBaseFields` spacing via `{withSpacing: false}`)
+**Component:** `src/components/sections/HeroSection.astro`
+
+Hero already has `heightMode` (auto / tall / fullscreen) controlling vertical size, so a second top/bottom-padding knob was redundant and confused editors. The field has been removed from the Hero schema only — every other section type still gets `spacing` from `sectionBaseFields()`. To restore it, drop the `{withSpacing: false}` argument in `heroSection.js` and (if needed) wire `section.spacing` into `HeroSection.astro` styling.
+
+---
+
+## 10. Full-Bleed Image — Parallax Schema Description
 
 **Status:** working (but docs are wrong)
 **Section:** `fullBleedImageSection`
