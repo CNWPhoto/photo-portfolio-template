@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 import {richTextBody} from '../_shared/richTextBody'
 
 // FAQ section. Replaces homepageFaqs and experienceFaqs.
@@ -6,21 +7,17 @@ import {richTextBody} from '../_shared/richTextBody'
 
 export default {
   name: 'faqSection',
+  icon: sectionIcon('faqSection'),
   title: 'FAQs',
   type: 'object',
   preview: {
-    select: {heading: 'heading', layout: 'layout'},
-    prepare({heading, layout}) {
-      return {title: 'FAQs', subtitle: heading || layout || ''}
+    select: {heading: 'heading'},
+    prepare({heading}) {
+      return {title: 'FAQs', subtitle: heading || ''}
     },
   },
   fields: [
     ...sectionBaseFields({withVerticalSideLabel: true}),
-    {
-      name: 'eyebrow',
-      title: 'Eyebrow',
-      type: 'string',
-    },
     {
       name: 'heading',
       title: 'Heading',
@@ -35,7 +32,6 @@ export default {
       options: {
         list: [
           {title: 'Accordion (click to expand)', value: 'accordion'},
-          {title: 'Two column', value: 'two-column'},
           {title: 'Flat list (always open)', value: 'flat-list'},
         ],
         layout: 'radio',

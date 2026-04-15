@@ -1,10 +1,12 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 
 // Standalone rich text body, no image. For about blurbs, policies,
 // long-form copy on any page. See docs/page-builder-spec.md §2.
 
 export default {
   name: 'richTextSection',
+  icon: sectionIcon('richTextSection'),
   title: 'Rich Text',
   type: 'object',
   preview: {

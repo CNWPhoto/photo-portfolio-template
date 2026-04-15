@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 import {imageField} from '../_shared/imageField'
 import {richTextBody} from '../_shared/richTextBody'
 
@@ -8,6 +9,7 @@ import {richTextBody} from '../_shared/richTextBody'
 
 export default {
   name: 'threeColumnSection',
+  icon: sectionIcon('threeColumnSection'),
   title: 'Three Columns',
   type: 'object',
   preview: {

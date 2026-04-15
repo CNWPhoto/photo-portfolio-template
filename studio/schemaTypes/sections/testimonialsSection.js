@@ -1,19 +1,25 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 
 // Testimonials section. Pulls from testimonial documents.
 // See docs/page-builder-spec.md §2 (testimonialsSection).
 
 export default {
   name: 'testimonialsSection',
+  icon: sectionIcon('testimonialsSection'),
   title: 'Testimonials',
   type: 'object',
   preview: {
-    select: {heading: 'heading', layout: 'layout'},
-    prepare({heading, layout}) {
-      return {title: 'Testimonials', subtitle: heading || layout || ''}
+    select: {heading: 'heading'},
+    prepare({heading}) {
+      return {title: 'Testimonials', subtitle: heading || ''}
     },
   },
   fields: [
+    // `layout` (slider / grid / single-featured) was removed because only
+    // `slider` was ever implemented in the component; picking grid or
+    // single-featured silently fell back to slider. Tracked in
+    // docs/deferred-features.md.
     ...sectionBaseFields(),
     {
       name: 'eyebrow',
@@ -27,45 +33,10 @@ export default {
       initialValue: 'What Clients Are Saying',
     },
     {
-      name: 'layout',
-      title: 'Layout',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Slider', value: 'slider'},
-          {title: 'Grid', value: 'grid'},
-          {title: 'Single featured', value: 'single-featured'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'slider',
-    },
-    {
-      name: 'source',
-      title: 'Source',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'All testimonials (newest first)', value: 'all'},
-          {title: 'Pick specific', value: 'pickSpecific'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'all',
-    },
-    {
-      name: 'testimonials',
-      title: 'Testimonials',
-      type: 'array',
-      of: [{type: 'reference', to: [{type: 'testimonial'}]}],
-      hidden: ({parent}) => parent?.source !== 'pickSpecific',
-    },
-    {
       name: 'maxCount',
       title: 'Max Count',
       type: 'number',
-      description: 'Optional. Limits how many to show when source is "All".',
-      hidden: ({parent}) => parent?.source !== 'all',
+      description: 'Optional. Limits how many testimonials to show. Leave blank to show all.',
     },
   ],
 }

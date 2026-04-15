@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 import {imageField} from '../_shared/imageField'
 import {richTextBody} from '../_shared/richTextBody'
 
@@ -8,6 +9,7 @@ import {richTextBody} from '../_shared/richTextBody'
 
 export default {
   name: 'fullBleedImageSection',
+  icon: sectionIcon('fullBleedImageSection'),
   title: 'Full-Bleed Image',
   type: 'object',
   preview: {

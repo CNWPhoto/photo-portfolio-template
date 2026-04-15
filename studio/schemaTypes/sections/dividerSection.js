@@ -1,9 +1,11 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 
 // Visual break between sections. See docs/page-builder-spec.md §2.
 
 export default {
   name: 'dividerSection',
+  icon: sectionIcon('dividerSection'),
   title: 'Divider',
   type: 'object',
   preview: {

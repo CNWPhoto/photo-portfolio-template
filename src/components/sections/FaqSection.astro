@@ -193,18 +193,23 @@ const faqs = (section?.faqs || []).map((f: any) => ({
 </style>
 
 <script>
-  document.querySelectorAll<HTMLButtonElement>('.faqs__question--accordion').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const item = btn.closest('.faqs__item');
-      const isOpen = item?.classList.contains('faqs__item--open');
-      document.querySelectorAll('.faqs__item--open').forEach((el) => {
-        el.classList.remove('faqs__item--open');
-        el.querySelector('.faqs__question--accordion')?.setAttribute('aria-expanded', 'false');
-      });
-      if (!isOpen && item) {
-        item.classList.add('faqs__item--open');
-        btn.setAttribute('aria-expanded', 'true');
-      }
+  // Event delegation on document so accordion clicks keep working after
+  // the visual-editing fetch-and-swap replaces <main> in place (per-button
+  // listeners get wiped when the old DOM nodes are discarded).
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement | null;
+    const btn = target?.closest<HTMLButtonElement>('.faqs__question--accordion');
+    if (!btn) return;
+    const item = btn.closest('.faqs__item');
+    if (!item) return;
+    const isOpen = item.classList.contains('faqs__item--open');
+    document.querySelectorAll('.faqs__item--open').forEach((el) => {
+      el.classList.remove('faqs__item--open');
+      el.querySelector('.faqs__question--accordion')?.setAttribute('aria-expanded', 'false');
     });
+    if (!isOpen) {
+      item.classList.add('faqs__item--open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
   });
 </script>

@@ -1,10 +1,12 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 
 // Featured portfolio section. Pulls items from the portfolio collection.
 // See docs/page-builder-spec.md §2 (featuredPortfolioSection).
 
 export default {
   name: 'featuredPortfolioSection',
+  icon: sectionIcon('featuredPortfolioSection'),
   title: 'Featured Portfolio',
   type: 'object',
   preview: {
@@ -52,13 +54,6 @@ export default {
         layout: 'radio',
       },
       initialValue: 'latest',
-    },
-    {
-      name: 'itemCount',
-      title: 'Item Count',
-      type: 'number',
-      initialValue: 6,
-      hidden: ({parent}) => parent?.source !== 'latest',
     },
     {
       name: 'items',

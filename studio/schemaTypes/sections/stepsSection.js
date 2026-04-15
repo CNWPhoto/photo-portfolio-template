@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 import {imageField} from '../_shared/imageField'
 import {richTextBody} from '../_shared/richTextBody'
 
@@ -8,6 +9,7 @@ import {richTextBody} from '../_shared/richTextBody'
 
 export default {
   name: 'stepsSection',
+  icon: sectionIcon('stepsSection'),
   title: 'Steps',
   type: 'object',
   preview: {
@@ -58,20 +60,6 @@ export default {
           },
         },
       ],
-    },
-    {
-      name: 'variant',
-      title: 'Variant',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Stacked', value: 'stacked'},
-          {title: 'Timeline', value: 'timeline'},
-          {title: 'Horizontal cards', value: 'horizontal-cards'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'stacked',
     },
     {
       name: 'ctaText',

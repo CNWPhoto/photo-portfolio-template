@@ -1,10 +1,12 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 import {richTextBody} from '../_shared/richTextBody'
 
 // Contact info card. See docs/page-builder-spec.md §2.
 
 export default {
   name: 'contactInfoSection',
+  icon: sectionIcon('contactInfoSection'),
   title: 'Contact Info',
   type: 'object',
   preview: {

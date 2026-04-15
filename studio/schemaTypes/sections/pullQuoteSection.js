@@ -1,10 +1,12 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 
 // Single featured quote. Replaces aboutQuoteSection.
 // See docs/page-builder-spec.md §2 (pullQuoteSection).
 
 export default {
   name: 'pullQuoteSection',
+  icon: sectionIcon('pullQuoteSection'),
   title: 'Pull Quote',
   type: 'object',
   preview: {

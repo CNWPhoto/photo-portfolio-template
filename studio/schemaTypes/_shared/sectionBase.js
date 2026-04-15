@@ -3,8 +3,12 @@
 // Pass `withVerticalSideLabel: true` for the four section types that
 // support the optional vertical side-rail label (see spec §17): splitSection,
 // threeColumnSection, faqSection (list variant), featuredPortfolioSection.
+//
+// `spacing` used to be a field here but was a no-op on most components
+// and actively misleading — editors would set "Spacious" and nothing would
+// change. Removed site-wide; tracked in docs/deferred-features.md.
 
-export const sectionBaseFields = ({groupName, withVerticalSideLabel = false, withSpacing = true} = {}) => {
+export const sectionBaseFields = ({groupName, withVerticalSideLabel = false} = {}) => {
   const group = groupName ? {group: groupName} : {}
   const fields = [
     {
@@ -33,26 +37,6 @@ export const sectionBaseFields = ({groupName, withVerticalSideLabel = false, wit
       initialValue: 'default',
       ...group,
     },
-    ...(withSpacing
-      ? [
-          {
-            name: 'spacing',
-            title: 'Spacing',
-            type: 'string',
-            options: {
-              list: [
-                {title: 'Compact', value: 'compact'},
-                {title: 'Normal', value: 'normal'},
-                {title: 'Spacious', value: 'spacious'},
-              ],
-              layout: 'radio',
-              direction: 'horizontal',
-            },
-            initialValue: 'normal',
-            ...group,
-          },
-        ]
-      : []),
     {
       name: 'sectionId',
       title: 'Anchor ID',

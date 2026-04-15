@@ -21,7 +21,7 @@ const style = paletteToStyle(palette);
 // their markers so visual-editing overlays still work.
 const variant = stegaClean(section?.variant) || 'slider';
 const eyebrow = section?.eyebrow || '';
-const heading = section?.heading || section?.nicheKeyword || '';
+const heading = section?.heading || '';
 const subheading = section?.subheading || '';
 const ctaText = section?.ctaText || '';
 const ctaHref = stegaClean(resolveLink(section?.ctaLink));
@@ -81,8 +81,9 @@ const firstImage = sanityImages[0] ?? null;
         </button>
       </div>
 
-      {(heading || subheading) && (
+      {(eyebrow || heading || subheading) && (
         <div class="hero__caption">
+          {eyebrow && <p class="hero__eyebrow">{eyebrow}</p>}
           {heading && <h1 class="hero__heading">{heading}</h1>}
           {subheading && <p class="hero__sub">{subheading}</p>}
           {ctaText && ctaHref && (

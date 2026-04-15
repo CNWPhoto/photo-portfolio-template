@@ -21,7 +21,6 @@ const eyebrow = section?.eyebrow || '';
 const heading = section?.heading || '';
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink);
-const sideLabel = section?.verticalSideLabel || '';
 
 const bodyHTML = isPortableText(section?.body)
   ? renderBody(section.body, { className: 'isplit__body' })
@@ -37,8 +36,6 @@ const image = section?.image ?? null;
   id={section?.sectionId || undefined}
   style={style}
 >
-  {sideLabel && <div class="isplit__side-label" aria-hidden="true">{sideLabel}</div>}
-
   <div class="isplit__content">
     <div class="isplit__text-wrap">
       {eyebrow && <p class="isplit__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
@@ -81,23 +78,31 @@ const image = section?.image ?? null;
     max-width: 1100px;
     margin-left: auto;
     margin-right: auto;
+    padding-top: 50px !important;
+    padding-bottom: 50px !important;
     padding-left: clamp(1.5rem, 4vw, 3rem) !important;
     padding-right: clamp(1.5rem, 4vw, 3rem) !important;
     border-top: none;
-    min-height: 0;
+    min-height: 600px;
     align-items: center;
-  }
-  .isplit--image-left {
-    grid-template-columns: minmax(0, 500px) 1fr;
-  }
-  .isplit--image-right {
-    grid-template-columns: 1fr 1fr;
-    height: 500px;
-  }
-  .isplit--image-left {
     overflow: visible;
   }
-  .isplit--image-left::before {
+  /* Image column is 400px wide (was 500px) and the section min-height
+     was bumped to 600px (from 500px), so the image is now narrower AND
+     taller — a more portrait / vertical crop that matches editorial
+     photography conventions and leaves ~100px more horizontal room for
+     the text column. image-right mirrors the column layout. */
+  .isplit--image-left {
+    grid-template-columns: minmax(0, 400px) 1fr;
+  }
+  .isplit--image-right {
+    grid-template-columns: 1fr minmax(0, 400px);
+  }
+  /* Full-width background pseudo-element — paints var(--bg) edge-to-edge
+     behind the contained 1100px content so the section doesn't look like
+     it's "floating" in a differently-colored parent. */
+  .isplit--image-left::before,
+  .isplit--image-right::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -107,29 +112,47 @@ const image = section?.image ?? null;
     background: var(--bg);
     z-index: -1;
   }
-  .isplit--image-left .isplit__image {
-    min-height: 0;
-    aspect-ratio: 3 / 4;
-    padding: 50px 0 50px 0;
-  }
+  /* Contained variants: the image has a fixed 600px container height
+     with symmetric 50px top/bottom padding, so the photo is visually
+     inset from both top and bottom of the section. align-self: center
+     keeps the image vertically centered in the row even when the
+     content column grows taller than 600px (the section min-height is
+     600px and the row expands with text if needed). Combined with the
+     400px image column width above, the image now renders at a clean
+     400×500 content area — a portrait-oriented crop. */
+  .isplit--image-left .isplit__image,
   .isplit--image-right .isplit__image {
     min-height: 0;
-    height: 500px;
-    padding: 0;
+    height: 600px;
+    padding: 50px 0;
+    align-self: center;
   }
+  /* Content padding is mirrored between the two contained variants so
+     image-left and image-right render with the same typography and
+     visual rhythm — just swapped horizontally. Padding was tightened
+     (from 5rem/6rem to 3rem/4rem) specifically to free ~96px of
+     horizontal space inside the text column, so the text-wrap
+     max-width bump below actually has room to take visual effect. */
   .isplit--image-left .isplit__content {
     background: transparent;
-    padding: 4rem 5rem 4rem 6rem;
+    padding: 4rem 3rem 4rem 4rem;
   }
   .isplit--image-right .isplit__content {
     background: transparent;
-    padding: 4rem;
-    text-align: center;
-    align-items: center;
-    border-right: 1px solid var(--border);
+    padding: 4rem 4rem 4rem 3rem;
   }
 
-  /* ── Full-bleed variants ── */
+  /* ── Full-bleed variants ──
+     Both variants use min-height (not fixed height) so the section
+     expands to fit the text content, with symmetric 3rem top/bottom
+     padding on the text column. image-left-full-bleed is the reference
+     for typography and sizing; image-right-full-bleed inherits the
+     same styling via the shared selectors below so editors get an
+     identical look when they flip the image to the other side. */
+  .isplit--image-left-full-bleed,
+  .isplit--image-right-full-bleed {
+    min-height: 500px;
+  }
   .isplit--image-left-full-bleed {
     grid-template-columns: 1fr 1fr;
   }
@@ -139,9 +162,6 @@ const image = section?.image ?? null;
     gap: 0;
     max-width: none;
     margin: 0;
-    min-height: 680px;
-    max-height: 680px;
-    align-items: center;
     padding: 0 !important;
     border-top: none;
   }
@@ -158,24 +178,29 @@ const image = section?.image ?? null;
     width: 100%;
     object-fit: cover;
   }
+  /* Unified content padding for both full-bleed variants. Symmetric
+     3rem on all sides so left and right gutters match exactly — was
+     previously `3rem 3rem 3rem 2.5rem` which left the left side
+     under-padded relative to the right. */
+  .isplit--image-left-full-bleed .isplit__content,
   .isplit--image-right-full-bleed .isplit__content {
     background: transparent;
-    padding: 100px 5rem 100px max(3rem, calc((100vw - 1100px) / 2 + 3rem));
-    align-items: flex-start;
+    padding: 3rem;
+    align-self: stretch;
   }
+  .isplit--image-left-full-bleed .isplit__text-wrap,
   .isplit--image-right-full-bleed .isplit__text-wrap {
     text-align: left;
     padding-right: 0;
     padding-left: 0;
-    max-width: 500px;
   }
 
-  /* ── Welcome-style full-bleed (text-align right) ── */
+  /* ── Welcome-style full-bleed (text-align right) ──
+     Inherits min-height/max-height from the base full-bleed rule so the
+     section height is consistent across all three text alignments —
+     previously this block set 578px while the base set 680px, which meant
+     the section visibly jumped size when an editor toggled alignment. */
   .isplit--image-right-full-bleed[data-text-align='right'] {
-    grid-template-columns: 45fr 55fr;
-    gap: 0;
-    min-height: 578px;
-    max-height: 578px;
     padding: 0 !important;
     background: var(--bg);
     border-top: 1px solid var(--border);
@@ -212,12 +237,17 @@ const image = section?.image ?? null;
   .isplit--image-left-full-bleed .isplit__image    { order: 1; }
   .isplit--image-left-full-bleed .isplit__content  { order: 2; }
   .isplit--image-left .isplit__content,
+  .isplit--image-right .isplit__content,
   .isplit--image-left-full-bleed .isplit__content { align-items: flex-start; }
   .isplit--image-left .isplit__text-wrap,
+  .isplit--image-right .isplit__text-wrap,
   .isplit--image-left-full-bleed .isplit__text-wrap { text-align: left; padding-right: 0; padding-left: 0; }
   .isplit--image-left .isplit__eyebrow,
   .isplit--image-left .isplit__body,
-  .isplit--image-left .isplit__link { text-align: left; }
+  .isplit--image-left .isplit__link,
+  .isplit--image-right .isplit__eyebrow,
+  .isplit--image-right .isplit__body,
+  .isplit--image-right .isplit__link { text-align: left; }
 
   .isplit__image {
     overflow: hidden;
@@ -248,10 +278,12 @@ const image = section?.image ?? null;
     text-align: right;
     padding-right: 75px;
   }
+  /* Contained variants. Paired with the tightened content padding
+     above — without that, the content column's horizontal padding
+     would constrain text-wrap before this max-width ever applies. */
+  .isplit--image-left .isplit__text-wrap,
   .isplit--image-right .isplit__text-wrap {
-    max-width: 380px;
-    text-align: center;
-    padding-right: 0;
+    max-width: 515px;
   }
 
   .isplit__eyebrow {
@@ -283,35 +315,17 @@ const image = section?.image ?? null;
     color: var(--muted);
     margin-bottom: 1.25rem;
   }
-  .isplit--image-right .isplit__body-wrap :global(.isplit__body) {
-    font-family: var(--font-heading, var(--font-serif));
-    font-style: italic;
-    font-size: clamp(1.0625rem, 1.75vw, 1.25rem);
-    line-height: 1.82;
-    color: var(--text);
-    margin-bottom: 1.5rem;
-  }
-  .isplit--image-right .isplit__body-wrap :global(.isplit__body:last-child) {
-    margin-bottom: 0;
-  }
 
-  /* Full-bleed body text */
-  .isplit--image-left-full-bleed .isplit__body-wrap :global(.isplit__body) {
+  /* Full-bleed body text — single shared rule so image-left-full-bleed
+     and image-right-full-bleed render at identical sizes and fonts.
+     Previously image-right-full-bleed had its own smaller clamp() size,
+     which made the two variants look different for the same content. */
+  .isplit--image-left-full-bleed .isplit__body-wrap :global(.isplit__body),
+  .isplit--image-right-full-bleed .isplit__body-wrap :global(.isplit__body) {
     font-size: 1.32rem;
     line-height: 1.43;
     color: var(--text);
     text-align: left;
-  }
-  .isplit--image-right-full-bleed .isplit__body-wrap :global(.isplit__body) {
-    font-size: clamp(0.844rem, 1.5vw, 1.125rem);
-    line-height: 1.45;
-    color: var(--text);
-    text-align: left;
-  }
-
-  .isplit__body-wrap :global(.isplit__body em) {
-    font-style: normal;
-    color: var(--accent);
   }
 
   .isplit__link {
@@ -327,20 +341,35 @@ const image = section?.image ?? null;
   /* Full-bleed: right-aligned link */
   .isplit--image-right-full-bleed .isplit__link { text-align: right; }
 
-  .isplit__side-label {
-    position: absolute;
-    top: 50%;
-    left: 1rem;
-    transform: translateY(-50%) rotate(-90deg);
-    transform-origin: left center;
-    font-family: var(--font-sans, var(--font-body));
-    font-size: 0.65rem;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--muted-light);
-    z-index: 2;
-    pointer-events: none;
+  /* ── Text alignment override ──
+     The Split schema's Text Alignment field is rendered via data-text-align
+     on the section root. Every variant used to hardcode text-align per-class,
+     which meant the field silently did nothing. These rules let the field
+     drive the alignment of the eyebrow, heading, body, and link in every
+     variant, and flex-align the content column so the text block sits at
+     the chosen edge. !important is needed because the hardcoded variant
+     rules above have equal specificity — this block is the single override. */
+  .isplit[data-text-align='left'] .isplit__text-wrap,
+  .isplit[data-text-align='left'] .isplit__eyebrow,
+  .isplit[data-text-align='left'] .isplit__link,
+  .isplit[data-text-align='left'] .isplit__body-wrap :global(.isplit__body) {
+    text-align: left !important;
   }
+  .isplit[data-text-align='center'] .isplit__text-wrap,
+  .isplit[data-text-align='center'] .isplit__eyebrow,
+  .isplit[data-text-align='center'] .isplit__link,
+  .isplit[data-text-align='center'] .isplit__body-wrap :global(.isplit__body) {
+    text-align: center !important;
+  }
+  .isplit[data-text-align='right'] .isplit__text-wrap,
+  .isplit[data-text-align='right'] .isplit__eyebrow,
+  .isplit[data-text-align='right'] .isplit__link,
+  .isplit[data-text-align='right'] .isplit__body-wrap :global(.isplit__body) {
+    text-align: right !important;
+  }
+  .isplit[data-text-align='left'] .isplit__content { align-items: flex-start; }
+  .isplit[data-text-align='center'] .isplit__content { align-items: center; }
+  .isplit[data-text-align='right'] .isplit__content { align-items: flex-end; }
 
   @media (max-width: 900px) {
     .isplit { grid-template-columns: 1fr; min-height: 0; height: auto; }
@@ -370,8 +399,7 @@ const image = section?.image ?? null;
     .isplit--image-left .isplit__content,
     .isplit--image-right .isplit__content {
       padding: 3rem 1.5rem;
-      align-items: center;
-      text-align: center;
+      align-items: flex-start;
     }
     .isplit__text-wrap,
     .isplit--image-left .isplit__text-wrap,
@@ -379,14 +407,22 @@ const image = section?.image ?? null;
       max-width: none;
       padding-right: 0;
       padding-left: 0;
-      text-align: center;
     }
-    .isplit__eyebrow,
-    .isplit__heading,
-    .isplit__body-wrap :global(.isplit__body),
-    .isplit__link { text-align: center !important; }
-    .isplit__link { margin-left: auto; margin-right: auto; width: fit-content; }
-    .isplit__side-label { display: none; }
+    /* Force left alignment on mobile regardless of the desktop textAlignment
+       field — the [data-text-align] wildcard selector matches the same
+       specificity as the desktop override rules above, and source order
+       (inside the media query = later) means these rules win the tiebreak. */
+    .isplit[data-text-align] .isplit__text-wrap,
+    .isplit[data-text-align] .isplit__eyebrow,
+    .isplit[data-text-align] .isplit__heading,
+    .isplit[data-text-align] .isplit__link,
+    .isplit[data-text-align] .isplit__body-wrap :global(.isplit__body) {
+      text-align: left !important;
+    }
+    .isplit[data-text-align] .isplit__content {
+      align-items: flex-start;
+    }
+    .isplit__link { margin-left: 0; margin-right: auto; width: fit-content; }
 
     .isplit--image-right-full-bleed {
       grid-template-columns: 1fr;
@@ -398,11 +434,8 @@ const image = section?.image ?? null;
     .isplit--image-right-full-bleed .isplit__content {
       padding: 3rem 1.5rem;
       order: 2;
-      align-items: center;
-      text-align: center;
     }
     .isplit--image-right-full-bleed .isplit__text-wrap {
-      text-align: center;
       max-width: none;
     }
     .isplit--image-right-full-bleed .isplit__image {
@@ -417,19 +450,27 @@ const image = section?.image ?? null;
       padding: 0 !important;
     }
     .isplit--image-right-full-bleed[data-text-align='right'] .isplit__content {
-      align-items: center;
       padding: 3rem 1.5rem;
     }
     .isplit--image-right-full-bleed[data-text-align='right'] .isplit__text-wrap {
-      text-align: center;
       padding-right: 0;
       padding-left: 0;
       max-width: none;
     }
-    .isplit--image-right-full-bleed[data-text-align='right'] .isplit__eyebrow,
-    .isplit--image-right-full-bleed[data-text-align='right'] .isplit__link,
-    .isplit--image-right-full-bleed[data-text-align='right'] .isplit__body-wrap :global(.isplit__body) {
-      text-align: center;
+  }
+
+  /* Universal horizontal gutter on narrower viewports — guarantees a
+     visible margin on every Split variant (including full-bleed, where
+     the section itself has padding: 0). Scoped to `max-width: 1100px`
+     because that's where the contained variants start to have auto margin
+     around them; above 1100px the `.isplit--image-left / --image-right`
+     rules already produce ample space on both sides. This block lives
+     outside the mobile stacking media query (< 900px) so the 900–1100px
+     gap — iPad Pro 12.9" portrait, wider tablets — is also covered. */
+  @media (max-width: 1100px) {
+    .isplit .isplit__content {
+      padding-left: max(1.75rem, 4vw) !important;
+      padding-right: max(1.75rem, 4vw) !important;
     }
   }
 </style>

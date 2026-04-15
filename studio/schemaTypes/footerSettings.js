@@ -111,8 +111,8 @@ export default {
               lists: [],
               marks: {
                 decorators: [
-                  {title: 'Strong', value: 'strong'},
-                  {title: 'Emphasis', value: 'em'},
+                  {title: 'Bold', value: 'strong'},
+                  {title: 'Italic', value: 'em'},
                 ],
                 annotations: [
                   {

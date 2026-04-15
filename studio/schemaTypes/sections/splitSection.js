@@ -2,6 +2,7 @@ import {sectionBaseFields} from '../_shared/sectionBase'
 import {imageField} from '../_shared/imageField'
 import {ctaLink} from '../_shared/ctaLink'
 import {richTextBody} from '../_shared/richTextBody'
+import {sectionIcon} from '../../components/SectionIcons'
 
 // Two-column image + rich text. The workhorse layout — replaces all the
 // niche-named intro / welcome / personal sections.
@@ -11,6 +12,7 @@ export default {
   name: 'splitSection',
   title: 'Split (Image + Text)',
   type: 'object',
+  icon: sectionIcon('splitSection'),
   preview: {
     select: {heading: 'heading', image: 'image'},
     prepare({heading, image}) {
@@ -18,7 +20,10 @@ export default {
     },
   },
   fields: [
-    ...sectionBaseFields({withVerticalSideLabel: true}),
+    // Split opts out of the shared vertical side label — the rail rarely
+    // landed visually correctly across all four Split variants. Tracked
+    // in docs/deferred-features.md for possible future rework.
+    ...sectionBaseFields(),
     {
       name: 'imageLayout',
       title: 'Image Layout',
@@ -57,21 +62,6 @@ export default {
     },
     imageField({}),
     {
-      name: 'imageAspectRatio',
-      title: 'Image Aspect Ratio',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Square', value: 'square'},
-          {title: 'Portrait (4:5)', value: 'portrait-4-5'},
-          {title: 'Landscape (3:2)', value: 'landscape-3-2'},
-          {title: 'Auto (image native)', value: 'auto'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'auto',
-    },
-    {
       name: 'textAlignment',
       title: 'Text Alignment',
       type: 'string',
@@ -85,35 +75,6 @@ export default {
         direction: 'horizontal',
       },
       initialValue: 'left',
-    },
-    {
-      name: 'verticalAlignment',
-      title: 'Vertical Alignment',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Top', value: 'top'},
-          {title: 'Center', value: 'center'},
-          {title: 'Bottom', value: 'bottom'},
-        ],
-        layout: 'radio',
-        direction: 'horizontal',
-      },
-      initialValue: 'center',
-    },
-    {
-      name: 'mobileOrder',
-      title: 'Mobile Order',
-      type: 'string',
-      description: 'Which column appears first on mobile.',
-      options: {
-        list: [
-          {title: 'Image first', value: 'image-first'},
-          {title: 'Text first', value: 'text-first'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'image-first',
     },
   ],
 }

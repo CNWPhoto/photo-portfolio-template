@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 import {imageField} from '../_shared/imageField'
 
 // Manual image grid (not pulled from portfolio).
@@ -6,6 +7,7 @@ import {imageField} from '../_shared/imageField'
 
 export default {
   name: 'galleryGridSection',
+  icon: sectionIcon('galleryGridSection'),
   title: 'Gallery Grid',
   type: 'object',
   preview: {

@@ -1,6 +1,7 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
 import {imageField} from '../_shared/imageField'
 import {ctaLink} from '../_shared/ctaLink'
+import {sectionIcon} from '../../components/SectionIcons'
 
 // Unified hero section. Replaces all the niche-named hero variants.
 // See docs/page-builder-spec.md §2 (heroSection) and §17 (stickyBackground).
@@ -9,6 +10,7 @@ export default {
   name: 'heroSection',
   title: 'Hero',
   type: 'object',
+  icon: sectionIcon('heroSection'),
   preview: {
     select: {heading: 'heading', eyebrow: 'eyebrow'},
     prepare({heading, eyebrow}) {
@@ -16,11 +18,7 @@ export default {
     },
   },
   fields: [
-    // Hero opts out of the shared `spacing` field — its height is already
-    // controlled by `heightMode` (auto/tall/fullscreen), so a second knob
-    // for top/bottom padding only confused editors. Tracked in
-    // docs/deferred-features.md for possible future rework.
-    ...sectionBaseFields({withSpacing: false}),
+    ...sectionBaseFields(),
     {
       name: 'variant',
       title: 'Variant',
@@ -89,7 +87,8 @@ export default {
       name: 'textPosition',
       title: 'Text Position',
       type: 'string',
-      description: 'Where the text block sits over the hero image (nine-point grid).',
+      description:
+        'Where the text block sits over the hero image (nine-point grid). Applies to the "Single full-width image" variant only — ignored by the slider and image-right variants.',
       options: {
         list: [
           'top-left', 'top-center', 'top-right',
@@ -126,14 +125,8 @@ export default {
       title: 'Sticky Background',
       type: 'boolean',
       description:
-        'When enabled, the hero stays pinned at the top of the viewport while subsequent sections scroll up over it (curtain effect). Used by the Experience page.',
+        'When enabled, the hero stays pinned at the top of the viewport while subsequent sections scroll up over it (curtain effect). Designed for experience-style pages — leave OFF on the homepage, where it interacts badly with the nav and the default section stack.',
       initialValue: false,
-    },
-    {
-      name: 'nicheKeyword',
-      title: 'Niche Keyword',
-      type: 'string',
-      description: 'Optional. Used as a fallback for image alt text (e.g. "Denver dog photographer").',
     },
   ],
 }

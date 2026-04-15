@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 import {imageField} from '../_shared/imageField'
 
 // Horizontal call-to-action strip. Replaces aboutCtaSection.
@@ -6,6 +7,7 @@ import {imageField} from '../_shared/imageField'
 
 export default {
   name: 'ctaBandSection',
+  icon: sectionIcon('ctaBandSection'),
   title: 'CTA Band',
   type: 'object',
   preview: {

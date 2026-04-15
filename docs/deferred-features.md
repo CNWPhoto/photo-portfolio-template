@@ -30,13 +30,13 @@ The field is stored and passed as `data-lightbox` on the section element, but no
 
 ## 2. Steps Section — Layout Variants
 
-**Status:** partial (only `horizontal-cards` renders)
+**Status:** removed (was partial — only `horizontal-cards` was implemented)
 **Section:** `stepsSection`
-**Schema field:** `variant` (radio: `stacked` / `timeline` / `horizontal-cards`)
+**Schema field:** `variant` (was: radio `stacked` / `timeline` / `horizontal-cards`)
 **Schema file:** `studio/schemaTypes/sections/stepsSection.js`
 **Component:** `src/components/sections/StepsSection.astro`
 
-The component always renders a horizontal 3-column card grid regardless of the variant value. Missing implementations:
+The component always rendered a horizontal 3-column card grid regardless of the variant value, so picking "Stacked" or "Timeline" did nothing. Removed the field entirely. The component keeps rendering horizontal cards unconditionally. To restore, re-add the `variant` field and implement:
 - **`stacked`** — vertical layout, one step per row, full-width
 - **`timeline`** — vertical timeline with connecting line and alternating left/right content
 
@@ -46,13 +46,13 @@ The `image` field on each step item is also defined in the schema but never rend
 
 ## 3. Testimonials — Grid and Single-Featured Layouts
 
-**Status:** partial (only `slider` renders)
+**Status:** removed (was partial — only `slider` was ever implemented)
 **Section:** `testimonialsSection`
-**Schema field:** `layout` (radio: `slider` / `grid` / `single-featured`)
+**Schema field:** `layout` (was: radio `slider` / `grid` / `single-featured`)
 **Schema file:** `studio/schemaTypes/sections/testimonialsSection.js`
 **Component:** `src/components/sections/TestimonialsSection.astro`
 
-Only the slider carousel is implemented. Missing:
+The schema used to offer three layouts but the Astro component hardcodes the slider carousel and ignored the field — picking "Grid" or "Single featured" silently fell back to the slider, confusing editors. Removed the `layout` field entirely. The component still renders a slider unconditionally. To restore, re-add the `layout` field to the schema and implement:
 - **`grid`** — multi-column grid of testimonial cards (2 or 3 columns)
 - **`single-featured`** — large single testimonial with prominent image and quote
 
@@ -60,14 +60,13 @@ Only the slider carousel is implemented. Missing:
 
 ## 4. FAQ — Two-Column Layout
 
-**Status:** partial (`accordion` and `flat-list` work; `two-column` does not)
+**Status:** removed (was partial — `two-column` was never implemented)
 **Section:** `faqSection`
-**Schema field:** `layout` (radio: `accordion` / `two-column` / `flat-list`)
+**Schema field:** `layout` (now: radio `accordion` / `flat-list`; previously also offered `two-column`)
 **Schema file:** `studio/schemaTypes/sections/faqSection.js`
 **Component:** `src/components/sections/FaqSection.astro`
 
-Missing:
-- **`two-column`** — questions and answers laid out in a two-column grid instead of a single list
+Picking "Two column" silently rendered as a flat list. Removed the option from the layout dropdown to stop offering a broken choice. To restore, re-add `{title: 'Two column', value: 'two-column'}` to the layout dropdown and implement the two-column grid layout in `FaqSection.astro`.
 
 ---
 
@@ -93,13 +92,13 @@ This is the largest gap between schema and component.
 
 ## 6. Split Section — Image Aspect Ratio
 
-**Status:** schema-only
+**Status:** removed (was schema-only)
 **Section:** `splitSection`
-**Schema field:** `imageAspectRatio` (radio: `square` / `portrait-4-5` / `landscape-3-2` / `auto`)
+**Schema field:** `imageAspectRatio` (was: radio `square` / `portrait-4-5` / `landscape-3-2` / `auto`)
 **Schema file:** `studio/schemaTypes/sections/splitSection.js`
 **Component:** `src/components/sections/SplitSection.astro`
 
-The field is stored but the component uses hardcoded aspect ratios per variant (`3/4` for image-left, `1/1` for image-right, stretch for full-bleed). Implementing this would let editors control image crop per section.
+The component uses hardcoded aspect ratios per variant (`3/4` for image-left, `1/1` for image-right, stretch for full-bleed) and was ignoring the field entirely. Removed from the schema to reduce editor confusion. To restore, re-add the field to `splitSection.js` and wire `section.imageAspectRatio` into the CSS per variant.
 
 ---
 
@@ -127,27 +126,51 @@ Web3Forms routing is configured via the access key, not a destination email fiel
 
 ---
 
-## 9. Hero — Spacing Control
+## 9. Section Spacing — removed site-wide
 
-**Status:** removed (was schema-only)
-**Section:** `heroSection`
-**Schema field:** `spacing` (was: radio `compact` / `normal` / `spacious`)
-**Schema file:** `studio/schemaTypes/sections/heroSection.js` (opts out of `sectionBaseFields` spacing via `{withSpacing: false}`)
-**Component:** `src/components/sections/HeroSection.astro`
+**Status:** removed (was a no-op on most sections)
+**Section:** every section that used `sectionBaseFields()` (hero, split, full-bleed image, rich text, three-column, steps, gallery, divider, CTA band, contact form, contact info, testimonials, FAQ, featured portfolio, pull quote, blog teaser, HTML embed)
+**Schema field:** `spacing` (was: radio `compact` / `normal` / `spacious`, defined on `sectionBaseFields`)
+**Schema file:** `studio/schemaTypes/_shared/sectionBase.js`
+**Components:** `src/components/sections/*.astro` (many read `data-spacing` but the CSS effect was inconsistent and invisible on most variants)
 
-Hero already has `heightMode` (auto / tall / fullscreen) controlling vertical size, so a second top/bottom-padding knob was redundant and confused editors. The field has been removed from the Hero schema only — every other section type still gets `spacing` from `sectionBaseFields()`. To restore it, drop the `{withSpacing: false}` argument in `heroSection.js` and (if needed) wire `section.spacing` into `HeroSection.astro` styling.
+Most components either had `padding: 0 !important` to reach for their own layout system or rendered spacing via fixed-height sections, which made "Compact / Normal / Spacious" a silent no-op — editors would set "Spacious" and nothing would change. Removed the field entirely from `sectionBaseFields` and removed the `withSpacing` parameter. The Astro components still emit `data-spacing="normal"` via their fallback default, so the existing `section[data-spacing='normal']` CSS in `src/styles/palette.css` keeps producing the same default rhythm. To restore per-section spacing, re-add the field to `sectionBaseFields.js` and ensure every consumer component actually responds to `data-spacing` values (e.g., by moving outer padding off the base `.isplit { padding: 0 !important }` pattern).
 
 ---
 
-## 10. Full-Bleed Image — Parallax Schema Description
+## 10. Hero — Niche Keyword
 
-**Status:** working (but docs are wrong)
+**Status:** removed (was schema-only fallback)
+**Section:** `heroSection`
+**Schema field:** `nicheKeyword` (was: string, free text)
+**Schema file:** `studio/schemaTypes/sections/heroSection.js`
+**Component:** `src/components/sections/HeroSection.astro`
+
+Originally intended as an image alt-text fallback and SEO keyword hint (e.g. "Denver dog photographer") for template forks. In practice the component only used it as a last-resort fallback for the `heading` field, which is confusing — editors couldn't tell whether it controlled copy or SEO, and it duplicated functionality of the seo/heading fields. Removed from the schema and the `section?.heading || section?.nicheKeyword` fallback in the Astro component. To restore, pick one clear use case (alt text for hero images OR automatic H1 fallback) and wire it explicitly.
+
+---
+
+## 11. Split Section — Vertical Side Label
+
+**Status:** removed
+**Section:** `splitSection`
+**Schema field:** `verticalSideLabel` (was: string, inherited from `sectionBaseFields({withVerticalSideLabel: true})`)
+**Schema file:** `studio/schemaTypes/sections/splitSection.js`
+**Component:** `src/components/sections/SplitSection.astro`
+
+A small rotated uppercase label ("INTRO", "ABOUT", etc.) pinned to the left edge of the section. Looked fine on the contained image-left variant but collided with the image column on image-right and the full-bleed variants, and never landed visually correctly across all four layouts. Removed from Split only — other sections that use it (`threeColumnSection`, `faqSection` list variant, `featuredPortfolioSection`) still have the option. To restore on Split, pass `{withVerticalSideLabel: true}` in the `sectionBaseFields` call, re-add the `{sideLabel && <div class="isplit__side-label">...</div>}` JSX, and re-add the `.isplit__side-label` CSS block with per-variant positioning fixes.
+
+---
+
+## 12. Full-Bleed Image — Parallax (wired to field)
+
+**Status:** working — the Parallax checkbox now actually gates the behavior
 **Section:** `fullBleedImageSection`
-**Schema field:** `parallax` (boolean)
+**Schema field:** `parallax` (boolean, default: false)
 **Schema file:** `studio/schemaTypes/sections/fullBleedImageSection.js`
 **Component:** `src/components/sections/FullBleedImageSection.astro`
 
-The schema description says "background-attachment: fixed" but the actual implementation uses JavaScript `requestAnimationFrame` scroll-based parallax with `translateY`. The feature works — only the schema description text is inaccurate. The overlay-card variant always uses parallax; the default variant uses `background-attachment: fixed` on `.why__image-full`. The `parallax` boolean field is not currently read by the component — it's either always-on (overlay-card) or always CSS-fixed (default).
+Previously the schema boolean was silently ignored — the overlay-card variant always used JS `translateY` parallax and the default variant always used CSS `background-attachment: fixed`. The component now reads `section.parallax`, emits `data-parallax="true|false"` on the section root, gates the CSS `background-attachment: fixed` on `[data-parallax='true']`, and short-circuits the overlay-card rAF scroll handler when the attribute is false. Set Parallax in the Sanity field to enable the effect; leave it off for static backgrounds. `prefers-reduced-motion: reduce` still disables the rAF handler regardless. Mobile (< 900px) disables `background-attachment: fixed` because iOS Safari doesn't support it — this is expected.
 
 ---
 

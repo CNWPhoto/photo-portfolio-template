@@ -1,4 +1,5 @@
 import {sectionBaseFields} from './sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 
 // Wrapper object used inside a page's sections[] array. Holds a reference
 // to a reusable htmlEmbedSection document plus the section common fields
@@ -11,6 +12,7 @@ import {sectionBaseFields} from './sectionBase'
 
 export default {
   name: 'htmlEmbedRef',
+  icon: sectionIcon('htmlEmbedRef'),
   title: 'HTML Embed',
   type: 'object',
   fields: [

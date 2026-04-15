@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 import {richTextBody} from '../_shared/richTextBody'
 
 // Two modes: built-in Web3Forms-backed form, or an embedded third-party
@@ -8,6 +9,7 @@ import {richTextBody} from '../_shared/richTextBody'
 
 export default {
   name: 'contactFormSection',
+  icon: sectionIcon('contactFormSection'),
   title: 'Contact Form',
   type: 'object',
   preview: {

@@ -1,10 +1,12 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {sectionIcon} from '../../components/SectionIcons'
 
 // Blog teaser section. Pulls posts from the blog collection.
 // See docs/page-builder-spec.md §2 (blogTeaserSection).
 
 export default {
   name: 'blogTeaserSection',
+  icon: sectionIcon('blogTeaserSection'),
   title: 'Blog Teaser',
   type: 'object',
   preview: {
@@ -40,31 +42,11 @@ export default {
       initialValue: 'grid-3',
     },
     {
-      name: 'source',
-      title: 'Source',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Latest posts', value: 'latest'},
-          {title: 'Pick specific', value: 'pickSpecific'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'latest',
-    },
-    {
       name: 'postCount',
       title: 'Post Count',
       type: 'number',
+      description: 'How many latest posts to show.',
       initialValue: 3,
-      hidden: ({parent}) => parent?.source !== 'latest',
-    },
-    {
-      name: 'specificPosts',
-      title: 'Posts',
-      type: 'array',
-      of: [{type: 'reference', to: [{type: 'blogPost'}]}],
-      hidden: ({parent}) => parent?.source !== 'pickSpecific',
     },
     {
       name: 'showCategory',
