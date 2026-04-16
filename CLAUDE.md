@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Sibling knowledge base
+
+This project has a shared Astro/Sanity knowledge base at `~/Projects/astro-brain/`.
+
+At session start:
+1. Read `~/Projects/astro-brain/CLAUDE.md` for wiki conventions and workflows
+2. Read `~/Projects/astro-brain/index.md` to find relevant wiki pages
+3. Read 3–5 wiki pages relevant to the current task before writing any code
+4. Pay attention to `wiki/decisions/` for locked architectural commitments and `wiki/questions/` for known open items
+
+At session end:
+- Produce a session summary per the vault's Session Summary workflow
+- Write it to `~/Projects/astro-brain/raw/sessions/YYYY-MM-DD-short-title.md`
+- Do not ingest it — Connor will run the ingest from a vault session
+
+---
+
 ## In-progress: page builder rewrite
 
 A unified page builder rewrite is in progress on the `page-builder-rewrite` branch. **Before touching anything in `studio/schemaTypes/`, `src/pages/`, `src/components/`, or `src/layouts/Layout.astro`**, read these two docs:
