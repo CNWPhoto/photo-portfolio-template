@@ -5,99 +5,108 @@
 
 ## How It Works
 
-Your private GitHub repo is the single source of truth for all care plan
-client sites. When you push to `main`, a GitHub Action builds the site once
-per client (with their Sanity env vars) and uploads the result directly to
-their Cloudflare account via the CF API.
+Your private GitHub repo is the single source of truth for all care plan client sites. A single GitHub Actions workflow (`.github/workflows/deploy.yml`) builds the site once per client (with their Sanity env vars) and uploads the result directly to their Cloudflare account via Direct Upload (not Git-connected).
 
 ```
-You push to main
-    │
-    └── GitHub Action runs in parallel for each care plan client
-            ├── builds with Smith's Sanity project ID → uploads to Smith's CF account
-            ├── builds with Jones's Sanity project ID → uploads to Jones's CF account
-            └── builds with ...
+Push to main            → Demo canary only (cnw-photo-demo.pages.dev)
+                           Verify it looks right before promoting.
 
-One-time clients are unaffected — they have their own fork, their own repo,
-their own CF connection. You have no access to their deployments.
+Push to production      → Demo canary + fan-out to every care plan client
+(git merge main then      in the matrix. Each build uses per-client env vars
+ push origin production)  from a scoped GitHub Environment.
 ```
+
+One-time clients (not on a care plan) are unaffected — they either have their own fork or they left the platform on their last deployed state.
 
 ---
 
 ## Branch Strategy
 
 ```
-main        ← live; every push redeploys all care plan clients
-staging     ← your personal testing branch; gets a CF preview URL
-feature/*   ← individual feature branches; also get preview URLs
+main          ← Demo canary. Every push deploys only to cnw-photo-demo.
+                Your iteration + QA branch. Safe to break.
+
+production    ← Client fan-out branch. Merging main → production triggers
+                deploys to every care plan client. Only merge when demo is
+                confirmed healthy.
+
+feature/*     ← Individual feature branches. Test locally, merge to main.
+                (There is no CF preview URL for feature branches now that
+                 deploys are Direct Upload rather than Git-connected.)
 ```
 
 **Rules:**
-- Never commit directly to `main` for anything beyond a typo fix
-- All work starts on `staging` or a `feature/*` branch
-- Test on a Cloudflare preview URL before merging to `main`
-- One merge to `main` = all care plan clients update simultaneously
+- `main` is always the latest thing you want on the demo. Push freely.
+- `production` is the gate before client sites update. Merge explicitly, deliberately.
+- Never push a schema migration to `production` without dataset snapshots of affected clients first (see `docs/emergency-playbook.md` → "Dataset corrupted").
+- One merge to `production` = all care plan clients update together.
 
 ---
 
 ## Day-to-Day Development Workflow
 
-### Step 1 — Branch off staging
+### Step 1 — Branch off main
 
 ```sh
-git checkout staging
-git pull origin staging
+git checkout main
+git pull origin main
 git checkout -b feature/new-section
 ```
 
 ### Step 2 — Build and test locally
 
 ```sh
-./start.sh   # Astro dev server + Sanity Studio
+./start.sh     # Astro dev server + Sanity Studio
 npm run build  # catch build errors before pushing
 ```
 
-### Step 3 — Push and get a Cloudflare preview URL
+### Step 3 — Merge to main → demo deploys automatically
 
 ```sh
-git push origin feature/new-section
-```
-
-Cloudflare Pages (your own demo project) automatically builds every pushed
-branch at a unique preview URL:
-```
-https://feature-new-section.<your-demo-project>.pages.dev
-```
-
-This is a real Cloudflare build — not localhost. Verify it looks correct here
-before touching `main`.
-
-### Step 4 — Merge to staging, then to main
-
-```sh
-# Merge feature into staging and verify once more
-git checkout staging
-git merge feature/new-section
-git push origin staging
-
-# When confident — this deploys to ALL care plan clients
 git checkout main
-git merge staging
+git merge feature/new-section
 git push origin main
 ```
 
-### Step 5 — Monitor builds
+GitHub Actions fires the `demo` job. Watch at `https://github.com/CNWPhoto/photo-portfolio-template/actions`. The workflow builds, deploys to `cnw-photo-demo.pages.dev` via Direct Upload, then runs a smoke test (200 status, non-empty body, `<title>` present). Typical run: ~90 seconds.
 
-1. Open your GitHub repo → Actions → the running workflow
-2. Each client is a matrix job — watch for failures
-3. Cloudflare also shows deployment history in each client's Pages project
-4. If a build fails, the previous deployment stays live automatically
+### Step 4 — Verify demo
+
+Visit `https://cnw-photo-demo.pages.dev` and check:
+- Homepage loads with expected content
+- Navigation works
+- No browser console errors
+- Mobile layout at 375px and 768px
+
+If anything looks wrong, iterate on `main` until it's clean. Clients are not affected yet.
+
+### Step 5 — Promote to clients
+
+```sh
+git checkout production
+git merge main
+git push origin production
+```
+
+GH Actions re-runs the demo canary, and on its success fans out to every matrix entry in parallel. Each matrix job:
+1. Checks out the code.
+2. Builds with that client's env vars from `client-<slug>` Environment secrets.
+3. Uploads to that client's CF Pages project via `wrangler pages deploy`.
+4. Smoke-tests the deployed URL.
+
+Clients are independent — one failure doesn't stop the others (`fail-fast: false`).
+
+### Step 6 — Monitor
+
+1. GH Actions run page — each matrix entry is a separate job; hover for timing.
+2. If any client's smoke test fails, that client's site is still on its PREVIOUS deploy (wrangler's Direct Upload is atomic — new version or no change). Investigate via `docs/emergency-playbook.md` → "One client broken, others fine".
+3. Cloudflare dashboard shows deployment history per client project if you want per-version detail.
 
 ---
 
-## Safety Checks Before Merging to Main
+## Safety Checks Before Promoting `main → production`
 
-Run through this list before every push to `main`:
+Run through this list before merging `main` to `production` (i.e. before clients update):
 
 **Build**
 - [ ] `npm run build` passes locally with no errors
@@ -193,69 +202,64 @@ projectId: process.env.SANITY_STUDIO_PROJECT_ID || 'your-template-id',
 
 ## Rolling Back
 
-Cloudflare keeps every deployment permanently. Rollback takes ~30 seconds.
+Full scenarios + step-by-step recovery commands live in `docs/emergency-playbook.md`. Quick reference:
 
-**Roll back one client:**
-1. Client's Cloudflare account → Workers & Pages → their project
-2. Deployments → find the last known-good build
-3. `•••` → **Rollback to this deployment** — goes live instantly
+**Roll back one client (10 seconds)**:
+CF dashboard → client's account → Workers & Pages → their project → Deployments → last known-good → ⋯ → **Rollback to this deployment**.
 
-**Roll back all care plan clients:**
+**Roll back all care plan clients (2–5 minutes, automatic)**:
 ```sh
-git revert HEAD        # new commit that undoes the last commit
-git push origin main   # triggers Action, all clients get the reverted build
+git checkout production
+git revert HEAD
+git push origin production
+# Workflow fires, clients redeploy to previous good state
 ```
 
-Use `git revert` (not `git reset --hard`) — it keeps history clean and avoids
-force-pushing.
+Use `git revert` (not `git reset --hard`) — keeps history clean and avoids force-pushing. See `docs/emergency-playbook.md` for force-push and other recovery scenarios.
 
 ---
 
 ## Adding a New Care Plan Client
 
-1. Complete the full setup in `client-setup-guide.md`
-2. Add their entry to the `matrix.client` list in
-   `.github/workflows/deploy-clients.yml`
-3. Add their GitHub Secrets (CF account ID, CF API token, Sanity token, etc.)
-4. Push any commit to `main` to trigger their first Action deploy
-5. Add to your uptime monitor
+1. Complete the full setup in `docs/client-setup-guide.md` (Sanity + CF Pages + domain + Web3Forms).
+2. Add their entry to the `matrix.client` list in `.github/workflows/deploy.yml`:
+   ```yaml
+   - slug: <client-slug>
+     sanity_project_id: <sanity-id>
+     studio_url: https://<slug>.sanity.studio
+     pages_url: https://<slug>.pages.dev
+   ```
+3. Create GitHub Environment `client-<slug>` (Settings → Environments → New) with 4 secrets:
+   - `CF_API_TOKEN` (scoped to client's CF account)
+   - `CF_ACCOUNT_ID`
+   - `SANITY_API_READ_TOKEN`
+   - `SANITY_PREVIEW_SECRET`
+4. Commit the workflow change, merge `main → production`, push — their first deploy runs alongside everyone else's.
+5. Add to your uptime monitor (see Monitoring section below).
 
 ---
 
 ## Off-Boarding a Care Plan Client (They Cancel)
 
-Their site keeps running. They get the code. Clean handoff.
+Their site keeps running on whatever the last deploy was. You stop deploying new updates. Everything else was always theirs.
 
-1. **Fork the repo** to their GitHub account at its current state
-   - GitHub UI: your repo → Use this template, or manually fork to their account
-   - Make it private in their account
-2. **Reconnect their CF Pages** to their fork
-   - In their CF account: delete the Direct Upload project
-   - Create a new Pages project connected to their GitHub fork
-   - Re-add env vars (they already have these from initial setup)
-3. **Remove them from your GitHub Action**
-   - Delete their entry from `matrix.client` in the workflow file
-   - Commit and push
-4. **Remove their GitHub Secrets** from your repo
-5. **Confirm their site is still live** from their own fork before closing out
-6. **Hand off documentation:**
-   - Their GitHub repo URL and login
-   - Their Sanity Studio URL (sanity.io/manage for their project)
-   - Their Web3Forms login (they already own this — it's on their email)
-   - A brief note: *"Your site now deploys from your own GitHub repo. Future
-     Cloudflare builds are triggered automatically when you push to main.
-     Contact your developer for future changes."*
+1. **Transfer Sanity project ownership** to the client's Sanity account (sanity.io/manage → project → Members → Transfer Ownership).
+2. **Remove their matrix entry** from `.github/workflows/deploy.yml`.
+3. **Delete their GitHub Environment** (`client-<slug>`) — Settings → Environments → Delete. This cleans up the secrets too.
+4. **Commit + push** the workflow change to `main` then promote to `production`. Future production deploys skip them.
+5. **Client revokes the CF API token** that your workflow was using — their CF dashboard → My Profile → API Tokens → Delete. Immediate cut-off of your deploy access.
+6. **Client removes you as Super Admin** from her CF account (optional but recommended) — her CF account → Members → remove your email.
+7. **Hand off the site code**: either fork the repo and transfer the fork to her GitHub account at the last-deployed commit, OR `git archive --format=zip HEAD > client-site.zip` and email the zip. Fork is cleaner if she or her next developer uses GitHub.
+8. **Confirm her site is still live** (hit the custom domain in a browser) before considering the offboard complete.
 
-**What they own at handoff:**
-- The source code (their GitHub fork)
-- Their Sanity project and all content
-- Their Cloudflare account and DNS
-- Their Web3Forms account
-- Their domain
+**What she owns at handoff:**
+- The source code (fork or zip)
+- Her Sanity project and all content
+- Her Cloudflare account, Pages project, custom domain, DNS
+- Her Web3Forms account
+- Her domain registration
 
-**What they don't get:** future updates you make to the template after their
-cancellation date. That is the sole value of the care plan — ongoing
-improvements. Everything else was always theirs.
+**What she doesn't get:** future template updates after the cancellation date. That's the value of the care plan — ongoing template improvements merged into her site. Everything else is already hers.
 
 ---
 
@@ -289,9 +293,9 @@ monitors, checks every 5 minutes, email/Slack alerts.
 
 ### Per major Astro or Sanity version release
 - [ ] Read the migration guide for breaking changes
-- [ ] Test upgrade on `staging` branch and preview deployment
-- [ ] Deploy to your own demo site first, monitor for one week
-- [ ] Then merge to `main` to roll out to all care plan clients
+- [ ] Test upgrade on a feature branch, merge to `main` (demo-only deploy)
+- [ ] Let the demo site bake for at least a week — spot-check pages, watch CF + Sanity error logs
+- [ ] Only then merge `main → production` to roll out to all care plan clients
 
 ---
 

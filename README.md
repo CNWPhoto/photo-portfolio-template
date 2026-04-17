@@ -66,110 +66,37 @@ Reach out to your developer. Do not delete documents or change the document stru
 
 This section is for the developer setting up a new client site from this template. Clients do not need to read this.
 
-### What you'll need
+### Deployment model at a glance
 
-- [Node.js](https://nodejs.org/) v18 or later
-- A [Sanity account](https://sanity.io) (free)
-- A hosting account (Netlify, Vercel, or similar)
-- A GitHub account
+**One template repo → one GitHub Actions workflow → N client sites on Cloudflare Pages.** Each client owns their own CF account and Sanity project; a scoped CF API token lets the workflow deploy via Direct Upload without Git-integrating the repo to their account (CF's per-repo-per-CF-account constraint forbids that for more than one client).
 
-### Step 1 — Fork or clone the repo
+Branch model:
+- **`main`** — demo canary. Every push deploys to `cnw-photo-demo.pages.dev` only.
+- **`production`** — client fan-out. Merging `main → production` fans out to every client in parallel.
 
-Fork this repository into your own GitHub account (or the client's), then clone it locally:
+Break-glass: `git revert HEAD && git push origin production` redeploys every client to the previous good state in 2–5 minutes. Or CF dashboard → client project → Deployments → previous → Rollback for a single-client instant restore.
 
-```sh
-git clone https://github.com/your-account/your-repo.git
-cd your-repo
-npm install
-cd studio && npm install && cd ..
-```
+### Where to read next
 
-### Step 2 — Create a Sanity project
+- **[`docs/client-setup-guide.md`](./docs/client-setup-guide.md)** — the authoritative step-by-step for setting up a new client. Covers Sanity project creation, Studio deploy, CF Pages Direct Upload project, GitHub Actions workflow matrix entry, DNS, custom domain, Web3Forms, canonical host alignment, pre-launch checklist. Follow this end to end for every new client.
+- **[`docs/update-and-maintenance-guide.md`](./docs/update-and-maintenance-guide.md)** — day-to-day workflow once clients are live. Branch strategy, safety checks, schema migration patterns, adding/removing clients from the matrix, monitoring.
+- **[`docs/emergency-playbook.md`](./docs/emergency-playbook.md)** — field manual for when something breaks. TL;DR at the top; detailed scenarios with copy-pasteable commands below. Bookmark this.
+- **[`docs/page-builder-spec.md`](./docs/page-builder-spec.md)** — architecture spec for the section catalog, JSON-LD/SEO infrastructure, schema decisions.
+- **[`docs/rewrite-rollback.md`](./docs/rewrite-rollback.md)** — historical snapshot of the pre-rewrite state and dataset rollback procedure.
 
-If this is a new client (not reusing an existing Sanity project):
+### Quick prerequisites
 
-1. Go to [sanity.io/manage](https://sanity.io/manage) and create a new project
-2. Update the `projectId` in both files:
-   - `studio/sanity.config.js`
-   - `src/lib/sanity.js`
-3. Update the dataset name if you changed it from `production`
+- [Node.js](https://nodejs.org/) v20 (matches `.node-version`)
+- A Sanity account (yours — client gets added as Editor, not a new Sanity account per client)
+- A Cloudflare account (yours for the demo; each client's CF account is separate)
+- A GitHub account with push access to this repo
 
-### Step 3 — Set environment variables
+### What NOT to do
 
-Create a `.env` file in the project root (copy from `.env.example`):
-
-```sh
-cp .env.example .env
-```
-
-#### `SANITY_API_READ_TOKEN`
-
-Required for the live preview feature.
-
-1. [sanity.io/manage](https://sanity.io/manage) → your project → **API** → **Tokens**
-2. Click **Add API token** → name it `Preview` → role: **Viewer**
-3. Copy the token into `.env`
-
-#### `SANITY_PREVIEW_SECRET`
-
-A random password that authenticates preview requests. Generate one:
-
-```sh
-openssl rand -hex 32
-```
-
-Paste the output into `.env`.
-
-### Step 4 — Deploy the Astro site
-
-The site uses `@astrojs/node` by default. Swap the adapter in `astro.config.mjs` for your hosting platform before deploying:
-
-| Platform | Package |
-| --- | --- |
-| Netlify | `@astrojs/netlify` |
-| Vercel | `@astrojs/vercel` |
-| Cloudflare | `@astrojs/cloudflare` |
-
-See the [Astro adapters guide](https://docs.astro.build/en/guides/on-demand-rendering/) for installation instructions.
-
-Add these environment variables in your hosting platform's dashboard:
-
-```
-SANITY_API_READ_TOKEN=   (from step 3)
-SANITY_PREVIEW_SECRET=   (from step 3)
-SANITY_STUDIO_PREVIEW_URL=https://your-deployed-site.com
-```
-
-Connect your GitHub repo to the platform and deploy.
-
-### Step 5 — Deploy Sanity Studio
-
-Deploy the Studio so the client can access it from a browser without running anything locally:
-
-```sh
-cd studio
-npm run deploy
-```
-
-This gives you a URL like `https://your-project.sanity.studio`. Share this link with the client along with an invitation from Sanity's manage dashboard.
-
-### Step 6 — Invite the client to Sanity
-
-1. [sanity.io/manage](https://sanity.io/manage) → your project → **Members**
-2. Click **Invite members** → enter the client's email → role: **Editor**
-
-They'll receive an email to set up their account. Once they log in, they only ever need the Studio URL — no code, no terminal.
-
-### Step 7 — Set up the contact form (Web3Forms)
-
-Web3Forms is free (250 submissions/month, no credit card) and takes two minutes. You can either do this yourself during setup or walk the client through it — it's simple enough for them to handle on their own.
-
-1. Go to [web3forms.com](https://web3forms.com)
-2. Enter the client's email address → click **Create Access Key**
-3. Copy the access key
-4. In Sanity Studio → **Pages → Contact → Form** tab → paste the key into **Web3Forms Access Key** → publish
-
-Form submissions will be delivered to whatever email was used in step 2. If the client wants to use a different tool (Typeform, JotForm, HubSpot, etc.), they can paste any embed code into the **Form Embed Code** field in Sanity instead — it will replace the built-in form automatically.
+- **Don't Git-connect client CF Pages projects to this repo.** CF only allows one repo per GitHub account → CF account pairing. Use the Direct Upload workflow instead (`.github/workflows/deploy.yml`).
+- **Don't fork the template per client.** Forks inherit the same per-GitHub-account-to-CF-account constraint.
+- **Don't commit `studio/.env`.** Gitignored on purpose — holds per-client project IDs, preview URLs, app IDs. One file, swapped per-client while working locally.
+- **Don't push Sanity schema changes to `production`** without first snapshotting affected client datasets — see the emergency playbook's "Dataset corrupted" scenario.
 
 ### Niche forking
 

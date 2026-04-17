@@ -19,14 +19,30 @@ At session end:
 
 ---
 
-## In-progress: page builder rewrite
+## Deployment model (Path B — Direct Upload via GitHub Actions)
 
-A unified page builder rewrite is in progress on the `page-builder-rewrite` branch. **Before touching anything in `studio/schemaTypes/`, `src/pages/`, `src/components/`, or `src/layouts/Layout.astro`**, read these two docs:
+**One template repo → one workflow → N client sites on Cloudflare Pages, each in the client's CF account.** Direct Upload (not Git-connected) sidesteps CF's per-repo-per-account constraint that blocks the naive "Git-integrate this repo to every client's CF account" pattern.
 
-1. [`docs/page-builder-spec.md`](./docs/page-builder-spec.md) — full implementation spec, 23 sections, drives Phases 1–13
-2. [`docs/rewrite-rollback.md`](./docs/rewrite-rollback.md) — safety net (Sanity backup location, branch model, restore commands)
+Branch model:
+- **`main`** — demo canary. Every push deploys only to `cnw-photo-demo.pages.dev`. Iterate freely here.
+- **`production`** — client fan-out. Merging `main → production` triggers the workflow's matrix to deploy to every client in parallel.
 
-The rewrite must NOT be pushed to a deploying branch (`main` or `about-page-builder`) until Phase 13 integration tests pass. The Sanity production dataset is backed up at `~/sanity-backup-2026-04-11.tar.gz` for restore via `npx sanity dataset import`.
+Workflow file: [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)
+
+**Before touching the workflow, a GitHub Environment secret, or the client matrix**, read:
+
+1. [`docs/client-setup-guide.md`](./docs/client-setup-guide.md) — Phase 2 covers the Direct Upload workflow setup end to end (CF API token, GH Environment creation, matrix entry).
+2. [`docs/update-and-maintenance-guide.md`](./docs/update-and-maintenance-guide.md) — branch promotion, adding/removing clients, monitoring.
+3. [`docs/emergency-playbook.md`](./docs/emergency-playbook.md) — field manual for every break scenario, rollback commands, dataset restore, credential rotation.
+
+## In-progress / recently completed
+
+- **Page builder rewrite** — merged into `main` via `3486335`. Archive tags exist: `archive/page-builder-rewrite` (commit `cd23ec5` = Phase 13 completion) and `archive/about-page-builder` (commit `7d5c740` = spec). The rewrite branches have been deleted locally and on origin.
+- **SEO audit fixes** — landed on `main` in 4 commits (`9530ba7` redirects, `fde2c7d` viewport, `11a4485` FAQ flatten, `7c3ef3e` resolveLink self-origin strip). Demo site verified post-deploy.
+- **Studio config env-driven** — `studio/sanity.config.js` and `studio/sanity.cli.js` read title/allowOrigins/appId from env. Per-client deploys are now pure `.env` swaps.
+- **Path B deploy workflow** — `.github/workflows/deploy.yml` with demo canary + production branch gate + smoke tests. First client (Coola Creative) onboarding in progress.
+
+The Sanity production dataset for the demo project (`hx5xgigp`) is backed up at `~/sanity-backup-2026-04-11.tar.gz` for restore via `npx sanity dataset import`. Snapshot each client's dataset before any destructive operation.
 
 ## Project Overview
 

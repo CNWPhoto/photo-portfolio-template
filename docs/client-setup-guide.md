@@ -19,9 +19,13 @@ is in the linked phase.
 - [ ] **Preview secret generated** ([Phase 1.4](#phase-1--sanity-cms))
 - [ ] **CORS origins added** — localhost, `*.pages.dev`, client domain ([Phase 1.5](#phase-1--sanity-cms))
 - [ ] **Dataset seeded** — `cd studio && npm run seed` populates template content ([Phase 1.6](#phase-1--sanity-cms))
-- [ ] **Cloudflare admin access granted** — client invites you as Super Administrator on her CF account ([Phase 2.1](#phase-2--cloudflare-pages))
-- [ ] **Cloudflare Pages project connected via Git** — in her CF account, pointed at your template repo ([Phase 2.2](#phase-2--cloudflare-pages))
-- [ ] **Cloudflare env vars set** — project ID, dataset, token, preview secret, studio URL ([Phase 2.3](#phase-2--cloudflare-pages))
+- [ ] **Cloudflare admin access granted** — client invites you as Super Administrator on her CF account ([Phase 2.1](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
+- [ ] **Cloudflare Pages project created (Direct Upload mode)** — in her CF account, empty project ([Phase 2.2](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
+- [ ] **Cloudflare env vars set on Pages project** — project ID, dataset, token, preview secret, studio URL, Node version ([Phase 2.2](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
+- [ ] **CF API token generated** — scoped to client's account, given to workflow via GH secret ([Phase 2.3](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
+- [ ] **Matrix entry added to `.github/workflows/deploy.yml`** ([Phase 2.4](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
+- [ ] **GH Environment `client-<slug>` created with 4 secrets** ([Phase 2.5](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
+- [ ] **First workflow deploy triggered via `main → production` merge** ([Phase 2.6](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
 - [ ] **Canonical host picked (apex vs www) + custom domains wired + DNS propagated** ([Phase 3](#phase-3--domain-setup))
 - [ ] **`seoSettings.siteUrl` set in Studio to canonical host** — drives canonical tag, sitemap, JSON-LD ([Phase 3.3](#phase-3--domain-setup))
 - [ ] **`SANITY_STUDIO_PREVIEW_URL` flipped to canonical host** — re-run `npm run deploy` ([Phase 3.4](#phase-3--domain-setup))
@@ -36,33 +40,52 @@ is in the linked phase.
 
 ## Deployment Model
 
-**One template repo, many Cloudflare Pages projects — each with its own env vars.** This is the default and recommended model for all clients.
+**One template repo, many Cloudflare Pages projects — one GitHub Actions workflow deploys to all of them via Direct Upload.**
+
+This is the default model for all clients. It works around a Cloudflare Pages constraint: a single GitHub account can only Git-integrate its repos to one Cloudflare account at a time, so the "connect via Git" approach can't serve multiple clients whose Pages projects live in different Cloudflare accounts. Direct Upload via GitHub Actions sidesteps that constraint entirely while preserving the single-template-repo model.
 
 ### How it works
 
 - The template lives in your private GitHub repo (`photo-portfolio-template`). **One repo, shared by every client.** No forking.
-- Each client gets their own **Sanity project**, created in *your* Sanity account so schema updates and deploys go through you. The client is added as an **Editor** (Sanity's free tier includes 3 users per project, so adding one client editor is free).
-- Each client gets their own **Cloudflare Pages project**, created in *her* Cloudflare account. You're invited as **Super Administrator** on her account, so you can manage deploys from your Cloudflare dashboard via the account switcher without owning her billing.
-- Her Cloudflare Pages project **connects via Git** to your template repo. When you push to `main`, Cloudflare's Git webhook triggers a rebuild of every connected project. Each one injects its own `PUBLIC_SANITY_PROJECT_ID`, `SANITY_API_READ_TOKEN`, `SANITY_STUDIO_URL`, etc. at build time, so one push deploys the latest template to every client automatically.
+- Each client gets their own **Sanity project**, created in *your* Sanity account so schema updates and deploys go through you. The client is added as an **Editor** (Sanity's free tier includes 3 users per project).
+- Each client gets their own **Cloudflare Pages project** (**Direct Upload mode — not Git-connected**), created in *her* Cloudflare account. You're invited as Super Administrator on her account, or you use a scoped CF API token she generated for you.
+- A single GitHub Actions workflow in the template repo (`.github/workflows/deploy.yml`) builds and deploys via `wrangler pages deploy` using each client's CF API token (stored as a per-client GitHub Environment secret).
+- **Branch promotion model**: pushing to `main` deploys only to the demo (canary). To push to clients, merge `main → production` and push — GH Actions fans out to every client in the matrix.
 - Her **domain** lives on her Cloudflare account, wired to her Pages project via Custom Domains.
-- Her **Studio** is deployed to `<clientslug>.sanity.studio` via `npm run deploy` from your terminal, with the `SANITY_STUDIO_*` env vars set in `studio/.env` and baked into the hosted bundle at build time.
+- Her **Studio** is deployed to `<clientslug>.sanity.studio` via `npm run deploy` from your terminal, baked with her values from `studio/.env`.
+
+### Release flow at a glance
+
+```
+# iterate
+git push origin main                  → Demo rebuilds + smoke test
+# verify demo
+git checkout production
+git merge main
+git push origin production            → Demo + every client rebuild in parallel
+# break glass
+git revert HEAD && git push           → Clients roll back automatically
+```
+
+See `docs/emergency-playbook.md` for break-glass scenarios and rollback procedures.
 
 ### What she owns
 
 - The Cloudflare account (billing, DNS, Pages project, domain)
-- The Sanity project (she's added as Editor; if the engagement ever ends, you can transfer ownership in one click)
+- The Sanity project (she's added as Editor; transfer to her on offboarding)
 - The Web3Forms account for contact form submissions
 - Her domain and registrar
 
 ### What you own
 
 - The template code in the private GitHub repo
-- The deploy workflow (via `git push` to `main`)
-- Administrative access to her Sanity project and Cloudflare account (until/unless she removes you)
+- The GitHub Actions workflow and per-client environment secrets
+- Administrative access to her Sanity project (until transfer)
+- A scoped CF API token in her CF account that allows the workflow to deploy
 
-### When to fork the template instead
+### Forking for one-off client customization
 
-Only if a client needs custom code that shouldn't ship to other clients (a one-off feature, a unique section type, etc.). At that point, fork the template to a dedicated repo, reconnect their Cloudflare Pages project to the fork, and merge template updates manually from there on. Most clients don't need this — the template is fully configurable via Sanity content alone.
+Only if a client needs custom code that must not ship to other clients. Fork the template to a dedicated repo, add a separate deploy path for that fork, and merge template updates manually. Most clients never need this — the template is fully configurable via Sanity content alone.
 
 ---
 
@@ -70,19 +93,26 @@ Only if a client needs custom code that shouldn't ship to other clients (a one-o
 
 ```
 Your private GitHub repo (photo-portfolio-template — one repo)
-    │  (push to main)
     │
-    ├─ Cloudflare Pages project "coola-creative"   (in Carla's CF account)
-    │    └ env: PUBLIC_SANITY_PROJECT_ID=abc123xy → coolacreative.com
+    │  push to main       → workflow: deploy to demo only
+    │  push to production → workflow: deploy to demo + every client
     │
-    ├─ Cloudflare Pages project "smith-photography"   (in Smith's CF account)
-    │    └ env: PUBLIC_SANITY_PROJECT_ID=def456ab → smithphotography.com
+    ▼
+GitHub Actions runner
     │
-    └─ Cloudflare Pages project "cnw-photo-demo"   (in your CF account)
-         └ env: PUBLIC_SANITY_PROJECT_ID=hx5xgigp → cnw-photo-demo.pages.dev
+    ├─ builds with demo env   → wrangler pages deploy → cnw-photo-demo
+    │                              (uses CF_API_TOKEN from `demo` environment)
+    │
+    ├─ builds with Carla env  → wrangler pages deploy → coola-creative
+    │                              (uses CF_API_TOKEN from `client-coola-creative` environment,
+    │                               scoped to Carla's Cloudflare account)
+    │
+    └─ builds with Smith env  → wrangler pages deploy → smith-photography
+                                   (uses CF_API_TOKEN from `client-smith-photography` environment,
+                                    scoped to Smith's Cloudflare account)
 ```
 
-Each Cloudflare Pages project runs its own build with its own env vars and queries its own Sanity project — the code is identical, the data is completely isolated.
+Each deploy step in the matrix uses per-client environment secrets, so one workflow file deploys to N Cloudflare accounts. Adding a client: one matrix entry + one new GitHub Environment with 4 secrets.
 
 ---
 
@@ -111,60 +141,52 @@ These are already done in the current repo. Listed here for reference.
 
 **1.2 — Deploy the Sanity Studio**
 
-Each client needs their own Studio pointed at their own Sanity project, and
-its Presentation preview must be wired to their live Cloudflare URL so the
-"visual editing" iframe loads the actual deployed site.
+Each client needs their own Studio pointed at their own Sanity project, and its Presentation preview must be wired to their live Cloudflare URL so the "visual editing" iframe loads the actual deployed site.
 
-1. Create `studio/.env` locally with the client's values (this file is
-   gitignored — don't commit):
+Everything is controlled by `studio/.env`. No source edits needed — `studio/sanity.config.js` and `studio/sanity.cli.js` read every per-client value from environment variables (title, allowOrigins, preview URL, appId, studio hostname).
+
+1. Back up your current `studio/.env` if it's pointed at another client:
+   ```sh
+   cp studio/.env studio/.env.<previous-client>-backup
+   ```
+
+2. Overwrite `studio/.env` with the new client's values (this file is gitignored — never commit):
    ```env
    SANITY_STUDIO_PROJECT_ID=<clientProjectId>
    SANITY_STUDIO_DATASET=production
    SANITY_STUDIO_HOST=smith-photography
-   SANITY_STUDIO_PREVIEW_URL=https://smithphotography.com
+   SANITY_STUDIO_TITLE=Smith Photography
+   SANITY_STUDIO_PREVIEW_URL=https://smith-photography.pages.dev
+   # Leave SANITY_STUDIO_APP_ID unset on the first deploy — Sanity will
+   # create a new application and print the generated appId.
    ```
-   - `SANITY_STUDIO_HOST` picks the `<host>.sanity.studio` subdomain —
-     must be globally unique across all Sanity Studios.
-   - `SANITY_STUDIO_PREVIEW_URL` is the Astro site origin that
-     Presentation mode will load in its iframe. Use the `*.pages.dev`
-     URL until the custom domain is connected, then switch to the
-     custom domain.
-2. Update `studio/sanity.config.js`:
-   - `title` to the client's brand name.
-   - `presentationTool.allowOrigins` array to the client's domains. Presentation
-     blocks navigation to any origin not in this list, so it must include every
-     URL the iframe will ever load — typically `http://localhost:4321` (for
-     local dev), the `*.pages.dev` preview URL, and the final custom domain.
-     Example:
-     ```js
-     presentationTool({
-       allowOrigins: [
-         'http://localhost:4321',
-         'https://smith-photography.pages.dev',
-         'https://smithphotography.com',
-       ],
-       // ...previewUrl config
-     }),
-     ```
+
+   - `SANITY_STUDIO_HOST` picks the `<host>.sanity.studio` subdomain — must be globally unique across all Sanity Studios.
+   - `SANITY_STUDIO_TITLE` is the brand name shown in Studio's navbar.
+   - `SANITY_STUDIO_PREVIEW_URL` is the Astro site origin that Presentation mode will iframe. Use the `.pages.dev` URL initially; flip to the canonical domain after Phase 3 and redeploy.
+
 3. Deploy:
    ```sh
    cd studio
    npm run deploy
    ```
-   All `npm run` scripts auto-load `studio/.env` via `dotenv-cli`, so the
-   env vars above are baked into the build automatically. No shell exports
-   needed.
-4. Studio URL will be: `https://smith-photography.sanity.studio`
-5. Share with the client
 
-> **Heads up:** If you change `SANITY_STUDIO_PREVIEW_URL` later (e.g., switch
-> from `*.pages.dev` to the final domain), you must re-run `npm run deploy`
-> to rebuild and push the updated value. It's a build-time bundled value, not
-> runtime.
+   All `npm run` scripts auto-load `studio/.env` via `dotenv-cli`. The build output will include something like:
+   > `Add appId: 'a2zsj4jpbc1xb0kijfsdq595' to the deployment section in sanity.cli.js or sanity.cli.ts`
 
-> After deploying, revert `studio/sanity.config.js` `title` to template
-> values. Do not commit client-specific env values — they live in
-> `studio/.env` which is gitignored.
+4. Paste that appId back into the client's `studio/.env` so future deploys are non-interactive:
+   ```env
+   SANITY_STUDIO_APP_ID=a2zsj4jpbc1xb0kijfsdq595
+   ```
+
+5. Studio is live at `https://smith-photography.sanity.studio` — share with the client.
+
+> **Heads up:** Changing `SANITY_STUDIO_PREVIEW_URL` later (e.g. flipping from `.pages.dev` to the canonical domain) requires re-running `npm run deploy` — it's a build-time bundled value, not runtime.
+
+> After deploying, restore your previous `.env` if you want to resume local dev against a different client:
+> ```sh
+> cp studio/.env.<previous-client>-backup studio/.env
+> ```
 
 **1.3 — Create a Sanity API Read Token**
 
@@ -220,66 +242,99 @@ design out of the box.
 
 ---
 
-### PHASE 2 — Cloudflare Pages
+### PHASE 2 — Cloudflare Pages (Direct Upload via GitHub Actions)
 
-Default flow: the client's Cloudflare Pages project lives in *her* Cloudflare account, connected via Git to your (unforked) template repo. You manage deploys from your terminal by pushing to `main`.
+The client's CF Pages project lives in her CF account but is **not Git-connected**. Instead, the template's GitHub Actions workflow builds and uploads to it using a scoped CF API token.
 
-**2.1 — Get admin access to the client's Cloudflare account**
+**2.1 — Admin access to the client's Cloudflare account**
 
-Have the client invite you as a Super Administrator so you can manage the Pages project from your own Cloudflare dashboard without owning her billing.
+Have the client invite you as Super Administrator so you can manage her Pages project from your dashboard. Same as before:
 
-1. Client logs in to her Cloudflare account → **Manage Account → Members → Invite**
-2. She enters your email, role: **Super Administrator - All Privileges**
-3. You accept the invite from the email
-4. In your Cloudflare dashboard, use the **account switcher** (top-left or in your profile menu) to select her account whenever you need to work on her site
+1. Client → her CF account → **Manage Account → Members → Invite**
+2. Your email, role: **Super Administrator - All Privileges**
+3. You accept the invite, use the account switcher whenever you need to work on her site
 
-If she ever removes you later, she retains full ownership with zero migration. Nothing you set up has to move.
+(Super Admin is optional if she'll generate the CF API token herself and hand it to you — but it makes troubleshooting easier.)
 
-**2.2 — Create a Pages project via Git connection**
+**2.2 — Create a Cloudflare Pages project (Direct Upload mode)**
 
-1. In your Cloudflare dashboard, **switch to the client's account** via the account picker
-2. Workers & Pages → Create application → Pages → **Connect to Git**
-3. Authorize GitHub — use **your** GitHub account, so Cloudflare can see your private template repo
-4. Select the template repo: `photo-portfolio-template`
-5. Build settings:
-   - Project name: `<client-slug>` (e.g., `coola-creative`)
-   - Production branch: `main`
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-6. Click **Save and Deploy** — the first deploy will fail or show a blank site because env vars aren't set yet. That's expected; move to 2.3.
+1. In your CF dashboard, **switch to the client's account** via the account picker.
+2. Workers & Pages → Create application → Pages → **Upload assets**.
+3. Project name: `<client-slug>` (e.g. `coola-creative` — this becomes `coola-creative.pages.dev`).
+4. Don't actually upload anything yet — CF will create an empty project. The first real deploy will come from GitHub Actions in step 2.6.
+5. Settings → Environment Variables → Production — add these 6 (values below):
 
-**2.3 — Set environment variables**
+| Variable | Value | Encryption |
+|---|---|---|
+| `NODE_VERSION` | `20` | Plaintext |
+| `PUBLIC_SANITY_PROJECT_ID` | Client's Sanity project ID | Plaintext |
+| `PUBLIC_SANITY_DATASET` | `production` | Plaintext |
+| `SANITY_API_READ_TOKEN` | Viewer token from Phase 1.3 | **Encrypt** |
+| `SANITY_PREVIEW_SECRET` | Secret from Phase 1.4 | **Encrypt** |
+| `SANITY_STUDIO_URL` | `https://<client-slug>.sanity.studio` | Plaintext |
 
-In the CF Pages project → Settings → Environment Variables → Production:
+> `SANITY_API_READ_TOKEN` MUST be set, or Sanity Presentation mode won't activate — drafts won't render, click-to-edit overlays stay dark. Most common first-deploy failure is forgetting this.
 
-| Variable | Value |
+**2.3 — Create a scoped CF API token for the workflow**
+
+This token lets GitHub Actions push Direct Upload deploys to her account without needing Super Admin or browser login.
+
+1. In CF dashboard, **while switched to the client's account**, click your profile → **My Profile → API Tokens → Create Token**.
+2. Select the template: **Edit Cloudflare Pages — Account**.
+3. Account Resources → Include → **the client's account only** (one account).
+4. Leave other settings at defaults. Click Continue → Create Token.
+5. Copy the token immediately (shown once). This goes into the GitHub Environment secret in step 2.5.
+
+Also grab the **Account ID** from the CF dashboard URL or the right sidebar of the Workers & Pages overview — it's a 32-char hex string.
+
+**2.4 — Add the client to the workflow matrix**
+
+Edit `.github/workflows/deploy.yml` in the template repo. Inside the `clients` job → `strategy.matrix.client` list, add a new entry:
+
+```yaml
+- slug: <client-slug>                              # e.g. coola-creative
+  sanity_project_id: <client-sanity-project-id>    # e.g. tl3zj8iz
+  studio_url: https://<client-slug>.sanity.studio
+  pages_url: https://<client-slug>.pages.dev
+```
+
+Commit the change; do NOT push to `production` yet (we'll do that after secrets are in place).
+
+**2.5 — Create the `client-<slug>` GitHub Environment with secrets**
+
+GitHub template repo → Settings → **Environments** → **New environment** → name it `client-<slug>` (must match the matrix entry — e.g. `client-coola-creative`).
+
+Add these 4 **Environment secrets**:
+
+| Secret | Value |
 |---|---|
-| `PUBLIC_SANITY_PROJECT_ID` | Client's Sanity project ID (from Phase 1.1) |
-| `PUBLIC_SANITY_DATASET` | `production` |
-| `SANITY_API_READ_TOKEN` | Viewer token from Phase 1.3 — required for preview mode to validate Presentation's ephemeral secret |
-| `SANITY_PREVIEW_SECRET` | Secret from Phase 1.4 |
-| `SANITY_STUDIO_URL` | `https://<client-slug>.sanity.studio` — tells the Astro site which Studio origin can iframe it (enables click-to-edit overlays via stega) |
+| `CF_API_TOKEN` | CF API token from 2.3 (scoped to client's account) |
+| `CF_ACCOUNT_ID` | Client's CF Account ID |
+| `SANITY_API_READ_TOKEN` | Viewer token from Phase 1.3 (same value as CF Pages env var) |
+| `SANITY_PREVIEW_SECRET` | Preview secret from Phase 1.4 (same value as CF Pages env var) |
 
-> **Important:** `SANITY_API_READ_TOKEN` must be set, or Sanity Presentation
-> mode will not activate — clicking edit overlays in Studio won't work,
-> drafts won't render, and images referenced from unpublished docs won't
-> load. If the client complains "Studio preview shows nothing" or "I can't
-> edit from the preview", check this env var first.
+Environment secrets are scoped per-client — one client's workflow run can only see its own environment's secrets, never another client's.
 
-> After setting env vars, trigger a redeploy in CF Pages (Deployments →
-> latest → Retry deployment) so the new values bake into the bundle.
+**2.6 — Trigger the first deploy**
 
-**2.4 — Verify the first deploy**
+Now push `main → production` to fire the workflow:
 
-After the redeploy, visit `https://<client-slug>.pages.dev` — you should see the seeded template content from Phase 1.6 (populated homepage, about, experience, contact pages with real palettes and section layouts). If it's blank, check: (a) env vars are set, (b) the redeploy actually ran with those env vars (check the deploy log for `PUBLIC_SANITY_PROJECT_ID`), (c) the Sanity dataset is seeded (Phase 1.6).
+```sh
+git checkout production
+git merge main
+git push origin production
+```
 
-### When to fork the template (alternative)
+The workflow runs:
+1. Demo canary (must succeed before clients run)
+2. Fan-out to every matrix entry in parallel, including the new client
+3. Smoke tests each deployed URL
 
-Only fork when a specific client needs custom code that shouldn't ship to all clients. At that point:
+Watch at `https://github.com/CNWPhoto/photo-portfolio-template/actions`. The run is typically 3–5 minutes total.
 
-1. Create a new private repo by forking `photo-portfolio-template` on GitHub
-2. In Cloudflare Pages → the client's project → Settings → Builds & deployments, disconnect the current Git source and reconnect to the fork
-3. Future template updates for that client require manual `git merge` from the template repo into their fork
+**2.7 — Verify the first deploy**
+
+Visit `https://<client-slug>.pages.dev` — you should see the seeded template content from Phase 1.6 (homepage, about/experience/contact/404 pages with real palettes and section layouts). If it's blank or broken, see `docs/emergency-playbook.md` → "Blank page or 500 error" — almost always a missing CF Pages env var.
 
 ---
 
@@ -435,17 +490,20 @@ slug validator.
 
 When a client leaves (they want full ownership, you're winding down, etc.):
 
-1. **Fork the template repo** to a new private GitHub repo that they own, capturing the code at its current state. Add them as an admin on that fork if they want to edit it directly.
-2. **Reconnect their Cloudflare Pages project to the fork** — Cloudflare → their Pages project → Settings → Builds & deployments → disconnect the current Git source, reconnect to the new fork. Cloudflare keeps all env vars and custom domains intact, so no rebuild needed beyond the next push.
-3. **Transfer Sanity project ownership** — Sanity → their project → Members → find yourself, click Transfer Ownership to the client. Or have them create their own Sanity account first and invite them, then transfer. Either way, you can then remove yourself as admin.
-4. **Remove yourself from their Cloudflare account** — their CF Account → Members → remove your email.
-5. Hand off the credentials package:
-   - Their GitHub repo URL (the fork)
+1. **Transfer Sanity project ownership** — sanity.io/manage → their project → Members → find yourself → **Transfer Ownership** to the client's Sanity account. They must have a Sanity account first. After transfer, remove yourself as admin.
+2. **Remove their matrix entry from `.github/workflows/deploy.yml`** and delete the `client-<slug>` GitHub Environment (Settings → Environments → Delete). Commit + push. The workflow will no longer deploy to their site on future `production` pushes.
+3. **Client revokes the CF API token** that you were using for deploys — their CF dashboard → My Profile → API Tokens → find the token → Delete. This immediately cuts off your deploy access.
+4. **Client removes you as Super Admin** — her CF Account → Members → remove your email.
+5. **Hand off the site code** — either:
+   - **Fork-and-transfer**: create a fork of the template repo at the commit matching their last deploy, transfer ownership of the fork to their GitHub account.
+   - **Zip-and-hand-off**: `git archive --format=zip HEAD > coola-creative-site.zip` at the matching commit, email the zip. Simpler if they don't use GitHub.
+6. Hand off the credentials package (their read-only record now):
    - Their Sanity Studio URL
    - Their Web3Forms login
-   - A note that future template updates won't auto-propagate to them — they'd need to manually `git merge` from your template if they want new features
+   - If fork was transferred: the GitHub URL; if zip was given: note that future template updates won't auto-propagate (they'd need dev help to merge updates manually).
+   - A restore-from-snapshot reminder if dataset rollback ever needed: `docs/emergency-playbook.md` → "Dataset corrupted".
 
-Their site stays up indefinitely. They own the domain, the code, the Sanity content, the Cloudflare account, the Web3Forms account. You retain nothing but your template repo (which continues serving other clients).
+Their site stays up indefinitely on whatever the last deploy was. They own the domain, the code, the Sanity content, the Cloudflare account, the Web3Forms account. You retain nothing but your template repo.
 
 ---
 
