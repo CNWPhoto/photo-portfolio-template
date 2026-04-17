@@ -15,7 +15,7 @@ const style = paletteToStyle(palette);
 const eyebrow = section?.eyebrow || '';
 const heading = section?.heading || '';
 const ctaText = section?.ctaText || '';
-const ctaHref = resolveLink(section?.ctaLink);
+const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
 const steps = section?.steps || [];
 
 // Render each step body once

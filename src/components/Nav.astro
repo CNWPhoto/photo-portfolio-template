@@ -36,11 +36,15 @@ const defaultLinks = [
 	{ label: 'Inquire',    url: '/contact',    enabled: true, openInNewTab: false, isButton: true,  linkType: 'external' },
 ];
 
-// Normalize each link: compute resolved href, normalize children
+// Normalize each link: compute resolved href, normalize children.
+// Pass [Astro.url.hostname] so resolveLink strips the origin from any
+// absolute URL that accidentally points at this same host — keeps the
+// rendered href portable across custom domains.
+const selfHostnames = [Astro.url.hostname];
 const normalizeLink = (l: any) => {
-	const href = resolveLink(l) || l?.url || '#';
+	const href = resolveLink(l, selfHostnames) || l?.url || '#';
 	const children = Array.isArray(l?.children)
-		? l.children.map((c: any) => ({ ...c, href: resolveLink(c) || c?.url || '#' }))
+		? l.children.map((c: any) => ({ ...c, href: resolveLink(c, selfHostnames) || c?.url || '#' }))
 		: [];
 	return { ...l, href, children, hasChildren: children.length > 0 };
 };

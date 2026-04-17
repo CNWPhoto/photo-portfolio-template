@@ -17,7 +17,7 @@ const style = paletteToStyle(palette);
 const heading = renderHeading(section?.heading || '');
 const body = section?.body || '';
 const ctaText = section?.ctaText || '';
-const ctaHref = resolveLink(section?.ctaLink);
+const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
 const layout = section?.layout || 'centered';
 const caption = section?.caption || '';
 

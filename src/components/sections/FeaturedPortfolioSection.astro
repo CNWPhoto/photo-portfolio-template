@@ -14,7 +14,7 @@ const { section, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 const ctaText = section?.ctaText || 'View Full Portfolio';
-const ctaHref = resolveLink(section?.ctaLink) || '/portfolio';
+const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || '/portfolio';
 
 const FALLBACK_VERTICAL = 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=900';
 const FALLBACK_HORIZONTAL = 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=1200';

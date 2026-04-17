@@ -20,7 +20,7 @@ const imageLayout = section?.imageLayout || 'image-right';
 const eyebrow = section?.eyebrow || '';
 const heading = section?.heading || '';
 const ctaText = section?.ctaText || '';
-const ctaHref = resolveLink(section?.ctaLink);
+const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
 
 const bodyHTML = isPortableText(section?.body)
   ? renderBody(section.body, { className: 'isplit__body' })

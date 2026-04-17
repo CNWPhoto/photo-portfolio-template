@@ -1033,6 +1033,19 @@ export function resolveLink(link) {
 
 Used by every CTA rendering.
 
+### Self-origin stripping (defense against pasted absolute self-links)
+
+Editors sometimes paste full absolute URLs into the "External URL" field when the link actually points back at the same site (e.g. `https://cnw-photo-demo.pages.dev/portfolio` when `/portfolio` would be correct). That produces hardcoded domain references in the rendered HTML, breaks the template's portability across client domains, and causes audit tools to flag the absolute-URL anti-pattern.
+
+`resolveLink` accepts an optional second argument `selfHostnames: string[]`. When an external link's hostname matches any entry, the returned href is rewritten to the relative path (`pathname + search + hash`). Callers typically pass `[Astro.url.hostname]`; pages that also have access to `seoSettings.siteUrl` should add its hostname for coverage when the request host differs from the canonical host.
+
+Pattern at each call site:
+```js
+const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || '/fallback';
+```
+
+Currently applied in: `Nav.astro`, `FeaturedPortfolioSection`, `CtaBandSection`, `FullBleedImageSection`, `StepsSection`, `HeroSection`, `SplitSection`, `BlogTeaserSection`. New section components that render a CTA must follow the same pattern or absolute self-links leak through.
+
 ---
 
 ## 9. Navigation Integration

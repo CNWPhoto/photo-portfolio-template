@@ -25,7 +25,7 @@ const bodyHTML = isPortableText(section?.body)
   ? renderBody(section.body, { className: 'why__body' })
   : '';
 const ctaText = section?.ctaText || '';
-const ctaHref = resolveLink(section?.ctaLink) || '#';
+const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || '#';
 const caption = section?.caption || '';
 const eyebrow = section?.eyebrow || '';
 const textContainer = section?.textContainer || 'default';

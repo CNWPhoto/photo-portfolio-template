@@ -22,7 +22,7 @@ const showCategory = section?.showCategory !== false;
 const showExcerpt = section?.showExcerpt !== false;
 const showDate = section?.showDate !== false;
 const ctaText = section?.ctaText || '';
-const ctaHref = resolveLink(section?.ctaLink) || '/blog';
+const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || '/blog';
 
 const client = getClient(false);
 let posts: any[] = [];
