@@ -22,8 +22,9 @@ is in the linked phase.
 - [ ] **Cloudflare admin access granted** — client invites you as Super Administrator on her CF account ([Phase 2.1](#phase-2--cloudflare-pages))
 - [ ] **Cloudflare Pages project connected via Git** — in her CF account, pointed at your template repo ([Phase 2.2](#phase-2--cloudflare-pages))
 - [ ] **Cloudflare env vars set** — project ID, dataset, token, preview secret, studio URL ([Phase 2.3](#phase-2--cloudflare-pages))
-- [ ] **Custom domain wired + DNS propagated** ([Phase 3](#phase-3--domain-setup))
-- [ ] **`SANITY_STUDIO_PREVIEW_URL` flipped to custom domain** — re-run `npm run deploy` ([Phase 3.3](#phase-3--domain-setup))
+- [ ] **Canonical host picked (apex vs www) + custom domains wired + DNS propagated** ([Phase 3](#phase-3--domain-setup))
+- [ ] **`seoSettings.siteUrl` set in Studio to canonical host** — drives canonical tag, sitemap, JSON-LD ([Phase 3.3](#phase-3--domain-setup))
+- [ ] **`SANITY_STUDIO_PREVIEW_URL` flipped to canonical host** — re-run `npm run deploy` ([Phase 3.4](#phase-3--domain-setup))
 - [ ] **Web3Forms contact key added** ([Phase 4](#phase-4--contact-form-web3forms))
 - [ ] **Client content added** — photos, copy, palette, nav, SEO ([Phase 5](#phase-5--initial-content-setup))
 - [ ] **Pre-launch checklist passed** — SEO, favicons, analytics, forms ([Phase 6](#phase-6--pre-launch-checklist))
@@ -293,19 +294,43 @@ Only fork when a specific client needs custom code that shouldn't ship to all cl
 5. Client updates nameservers at their registrar (GoDaddy, Namecheap, etc.)
 6. Propagation: 15 minutes to 2 hours
 
-**3.2 — Connect custom domain to Pages**
+**3.2 — Pick the canonical host (apex vs www)**
+
+Before wiring domains, decide which host is canonical — `smithphotography.com` (apex) or `www.smithphotography.com`. The other becomes a 301 redirect to it.
+
+- **No SEO difference on Cloudflare Pages** — redirect is 301, flows PageRank fully.
+- **Default to apex** unless the client's existing branding (logo, print material, email signature) uses `www`. Shorter, cleaner in share links, matches how most clients think about their domain.
+- Once picked, four settings have to align with the choice — see 3.3 and 3.4 below. If any of them drift, canonicals/sitemap/JSON-LD will advertise the non-canonical host, which Google treats as a soft signal to ignore the canonical.
+
+**3.3 — Connect custom domains to Pages**
 
 1. Pages project → **Custom Domains → Set up a custom domain**
-2. Enter `smithphotography.com`
-3. Cloudflare adds the CNAME automatically
-4. Repeat for `www` — Cloudflare redirects www → root
-5. SSL certificates provision automatically (5–15 minutes)
+2. Enter the **canonical host first** — whichever is added first becomes canonical; the other auto-redirects to it. To flip later, remove both and re-add in the desired order.
+3. Cloudflare adds the CNAME automatically.
+4. Add the non-canonical host as a second custom domain — Cloudflare auto-creates a 301 redirect to the canonical.
+5. SSL certificates provision automatically for both (5–15 minutes).
+6. Verify redirect direction with `curl`:
 
-**3.3 — Update CORS and env vars with live domain**
+   ```sh
+   curl -sI https://smithphotography.com | grep -i location        # should be empty (canonical)
+   curl -sI https://www.smithphotography.com | grep -i location    # should 301 → apex
+   ```
 
-1. Sanity CORS — confirm live domain is listed (Phase 1.5)
-2. Update `SANITY_STUDIO_PREVIEW_URL` to the live domain
-3. Redeploy (push a commit or re-run the Action)
+   Reverse expected behavior if `www` is canonical.
+
+**3.4 — Align canonical host across Sanity + Studio + Search Console**
+
+1. **Sanity CORS** — confirm **both** hosts are listed (Phase 1.5: `https://smithphotography.com` **and** `https://www.smithphotography.com`). Redirect still requires both to be allowed during the TLS handshake window.
+2. **`seoSettings.siteUrl` in Studio** — open the client's Sanity Studio → SEO Settings → set `Site URL` to the canonical host, no trailing slash (e.g. `https://smithphotography.com`). This drives:
+   - `<link rel="canonical">` on every page (`src/layouts/Layout.astro`)
+   - `/sitemap.xml` base URL (`src/pages/sitemap.xml.ts`)
+   - `/robots.txt` sitemap line (`src/pages/robots.txt.ts`)
+   - JSON-LD `@id` values for every structured-data node
+
+   If left blank, canonicals are omitted and sitemap falls back to request origin — fine for pre-launch, **not acceptable for production**.
+3. **`SANITY_STUDIO_PREVIEW_URL`** — update `studio/.env` to the canonical host, then re-run `cd studio && npm run deploy`. Baked into the hosted Studio at build time; must match the canonical host so Presentation iframes the canonical origin (not the redirect source).
+4. **Redeploy the Astro site** so the new `siteUrl` is picked up — push a no-op commit or retry latest deployment in CF Pages.
+5. **Google Search Console** (can be done at pre-launch, Phase 6) — add the canonical host as the **primary property** and submit `https://<canonical>/sitemap.xml`. Adding the non-canonical host as a second property is optional but useful for catching stray inbound links.
 
 ---
 
@@ -388,14 +413,19 @@ slug validator.
 
 ### PHASE 6 — Pre-Launch Checklist
 
-- [ ] Site loads on `https://clientdomain.com` with valid SSL
-- [ ] `www` redirects correctly
+- [ ] Site loads on canonical host with valid SSL (e.g. `https://clientdomain.com`)
+- [ ] Non-canonical host 301-redirects to canonical:
+      `curl -sI https://www.clientdomain.com | grep -i location` → points at canonical
+      (reverse if `www` is canonical)
+- [ ] View-source on a live page: `<link rel="canonical">` points at the canonical
+      host and matches `seoSettings.siteUrl`
+- [ ] `/sitemap.xml` URLs all use the canonical host (no mix of apex + www)
 - [ ] Contact form delivers email to client's inbox
 - [ ] All nav links work
 - [ ] Portfolio images load
 - [ ] Mobile layout correct (test on real device)
-- [ ] Google Search Console — add property, submit sitemap:
-      `https://clientdomain.com/sitemap.xml`
+- [ ] Google Search Console — add **canonical host** as primary property,
+      submit sitemap: `https://<canonical>/sitemap.xml`
 - [ ] Verify `robots.txt` and `manifest.json` are accessible
 - [ ] Share Studio URL with client, walk them through editing
 
