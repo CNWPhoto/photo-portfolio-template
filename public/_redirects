@@ -9,3 +9,9 @@
 #   /blog/old-title    /blog/new-title 301
 #
 # Add your redirects below this line:
+
+# Common alias paths users may type or prior site versions may have used.
+/home       /            301
+/inquire    /contact     301
+/services   /experience  301
+/work       /portfolio   301
