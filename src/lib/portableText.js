@@ -59,6 +59,31 @@ export function renderBody(value, options = {}) {
 }
 
 /**
+ * Flatten Portable Text (or a plain string) to a single plain string.
+ * Used for JSON-LD fields that MUST be strings per schema.org spec
+ * (e.g. FAQPage Answer.text, Article.description). Passing a raw
+ * Portable Text array here produces invalid structured data that
+ * Google's Rich Results Test will reject — silent SEO regression.
+ *
+ * Spans within a block are joined with no separator; blocks are joined
+ * with a single space. Empty input returns ''.
+ */
+export function portableTextToString(value) {
+  if (typeof value === 'string') return value.trim();
+  if (!isPortableText(value)) return '';
+  return value
+    .map((block) =>
+      (block.children || [])
+        .filter((c) => c && c._type === 'span' && typeof c.text === 'string')
+        .map((c) => c.text)
+        .join(''),
+    )
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+}
+
+/**
  * Render an array of fallback paragraph strings as <p> elements (used when
  * Sanity has no content yet). Skips empty strings.
  */

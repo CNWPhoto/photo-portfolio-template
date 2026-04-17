@@ -910,6 +910,8 @@ Generated server-side per page in `src/layouts/Layout.astro` lines ~82–153. Au
 
 **All this generation logic stays in Layout.astro verbatim.** The new `[...slug].astro` page passes `schemaData` for any page-specific nodes (e.g. category pages might emit nothing extra; pages with FAQ sections emit FAQPage).
 
+**Gotcha — Portable Text must be flattened before JSON-LD emission.** Any Sanity field typed as `array of block` (rich text) is a Portable Text array, not a string. Passing the raw array into a JSON-LD field whose schema.org definition expects a string (e.g. `FAQPage > mainEntity > acceptedAnswer.text`, `Article.description`, `BlogPosting.articleBody`) produces invalid structured data that Google's Rich Results Test rejects silently at crawl time. Always run such fields through `portableTextToString()` in `src/lib/portableText.js` before emitting. Touched: `src/pages/index.astro`, `src/pages/[...slug].astro` for FAQPage answer flattening. Add new emission sites to the same helper.
+
 ### Meta tags (Layout.astro lines ~160–189)
 
 All preserved. Title format: `${pageTitle} | ${siteName}`. Tags emitted:
