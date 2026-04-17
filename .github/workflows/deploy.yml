@@ -1,0 +1,206 @@
+name: Deploy
+
+# Branch-promoted client deploys.
+#
+# ──────────────────────────────────────────────────────────────────────
+#                          push to `main`
+#                                │
+#                                ▼
+#                     Demo (cnw-photo-demo) ─── canary
+#                                │  (must succeed before clients run)
+#                                ▼
+#                         (stop — clients not touched)
+#
+#                          push to `production`
+#                                │
+#                                ▼
+#                     Demo (cnw-photo-demo) ─── canary again
+#                                │  (must succeed)
+#                                ▼
+#                     Fan-out to every client in matrix
+# ──────────────────────────────────────────────────────────────────────
+#
+# Client deploys ONLY happen when something is explicitly merged into
+# `production`. `main` is for iteration and demo validation. Typical
+# release flow:
+#
+#     # work on main
+#     git push origin main                  # demo rebuilds + smoke tested
+#     # verify demo looks right
+#     git checkout production
+#     git merge main
+#     git push origin production            # demo + all clients rebuild
+#
+# If a release goes bad:
+#
+#     git revert HEAD
+#     git push origin production            # clients redeploy previous good state
+#
+# Or for one-off fast recovery: CF dashboard → client project →
+# Deployments → previous → "Rollback to this deployment". See
+# docs/emergency-playbook.md.
+#
+# ──────────────────────────────────────────────────────────────────────
+# Secrets model — per GitHub Environment
+# ──────────────────────────────────────────────────────────────────────
+# Environments (Settings → Environments in the template repo):
+#
+#   demo                        ← cnw-photo-demo.pages.dev
+#     CF_API_TOKEN              CF account token scoped to Pages:Edit
+#     CF_ACCOUNT_ID             numeric account ID
+#     SANITY_API_READ_TOKEN     read token for hx5xgigp
+#     SANITY_PREVIEW_SECRET     32-byte hex preview secret
+#
+#   client-coola-creative       ← coola-creative.pages.dev
+#     CF_API_TOKEN              CF token scoped to Carla's account
+#     CF_ACCOUNT_ID             Carla's CF account ID
+#     SANITY_API_READ_TOKEN     read token for tl3zj8iz
+#     SANITY_PREVIEW_SECRET     32-byte hex preview secret
+#
+# Adding a client: create a new environment `client-<slug>` with the 4
+# secrets above, then add a matrix entry below.
+# ──────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main, production]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ════════════════════════════════════════════════════════════════════
+  # 1. Demo (canary) — runs on every push to main or production.
+  #    Client job is gated on this succeeding.
+  # ════════════════════════════════════════════════════════════════════
+  demo:
+    name: Demo (canary)
+    runs-on: ubuntu-latest
+    environment: demo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          PUBLIC_SANITY_PROJECT_ID: hx5xgigp
+          PUBLIC_SANITY_DATASET: production
+          SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
+          SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
+          SANITY_STUDIO_URL: https://cnw-photo-demo.sanity.studio
+
+      - name: Deploy to Cloudflare Pages (Direct Upload)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=cnw-photo-demo --branch=${{ github.ref_name }} --commit-dirty=true
+
+      - name: Smoke test
+        run: |
+          URL="https://cnw-photo-demo.pages.dev"
+          echo "Smoke testing ${URL}"
+          sleep 15  # give CF a moment to propagate
+          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" "$URL")
+          BODY=$(curl -sL "$URL")
+          BODY_LEN=${#BODY}
+          echo "Status: $STATUS"
+          echo "Body length: $BODY_LEN bytes"
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Smoke test failed — HTTP $STATUS (expected 200)"
+            exit 1
+          fi
+          if [ "$BODY_LEN" -lt 5000 ]; then
+            echo "::error::Smoke test failed — body length $BODY_LEN bytes (expected > 5000)"
+            exit 1
+          fi
+          if ! echo "$BODY" | grep -qi '<title>'; then
+            echo "::error::Smoke test failed — no <title> tag found"
+            exit 1
+          fi
+          echo "✓ Smoke test passed"
+
+  # ════════════════════════════════════════════════════════════════════
+  # 2. Clients — only on push to `production`, and only if demo passed.
+  #    fail-fast is OFF: one client's failure doesn't block the rest
+  #    (they're independent sites).
+  # ════════════════════════════════════════════════════════════════════
+  clients:
+    name: Client — ${{ matrix.client.slug }}
+    if: github.ref == 'refs/heads/production'
+    needs: demo
+    runs-on: ubuntu-latest
+    environment: client-${{ matrix.client.slug }}
+    strategy:
+      fail-fast: false
+      matrix:
+        client:
+          - slug: coola-creative
+            sanity_project_id: tl3zj8iz
+            studio_url: https://coola-creative.sanity.studio
+            pages_url: https://coola-creative.pages.dev
+          # Add new clients here. Each slug must match the GitHub
+          # Environment name pattern `client-<slug>`.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for ${{ matrix.client.slug }}
+        run: npm run build
+        env:
+          PUBLIC_SANITY_PROJECT_ID: ${{ matrix.client.sanity_project_id }}
+          PUBLIC_SANITY_DATASET: production
+          SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
+          SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
+          SANITY_STUDIO_URL: ${{ matrix.client.studio_url }}
+
+      - name: Deploy to Cloudflare Pages (Direct Upload)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ matrix.client.slug }} --branch=production --commit-dirty=true
+
+      - name: Smoke test
+        run: |
+          URL="${{ matrix.client.pages_url }}"
+          echo "Smoke testing ${URL}"
+          sleep 15
+          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" "$URL")
+          BODY=$(curl -sL "$URL")
+          BODY_LEN=${#BODY}
+          echo "Status: $STATUS"
+          echo "Body length: $BODY_LEN bytes"
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Smoke test failed for ${{ matrix.client.slug }} — HTTP $STATUS"
+            exit 1
+          fi
+          if [ "$BODY_LEN" -lt 5000 ]; then
+            echo "::error::Smoke test failed for ${{ matrix.client.slug }} — body $BODY_LEN bytes"
+            exit 1
+          fi
+          if ! echo "$BODY" | grep -qi '<title>'; then
+            echo "::error::Smoke test failed for ${{ matrix.client.slug }} — no <title>"
+            exit 1
+          fi
+          echo "✓ Smoke test passed for ${{ matrix.client.slug }}"
