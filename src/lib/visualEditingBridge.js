@@ -50,6 +50,37 @@ function buildHistoryAdapter() {
 // 'nav' selector would match (and swap) the wrong element.
 const SWAP_SELECTORS = ['main', 'header.nav', 'footer.footer', '.preview-banner']
 
+// <html> attributes derived from siteSettings — synced on every refresh so
+// fontTheme / defaultPalette changes take effect without a full reload.
+const HTML_ATTRS_TO_SYNC = ['data-theme', 'data-font']
+
+// <head> elements tagged with data-sanity-head in Layout.astro. Each value is
+// unique per concern so we can match the same slot across old and new DOM.
+// Missing-in-new = remove from live DOM; present-in-new = insert/replace.
+const HEAD_MARKERS = ['fonts', 'palette', 'accent', 'text-preset', 'theme-color']
+
+function syncHtmlAttrs(newHtml) {
+  const liveHtml = document.documentElement
+  for (const attr of HTML_ATTRS_TO_SYNC) {
+    const next = newHtml.getAttribute(attr)
+    const curr = liveHtml.getAttribute(attr)
+    if (next === curr) continue
+    if (next == null) liveHtml.removeAttribute(attr)
+    else liveHtml.setAttribute(attr, next)
+  }
+}
+
+function syncHeadMarkers(newDoc) {
+  for (const marker of HEAD_MARKERS) {
+    const selector = `[data-sanity-head="${marker}"]`
+    const next = newDoc.querySelector(selector)
+    const curr = document.head.querySelector(selector)
+    if (next && curr) curr.replaceWith(next)
+    else if (next && !curr) document.head.appendChild(next)
+    else if (!next && curr) curr.remove()
+  }
+}
+
 // Fetch the current URL and swap a known set of body-level elements in
 // place. Falls back to a full page reload on any failure so editors never
 // get stuck on stale content.
@@ -84,6 +115,9 @@ async function swapInPlace() {
       }
     }
     if (!swappedMain) throw new Error('refresh: <main> missing')
+
+    syncHtmlAttrs(doc.documentElement)
+    syncHeadMarkers(doc)
 
     if (doc.title && doc.title !== document.title) document.title = doc.title
 
