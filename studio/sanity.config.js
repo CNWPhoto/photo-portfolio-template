@@ -10,21 +10,32 @@ const singleton = (S, id, title, schemaType) =>
     .id(id)
     .child(S.document().documentId(id).schemaType(schemaType).title(title))
 
+const PREVIEW_ORIGIN = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:4321'
+
+// Every origin that might iframe the deployed Studio. Baked at build time.
+// - localhost for local Astro dev
+// - *.pages.dev wildcard covers every Cloudflare Pages preview subdomain
+// - PREVIEW_ORIGIN covers whatever we're currently pointing the hosted
+//   Studio at (client domain after DNS, the .pages.dev URL before).
+// Dedup at the bottom so a localhost PREVIEW_ORIGIN doesn't double-list.
+const ALLOW_ORIGINS = [
+  'http://localhost:4321',
+  'https://*.pages.dev',
+  PREVIEW_ORIGIN,
+].filter((v, i, arr) => v && arr.indexOf(v) === i)
+
 export default defineConfig({
   name: 'default',
-  title: 'photo-portfolio-template',
+  title: process.env.SANITY_STUDIO_TITLE || 'photo-portfolio-template',
 
   projectId: process.env.SANITY_STUDIO_PROJECT_ID || 'hx5xgigp',
   dataset: process.env.SANITY_STUDIO_DATASET || 'production',
 
   plugins: [
     presentationTool({
-      allowOrigins: [
-        'http://localhost:4321',
-        'https://cnw-photo-demo.pages.dev',
-      ],
+      allowOrigins: ALLOW_ORIGINS,
       previewUrl: {
-        origin: process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:4321',
+        origin: PREVIEW_ORIGIN,
         preview: '/',
         previewMode: {
           enable: '/api/preview',
