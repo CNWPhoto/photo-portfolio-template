@@ -251,15 +251,18 @@ const schemaJSON = schemaGraph.length
 		{ogImage && <meta name="twitter:image" content={ogImage} />}
 		{twitterHandle && <meta name="twitter:site" content={`@${twitterHandle}`} />}
 		{twitterHandle && <meta name="twitter:creator" content={`@${twitterHandle}`} />}
-		<meta name="theme-color" content={themeColor} />
+		<meta name="theme-color" content={themeColor} data-sanity-head="theme-color" />
 		<link rel="manifest" href="/manifest.json" />
-		<!-- Google Fonts — only the 2 families for the active theme are loaded -->
+		{/* Head elements tagged with data-sanity-head are swapped in place by
+		    visualEditingBridge.js when Sanity settings change (font theme,
+		    palette, accent, text color preset) so edits reflect without a
+		    full page reload. */}
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href={fontUrl} rel="stylesheet" />
-		{rootPaletteCss && <style set:html={rootPaletteCss} />}
+		<link href={fontUrl} rel="stylesheet" data-sanity-head="fonts" />
+		{rootPaletteCss && <style set:html={rootPaletteCss} data-sanity-head="palette" />}
 		{accentOverride && (
-			<style set:html={`
+			<style data-sanity-head="accent" set:html={`
 				:root, [data-theme] {
 					--accent: ${accentOverride} !important;
 					--accent-dark: color-mix(in srgb, ${accentOverride} 80%, black) !important;
@@ -268,7 +271,7 @@ const schemaJSON = schemaGraph.length
 			`} />
 		)}
 		{textPresetColors && (
-			<style set:html={`
+			<style data-sanity-head="text-preset" set:html={`
 				:root,
 				html[data-theme='${colorTheme}'],
 				[data-theme='${colorTheme}'] {
@@ -372,6 +375,17 @@ const schemaJSON = schemaGraph.length
 	html[data-font='airy-minimal'] {
 		--font-heading: 'Tenor Sans', Georgia, serif;
 		--font-body: 'Raleway', system-ui, sans-serif;
+	}
+
+	/* DM Serif Display (modern-luxury) and Tenor Sans (airy-minimal) are
+	   single-weight display fonts — Google Fonts only serves weight 400.
+	   Component CSS that asks for 500/600/700 would trigger browser-synthesized
+	   bold, which renders fuzzy on retina. Tenor Sans also has no italic.
+	   Disable synthesis so requested weights/styles fall back to the real 400
+	   glyphs instead of being faked. */
+	html[data-font='modern-luxury'],
+	html[data-font='airy-minimal'] {
+		font-synthesis: none;
 	}
 
 	/* ══════════════════════════════════════════════════
