@@ -20,7 +20,7 @@ const [pageDoc, totalCount] = await Promise.all([
     {},
     { cache: 'no-store' }
   ),
-  client.fetch(`count(*[_type == "blogPost"])`, {}, { cache: 'no-store' }),
+  client.fetch(`count(*[_type == "blogPost" && defined(slug.current)])`, {}, { cache: 'no-store' }),
 ]);
 
 const seoTitle       = pageDoc?.seo?.seoTitle       || pageDoc?.pageTitle || 'Blog';
@@ -43,7 +43,7 @@ const safePage     = Math.min(currentPage, totalPages);
 const skip         = (safePage - 1) * postsPerPage;
 
 const posts = await client.fetch(
-  `*[_type == "blogPost"] | order(publishDate desc) [$skip...$end]{
+  `*[_type == "blogPost" && defined(slug.current)] | order(publishDate desc) [$skip...$end]{
     _id, title, slug, publishDate, excerpt,
     "categories": categories[]->{ name, "slug": slug.current },
     coverImage { ..., asset->{ _id, url, metadata { dimensions { width, height }, lqip } } }
