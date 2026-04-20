@@ -93,33 +93,34 @@ export default {
 
     // ── Blog post defaults (applied to every individual blog post) ─────
     {
-      name: 'postDefaultsNote',
-      title: '── Blog post defaults ──',
-      type: 'string',
-      readOnly: true,
-      initialValue:
-        'Settings below apply to every individual blog post. Configure once; shows on all posts.',
+      name: 'postCtaText',
+      title: 'Blog Post CTA Line',
+      type: 'array',
       description:
-        'Settings below apply to every individual blog post. Configure once; shows on all posts.',
+        'A single line appended as the last paragraph of every blog post — no extra spacing, reads as the final sentence. Supports bold, italic, and links. Leave blank to disable.',
       group: 'all',
-    },
-    {
-      name: 'showPostCta',
-      title: 'Show CTA at bottom of posts',
-      type: 'boolean',
-      description:
-        'If enabled, every blog post renders the CTA configured below at the bottom (above pagination).',
-      initialValue: false,
-      group: 'all',
-    },
-    {
-      name: 'postCta',
-      title: 'Post CTA',
-      type: 'fullBleedImageSection',
-      description:
-        'The same section type used on the Experience page "Next Steps" block — configure a heading, body copy, button, and background image.',
-      hidden: ({parent}) => parent?.showPostCta === false,
-      group: 'all',
+      validation: (Rule) => Rule.max(1),
+      of: [
+        {
+          type: 'block',
+          styles: [{title: 'Normal', value: 'normal'}],
+          lists: [],
+          marks: {
+            decorators: [
+              {title: 'Bold', value: 'strong'},
+              {title: 'Italic', value: 'em'},
+            ],
+            annotations: [
+              {
+                name: 'link',
+                type: 'object',
+                title: 'Link',
+                fields: [{name: 'href', type: 'url', title: 'URL'}],
+              },
+            ],
+          },
+        },
+      ],
     },
     {
       name: 'showPagination',

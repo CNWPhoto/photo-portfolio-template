@@ -2,16 +2,15 @@
 import Layout from '../../layouts/Layout.astro';
 import { toHTML } from '@portabletext/to-html';
 import SanityImage from '../../components/SanityImage.astro';
-import SectionRenderer from '../../components/SectionRenderer.astro';
 import BlogPagination from '../../components/BlogPagination.astro';
 import { buildSrc, buildSrcset } from '../../lib/image';
 import { getClient } from '../../lib/sanity.js';
-import { SECTION_PROJECTION, SITE_PALETTES_QUERY } from '../../lib/sectionsQuery.js';
+import { renderBody, isPortableText } from '../../lib/portableText.js';
 
 const { slug } = Astro.params;
 const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 
-const [post, siteSettings, blogPage, siteData] = await Promise.all([
+const [post, siteSettings, blogPage] = await Promise.all([
   client.fetch(
     `*[_type == "blogPost" && slug.current == $slug][0]{
       title, publishDate, _updatedAt, excerpt,
@@ -24,20 +23,15 @@ const [post, siteSettings, blogPage, siteData] = await Promise.all([
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ siteName, photographerName }`),
   client.fetch(
     `*[_type == "blogPage" && _id == "blogPage"][0]{
-      showPostCta,
-      "postCta": postCta{ ${SECTION_PROJECTION} },
+      postCtaText,
       showPagination
     }`,
   ),
-  client.fetch(SITE_PALETTES_QUERY),
 ]);
 
 if (!post) {
   return Astro.redirect('/blog');
 }
-
-const palettes = siteData?.palettes ?? [];
-const sitePaletteSlug = siteData?.defaultPalette ?? null;
 
 // Adjacent posts (only fetched if pagination is enabled). "Previous" is the
 // next-oldest post; "Next" is the next-newer post by publishDate. Returns
@@ -62,7 +56,12 @@ if (showPagination && post.publishDate) {
   nextPost = next;
 }
 
-const showPostCta = !!blogPage?.showPostCta && !!blogPage?.postCta;
+// Rich-text CTA line appended as the final paragraph of every blog post.
+// Renders through the shared renderBody helper so bold/italic/link marks
+// produce the same HTML as the rest of the body — no extra spacing.
+const postCtaHTML = isPortableText(blogPage?.postCtaText)
+  ? renderBody(blogPage.postCtaText)
+  : '';
 
 const publishFormatted = post.publishDate
   ? new Date(post.publishDate).toLocaleDateString('en-US', {
@@ -185,16 +184,8 @@ const bodyHTML = post.body
         </div>
       )}
 
-      <div class="post__body" set:html={bodyHTML} />
+      <div class="post__body" set:html={bodyHTML + postCtaHTML} />
     </article>
-
-    {showPostCta && (
-      <SectionRenderer
-        section={blogPage.postCta}
-        sitePaletteSlug={sitePaletteSlug}
-        palettes={palettes}
-      />
-    )}
 
     {showPagination && (prevPost || nextPost) && (
       <BlogPagination prev={prevPost} next={nextPost} />
