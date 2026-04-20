@@ -39,10 +39,10 @@ const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
     navVariant,
     links[] {
       label, url, enabled, openInNewTab, isButton, linkType,
-      "internalRef": internalRef->{ "slug": slug.current },
+      "internalRef": internalRef->{ _type, "slug": slug.current },
       children[] {
         label, url, openInNewTab, linkType,
-        "internalRef": internalRef->{ "slug": slug.current }
+        "internalRef": internalRef->{ _type, "slug": slug.current }
       }
     }
   }`),

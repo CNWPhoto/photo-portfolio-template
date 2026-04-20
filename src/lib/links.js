@@ -25,6 +25,18 @@ function stripSelfOrigin(url, selfHostnames) {
   return url
 }
 
+// Map a dereferenced internal doc to its public URL. Handles the
+// singletons that don't carry a slug (homepagePage → '/') and the ones
+// that do (portfolio, blogPage, page). The doc must have been fetched
+// with `_type` projected, e.g. `internal->{ _type, "slug": slug.current }`.
+function pathForInternal(doc) {
+  if (!doc) return null
+  if (doc._type === 'homepagePage') return '/'
+  const slug = doc.slug?.current || doc.slug
+  if (!slug) return null
+  return slug === 'home' ? '/' : `/${slug}`
+}
+
 export function resolveLink(link, selfHostnames = null) {
   if (!link) return null
 
@@ -32,9 +44,9 @@ export function resolveLink(link, selfHostnames = null) {
   if (link.linkType) {
     if (link.linkType === 'external') return stripSelfOrigin(link.url || null, selfHostnames)
     if (link.linkType === 'internal') {
-      const slug = link.internalRef?.slug?.current || link.internalRef?.slug
-      if (!slug) return stripSelfOrigin(link.url || null, selfHostnames)
-      return slug === 'home' ? '/' : `/${slug}`
+      const path = pathForInternal(link.internalRef)
+      if (!path) return stripSelfOrigin(link.url || null, selfHostnames)
+      return path
     }
     return stripSelfOrigin(link.url || null, selfHostnames)
   }
@@ -47,10 +59,6 @@ export function resolveLink(link, selfHostnames = null) {
     if (!a) return null
     return a.startsWith('#') ? a : `#${a}`
   }
-  if (link.type === 'internal') {
-    const slug = link.internal?.slug?.current || link.internal?.slug
-    if (!slug) return null
-    return slug === 'home' ? '/' : `/${slug}`
-  }
+  if (link.type === 'internal') return pathForInternal(link.internal)
   return null
 }

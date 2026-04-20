@@ -26,7 +26,15 @@ export const ctaLink = {
       name: 'internal',
       title: 'Page',
       type: 'reference',
-      to: [{type: 'page'}],
+      // Every page-like document except the 404. resolveLink in
+      // src/lib/links.js handles each _type — homepagePage → '/',
+      // others use their slug field.
+      to: [
+        {type: 'page'},
+        {type: 'homepagePage'},
+        {type: 'portfolio'},
+        {type: 'blogPage'},
+      ],
       hidden: ({parent}) => parent?.type !== 'internal',
       weak: true,
     },
