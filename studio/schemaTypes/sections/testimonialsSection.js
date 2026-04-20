@@ -16,11 +16,22 @@ export default {
     },
   },
   fields: [
-    // `layout` (slider / grid / single-featured) was removed because only
-    // `slider` was ever implemented in the component; picking grid or
-    // single-featured silently fell back to slider. Tracked in
-    // docs/deferred-features.md.
     ...sectionBaseFields(),
+    {
+      name: 'layout',
+      title: 'Layout',
+      type: 'string',
+      description:
+        '"Image + slider" shows one testimonial at a time with a photo on the left and prev/next arrows. "2-column text only" shows two testimonials side by side without photos.',
+      options: {
+        list: [
+          {title: 'Image + slider', value: 'image-slider'},
+          {title: '2-column text only', value: 'two-col-text'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'image-slider',
+    },
     {
       name: 'eyebrow',
       title: 'Eyebrow',
@@ -36,7 +47,7 @@ export default {
       name: 'maxCount',
       title: 'Max Count',
       type: 'number',
-      description: 'Optional. Limits how many testimonials to show. Leave blank to show all.',
+      description: 'Optional. Limits how many testimonials to show. Leave blank to show all. (2-column text only uses just the first 2.)',
     },
   ],
 }

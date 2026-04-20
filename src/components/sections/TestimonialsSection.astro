@@ -2,6 +2,7 @@
 import { paletteToStyle } from '../../lib/palette.js';
 import { getClient } from '../../lib/sanity.js';
 import { buildSrc, buildSrcset } from '../../lib/image';
+import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
   section: any;
@@ -12,6 +13,8 @@ interface Props {
 const { section, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
+// stegaClean on layout so equality checks survive preview-mode markers
+const layout = stegaClean(section?.layout) || 'image-slider';
 const source = section?.source || 'all';
 const maxCount = section?.maxCount || 12;
 
@@ -43,44 +46,55 @@ const first = testimonials[0] ?? null;
 ---
 
 <section
-  class="tslider"
+  class:list={['tslider', `tslider--${layout}`]}
   data-section-type="testimonialsSection"
   id={section?.sectionId || 'testimonials'}
   style={style}
 >
-  <div class="tslider__inner">
-    <div class="tslider__image-col reveal-fade">
-      <div class="tslider__image-wrap" data-tslider-img-wrap>
-        {first?.image && (
-          <img
-            src={first.photoSrc}
-            srcset={first.photoSrcset}
-            sizes="(max-width: 900px) 30vw, 200px"
-            alt={first.photoAlt}
-            class="tslider__img"
-            loading="lazy"
-          />
+  {layout === 'two-col-text' ? (
+    <div class="tslider__inner tslider__inner--two-col">
+      {testimonials.slice(0, 2).map((t, i) => (
+        <div class={`tslider__col reveal reveal-delay-${i + 1}`}>
+          <blockquote class="tslider__quote">&ldquo;{t.quote}&rdquo;</blockquote>
+          <p class="tslider__attribution">{t.client}</p>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div class="tslider__inner">
+      <div class="tslider__image-col reveal-fade">
+        <div class="tslider__image-wrap" data-tslider-img-wrap>
+          {first?.image && (
+            <img
+              src={first.photoSrc}
+              srcset={first.photoSrcset}
+              sizes="(max-width: 900px) 30vw, 200px"
+              alt={first.photoAlt}
+              class="tslider__img"
+              loading="lazy"
+            />
+          )}
+        </div>
+      </div>
+
+      <div class="tslider__content reveal reveal-delay-2">
+        <blockquote class="tslider__quote" data-tslider-quote>
+          &ldquo;{first?.quote}&rdquo;
+        </blockquote>
+        <p class="tslider__attribution" data-tslider-client>{first?.client}</p>
+
+        {testimonials.length > 1 && (
+          <div class="tslider__nav">
+            <span class="tslider__count">
+              <span data-tslider-idx>1</span> / {testimonials.length}
+            </span>
+            <button class="tslider__arrow" data-tslider-prev aria-label="Previous testimonial">&#8592;</button>
+            <button class="tslider__arrow" data-tslider-next aria-label="Next testimonial">&#8594;</button>
+          </div>
         )}
       </div>
     </div>
-
-    <div class="tslider__content reveal reveal-delay-2">
-      <blockquote class="tslider__quote" data-tslider-quote>
-        &ldquo;{first?.quote}&rdquo;
-      </blockquote>
-      <p class="tslider__attribution" data-tslider-client>{first?.client}</p>
-
-      {testimonials.length > 1 && (
-        <div class="tslider__nav">
-          <span class="tslider__count">
-            <span data-tslider-idx>1</span> / {testimonials.length}
-          </span>
-          <button class="tslider__arrow" data-tslider-prev aria-label="Previous testimonial">&#8592;</button>
-          <button class="tslider__arrow" data-tslider-next aria-label="Next testimonial">&#8594;</button>
-        </div>
-      )}
-    </div>
-  </div>
+  )}
 </section>
 
 <style>
@@ -176,6 +190,18 @@ const first = testimonials[0] ?? null;
   .tslider__arrow:hover:not(:disabled) { border-color: var(--text); }
   .tslider__arrow:disabled { opacity: 0.3; cursor: default; }
 
+  /* ── 2-column text-only variant ─────────────────────────────── */
+  .tslider__inner--two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: start;
+  }
+
+  .tslider__col {
+    max-width: none;
+  }
+
   @media (max-width: 900px) {
     .tslider__inner {
       flex-direction: column;
@@ -186,6 +212,12 @@ const first = testimonials[0] ?? null;
     .tslider__image-col { width: 100%; display: flex; justify-content: center; }
     .tslider__image-wrap { width: 80%; height: 90vw; max-height: 500px; }
     .tslider__content { max-width: none; width: 80%; }
+
+    .tslider__inner--two-col {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+      padding: 0 1.5rem;
+    }
   }
 </style>
 
