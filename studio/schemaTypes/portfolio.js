@@ -1,4 +1,5 @@
 import {imageSizeWarning, altTextWarning} from './_shared/imageValidation'
+import {validatePageSlug} from './_shared/slugValidator'
 
 export default {
   name: 'portfolio',
@@ -123,6 +124,114 @@ export default {
               validation: (Rule) => Rule.max(3),
             },
           ],
+        },
+      ],
+    },
+    {
+      name: 'additionalGalleries',
+      title: 'Additional Galleries',
+      type: 'array',
+      description:
+        'Optional secondary galleries. They appear as tab links at the top of the portfolio page. Each gets its own URL: /portfolio/<slug> — linkable from anywhere on the site. Max 2.',
+      group: 'all',
+      validation: (Rule) => Rule.max(2),
+      of: [
+        {
+          type: 'object',
+          name: 'additionalGallery',
+          title: 'Gallery',
+          fields: [
+            {
+              name: 'name',
+              title: 'Gallery Name',
+              type: 'string',
+              description: 'Displayed as the tab label at the top of the portfolio page.',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'slug',
+              title: 'URL Slug',
+              type: 'slug',
+              description:
+                'The URL for this gallery: /portfolio/<slug>. Click "Generate" to create from the name.',
+              options: {source: 'name', maxLength: 64},
+              validation: (Rule) => Rule.required().custom(validatePageSlug),
+            },
+            {
+              name: 'byline',
+              title: 'Byline Override',
+              type: 'string',
+              description: 'Optional. Overrides the portfolio byline for this gallery only.',
+            },
+            {
+              name: 'galleryColumns',
+              title: 'Gallery Columns Override',
+              type: 'number',
+              description:
+                'Optional. Overrides the portfolio column count for this gallery only.',
+              options: {
+                list: [
+                  {title: '2 columns', value: 2},
+                  {title: '3 columns', value: 3},
+                  {title: '4 columns', value: 4},
+                ],
+                layout: 'radio',
+              },
+            },
+            {
+              name: 'seo',
+              title: 'SEO',
+              type: 'seo',
+              description: 'Optional per-gallery SEO. Falls back to the portfolio page SEO.',
+            },
+            {
+              name: 'images',
+              title: 'Gallery Images',
+              type: 'array',
+              description:
+                'Drag to reorder. Bulk-upload supported. Categories on these images are not used — categories only filter the main portfolio gallery.',
+              of: [
+                {
+                  type: 'image',
+                  options: {hotspot: true, crop: true},
+                  validation: imageSizeWarning,
+                  preview: {
+                    select: {title: 'title', media: 'asset'},
+                    prepare({title, media}) {
+                      return {title: title || 'Untitled', media}
+                    },
+                  },
+                  fields: [
+                    {
+                      name: 'alt',
+                      title: 'Alt Text',
+                      type: 'string',
+                      description:
+                        'Describe the image for accessibility and SEO.',
+                      validation: altTextWarning,
+                    },
+                    {
+                      name: 'title',
+                      title: 'Internal Label',
+                      type: 'string',
+                      description:
+                        'Optional. Only visible in the Studio.',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          preview: {
+            select: {title: 'name', subtitle: 'slug.current', media: 'images.0'},
+            prepare({title, subtitle, media}) {
+              return {
+                title: title || 'Untitled Gallery',
+                subtitle: subtitle ? `/portfolio/${subtitle}` : 'No slug set',
+                media,
+              }
+            },
+          },
         },
       ],
     },

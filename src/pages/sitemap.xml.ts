@@ -19,7 +19,7 @@ export const GET: APIRoute = async () => {
     sanityClient.fetch(`{
       "homepage":  *[_type == "homepagePage"  && _id == "homepagePage"][0]{ _updatedAt },
       "blog":      *[_type == "blogPage"      && _id == "blogPage"][0]    { slug, blogEnabled, _updatedAt },
-      "portfolio": *[_type == "portfolio"     && _id == "portfolio"][0]   { slug, _updatedAt },
+      "portfolio": *[_type == "portfolio"     && _id == "portfolio"][0]   { slug, _updatedAt, "additionalGallerySlugs": additionalGalleries[defined(slug.current)].slug.current },
     }`),
     sanityClient.fetch(
       `*[_type == "page" && defined(slug.current)] | order(slug.current asc){
@@ -72,6 +72,17 @@ export const GET: APIRoute = async () => {
     changefreq: 'weekly',
     priority: '0.9',
   });
+
+  // Additional galleries (tab-linked secondary galleries)
+  for (const gSlug of singletons?.portfolio?.additionalGallerySlugs ?? []) {
+    if (!gSlug) continue;
+    urls.push({
+      loc: `${base}/${portfolioSlug}/${gSlug}`,
+      lastmod: fmt(singletons?.portfolio?._updatedAt),
+      changefreq: 'weekly',
+      priority: '0.7',
+    });
+  }
 
   // ── Unified page docs (about, contact, experience, anything custom) ─
   for (const page of pages ?? []) {

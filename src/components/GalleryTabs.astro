@@ -1,0 +1,84 @@
+---
+// Horizontal link bar shown above the masonry grid on /portfolio and
+// /portfolio/<slug>. Plain <a> links — each tab is a fresh page load.
+// Renders nothing when there's only one tab (default gallery + no
+// additional galleries) so the single-gallery case looks unchanged.
+
+interface Tab {
+  label: string;
+  href: string;
+  slug: string;
+}
+
+interface Props {
+  tabs: Tab[];
+  activeSlug: string;
+}
+
+const { tabs, activeSlug } = Astro.props;
+const showTabs = tabs.length >= 2;
+---
+
+{showTabs && (
+  <nav class="gallery-tabs" aria-label="Gallery">
+    <ul class="gallery-tabs__list">
+      {tabs.map((tab) => {
+        const isActive = tab.slug === activeSlug;
+        return (
+          <li class="gallery-tabs__item">
+            <a
+              href={tab.href}
+              class:list={['gallery-tabs__link', { 'gallery-tabs__link--active': isActive }]}
+              aria-current={isActive ? 'page' : undefined}
+            >{tab.label}</a>
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+)}
+
+<style>
+  .gallery-tabs {
+    padding: 1.5rem 3rem 0.5rem;
+    border-top: 1px solid var(--border, #ececec);
+    margin-top: 2rem;
+  }
+  .gallery-tabs__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: flex-end;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .gallery-tabs__item { margin: 0; }
+  .gallery-tabs__link {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted, #4a5568);
+    text-decoration: none;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid transparent;
+    transition: color 0.18s, border-color 0.18s;
+  }
+  .gallery-tabs__link:hover {
+    color: var(--text, #1a2744);
+    border-bottom-color: var(--accent, currentColor);
+  }
+  .gallery-tabs__link--active {
+    color: var(--accent, #8b2635);
+    border-bottom-color: var(--accent, currentColor);
+  }
+
+  @media (max-width: 900px) {
+    .gallery-tabs { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .gallery-tabs__list { gap: 1.25rem; }
+  }
+  @media (max-width: 480px) {
+    .gallery-tabs__list { justify-content: flex-start; }
+  }
+</style>

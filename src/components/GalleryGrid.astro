@@ -1,0 +1,242 @@
+---
+// Masonry grid + lightbox — shared between /portfolio and
+// /portfolio/<slug>. Takes pre-normalized image objects
+// ({ src, fullSrc, alt, w, h }) so the page decides what to urlFor.
+
+interface GalleryImage {
+  src: string;
+  fullSrc: string;
+  alt: string;
+  w: number;
+  h: number;
+}
+
+interface Props {
+  images: GalleryImage[];
+  galleryColumns?: number;
+}
+
+const { images, galleryColumns = 3 } = Astro.props;
+const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
+---
+
+<div class="portfolio__grid" style={`--gallery-columns: ${galleryColumns}`}>
+  {images.map((img, i) => (
+    <div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
+      <img
+        src={img.src}
+        alt={img.alt}
+        width={img.w}
+        height={img.h}
+        loading="lazy"
+        decoding="async"
+        class="portfolio__img"
+        data-index={i}
+      />
+    </div>
+  ))}
+</div>
+
+<!-- Lightbox -->
+<div class="lb" id="lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Image viewer">
+  <button class="lb__close" id="lb-close" aria-label="Close lightbox">&#x2715;</button>
+  <button class="lb__arrow lb__prev" id="lb-prev" aria-label="Previous image">&#x2039;</button>
+  <div class="lb__img-wrap">
+    <img class="lb__img" id="lb-img" src="" alt="" />
+  </div>
+  <button class="lb__arrow lb__next" id="lb-next" aria-label="Next image">&#x203A;</button>
+</div>
+
+<script define:vars={{ lbImages }}>
+  const lb     = document.getElementById('lb');
+  const lbImg  = document.getElementById('lb-img');
+  const lbPrev = document.getElementById('lb-prev');
+  const lbNext = document.getElementById('lb-next');
+  const lbClose = document.getElementById('lb-close');
+
+  let current = 0;
+
+  function open(index) {
+    current = index;
+    show();
+  }
+
+  function show() {
+    const { src, alt } = lbImages[current];
+    lbImg.style.opacity = '0';
+    lbImg.alt = alt;
+    lbImg.onload = () => { lbImg.style.opacity = '1'; };
+    lbImg.src = src;
+    if (lbImg.complete && lbImg.naturalWidth) lbImg.style.opacity = '1';
+    lb.setAttribute('aria-hidden', 'false');
+    lb.classList.add('lb--open');
+    document.body.style.overflow = 'hidden';
+    lbPrev.style.display = lbImages.length > 1 ? '' : 'none';
+    lbNext.style.display = lbImages.length > 1 ? '' : 'none';
+    [current - 1, current + 1].forEach((i) => {
+      const idx = (i + lbImages.length) % lbImages.length;
+      if (idx !== current) { const pre = new Image(); pre.src = lbImages[idx].src; }
+    });
+  }
+
+  function close() {
+    lb.classList.remove('lb--open');
+    lb.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    setTimeout(() => { lbImg.src = ''; }, 300);
+  }
+
+  function prev() { current = (current - 1 + lbImages.length) % lbImages.length; show(); }
+  function next() { current = (current + 1) % lbImages.length; show(); }
+
+  document.querySelectorAll('.portfolio__img').forEach((img) => {
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', () => open(Number(img.dataset.index)));
+  });
+
+  lbClose.addEventListener('click', close);
+  lbPrev.addEventListener('click', prev);
+  lbNext.addEventListener('click', next);
+
+  lb.addEventListener('click', (e) => {
+    if (e.target === lb) close();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!lb.classList.contains('lb--open')) return;
+    if (e.key === 'Escape')      close();
+    if (e.key === 'ArrowLeft')   prev();
+    if (e.key === 'ArrowRight')  next();
+  });
+</script>
+
+<style>
+  .portfolio__grid {
+    columns: var(--gallery-columns, 3);
+    column-gap: 15px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 1.5rem 15px 0;
+  }
+
+  .portfolio__item {
+    break-inside: avoid;
+    margin-bottom: 15px;
+    overflow: hidden;
+  }
+
+  .portfolio__item img {
+    width: 100%;
+    display: block;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .portfolio__img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+  }
+
+  .portfolio__item:hover img {
+    transform: scale(1.03);
+  }
+
+  /* ── Lightbox ─────────────────────────────────────────── */
+  .lb {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.92);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+  }
+
+  .lb--open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .lb__img-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: calc(100vw - 140px);
+    max-height: calc(100vh - 60px);
+  }
+
+  .lb__img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 60px);
+    object-fit: contain;
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+    transition: opacity 0.25s ease;
+  }
+
+  .lb__close {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.18s, transform 0.18s;
+    z-index: 2;
+  }
+
+  .lb__close:hover {
+    color: #fff;
+    transform: scale(1.15);
+  }
+
+  .lb__arrow {
+    position: fixed;
+    top: calc(50% - 26px);
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 2.5rem;
+    line-height: 1;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.18s, color 0.18s, background 0.18s, transform 0.18s;
+    z-index: 2;
+  }
+
+  .lb__arrow:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.7);
+    color: #fff;
+    transform: scale(1.08);
+  }
+
+  .lb__prev { left: 1.25rem; }
+  .lb__next { right: 1.25rem; }
+
+  @media (max-width: 900px) {
+    .portfolio__grid { columns: 2; }
+    .lb__img-wrap { max-width: calc(100vw - 100px); }
+  }
+
+  @media (max-width: 480px) {
+    .portfolio__grid { columns: 1; }
+    .lb__arrow { width: 40px; height: 40px; font-size: 2rem; }
+    .lb__prev { left: 0.5rem; }
+    .lb__next { right: 0.5rem; }
+    .lb__img-wrap { max-width: calc(100vw - 80px); }
+  }
+</style>

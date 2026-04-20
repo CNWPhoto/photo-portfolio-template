@@ -1,8 +1,30 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import GalleryTabs from '../components/GalleryTabs.astro';
+import GalleryGrid from '../components/GalleryGrid.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
 
-const portfolioDoc = await getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env).fetch(`*[_type == "portfolio"][0]{ pageTitle, seo { seoTitle, seoDescription, socialImage { asset->{ url } } }, title, byline, galleryColumns, images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } } }`, {}, { cache: 'no-store' });
+const portfolioDoc = await getClient(
+  Astro.locals.isPreview,
+  (Astro.locals as any).runtime?.env,
+).fetch(
+  `*[_type == "portfolio"][0]{
+    pageTitle,
+    seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+    title,
+    byline,
+    galleryColumns,
+    images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } },
+    additionalGalleries[]{
+      name,
+      "slug": slug.current,
+      byline,
+      galleryColumns,
+    }
+  }`,
+  {},
+  { cache: 'no-store' },
+);
 
 const seoTitle       = portfolioDoc?.seo?.seoTitle       || portfolioDoc?.pageTitle || null;
 const seoDescription = portfolioDoc?.seo?.seoDescription || null;
@@ -13,20 +35,19 @@ const galleryColumns = portfolioDoc?.galleryColumns || 3;
 const portfolio      = portfolioDoc?.images;
 
 // TODO:NICHE — swap fallback Pexels IDs and alt text for your niche
-// Alternating tall/wide aspect ratios so CSS columns mixes orientations across all three columns
 const fallbackImages = [
-	{ id: '1108099',  alt: 'Golden retriever in warm afternoon light',    w: 800, h: 1067 }, // tall
-	{ id: '2253275',  alt: 'Dog exploring in golden afternoon light',     w: 800, h: 533  }, // wide
-	{ id: '825949',   alt: 'Dog portrait in natural light',               w: 800, h: 1067 }, // tall
-	{ id: '1254140',  alt: 'Dog running through an open field',           w: 800, h: 533  }, // wide
-	{ id: '3726314',  alt: 'Dog looking curiously at the camera',         w: 800, h: 1067 }, // tall
-	{ id: '1805164',  alt: 'Playful dog in soft afternoon light',         w: 800, h: 533  }, // wide
-	{ id: '2607544',  alt: 'Dog portrait with soft bokeh background',     w: 800, h: 1067 }, // tall
-	{ id: '3196887',  alt: 'Happy dog outdoors in sunshine',              w: 800, h: 533  }, // wide
-	{ id: '4587998',  alt: 'Close-up dog portrait outdoors',              w: 800, h: 1067 }, // tall
-	{ id: '4587991',  alt: 'Dog at rest in warm natural light',           w: 800, h: 533  }, // wide
-	{ id: '1633794',  alt: 'Dog in dappled forest light',                 w: 800, h: 1067 }, // tall
-	{ id: '2607546',  alt: 'Dog portrait, candid expression',             w: 800, h: 533  }, // wide
+	{ id: '1108099',  alt: 'Golden retriever in warm afternoon light',    w: 800, h: 1067 },
+	{ id: '2253275',  alt: 'Dog exploring in golden afternoon light',     w: 800, h: 533  },
+	{ id: '825949',   alt: 'Dog portrait in natural light',               w: 800, h: 1067 },
+	{ id: '1254140',  alt: 'Dog running through an open field',           w: 800, h: 533  },
+	{ id: '3726314',  alt: 'Dog looking curiously at the camera',         w: 800, h: 1067 },
+	{ id: '1805164',  alt: 'Playful dog in soft afternoon light',         w: 800, h: 533  },
+	{ id: '2607544',  alt: 'Dog portrait with soft bokeh background',     w: 800, h: 1067 },
+	{ id: '3196887',  alt: 'Happy dog outdoors in sunshine',              w: 800, h: 533  },
+	{ id: '4587998',  alt: 'Close-up dog portrait outdoors',              w: 800, h: 1067 },
+	{ id: '4587991',  alt: 'Dog at rest in warm natural light',           w: 800, h: 533  },
+	{ id: '1633794',  alt: 'Dog in dappled forest light',                 w: 800, h: 1067 },
+	{ id: '2607546',  alt: 'Dog portrait, candid expression',             w: 800, h: 533  },
 ].map(({ id, alt, w, h }) => ({
 	src: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${h}&fit=crop`,
 	fullSrc: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1600`,
@@ -49,7 +70,18 @@ const images = portfolio?.length
 	  })
 	: fallbackImages;
 
-const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
+// Tabs: default (/portfolio) + each additionalGallery with a slug.
+const extraGalleries = (portfolioDoc?.additionalGalleries ?? []).filter(
+  (g: any) => g?.slug && g?.name,
+);
+const tabs = [
+  { label: pageTitle, href: '/portfolio', slug: '' },
+  ...extraGalleries.map((g: any) => ({
+    label: g.name,
+    href: `/portfolio/${g.slug}`,
+    slug: g.slug,
+  })),
+];
 ---
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Portfolio">
@@ -58,104 +90,10 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 			<p class="portfolio__byline">{byline}</p>
 			<h1 class="portfolio__title">{pageTitle}</h1>
 		</div>
-		<div class="portfolio__grid" style={`--gallery-columns: ${galleryColumns}`}>
-			{images.map((img, i) => (
-				<div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
-					<img
-						src={img.src}
-						alt={img.alt}
-						width={img.w}
-						height={img.h}
-						loading="lazy"
-						decoding="async"
-						class="portfolio__img"
-						data-index={i}
-					/>
-				</div>
-			))}
-		</div>
+		<GalleryTabs tabs={tabs} activeSlug="" />
+		<GalleryGrid images={images} galleryColumns={galleryColumns} />
 	</main>
-
-	<!-- Lightbox -->
-	<div class="lb" id="lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Image viewer">
-		<button class="lb__close" id="lb-close" aria-label="Close lightbox">&#x2715;</button>
-		<button class="lb__arrow lb__prev" id="lb-prev" aria-label="Previous image">&#x2039;</button>
-		<div class="lb__img-wrap">
-			<img class="lb__img" id="lb-img" src="" alt="" />
-		</div>
-		<button class="lb__arrow lb__next" id="lb-next" aria-label="Next image">&#x203A;</button>
-	</div>
 </Layout>
-
-<script define:vars={{ lbImages }}>
-	const lb     = document.getElementById('lb');
-	const lbImg  = document.getElementById('lb-img');
-	const lbPrev = document.getElementById('lb-prev');
-	const lbNext = document.getElementById('lb-next');
-	const lbClose = document.getElementById('lb-close');
-
-	let current = 0;
-
-	function open(index) {
-		current = index;
-		show();
-	}
-
-	function show() {
-		const { src, alt } = lbImages[current];
-		// Fade image in once loaded
-		lbImg.style.opacity = '0';
-		lbImg.alt = alt;
-		lbImg.onload = () => { lbImg.style.opacity = '1'; };
-		lbImg.src = src;
-		// Already cached — onload won't fire
-		if (lbImg.complete && lbImg.naturalWidth) lbImg.style.opacity = '1';
-		lb.setAttribute('aria-hidden', 'false');
-		lb.classList.add('lb--open');
-		document.body.style.overflow = 'hidden';
-		lbPrev.style.display = lbImages.length > 1 ? '' : 'none';
-		lbNext.style.display = lbImages.length > 1 ? '' : 'none';
-		// Preload adjacent images
-		[current - 1, current + 1].forEach((i) => {
-			const idx = (i + lbImages.length) % lbImages.length;
-			if (idx !== current) { const pre = new Image(); pre.src = lbImages[idx].src; }
-		});
-	}
-
-	function close() {
-		lb.classList.remove('lb--open');
-		lb.setAttribute('aria-hidden', 'true');
-		document.body.style.overflow = '';
-		// Clear src after fade-out so there's no flash on reopen
-		setTimeout(() => { lbImg.src = ''; }, 300);
-	}
-
-	function prev() { current = (current - 1 + lbImages.length) % lbImages.length; show(); }
-	function next() { current = (current + 1) % lbImages.length; show(); }
-
-	// Open on image click
-	document.querySelectorAll('.portfolio__img').forEach((img) => {
-		img.style.cursor = 'zoom-in';
-		img.addEventListener('click', () => open(Number(img.dataset.index)));
-	});
-
-	lbClose.addEventListener('click', close);
-	lbPrev.addEventListener('click', prev);
-	lbNext.addEventListener('click', next);
-
-	// Click outside image to close
-	lb.addEventListener('click', (e) => {
-		if (e.target === lb) close();
-	});
-
-	// Keyboard
-	document.addEventListener('keydown', (e) => {
-		if (!lb.classList.contains('lb--open')) return;
-		if (e.key === 'Escape')      close();
-		if (e.key === 'ArrowLeft')   prev();
-		if (e.key === 'ArrowRight')  next();
-	});
-</script>
 
 <style>
 	/* Portfolio overrides the palette ONLY inside .portfolio-main so
@@ -172,7 +110,6 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 		overflow-x: hidden;
 	}
 
-	/* Header row — byline + large title, right-aligned */
 	.portfolio__header {
 		display: flex;
 		align-items: center;
@@ -184,7 +121,6 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 		border-bottom: none;
 	}
 
-	/* Small uppercase byline, accent color */
 	.portfolio__byline {
 		font-family: var(--font-sans);
 		font-size: 0.65rem;
@@ -196,7 +132,6 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 		max-width: 180px;
 	}
 
-	/* Large page title */
 	.portfolio__title {
 		font-size: clamp(2.45rem, 5.6vw, 4.9rem);
 		letter-spacing: -0.02em;
@@ -207,136 +142,11 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 		white-space: nowrap;
 	}
 
-	/* Full-width masonry grid, edge to edge */
-	.portfolio__grid {
-		columns: var(--gallery-columns, 3);
-		column-gap: 15px;
-		width: 100%;
-		box-sizing: border-box;
-		margin: 0;
-		padding: 1.5rem 15px 0;
-	}
-
-	.portfolio__item {
-		break-inside: avoid;
-		margin-bottom: 15px;
-		overflow: hidden;
-	}
-
-	.portfolio__item img {
-		width: 100%;
-		display: block;
-		transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-	}
-
-	.portfolio__img {
-		width: 100%;
-		height: auto;
-		display: block;
-		object-fit: cover;
-	}
-
-	.portfolio__item:hover img {
-		transform: scale(1.03);
-	}
-
-	/* ── Lightbox ─────────────────────────────────────────── */
-	.lb {
-		position: fixed;
-		inset: 0;
-		z-index: 1000;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(0, 0, 0, 0.92);
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity 0.22s ease;
-	}
-
-	.lb--open {
-		opacity: 1;
-		pointer-events: all;
-	}
-
-	.lb__img-wrap {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		max-width: calc(100vw - 140px);
-		max-height: calc(100vh - 60px);
-	}
-
-	.lb__img {
-		display: block;
-		max-width: 100%;
-		max-height: calc(100vh - 60px);
-		object-fit: contain;
-		box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
-		transition: opacity 0.25s ease;
-	}
-
-	.lb__close {
-		position: fixed;
-		top: 1.25rem;
-		right: 1.5rem;
-		background: none;
-		border: none;
-		color: rgba(255, 255, 255, 0.8);
-		font-size: 1.5rem;
-		line-height: 1;
-		cursor: pointer;
-		padding: 0.5rem;
-		transition: color 0.18s, transform 0.18s;
-		z-index: 2;
-	}
-
-	.lb__close:hover {
-		color: #fff;
-		transform: scale(1.15);
-	}
-
-	.lb__arrow {
-		position: fixed;
-		top: calc(50% - 26px);
-		background: none;
-		border: 1px solid rgba(255, 255, 255, 0.3);
-		color: rgba(255, 255, 255, 0.8);
-		font-size: 2.5rem;
-		line-height: 1;
-		width: 52px;
-		height: 52px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		transition: border-color 0.18s, color 0.18s, background 0.18s, transform 0.18s;
-		z-index: 2;
-	}
-
-	.lb__arrow:hover {
-		background: rgba(255, 255, 255, 0.1);
-		border-color: rgba(255, 255, 255, 0.7);
-		color: #fff;
-		transform: scale(1.08);
-	}
-
-	.lb__prev { left: 1.25rem; }
-	.lb__next { right: 1.25rem; }
-
 	@media (max-width: 900px) {
 		.portfolio__header {
 			padding-left: 1.5rem;
 			padding-right: 1.5rem;
 			gap: 1.25rem;
-		}
-
-		.portfolio__grid {
-			columns: 2;
-		}
-
-		.lb__img-wrap {
-			max-width: calc(100vw - 100px);
 		}
 	}
 
@@ -346,26 +156,6 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 			align-items: flex-end;
 			gap: 0.5rem;
 		}
-
-		.portfolio__byline {
-			max-width: 100%;
-		}
-
-		.portfolio__grid {
-			columns: 1;
-		}
-
-		.lb__arrow {
-			width: 40px;
-			height: 40px;
-			font-size: 2rem;
-		}
-
-		.lb__prev { left: 0.5rem; }
-		.lb__next { right: 0.5rem; }
-
-		.lb__img-wrap {
-			max-width: calc(100vw - 80px);
-		}
+		.portfolio__byline { max-width: 100%; }
 	}
 </style>
