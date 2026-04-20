@@ -413,6 +413,14 @@ const schemaJSON = schemaGraph.length
 
 	html {
 		scroll-behavior: smooth;
+		/* Prevent a horizontal scroll sliver from sections that use
+		   `width: 100vw` full-bleed pseudo-elements (e.g. SplitSection's
+		   ::before). On desktop browsers, `100vw` includes the vertical
+		   scrollbar track, so such elements are ~15px wider than the
+		   visible viewport. `clip` (not `hidden`) prevents scrolling
+		   without creating a scroll container, so `position: sticky`
+		   children keep working. */
+		overflow-x: clip;
 	}
 
 	body {

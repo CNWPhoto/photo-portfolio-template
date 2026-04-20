@@ -13,6 +13,8 @@ interface Props {
 const { section, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
+const eyebrow = section?.eyebrow || 'Featured';
+const heading = section?.heading || '';
 const ctaText = section?.ctaText || 'View Full Portfolio';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || '/portfolio';
 
@@ -22,7 +24,9 @@ const FALLBACK_HORIZONTAL = 'https://images.pexels.com/photos/825949/pexels-phot
 // Pull from the portfolio singleton's images[] array. Find the first image
 // that's portrait (vertical) and the first that's landscape (horizontal),
 // matching the legacy PortfolioGrid two-image layout.
-const client = getClient(false);
+// Use the preview-aware client so Presentation surfaces the portfolio
+// doc in the "Documents on this page" panel and drafts render in preview.
+const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 const portfolio = await client.fetch(
   `*[_type == "portfolio" && _id == "portfolio"][0]{
     images[] {
@@ -51,10 +55,11 @@ const horizontalImage =
 >
   <div class="pgrid__inner">
     <div class="pgrid__label-col" aria-hidden="true">
-      <span class="pgrid__label">Featured</span>
+      <span class="pgrid__label">{eyebrow}</span>
     </div>
 
     <div class="pgrid__content">
+      {heading && <h2 class="pgrid__heading reveal">{heading}</h2>}
       <div class="pgrid__images">
         <div class="pgrid__img pgrid__img--vertical reveal reveal-delay-1">
           {verticalImage
@@ -125,6 +130,14 @@ const horizontalImage =
     transform-origin: center center;
     white-space: nowrap;
     user-select: none;
+  }
+
+  .pgrid__heading {
+    font-size: clamp(1.75rem, 3vw, 2.75rem);
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin: 0 0 2rem;
+    line-height: 1.2;
   }
 
   /* Two-image side-by-side layout */

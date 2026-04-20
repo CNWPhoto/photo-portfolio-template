@@ -12,7 +12,7 @@ interface Props {
 const { section, isFirst = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
-const client = getClient(false);
+const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 const social = await client.fetch(
   `*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom, contactEmail, contactPhone }`,
 );
