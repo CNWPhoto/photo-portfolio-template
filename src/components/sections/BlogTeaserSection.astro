@@ -67,8 +67,8 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     )}
 
     <div class="blogteaser__grid">
-      {posts.map((post, i) => (
-        <article class:list={['blogteaser__card', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
+      {posts.map((post) => (
+        <article class="blogteaser__card">
           <a href={`/blog/${post.slug}`} class="blogteaser__card-link">
             {post?.coverImage?.asset && (
               <div class="blogteaser__img-wrap">
@@ -135,19 +135,6 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     display: grid;
     gap: 2rem;
     grid-template-columns: repeat(3, 1fr);
-  }
-
-  /* Override the global .reveal will-change hint on these cards. Leaving
-     will-change: opacity, transform active after the animation completes
-     keeps the card promoted to its own GPU compositor layer indefinitely,
-     which — paired with the hover scale on the inner image (another
-     layer) — renders with a subpixel outline on cards whose position
-     doesn't land on a device pixel boundary. Using `will-change: auto`
-     here tells the browser we don't need a persistent compositor layer;
-     the image's own transform still gets promoted during the actual
-     hover animation. */
-  .blogteaser__card {
-    will-change: auto;
   }
 
   .blogteaser__card-link {
