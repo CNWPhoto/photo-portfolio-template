@@ -15,7 +15,6 @@ const style = paletteToStyle(palette);
 
 const eyebrow = section?.eyebrow || '';
 const heading = section?.heading || '';
-const layout = section?.layout || 'grid-3';
 const source = section?.source || 'latest';
 const postCount = section?.postCount || 3;
 const showCategory = section?.showCategory !== false;
@@ -53,7 +52,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
 
 <section
-  class:list={['section', 'blogteaser', `blogteaser--${layout}`]}
+  class:list={['section', 'blogteaser']}
   data-section-type="blogTeaserSection"
   data-spacing={section?.spacing || 'normal'}
   id={section?.sectionId || undefined}
@@ -68,17 +67,11 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     )}
 
     <div class="blogteaser__grid">
-      {posts.map((post, i) => {
-        const isCard = layout === 'cards';
-        const lqip = isCard ? post?.coverImage?.asset?.metadata?.lqip || null : null;
-        return (
+      {posts.map((post, i) => (
         <article class:list={['blogteaser__card', 'reveal', `reveal-delay-${Math.min(i + 1, 5)}`]}>
           <a href={`/blog/${post.slug}`} class="blogteaser__card-link">
             {post?.coverImage?.asset && (
-              <div
-                class="blogteaser__img-wrap"
-                style={lqip ? `background-image:url('${lqip}');background-size:cover;background-position:center;` : ''}
-              >
+              <div class="blogteaser__img-wrap">
                 <SanityImage
                   image={post.coverImage}
                   sizes="(max-width:900px) 100vw, 33vw"
@@ -101,8 +94,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
             </div>
           </a>
         </article>
-        );
-      })}
+      ))}
     </div>
 
     {ctaText && (
@@ -142,29 +134,29 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   .blogteaser__grid {
     display: grid;
     gap: 2rem;
+    grid-template-columns: repeat(3, 1fr);
   }
-  .blogteaser--grid-3 .blogteaser__grid { grid-template-columns: repeat(3, 1fr); }
-  .blogteaser--horizontal-list .blogteaser__grid { grid-template-columns: 1fr; }
-  .blogteaser--cards .blogteaser__grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 
-  /* No explicit background on the card. It matches the section's --bg
-     anyway, so it's visually invisible — but `.reveal` on the card
-     declares `will-change: opacity, transform` which promotes it to
-     its own compositor layer. Stacking two layers that share a
-     background can produce a phantom outline on cards whose position
-     doesn't land on a device pixel boundary. Removing the redundant
-     background eliminates the artifact. */
+  /* Override the global .reveal will-change hint on these cards. Leaving
+     will-change: opacity, transform active after the animation completes
+     keeps the card promoted to its own GPU compositor layer indefinitely,
+     which — paired with the hover scale on the inner image (another
+     layer) — renders with a subpixel outline on cards whose position
+     doesn't land on a device pixel boundary. Using `will-change: auto`
+     here tells the browser we don't need a persistent compositor layer;
+     the image's own transform still gets promoted during the actual
+     hover animation. */
+  .blogteaser__card {
+    will-change: auto;
+  }
+
   .blogteaser__card-link {
     display: block;
     color: inherit;
     text-decoration: none;
   }
 
-  /* Body text padding for the 3-column grid variant so category, title,
-     date, and excerpt don't bump the card's left/right edges. Scoped
-     to grid-3 only so the horizontal-list and cards variants keep
-     their existing flush layout. */
-  .blogteaser--grid-3 .blogteaser__body {
+  .blogteaser__body {
     padding: 0 1.25rem 1.25rem;
   }
 
@@ -227,6 +219,6 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   }
 
   @media (max-width: 900px) {
-    .blogteaser--grid-3 .blogteaser__grid { grid-template-columns: 1fr; }
+    .blogteaser__grid { grid-template-columns: 1fr; }
   }
 </style>
