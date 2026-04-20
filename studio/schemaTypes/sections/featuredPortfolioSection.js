@@ -21,11 +21,20 @@ export default {
     // would just duplicate and confuse editors.
     ...sectionBaseFields(),
     {
+      name: 'showVerticalLabel',
+      title: 'Show Vertical Label',
+      type: 'boolean',
+      description:
+        'Toggle the rotated decorative label on the left edge of the section.',
+      initialValue: true,
+    },
+    {
       name: 'eyebrow',
       title: 'Vertical Label',
       type: 'string',
       description:
         'Short word rendered rotated 90° down the left edge of the section (e.g. "Featured", "Gallery", "Work"). Defaults to "Featured" if left blank. Short single words read best at this size.',
+      hidden: ({parent}) => parent?.showVerticalLabel === false,
     },
     {
       name: 'heading',
