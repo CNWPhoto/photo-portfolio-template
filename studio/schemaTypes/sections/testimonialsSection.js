@@ -1,5 +1,6 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
 import {sectionIcon} from '../../components/SectionIcons'
+import ManageTestimonialsLink from '../../components/ManageTestimonialsLink'
 
 // Testimonials section. Pulls from testimonial documents.
 // See docs/page-builder-spec.md §2 (testimonialsSection).
@@ -17,6 +18,13 @@ export default {
   },
   fields: [
     ...sectionBaseFields(),
+    {
+      name: 'manageLink',
+      title: 'Manage testimonials',
+      type: 'string',
+      readOnly: true,
+      components: {input: ManageTestimonialsLink},
+    },
     {
       name: 'layout',
       title: 'Layout',

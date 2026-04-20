@@ -8,8 +8,9 @@ export default {
       return {title: 'Blog Page'}
     },
   },
+  // "All Fields" is a built-in Sanity tab shown whenever groups are
+  // defined — adding a custom "all" group here would duplicate it.
   groups: [
-    {name: 'all', title: 'All', default: true},
     {name: 'seo', title: 'SEO'},
   ],
   fields: [
@@ -19,14 +20,13 @@ export default {
       type: 'boolean',
       description: 'Turn off to hide the blog from the navigation and footer site-wide.',
       initialValue: true,
-      group: 'all',
     },
     {
       name: 'pageTitle',
       title: 'Page Title',
       type: 'string',
       description: 'Used in the browser tab and as the SEO title fallback. E.g. "Blog | Denver Dog Photographer".',
-      group: ['all', 'seo'],
+      group: 'seo',
     },
     {
       name: 'slug',
@@ -34,13 +34,13 @@ export default {
       type: 'slug',
       description: 'The URL for this page (e.g. /about). ⚠️ Avoid changing this once the page is live — it will break existing links and hurt your search rankings. If you must change it, set up a 301 redirect from the old URL to the new one in your hosting settings.',
       options: {source: 'pageTitle'},
-      group: ['all', 'seo'],
+      group: 'seo',
     },
     {
       name: 'seo',
       title: 'SEO',
       type: 'seo',
-      group: ['all', 'seo'],
+      group: 'seo',
     },
 
     // ── Hero ────────────────────────────────────────────────────
@@ -49,20 +49,17 @@ export default {
       title: 'Hero Background Image',
       type: 'image',
       options: {hotspot: true, crop: true},
-      group: 'all',
     },
     {
       name: 'heroHeading',
       title: 'Hero Heading',
       type: 'string',
-      group: 'all',
     },
     {
       name: 'heroSubtext',
       title: 'Hero Subtext',
       type: 'text',
       rows: 2,
-      group: 'all',
     },
 
     // ── Layout ───────────────────────────────────────────────────
@@ -79,7 +76,6 @@ export default {
         layout: 'radio',
       },
       initialValue: 'list',
-      group: 'all',
     },
     {
       name: 'postsPerPage',
@@ -88,7 +84,6 @@ export default {
       description: 'How many posts to display on the page. Defaults to 12.',
       initialValue: 12,
       validation: (Rule) => Rule.min(1).max(100).integer(),
-      group: 'all',
     },
 
     // ── Blog post defaults (applied to every individual blog post) ─────
@@ -98,7 +93,6 @@ export default {
       type: 'array',
       description:
         'A single line appended as the last paragraph of every blog post — no extra spacing, reads as the final sentence. Supports bold, italic, and links. Leave blank to disable.',
-      group: 'all',
       validation: (Rule) => Rule.max(1),
       of: [
         {
@@ -129,7 +123,6 @@ export default {
       description:
         'If enabled, every blog post shows a short previous/next link pair at the very bottom, ordered by publish date.',
       initialValue: false,
-      group: 'all',
     },
   ],
 }

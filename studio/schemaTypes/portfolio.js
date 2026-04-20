@@ -11,8 +11,9 @@ export default {
       return {title: 'Portfolio Images'}
     },
   },
+  // "All Fields" is a built-in Sanity tab shown whenever groups are
+  // defined — adding a custom "all" group here would duplicate it.
   groups: [
-    {name: 'all', title: 'All', default: true},
     {name: 'seo', title: 'SEO'},
   ],
   fields: [
@@ -21,7 +22,7 @@ export default {
       title: 'Page Title',
       type: 'string',
       description: 'Used in the browser tab and as the SEO title fallback. E.g. "Portfolio | Denver Dog Photographer".',
-      group: ['all', 'seo'],
+      group: 'seo',
     },
     {
       name: 'slug',
@@ -29,13 +30,13 @@ export default {
       type: 'slug',
       description: 'The URL for this page (e.g. /about). ⚠️ Avoid changing this once the page is live — it will break existing links and hurt your search rankings. If you must change it, set up a 301 redirect from the old URL to the new one in your hosting settings.',
       options: {source: 'pageTitle'},
-      group: ['all', 'seo'],
+      group: 'seo',
     },
     {
       name: 'seo',
       title: 'SEO',
       type: 'seo',
-      group: ['all', 'seo'],
+      group: 'seo',
     },
     {
       name: 'title',
@@ -43,7 +44,6 @@ export default {
       type: 'string',
       description: 'Large label shown top-right of the portfolio page. E.g. "Portfolio" or "Work".',
       initialValue: 'Portfolio',
-      group: 'all',
     },
     {
       name: 'byline',
@@ -51,7 +51,6 @@ export default {
       type: 'string',
       description: 'Small text shown to the left of the page label. E.g. "A collection of recent dog photography sessions".',
       initialValue: 'A collection of recent dog photography sessions',
-      group: 'all',
     },
     {
       name: 'galleryColumns',
@@ -67,7 +66,6 @@ export default {
         ],
         layout: 'radio',
       },
-      group: 'all',
     },
     {
       name: 'sizingNote',
@@ -78,7 +76,6 @@ export default {
         'Resize all images to 2500–3000px on the long edge before uploading. Export as high-quality JPEG (85–95%) or PNG. Sanity handles further optimisation and delivery automatically.',
       description:
         'Resize all images to 2500–3000px on the long edge before uploading. Export as high-quality JPEG (85–95%) or PNG. Sanity handles further optimisation and delivery automatically.',
-      group: 'all',
     },
     {
       name: 'images',
@@ -86,7 +83,6 @@ export default {
       type: 'array',
       description:
         'Drag to reorder. When the upload dialog opens you can select multiple files at once to bulk-upload.',
-      group: 'all',
       of: [
         {
           type: 'image',
@@ -133,7 +129,6 @@ export default {
       type: 'array',
       description:
         'Optional secondary galleries. They appear as tab links at the top of the portfolio page. Each gets its own URL: /portfolio/<slug> — linkable from anywhere on the site. Max 2.',
-      group: 'all',
       validation: (Rule) => Rule.max(2),
       of: [
         {
