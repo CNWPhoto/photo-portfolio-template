@@ -84,10 +84,10 @@ const horizontalImage =
           }
         </div>
       </div>
+    </div>
 
-      <div class="pgrid__footer reveal reveal-delay-3">
-        <a href={ctaHref} class="pgrid__cta">{ctaText}</a>
-      </div>
+    <div class="pgrid__footer reveal reveal-delay-3">
+      <a href={ctaHref} class="pgrid__cta">{ctaText}</a>
     </div>
   </div>
 </section>
@@ -105,11 +105,11 @@ const horizontalImage =
     padding: 0 3rem;
     display: grid;
     grid-template-columns: 60px 1fr;
-    grid-template-rows: 434px auto;
+    grid-template-rows: auto auto;
     gap: 0 1.5rem;
   }
 
-  /* Rotated label column */
+  /* Rotated label column — spans the content row (1), not the footer row. */
   .pgrid__label-col {
     grid-row: 1;
     display: flex;
@@ -118,16 +118,18 @@ const horizontalImage =
     overflow: hidden;
   }
 
+  /* Use vertical writing-mode + a lossless 180° rotate rather than
+     rotating horizontal text with transform: rotate(-90deg), which
+     triggers subpixel rasterization blur on retina displays. Same
+     pattern used by FaqSection and the page-builder-spec. */
   .pgrid__label {
     font-family: var(--font-serif, var(--font-heading));
     font-style: italic;
     font-size: clamp(2.25rem, 3.8vw, 3.5rem);
     letter-spacing: 0.04em;
     color: var(--accent-dark);
-    writing-mode: horizontal-tb;
-    display: block;
-    transform: rotate(-90deg);
-    transform-origin: center center;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
     white-space: nowrap;
     user-select: none;
   }
