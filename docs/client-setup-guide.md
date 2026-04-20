@@ -11,6 +11,8 @@ from Sanity to Cloudflare to live domain. Follow the steps in order.
 Fast-path summary of the full guide below. Follow in order; detail for each step
 is in the linked phase.
 
+- [ ] **Pre-session (client does async before kickoff call):**
+  - Signs up at [web3forms.com](https://web3forms.com) with their inbox email and sends you the access key ([Phase 4](#phase-4--contact-form-web3forms)). Do this **before** the setup session — Web3Forms' verification email has a ~90-second click window and you don't want to hit it mid-call.
 - [ ] **Sanity project created** — new project, `production` dataset ([Phase 1.1](#phase-1--sanity-cms))
 - [ ] **`studio/.env` set to client values** — project ID, dataset, host, **prod preview URL** ([Phase 1.2](#phase-1--sanity-cms))
 - [ ] **`sanity.config.js` updated** — `title` and `presentationTool.allowOrigins` (localhost + prod domain) ([Phase 1.2](#phase-1--sanity-cms))
@@ -392,6 +394,8 @@ Before wiring domains, decide which host is canonical — `smithphotography.com`
 ### PHASE 4 — Contact Form (Web3Forms)
 
 **4.1 — Create account using client's email**
+
+> **Do this async before the kickoff call.** Web3Forms' verification email has a ~90-second click window. Trying to complete this mid-session while switching tools is a known friction point — ask the client to do it on their own time the day before and send you the access key.
 
 1. Go to [web3forms.com](https://web3forms.com)
 2. Enter the **client's** email — submissions land directly in their inbox

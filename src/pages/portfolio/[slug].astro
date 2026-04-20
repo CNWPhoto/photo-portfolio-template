@@ -1,0 +1,162 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import GalleryTabs from '../../components/GalleryTabs.astro';
+import GalleryGrid from '../../components/GalleryGrid.astro';
+import { getClient, urlFor } from '../../lib/sanity.js';
+
+const { slug } = Astro.params;
+
+const portfolioDoc = await getClient(
+  Astro.locals.isPreview,
+  (Astro.locals as any).runtime?.env,
+).fetch(
+  `*[_type == "portfolio"][0]{
+    pageTitle,
+    seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+    title,
+    byline,
+    galleryColumns,
+    additionalGalleries[]{
+      name,
+      "slug": slug.current,
+      byline,
+      galleryColumns,
+      seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+      images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } }
+    }
+  }`,
+  {},
+  { cache: 'no-store' },
+);
+
+const gallery = (portfolioDoc?.additionalGalleries ?? []).find(
+  (g: any) => g?.slug === slug,
+);
+
+if (!gallery) {
+  return new Response(null, { status: 404 });
+}
+
+const portfolioTitle = portfolioDoc?.title || 'Portfolio';
+const pageByline     = gallery.byline || portfolioDoc?.byline || '';
+const columns        = gallery.galleryColumns || portfolioDoc?.galleryColumns || 3;
+
+const seoTitle       = gallery.seo?.seoTitle       || portfolioDoc?.seo?.seoTitle       || `${gallery.name} — ${portfolioTitle}`;
+const seoDescription = gallery.seo?.seoDescription || portfolioDoc?.seo?.seoDescription || null;
+const ogImage        = gallery.seo?.socialImage?.asset?.url || portfolioDoc?.seo?.socialImage?.asset?.url || null;
+
+const images = (gallery.images ?? []).map((img: any) => {
+  const naturalW = img.asset?.metadata?.dimensions?.width ?? 1200;
+  const naturalH = img.asset?.metadata?.dimensions?.height ?? 800;
+  const displayW = Math.min(naturalW, 800);
+  const displayH = Math.round((displayW / naturalW) * naturalH);
+  return {
+    src: urlFor(img).width(800).auto('format').url(),
+    fullSrc: urlFor(img).width(2000).auto('format').url(),
+    alt: img.alt ?? img.title ?? '',
+    w: displayW,
+    h: displayH,
+  };
+});
+
+const extraGalleries = (portfolioDoc?.additionalGalleries ?? []).filter(
+  (g: any) => g?.slug && g?.name,
+);
+const tabs = [
+  { label: portfolioTitle, href: '/portfolio', slug: '' },
+  ...extraGalleries.map((g: any) => ({
+    label: g.name,
+    href: `/portfolio/${g.slug}`,
+    slug: g.slug,
+  })),
+];
+---
+
+<Layout
+  pageTitle={seoTitle}
+  seoDescription={seoDescription}
+  ogImage={ogImage}
+  breadcrumb={gallery.name}
+>
+  <main class="portfolio-main">
+    <div class="portfolio__header">
+      {pageByline && <p class="portfolio__byline">{pageByline}</p>}
+      <h1 class="portfolio__title">{gallery.name}</h1>
+    </div>
+    <GalleryTabs tabs={tabs} activeSlug={gallery.slug} />
+    {images.length === 0 ? (
+      <p class="portfolio__empty">No images in this gallery yet.</p>
+    ) : (
+      <GalleryGrid images={images} galleryColumns={columns} />
+    )}
+  </main>
+</Layout>
+
+<style>
+  .portfolio-main {
+    --bg: #ffffff;
+    --bg-alt: #f5f5f5;
+    --surface: #ffffff;
+    --border: #ececec;
+    background: #ffffff;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .portfolio__header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2rem;
+    padding: 3rem 3rem 0;
+    width: 100%;
+    box-sizing: border-box;
+    border-bottom: none;
+  }
+
+  .portfolio__byline {
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-align: right;
+    line-height: 1.8;
+    max-width: 180px;
+  }
+
+  .portfolio__title {
+    font-size: clamp(2.45rem, 5.6vw, 4.9rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    text-align: right;
+    color: var(--text);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .portfolio__empty {
+    padding: 4rem 3rem;
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    .portfolio__header {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+      gap: 1.25rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .portfolio__header {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.5rem;
+    }
+    .portfolio__byline { max-width: 100%; }
+  }
+</style>

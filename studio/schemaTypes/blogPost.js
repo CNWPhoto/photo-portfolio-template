@@ -20,6 +20,7 @@ export default {
         source: 'title',
         maxLength: 96,
       },
+      validation: (Rule) => Rule.required().error('URL Slug is required — click "Generate" before publishing.'),
     },
     {
       name: 'publishDate',
