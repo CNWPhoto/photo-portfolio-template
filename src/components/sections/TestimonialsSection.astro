@@ -18,6 +18,15 @@ const layout = stegaClean(section?.layout) || 'image-slider';
 const source = section?.source || 'all';
 const maxCount = section?.maxCount || 12;
 
+// Preview-only shortcut to the Studio testimonials list. Hidden on the
+// public site via the isPreview gate.
+const isPreview = !!Astro.locals.isPreview;
+const studioUrl =
+  (Astro.locals as any).runtime?.env?.SANITY_STUDIO_URL ||
+  import.meta.env.SANITY_STUDIO_URL ||
+  '';
+const editUrl = studioUrl ? `${studioUrl.replace(/\/$/, '')}/structure/testimonial` : null;
+
 let raw: any[] = [];
 if (source === 'pickSpecific' && section?.testimonials?.length) {
   raw = section.testimonials;
@@ -51,6 +60,15 @@ const first = testimonials[0] ?? null;
   id={section?.sectionId || 'testimonials'}
   style={style}
 >
+  {isPreview && editUrl && (
+    <a
+      href={editUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="tslider__edit-link"
+      aria-label="Open testimonials list in Sanity Studio"
+    >Edit testimonials in Studio &rarr;</a>
+  )}
   {layout === 'two-col-text' ? (
     <div class="tslider__inner tslider__inner--two-col">
       {testimonials.slice(0, 2).map((t, i) => (
@@ -104,6 +122,29 @@ const first = testimonials[0] ?? null;
     margin-bottom: 100px;
     background: var(--bg);
     color: var(--text);
+    position: relative;
+  }
+
+  /* Preview-only shortcut — does not render on the public site. */
+  .tslider__edit-link {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.92);
+    padding: 0.45rem 0.85rem;
+    border: 1px solid var(--accent);
+    transition: background 0.18s, color 0.18s;
+  }
+  .tslider__edit-link:hover {
+    background: var(--accent);
+    color: var(--btn-text, #fff);
   }
 
   .tslider__inner {
