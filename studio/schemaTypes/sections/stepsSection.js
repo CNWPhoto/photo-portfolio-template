@@ -31,6 +31,21 @@ export default {
       type: 'string',
     },
     {
+      name: 'columns',
+      title: 'Columns',
+      type: 'number',
+      description: 'Number of columns on desktop. Collapses to 2 at tablet width (for 4-col layouts) and 1 on mobile.',
+      initialValue: 3,
+      options: {
+        list: [
+          {title: '2 columns', value: 2},
+          {title: '3 columns (default)', value: 3},
+          {title: '4 columns', value: 4},
+        ],
+        layout: 'radio',
+      },
+    },
+    {
       name: 'steps',
       title: 'Steps',
       type: 'array',

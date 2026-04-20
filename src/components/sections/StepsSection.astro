@@ -17,6 +17,7 @@ const heading = section?.heading || '';
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
 const steps = section?.steps || [];
+const columns = [2, 3, 4].includes(section?.columns) ? section.columns : 3;
 
 // Render each step body once
 const stepsRendered = steps.map((step: any, i: number) => ({
@@ -39,7 +40,7 @@ const stepsRendered = steps.map((step: any, i: number) => ({
       {eyebrow && <p class="hcols__sub">{eyebrow}</p>}
     </div>
 
-    <div class="hcols__steps">
+    <div class="hcols__steps" data-columns={columns}>
       {stepsRendered.map((step) => (
         <div class="hcols__step">
           <div class="hcols__step-rule" />
@@ -105,6 +106,9 @@ const stepsRendered = steps.map((step: any, i: number) => ({
     text-align: left;
   }
 
+  .hcols__steps[data-columns='2'] { grid-template-columns: repeat(2, 1fr); }
+  .hcols__steps[data-columns='4'] { grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+
   .hcols__step { padding-top: 2rem; }
 
   .hcols__step-rule {
@@ -160,9 +164,17 @@ const stepsRendered = steps.map((step: any, i: number) => ({
 
   .hcols__link:hover { opacity: 0.7; }
 
+  /* 4-col gets too cramped below ~1000px — wrap to 2 cols at tablet width
+     before the mobile breakpoint flattens everything to 1 col. */
+  @media (max-width: 1000px) {
+    .hcols__steps[data-columns='4'] { grid-template-columns: repeat(2, 1fr); }
+  }
+
   @media (max-width: 768px) {
     .hcols__inner { padding: 0 1.5rem; }
-    .hcols__steps { grid-template-columns: 1fr; gap: 2rem; }
+    .hcols__steps,
+    .hcols__steps[data-columns='2'],
+    .hcols__steps[data-columns='4'] { grid-template-columns: 1fr; gap: 2rem; }
     .hcols__footer { text-align: center; }
   }
 </style>
