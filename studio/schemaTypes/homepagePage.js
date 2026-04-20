@@ -12,6 +12,7 @@ export default {
   },
   groups: [
     {name: 'all', title: 'All', default: true},
+    {name: 'sections', title: 'Sections'},
     {name: 'seo', title: 'SEO'},
   ],
   fields: [
@@ -34,14 +35,14 @@ export default {
       title: 'Hero',
       type: 'heroSection',
       description: 'The hero at the very top of the homepage. Always rendered first; cannot be reordered.',
-      group: 'all',
+      group: ['all', 'sections'],
     },
     {
       name: 'sections',
       title: 'Sections',
       type: 'array',
       description: 'Add, remove, and drag to reorder sections on the Homepage.',
-      group: 'all',
+      group: ['all', 'sections'],
       initialValue: [
         {_type: 'splitSection',            _key: 'splitSection'},
         {_type: 'testimonialsSection',     _key: 'testimonialsSection'},

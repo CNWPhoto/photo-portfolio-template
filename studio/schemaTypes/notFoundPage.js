@@ -17,6 +17,7 @@ export default {
   },
   groups: [
     {name: 'content', title: 'Content', default: true},
+    {name: 'sections', title: 'Sections'},
     {name: 'seo', title: 'SEO'},
   ],
   fields: [
@@ -32,7 +33,7 @@ export default {
       type: 'array',
       description:
         'The 404 page is built from sections like any other page. The default seed contains a single full-bleed image with a heading, subheading, and a "Back to home" button.',
-      group: 'content',
+      group: ['content', 'sections'],
       initialValue: [
         {_type: 'fullBleedImageSection', _key: 'notFoundFullBleed'},
       ],

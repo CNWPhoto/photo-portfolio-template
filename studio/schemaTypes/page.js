@@ -11,6 +11,7 @@ export default {
   type: 'document',
   groups: [
     {name: 'content', title: 'Content', default: true},
+    {name: 'sections', title: 'Sections'},
     {name: 'seo', title: 'SEO'},
     {name: 'navigation', title: 'Navigation'},
   ],
@@ -45,7 +46,7 @@ export default {
       title: 'Sections',
       type: 'array',
       description: 'Add, remove, and drag to reorder sections on this page.',
-      group: 'content',
+      group: ['content', 'sections'],
       of: sectionsOf,
       options: {insertMenu: sectionsInsertMenu},
     },
