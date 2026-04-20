@@ -147,7 +147,13 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   .blogteaser--horizontal-list .blogteaser__grid { grid-template-columns: 1fr; }
   .blogteaser--cards .blogteaser__grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 
-  .blogteaser__card { background: var(--bg); }
+  /* No explicit background on the card. It matches the section's --bg
+     anyway, so it's visually invisible — but `.reveal` on the card
+     declares `will-change: opacity, transform` which promotes it to
+     its own compositor layer. Stacking two layers that share a
+     background can produce a phantom outline on cards whose position
+     doesn't land on a device pixel boundary. Removing the redundant
+     background eliminates the artifact. */
   .blogteaser__card-link {
     display: block;
     color: inherit;
