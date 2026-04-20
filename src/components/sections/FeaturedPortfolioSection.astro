@@ -15,6 +15,7 @@ const style = paletteToStyle(palette);
 
 const eyebrow = section?.eyebrow || 'Featured';
 const heading = section?.heading || '';
+const showVerticalLabel = section?.showVerticalLabel !== false;
 const ctaText = section?.ctaText || 'View Full Portfolio';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || '/portfolio';
 
@@ -53,10 +54,12 @@ const horizontalImage =
   id={section?.sectionId || 'portfolio'}
   style={style}
 >
-  <div class="pgrid__inner">
-    <div class="pgrid__label-col" aria-hidden="true">
-      <span class="pgrid__label">{eyebrow}</span>
-    </div>
+  <div class:list={['pgrid__inner', !showVerticalLabel && 'pgrid__inner--no-label']}>
+    {showVerticalLabel && (
+      <div class="pgrid__label-col" aria-hidden="true">
+        <span class="pgrid__label">{eyebrow}</span>
+      </div>
+    )}
 
     <div class="pgrid__content">
       {heading && <h2 class="pgrid__heading reveal">{heading}</h2>}
@@ -107,6 +110,15 @@ const horizontalImage =
     grid-template-columns: 60px 1fr;
     grid-template-rows: auto auto;
     gap: 0 1.5rem;
+  }
+
+  /* Label hidden — collapse to a single column, re-target the footer
+     which otherwise tries to land in the now-nonexistent col 2. */
+  .pgrid__inner--no-label {
+    grid-template-columns: 1fr;
+  }
+  .pgrid__inner--no-label .pgrid__footer {
+    grid-column: 1;
   }
 
   /* Rotated label column — spans the content row (1), not the footer row. */
