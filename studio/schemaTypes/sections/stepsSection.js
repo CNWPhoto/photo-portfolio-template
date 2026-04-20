@@ -31,7 +31,7 @@ export default {
       type: 'string',
     },
     {
-      name: 'columns',
+      name: 'gridColumns',
       title: 'Columns',
       type: 'number',
       description: 'Number of columns on desktop. Collapses to 2 at tablet width (for 4-col layouts) and 1 on mobile.',
