@@ -10,13 +10,18 @@ export default {
   title: 'Blog Teaser',
   type: 'object',
   preview: {
-    select: {heading: 'heading', layout: 'layout'},
-    prepare({heading, layout}) {
-      return {title: 'Blog Teaser', subtitle: heading || layout || ''}
+    select: {heading: 'heading'},
+    prepare({heading}) {
+      return {title: 'Blog Teaser', subtitle: heading || ''}
     },
   },
   fields: [
     ...sectionBaseFields(),
+    // `layout` (grid-3 / horizontal-list / cards) was removed. horizontal-list
+    // didn't fit the design, `cards` rendered identically to grid-3, and the
+    // choice had no practical value. The section always renders as a 3-column
+    // grid. Legacy docs may still carry a stored `layout` value — harmless,
+    // component ignores it.
     {
       name: 'eyebrow',
       title: 'Eyebrow',
@@ -26,20 +31,6 @@ export default {
       name: 'heading',
       title: 'Heading',
       type: 'string',
-    },
-    {
-      name: 'layout',
-      title: 'Layout',
-      type: 'string',
-      options: {
-        list: [
-          {title: '3-column grid', value: 'grid-3'},
-          {title: 'Horizontal list', value: 'horizontal-list'},
-          {title: 'Cards', value: 'cards'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'grid-3',
     },
     {
       name: 'postCount',
