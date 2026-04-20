@@ -56,7 +56,7 @@ export const SECTION_PROJECTION = /* groq */ `
   },
   ctaLink {
     ...,
-    internal->{ "slug": slug.current }
+    internal->{ _type, "slug": slug.current }
   },
   testimonials[]->,
   items[]->,
