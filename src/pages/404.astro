@@ -4,7 +4,7 @@ import SectionRenderer from '../components/SectionRenderer.astro';
 import { getClient } from '../lib/sanity.js';
 import { SECTION_PROJECTION, SITE_PALETTES_QUERY } from '../lib/sectionsQuery.js';
 
-const client = getClient(false);
+const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 
 const [doc, siteData] = await Promise.all([
 	client.fetch(

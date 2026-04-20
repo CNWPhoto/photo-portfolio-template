@@ -40,7 +40,7 @@ const embedTitle = section?.embedTitle || 'Contact form';
 // the site-wide default. Only fetched in built-in mode.
 let effectiveKey = section?.web3formsKeyOverride || '';
 if (mode === 'built-in' && !effectiveKey) {
-  const client = getClient(false);
+  const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
   const site = await client.fetch(
     `*[_type == "siteSettings" && _id == "siteSettings"][0]{ web3formsKey }`,
   );

@@ -24,7 +24,7 @@ const showDate = section?.showDate !== false;
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || '/blog';
 
-const client = getClient(false);
+const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 let posts: any[] = [];
 if (source === 'pickSpecific' && section?.specificPosts?.length) {
   posts = section.specificPosts;

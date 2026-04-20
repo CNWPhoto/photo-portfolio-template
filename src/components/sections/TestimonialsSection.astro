@@ -19,7 +19,7 @@ let raw: any[] = [];
 if (source === 'pickSpecific' && section?.testimonials?.length) {
   raw = section.testimonials;
 } else {
-  const client = getClient(false);
+  const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
   raw = await client.fetch(
     `*[_type == "testimonial"] | order(order asc)[0...$max]{
       _id, testimonial, client,
