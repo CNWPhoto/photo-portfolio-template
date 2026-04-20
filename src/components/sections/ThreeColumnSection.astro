@@ -107,6 +107,9 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     justify-content: center;
     overflow: hidden;
   }
+  /* vertical-lr + 180° rotate is the crisp pattern; rotating horizontal
+     text via transform: rotate(-90deg) triggers subpixel raster blur on
+     retina. Canonical pattern documented in the page-builder-spec. */
   .threecol__side-label {
     font-family: var(--font-heading, var(--font-serif));
     font-style: italic;
@@ -114,9 +117,8 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     font-size: clamp(2rem, 3.2vw, 3rem);
     letter-spacing: 0.05em;
     color: var(--text);
-    writing-mode: horizontal-tb;
-    transform: rotate(-90deg);
-    transform-origin: center center;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
     white-space: nowrap;
     user-select: none;
   }
