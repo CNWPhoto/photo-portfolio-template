@@ -17,7 +17,7 @@ const heading = section?.heading || '';
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
 const steps = section?.steps || [];
-const columns = [2, 3, 4].includes(section?.columns) ? section.columns : 3;
+const columns = [2, 3, 4].includes(section?.gridColumns) ? section.gridColumns : 3;
 
 // Render each step body once
 const stepsRendered = steps.map((step: any, i: number) => ({

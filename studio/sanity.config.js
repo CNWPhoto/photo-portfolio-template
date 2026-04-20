@@ -121,7 +121,7 @@ export default defineConfig({
       },
     }),
     structureTool({
-      structure: (S) =>
+      structure: (S, context) =>
         S.list()
           .title('Studio')
           .items([
@@ -145,11 +145,35 @@ export default defineConfig({
             S.divider(),
 
             // ── Pages ────────────────────────────────────────────────────
+            // Flat list: every `page` doc (About, Experience, Contact, and
+            // any custom pages) is inlined under the singletons, not hidden
+            // behind a second "Pages" click. The async fetch returns a
+            // fresh list on each open of the group.
             S.listItem()
               .title('📄 Pages')
               .id('pagesGroup')
-              .child(
-                S.list()
+              .child(async () => {
+                const client = context.getClient({apiVersion: '2024-01-01'})
+                const pages = await client.fetch(
+                  `*[_type == "page" && defined(slug.current)]{_id, title, "slug": slug.current}`,
+                )
+                // Raw perspective returns both `drafts.<id>` and `<id>` when
+                // a page has an unpublished draft. Collapse to one entry per
+                // logical document (prefer published; fall back to draft if
+                // the page was never published).
+                const byBaseId = new Map()
+                for (const p of pages) {
+                  const baseId = p._id.replace(/^drafts\./, '')
+                  const existing = byBaseId.get(baseId)
+                  const thisIsDraft = p._id.startsWith('drafts.')
+                  if (!existing || (existing._id.startsWith('drafts.') && !thisIsDraft)) {
+                    byBaseId.set(baseId, {...p, _id: baseId})
+                  }
+                }
+                const unique = Array.from(byBaseId.values()).sort((a, b) =>
+                  (a.title || '').localeCompare(b.title || ''),
+                )
+                return S.list()
                   .title('Pages')
                   .items([
                     singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
@@ -157,9 +181,19 @@ export default defineConfig({
                     singleton(S, 'blogPage', 'Blog', 'blogPage'),
                     singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
                     S.divider(),
-                    S.documentTypeListItem('page').title('Pages'),
-                  ]),
-              ),
+                    ...unique.map((p) =>
+                      S.listItem()
+                        .id(p._id)
+                        .title(p.title || 'Untitled')
+                        .child(
+                          S.document()
+                            .documentId(p._id)
+                            .schemaType('page')
+                            .title(p.title || 'Page'),
+                        ),
+                    ),
+                  ])
+              }),
 
             S.divider(),
 
