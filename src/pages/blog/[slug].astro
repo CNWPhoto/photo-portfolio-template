@@ -2,13 +2,16 @@
 import Layout from '../../layouts/Layout.astro';
 import { toHTML } from '@portabletext/to-html';
 import SanityImage from '../../components/SanityImage.astro';
+import SectionRenderer from '../../components/SectionRenderer.astro';
+import BlogPagination from '../../components/BlogPagination.astro';
 import { buildSrc, buildSrcset } from '../../lib/image';
 import { getClient } from '../../lib/sanity.js';
+import { SECTION_PROJECTION, SITE_PALETTES_QUERY } from '../../lib/sectionsQuery.js';
 
 const { slug } = Astro.params;
 const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 
-const [post, siteSettings] = await Promise.all([
+const [post, siteSettings, blogPage, siteData] = await Promise.all([
   client.fetch(
     `*[_type == "blogPost" && slug.current == $slug][0]{
       title, publishDate, _updatedAt, excerpt,
@@ -19,11 +22,47 @@ const [post, siteSettings] = await Promise.all([
     { slug }
   ),
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ siteName, photographerName }`),
+  client.fetch(
+    `*[_type == "blogPage" && _id == "blogPage"][0]{
+      showPostCta,
+      "postCta": postCta{ ${SECTION_PROJECTION} },
+      showPagination
+    }`,
+  ),
+  client.fetch(SITE_PALETTES_QUERY),
 ]);
 
 if (!post) {
   return Astro.redirect('/blog');
 }
+
+const palettes = siteData?.palettes ?? [];
+const sitePaletteSlug = siteData?.defaultPalette ?? null;
+
+// Adjacent posts (only fetched if pagination is enabled). "Previous" is the
+// next-oldest post; "Next" is the next-newer post by publishDate. Returns
+// null for either side at the ends of the timeline.
+const showPagination = !!blogPage?.showPagination;
+let prevPost: any = null;
+let nextPost: any = null;
+if (showPagination && post.publishDate) {
+  const [prev, next] = await Promise.all([
+    client.fetch(
+      `*[_type == "blogPost" && defined(slug.current) && publishDate < $pd]
+        | order(publishDate desc)[0]{ title, "slug": slug.current }`,
+      { pd: post.publishDate },
+    ),
+    client.fetch(
+      `*[_type == "blogPost" && defined(slug.current) && publishDate > $pd]
+        | order(publishDate asc)[0]{ title, "slug": slug.current }`,
+      { pd: post.publishDate },
+    ),
+  ]);
+  prevPost = prev;
+  nextPost = next;
+}
+
+const showPostCta = !!blogPage?.showPostCta && !!blogPage?.postCta;
 
 const publishFormatted = post.publishDate
   ? new Date(post.publishDate).toLocaleDateString('en-US', {
@@ -148,6 +187,18 @@ const bodyHTML = post.body
 
       <div class="post__body" set:html={bodyHTML} />
     </article>
+
+    {showPostCta && (
+      <SectionRenderer
+        section={blogPage.postCta}
+        sitePaletteSlug={sitePaletteSlug}
+        palettes={palettes}
+      />
+    )}
+
+    {showPagination && (prevPost || nextPost) && (
+      <BlogPagination prev={prevPost} next={nextPost} />
+    )}
   </main>
 </Layout>
 
