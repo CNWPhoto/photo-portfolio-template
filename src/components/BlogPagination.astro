@@ -1,0 +1,88 @@
+---
+// Short prev/next link pair rendered at the bottom of an individual
+// blog post when blogPage.showPagination is enabled. Previous (older) on
+// the left, next (newer) on the right.
+
+interface PostRef {
+  title: string;
+  slug: string;
+}
+
+interface Props {
+  prev: PostRef | null;
+  next: PostRef | null;
+}
+
+const { prev, next } = Astro.props;
+if (!prev && !next) return null;
+---
+
+<nav class="postnav" aria-label="Blog pagination">
+  {prev ? (
+    <a href={`/blog/${prev.slug}`} class="postnav__link postnav__link--prev">
+      <span class="postnav__label">&larr; Previous Post</span>
+      <span class="postnav__title">{prev.title}</span>
+    </a>
+  ) : (
+    <span class="postnav__spacer" />
+  )}
+  {next ? (
+    <a href={`/blog/${next.slug}`} class="postnav__link postnav__link--next">
+      <span class="postnav__label">Next Post &rarr;</span>
+      <span class="postnav__title">{next.title}</span>
+    </a>
+  ) : (
+    <span class="postnav__spacer" />
+  )}
+</nav>
+
+<style>
+  .postnav {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    border-top: 1px solid var(--border);
+  }
+  .postnav__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-decoration: none;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+  .postnav__link:hover { color: var(--accent); }
+  .postnav__link--next {
+    text-align: right;
+    align-items: flex-end;
+  }
+  .postnav__label {
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .postnav__title {
+    font-family: var(--font-heading, var(--font-serif));
+    font-size: 1.125rem;
+    line-height: 1.35;
+    font-style: italic;
+  }
+  .postnav__spacer { display: block; }
+
+  @media (max-width: 600px) {
+    .postnav {
+      padding: 2rem 1.25rem 3.5rem;
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
+    }
+    .postnav__link--next {
+      text-align: left;
+      align-items: flex-start;
+    }
+  }
+</style>

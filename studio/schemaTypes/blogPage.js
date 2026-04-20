@@ -90,5 +90,45 @@ export default {
       validation: (Rule) => Rule.min(1).max(100).integer(),
       group: 'all',
     },
+
+    // ── Blog post defaults (applied to every individual blog post) ─────
+    {
+      name: 'postDefaultsNote',
+      title: '── Blog post defaults ──',
+      type: 'string',
+      readOnly: true,
+      initialValue:
+        'Settings below apply to every individual blog post. Configure once; shows on all posts.',
+      description:
+        'Settings below apply to every individual blog post. Configure once; shows on all posts.',
+      group: 'all',
+    },
+    {
+      name: 'showPostCta',
+      title: 'Show CTA at bottom of posts',
+      type: 'boolean',
+      description:
+        'If enabled, every blog post renders the CTA configured below at the bottom (above pagination).',
+      initialValue: false,
+      group: 'all',
+    },
+    {
+      name: 'postCta',
+      title: 'Post CTA',
+      type: 'fullBleedImageSection',
+      description:
+        'The same section type used on the Experience page "Next Steps" block — configure a heading, body copy, button, and background image.',
+      hidden: ({parent}) => parent?.showPostCta === false,
+      group: 'all',
+    },
+    {
+      name: 'showPagination',
+      title: 'Show prev/next post pagination',
+      type: 'boolean',
+      description:
+        'If enabled, every blog post shows a short previous/next link pair at the very bottom, ordered by publish date.',
+      initialValue: false,
+      group: 'all',
+    },
   ],
 }

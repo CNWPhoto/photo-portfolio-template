@@ -108,8 +108,13 @@ const isOverlayCard = textContainer === 'overlay-card';
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 5rem;
-    max-width: 1100px;
-    margin: 0 auto;
+    max-width: 1200px;
+    /* Left edge pinned to where the old 1100px centered container sat
+       (`(100vw - 1100px) / 2`); right edge extends 100px further via
+       the wider max-width. `max(..., 1.5rem)` floors the margin on
+       narrow viewports so content can't scroll under the edge. */
+    margin-left: max((100vw - 1100px) / 2, 1.5rem);
+    margin-right: auto;
     padding: 6rem 3rem 7rem;
     align-items: start;
   }
