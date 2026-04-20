@@ -106,7 +106,10 @@ const isOverlayCard = textContainer === 'overlay-card';
   /* Two-column text section below the image */
   .why__inner {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* Heading col holds its original ~462px width (what 1fr was in the
+       old 1100px layout). Content col takes the rest of the 1200px
+       container, so all 100px of the added width goes to the text. */
+    grid-template-columns: minmax(0, 462px) 1fr;
     gap: 5rem;
     max-width: 1200px;
     /* Left edge pinned to where the old 1100px centered container sat
