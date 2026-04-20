@@ -22,45 +22,51 @@ export default {
     ...sectionBaseFields(),
     imageField({title: 'Background Image'}),
     {
+      name: 'textContainer',
+      title: 'Layout',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Overlay card (white box on the image)', value: 'overlay-card'},
+          {title: 'Hero/Text Stack (image on top, text below)', value: 'inline-overlay'},
+          {title: 'Image only (no text, no spacing below)', value: 'image-only'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'overlay-card',
+    },
+    {
       name: 'eyebrow',
       title: 'Eyebrow',
       type: 'string',
+      hidden: ({parent}) => parent?.textContainer === 'image-only',
     },
     {
       name: 'heading',
       title: 'Heading',
       type: 'string',
       description: 'Use a line break (Enter) to split onto two lines.',
+      hidden: ({parent}) => parent?.textContainer === 'image-only',
     },
-    richTextBody(),
+    richTextBody({hidden: ({parent}) => parent?.textContainer === 'image-only'}),
     {
       name: 'ctaText',
       title: 'Button Text',
       type: 'string',
+      hidden: ({parent}) => parent?.textContainer === 'image-only',
     },
     {
       name: 'ctaLink',
       title: 'Button Link',
       type: 'ctaLink',
+      hidden: ({parent}) => parent?.textContainer === 'image-only',
     },
     {
       name: 'caption',
       title: 'Caption',
       type: 'string',
       description: 'Optional small text below the CTA.',
-    },
-    {
-      name: 'textContainer',
-      title: 'Text Container',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Overlay card (white box on the image)', value: 'overlay-card'},
-          {title: 'Inline overlay (text directly on the image)', value: 'inline-overlay'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'overlay-card',
+      hidden: ({parent}) => parent?.textContainer === 'image-only',
     },
     {
       name: 'textPosition',

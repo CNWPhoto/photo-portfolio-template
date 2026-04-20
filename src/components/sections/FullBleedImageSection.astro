@@ -34,9 +34,20 @@ const height = section?.height || 'tall';
 const parallax = !!section?.parallax;
 
 const isOverlayCard = textContainer === 'overlay-card';
+const isImageOnly = textContainer === 'image-only';
 ---
 
-{isOverlayCard ? (
+{isImageOnly ? (
+  <section
+    class:list={['fbi-imgonly', `fbi-imgonly--${height}`]}
+    data-section-type="fullBleedImageSection"
+    data-parallax={parallax ? 'true' : 'false'}
+    id={section?.sectionId || undefined}
+    style={style}
+  >
+    <div class="fbi-imgonly__img" style={`background-image:url('${bgUrl}')`} aria-hidden="true" />
+  </section>
+) : isOverlayCard ? (
   <section
     class:list={['fbi', `fbi--${height}`]}
     data-section-type="fullBleedImageSection"
@@ -85,6 +96,32 @@ const isOverlayCard = textContainer === 'overlay-card';
     padding-bottom: 0 !important;
     background: var(--bg);
     color: var(--text);
+  }
+
+  /* ══ Image-only variant — full-bleed background image, no text,
+     no vertical padding so neighboring sections butt up flush. ══ */
+  .fbi-imgonly {
+    padding: 0 !important;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .fbi-imgonly__img {
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .fbi-imgonly--medium .fbi-imgonly__img { height: 50vh; min-height: 320px; }
+  .fbi-imgonly--tall .fbi-imgonly__img { height: 75vh; min-height: 480px; }
+  .fbi-imgonly--viewport .fbi-imgonly__img { height: 100vh; min-height: 560px; }
+  .fbi-imgonly[data-parallax='true'] .fbi-imgonly__img {
+    background-attachment: fixed;
+  }
+  @media (max-width: 900px) {
+    .fbi-imgonly[data-parallax='true'] .fbi-imgonly__img {
+      background-attachment: scroll;
+    }
   }
 
   /* Section acts as a viewport cutout; when parallax is enabled the
