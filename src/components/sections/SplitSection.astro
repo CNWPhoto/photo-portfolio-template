@@ -373,9 +373,10 @@ const image = section?.image ?? null;
 
   @media (max-width: 900px) {
     .isplit { grid-template-columns: 1fr; min-height: 0; height: auto; }
+    /* Shared non-order image resets for both contained variants on mobile.
+       Order is set per-variant below so the two layouts stack differently. */
     .isplit--image-right .isplit__image,
     .isplit--image-left .isplit__image {
-      order: -1;
       height: auto;
       min-height: 0;
       aspect-ratio: unset;
@@ -386,14 +387,24 @@ const image = section?.image ?? null;
       width: 100%;
       aspect-ratio: 1 / 1;
     }
+    /* image-right (text left, image right on desktop): stack text FIRST,
+       then image on mobile — reads top-down like a caption below the
+       description. */
     .isplit--image-right .isplit__content {
       border-right: none;
       border-bottom: none;
       border-top: 1px solid var(--border);
-      order: 2;
+      order: 1;
     }
     .isplit--image-right .isplit__image {
+      order: 2;
+    }
+    /* image-left: image first, text second (matches desktop source order). */
+    .isplit--image-left .isplit__image {
       order: 1;
+    }
+    .isplit--image-left .isplit__content {
+      order: 2;
     }
     .isplit__content,
     .isplit--image-left .isplit__content,

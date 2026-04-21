@@ -291,6 +291,19 @@ monitors, checks every 5 minutes, email/Slack alerts.
 - [ ] Check-in: any content help needed?
 - [ ] Renewal reminder if on annual plan
 
+### Quarterly — build-pipeline sanity check
+
+Once a quarter, confirm the build still works from a clean checkout before you need it in a hurry. Deployed sites keep running on their last build regardless of upstream drift, but the ability to *rebuild* depends on Node, npm, the pinned dependency tree, and the CF wrangler action all still playing nicely together. Catching breakage during calm waters is cheap; catching it during a client emergency isn't.
+
+- [ ] Fresh clone or `git clean -fdx && npm ci` at the repo root. Install must succeed with no resolver errors.
+- [ ] Run `npm run build` — it should complete with "Complete!" and no type errors.
+- [ ] Same for the studio: `cd studio && npm ci && npm run build`.
+- [ ] Trigger a demo deploy via `workflow_dispatch` on GitHub Actions. Smoke test must pass.
+- [ ] Skim the CF Pages changelog ([developers.cloudflare.com/pages/changelog](https://developers.cloudflare.com/pages/changelog/)) and the Sanity changelog for breaking-change headers since last check.
+- [ ] Check Node LTS status ([nodejs.org/en/about/previous-releases](https://nodejs.org/en/about/previous-releases/)). If the pinned version is within 6 months of EOL, plan a bump.
+
+Any failure here gets fixed in a branch, tested on demo, and merged during normal work — never under pressure.
+
 ### Per major Astro or Sanity version release
 - [ ] Read the migration guide for breaking changes
 - [ ] Test upgrade on a feature branch, merge to `main` (demo-only deploy)
