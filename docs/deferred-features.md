@@ -174,6 +174,18 @@ Previously the schema boolean was silently ignored — the overlay-card variant 
 
 ---
 
+## 13. Full-Bleed Image — Hero/Text Stack variant
+
+**Status:** removed
+**Section:** `fullBleedImageSection`
+**Schema field:** `textContainer` (removed value: `inline-overlay`), `textPosition` (removed entirely)
+**Schema file:** `studio/schemaTypes/sections/fullBleedImageSection.js`
+**Component:** `src/components/sections/FullBleedImageSection.astro`
+
+A layout where the background image sat on top and a two-column heading+body text block rendered directly below in the same section (the former `.why__*` block — heading col with accent left-border, content col with body/cta/caption). Removed from the `textContainer` dropdown because the visual outcome overlapped with an image-only `fullBleedImageSection` stacked above a `splitSection` or `richTextSection`, so editors had two ways to do the same thing. The `textPosition` field (9-point grid) was only read by this variant and has also been removed. To restore: re-add `{title: 'Hero/Text Stack (image on top, text below)', value: 'inline-overlay'}` to the `textContainer` options list, re-add the `textPosition` field, and restore the third branch in `FullBleedImageSection.astro` (the `.why` section + `.why__image-full` + `.why__inner` grid) along with its CSS block.
+
+---
+
 ## Quick reference: what's fully working
 
 These sections have complete schema-to-component parity:
@@ -182,7 +194,7 @@ These sections have complete schema-to-component parity:
 |---|---|---|
 | Hero | slider, image-full, image-right | All text positions, sticky, overlay |
 | Split | image-left, image-right, both full-bleed | All layout/alignment options |
-| Full-Bleed Image | default (parallax), overlay-card | Both text containers |
+| Full-Bleed Image | overlay-card, image-only | Parallax on both via `background-attachment: fixed` |
 | Rich Text | — | All widths, alignment |
 | Pull Quote | centered, bordered-left, italic-large | All 3 variants |
 | Three Column | image-cards, icon-cards, numbered-steps | Side label, alignment |

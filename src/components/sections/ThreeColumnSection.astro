@@ -3,6 +3,7 @@ import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { renderHeading } from '../../lib/heading.js';
 import { renderBody } from '../../lib/portableText.js';
+import { resolveLink } from '../../lib/links.js';
 
 interface Props {
   section: any;
@@ -56,6 +57,8 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
           const colImg = col?.image ?? null;
           const colBody = renderBody(col?.body, { className: 'threecol__col-body' });
           const delayClass = `reveal-delay-${i + 1}`;
+          const colCtaText = col?.ctaText || '';
+          const colCtaHref = resolveLink(col?.ctaLink, [Astro.url.hostname]);
           return (
             <div class:list={['threecol__col', 'reveal', delayClass]}>
               {variant === 'image-cards' && (
@@ -73,6 +76,11 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
               )}
               {col?.title && <h3 class="threecol__title">{col.title}</h3>}
               {colBody && <div class="threecol__body" set:html={colBody} />}
+              {colCtaText && colCtaHref && (
+                <a href={colCtaHref} class="threecol__link">
+                  {colCtaText}<span class="threecol__link-arrow" aria-hidden="true">&rarr;</span>
+                </a>
+              )}
             </div>
           );
         })}
@@ -86,7 +94,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     background: var(--bg);
     color: var(--text);
     position: relative;
-    padding: 0 0 6rem;
+    padding: 6rem 0;
   }
 
   .threecol__outer {
@@ -127,7 +135,6 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     padding: 0;
   }
   .threecol__head { margin-bottom: 3rem; text-align: center; }
-  .threecol[data-alignment='left'] .threecol__head { text-align: left; }
 
   .threecol__eyebrow {
     font-family: var(--font-sans, var(--font-body));
@@ -201,7 +208,6 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     color: var(--accent-dark, var(--accent));
     font-weight: 600;
     margin: 0 0 1rem;
-    text-align: center;
   }
   .threecol__body :global(p),
   .threecol__body :global(.threecol__col-body) {
@@ -209,6 +215,24 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     line-height: 1.78;
     color: var(--muted);
     margin: 0 0 0.75rem;
+  }
+
+  .threecol__link {
+    display: inline-block;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    margin-top: 0.5rem;
+  }
+  .threecol__link-arrow {
+    display: inline-block;
+    margin-left: 0.35em;
+    transition: transform 0.2s ease;
+  }
+  .threecol__link:hover .threecol__link-arrow {
+    transform: translateX(4px);
   }
 
   @media (max-width: 900px) {
