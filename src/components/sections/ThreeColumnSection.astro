@@ -94,7 +94,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     background: var(--bg);
     color: var(--text);
     position: relative;
-    padding: 6rem 0;
+    padding: 6rem 0 !important;
   }
 
   .threecol__outer {
@@ -156,12 +156,13 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2.5rem;
-    padding-top: 5rem;
+    padding-top: 2.75rem;
   }
 
   .threecol__col {
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
   .threecol[data-alignment='center'] .threecol__col {
     text-align: center;
@@ -171,9 +172,9 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   .threecol__img-wrap {
     overflow: hidden;
     margin-bottom: 1.5rem;
-    height: 288px;
     width: 288px;
     max-width: 100%;
+    aspect-ratio: 1;
   }
   .threecol__img-wrap img,
   .threecol__img-wrap :global(.threecol__img) {
@@ -218,13 +219,16 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   }
 
   .threecol__link {
-    display: inline-block;
+    align-self: flex-start;
     font-style: italic;
     font-size: 1rem;
     color: var(--accent);
     text-decoration: none;
     letter-spacing: 0.01em;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
+  }
+  .threecol[data-alignment='center'] .threecol__link {
+    align-self: center;
   }
   .threecol__link-arrow {
     display: inline-block;
@@ -239,6 +243,9 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     .threecol__outer {
       grid-template-columns: 1fr;
       padding: 0 1.5rem;
+    }
+    .threecol:has(.threecol__heading) .threecol__label-col {
+      display: none;
     }
     .threecol__label-col {
       overflow: visible;
@@ -257,12 +264,31 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     .threecol__col {
       align-items: center;
       text-align: center;
-      max-width: 400px;
+      max-width: 520px;
       margin: 0 auto;
     }
     .threecol__img-wrap {
-      width: 280px;
-      height: 280px;
+      width: 100%;
+      max-width: 520px;
+    }
+    .threecol__title {
+      font-size: 0.9rem;
+    }
+    .threecol__body {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .threecol__body :global(p),
+    .threecol__body :global(.threecol__col-body) {
+      font-size: 1.0625rem;
+      line-height: 1.7;
+    }
+    .threecol__link {
+      font-size: 1.0625rem;
+    }
+    .threecol[data-alignment='center'] .threecol__link,
+    .threecol__link {
+      align-self: center;
     }
   }
 </style>
