@@ -42,6 +42,10 @@ export const SECTION_PROJECTION = /* groq */ `
         _id,
         metadata { dimensions { width, height, aspectRatio }, lqip }
       }
+    },
+    ctaLink {
+      ...,
+      internal->{ _type, "slug": slug.current }
     }
   },
   steps[] {

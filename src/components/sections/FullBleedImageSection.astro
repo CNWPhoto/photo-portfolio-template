@@ -33,7 +33,6 @@ const overlayOpacity = (section?.overlayOpacity ?? 30) / 100;
 const height = section?.height || 'tall';
 const parallax = !!section?.parallax;
 
-const isOverlayCard = textContainer === 'overlay-card';
 const isImageOnly = textContainer === 'image-only';
 ---
 
@@ -47,7 +46,7 @@ const isImageOnly = textContainer === 'image-only';
   >
     <div class="fbi-imgonly__img" style={`background-image:url('${bgUrl}')`} aria-hidden="true" />
   </section>
-) : isOverlayCard ? (
+) : (
   <section
     class:list={['fbi', `fbi--${height}`]}
     data-section-type="fullBleedImageSection"
@@ -55,7 +54,7 @@ const isImageOnly = textContainer === 'image-only';
     id={section?.sectionId || undefined}
     style={style}
   >
-    <div class="fbi__bg" data-parallax-bg style={`background-image:url('${bgUrl}')`} aria-hidden="true"></div>
+    <div class="fbi__bg" style={`background-image:url('${bgUrl}')`} aria-hidden="true"></div>
     <div class="fbi__overlay" style={`background:rgba(0,0,0,${overlayOpacity})`} aria-hidden="true"></div>
     <div class="fbi__box">
       {eyebrow && <p class="fbi__label reveal reveal-delay-1">{eyebrow}</p>}
@@ -65,39 +64,9 @@ const isImageOnly = textContainer === 'image-only';
       {caption && <p class="fbi__caption reveal reveal-delay-5">{caption}</p>}
     </div>
   </section>
-) : (
-  <section
-    class="why"
-    data-section-type="fullBleedImageSection"
-    data-parallax={parallax ? 'true' : 'false'}
-    id={section?.sectionId || 'why-choose'}
-    style={style}
-  >
-    <div class="why__image-full" style={`background-image: url('${bgUrl}')`} aria-hidden="true"></div>
-
-    <hr />
-    <div class="why__inner">
-      <div class="why__heading-col reveal">
-        {headingHTML && <h2 class="why__heading" set:html={headingHTML} />}
-      </div>
-
-      <div class="why__content-col reveal reveal-delay-2">
-        {bodyHTML && <div set:html={bodyHTML} />}
-        {ctaText && ctaHref && <a href={ctaHref} class="why__cta">{ctaText}</a>}
-        {caption && <p class="why__caption">{caption}</p>}
-      </div>
-    </div>
-  </section>
 )}
 
 <style>
-  .why {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    background: var(--bg);
-    color: var(--text);
-  }
-
   /* ══ Image-only variant — full-bleed background image, no text,
      no vertical padding so neighboring sections butt up flush. ══ */
   .fbi-imgonly {
@@ -124,104 +93,7 @@ const isImageOnly = textContainer === 'image-only';
     }
   }
 
-  /* Section acts as a viewport cutout; when parallax is enabled the
-     image is pinned in place via background-attachment: fixed. The
-     attribute-selector gate means the Parallax checkbox in Sanity
-     actually controls the behavior instead of being a silent no-op. */
-  .why__image-full {
-    width: 100%;
-    height: 65vh;
-    min-height: 420px;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-  .why[data-parallax='true'] .why__image-full {
-    background-attachment: fixed;
-  }
-
-  /* Two-column text section below the image */
-  .why__inner {
-    display: grid;
-    /* Heading col holds its original ~462px width (what 1fr was in the
-       old 1100px layout). Content col takes the rest of the 1200px
-       container, so all 100px of the added width goes to the text. */
-    grid-template-columns: minmax(0, 462px) 1fr;
-    gap: 5rem;
-    max-width: 1200px;
-    /* Left edge pinned to where the old 1100px centered container sat
-       (`(100vw - 1100px) / 2`); right edge extends 100px further via
-       the wider max-width. `max(..., 1.5rem)` floors the margin on
-       narrow viewports so content can't scroll under the edge. */
-    margin-left: max((100vw - 1100px) / 2, 1.5rem);
-    margin-right: auto;
-    padding: 6rem 3rem 7rem;
-    align-items: start;
-  }
-
-  .why__heading-col {
-    border-left: 2px solid var(--accent);
-    padding-left: 1.5rem;
-  }
-
-  .why__heading {
-    font-size: clamp(2rem, 4vw, 3.25rem);
-    color: var(--text);
-    line-height: 1.18;
-    letter-spacing: -0.01em;
-    margin: 0;
-  }
-
-  .why__content-col { padding-top: 0.5rem; }
-
-  .why__content-col :global(.why__body),
-  .why__content-col :global(p) {
-    font-style: normal;
-    font-size: 18px;
-    line-height: 1.85;
-    color: var(--text);
-    margin: 0 0 1.5rem;
-  }
-
-  .why__cta {
-    display: inline-block;
-    font-family: var(--font-sans, var(--font-body));
-    font-style: normal;
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text);
-    text-decoration: none;
-    border: 1px solid var(--text);
-    padding: 0.8rem 1.75rem;
-    margin-top: 1.5rem;
-    margin-bottom: 1.75rem;
-  }
-
-  .why__cta:hover {
-    background: var(--text);
-    color: var(--bg);
-  }
-
-  .why__caption {
-    font-family: var(--font-sans, var(--font-body));
-    font-size: 0.8125rem;
-    letter-spacing: 0.04em;
-    color: var(--muted-light);
-    font-style: normal;
-    margin: 0;
-  }
-
-  @media (max-width: 900px) {
-    .why[data-parallax='true'] .why__image-full { background-attachment: scroll; }
-    .why__inner {
-      grid-template-columns: 1fr;
-      gap: 2.5rem;
-      padding: 4rem 1.5rem 5rem;
-    }
-  }
-
-  /* ── Overlay Card variant (legacy Next Steps) ── */
+  /* ── Overlay Card variant ── */
   .fbi {
     position: relative;
     display: flex;
@@ -237,11 +109,18 @@ const isImageOnly = textContainer === 'image-only';
 
   .fbi__bg {
     position: absolute;
-    inset: -100px;
+    inset: 0;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    will-change: transform;
+  }
+  .fbi[data-parallax='true'] .fbi__bg {
+    background-attachment: fixed;
+  }
+  @media (max-width: 900px) {
+    .fbi[data-parallax='true'] .fbi__bg {
+      background-attachment: scroll;
+    }
   }
   .fbi__overlay {
     position: absolute;
@@ -304,40 +183,29 @@ const isImageOnly = textContainer === 'image-only';
   }
 
   @media (max-width: 900px) {
+    .fbi,
+    .fbi--medium,
+    .fbi--tall,
+    .fbi--viewport {
+      display: block;
+      min-height: 0;
+    }
+    .fbi__bg {
+      position: relative;
+      inset: auto;
+      width: 100%;
+      height: 55vh;
+      min-height: 320px;
+    }
+    .fbi__overlay {
+      inset: 0 0 auto 0;
+      height: 55vh;
+      min-height: 320px;
+    }
     .fbi__box {
-      margin: 3rem 1.5rem;
-      padding: 2.5rem 2rem;
+      margin: 0;
+      padding: 2.5rem 1.5rem 3rem;
       max-width: none;
     }
   }
 </style>
-
-<script>
-  // Only attach the overlay-card rAF parallax handler to sections where
-  // the Parallax checkbox is actually enabled. Previously this ran
-  // unconditionally, which meant the schema boolean was silently ignored.
-  document.querySelectorAll<HTMLElement>('[data-parallax-bg]').forEach((bg) => {
-    const section = bg.closest('section');
-    if (!section) return;
-    if (!section.matches('[data-parallax="true"]')) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    const update = () => {
-      const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight;
-      if (rect.bottom < 0 || rect.top > vh) return;
-      const progress = (vh - rect.top) / (vh + rect.height);
-      const shift = (progress - 0.5) * 200;
-      bg.style.transform = `translateY(${shift}px)`;
-    };
-
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(() => { update(); ticking = false; });
-        ticking = true;
-      }
-    }, { passive: true });
-    update();
-  });
-</script>

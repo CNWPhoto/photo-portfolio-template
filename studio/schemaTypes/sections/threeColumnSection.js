@@ -56,6 +56,17 @@ export default {
               validation: (Rule) => Rule.required(),
             },
             richTextBody(),
+            {
+              name: 'ctaText',
+              title: 'Button Text',
+              type: 'string',
+              description: 'Optional. Renders as an accent-colored link with arrow.',
+            },
+            {
+              name: 'ctaLink',
+              title: 'Button Link',
+              type: 'ctaLink',
+            },
           ],
           preview: {
             select: {title: 'title', media: 'image'},

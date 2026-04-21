@@ -36,8 +36,8 @@ const stepsRendered = steps.map((step: any, i: number) => ({
   <hr />
   <div class="hcols__inner">
     <div class="hcols__header">
+      {eyebrow && <p class="hcols__eyebrow">{eyebrow}</p>}
       {heading && <h2 class="hcols__heading">{heading}</h2>}
-      {eyebrow && <p class="hcols__sub">{eyebrow}</p>}
     </div>
 
     <div class="hcols__steps" data-columns={columns}>
@@ -76,27 +76,21 @@ const stepsRendered = steps.map((step: any, i: number) => ({
 
   .hcols__header { padding: 5.5rem 0 4.5rem; }
 
+  .hcols__eyebrow {
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+
   .hcols__heading {
     font-size: clamp(2rem, 4vw, 3.25rem);
     color: var(--text);
-    margin: 0 0 1.25rem;
-    letter-spacing: -0.01em;
-  }
-
-  .hcols__sub {
-    font-size: 1.0625rem;
-    color: var(--muted);
-    font-style: italic;
-    line-height: 1.6;
     margin: 0;
-  }
-
-  .hcols__sub em {
-    font-style: normal;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 0.95em;
-    color: var(--accent);
+    letter-spacing: -0.01em;
   }
 
   .hcols__steps {

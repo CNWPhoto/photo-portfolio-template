@@ -28,7 +28,6 @@ export default {
       options: {
         list: [
           {title: 'Overlay card (white box on the image)', value: 'overlay-card'},
-          {title: 'Hero/Text Stack (image on top, text below)', value: 'inline-overlay'},
           {title: 'Image only (no text, no spacing below)', value: 'image-only'},
         ],
         layout: 'radio',
@@ -67,19 +66,6 @@ export default {
       type: 'string',
       description: 'Optional small text below the CTA.',
       hidden: ({parent}) => parent?.textContainer === 'image-only',
-    },
-    {
-      name: 'textPosition',
-      title: 'Text Position',
-      type: 'string',
-      options: {
-        list: [
-          'top-left', 'top-center', 'top-right',
-          'center-left', 'center-center', 'center-right',
-          'bottom-left', 'bottom-center', 'bottom-right',
-        ],
-      },
-      initialValue: 'center-center',
     },
     {
       name: 'overlayOpacity',
