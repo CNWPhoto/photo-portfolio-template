@@ -127,5 +127,44 @@ export default {
           invert: false,
         }).warning('Must be a valid hex color, e.g. #8b2635'),
     },
+    {
+      name: 'demo',
+      title: 'Demo Showcase',
+      type: 'object',
+      description:
+        'Internal — only used on template demo sites to show a banner linking back to the demo hub. Leave disabled on real client sites.',
+      options: {collapsible: true, collapsed: true},
+      fields: [
+        {
+          name: 'isDemo',
+          title: 'This is a demo site',
+          type: 'boolean',
+          description:
+            'When ON, a thin banner renders above the nav with a niche label and a link back to the demo hub. Leave OFF on any real client site.',
+          initialValue: false,
+        },
+        {
+          name: 'nicheLabel',
+          title: 'Niche label',
+          type: 'string',
+          description: 'Short label shown in the banner, e.g. "Pet Photographer demo".',
+          hidden: ({parent}) => !parent?.isDemo,
+        },
+        {
+          name: 'hubUrl',
+          title: 'Demo hub URL',
+          type: 'url',
+          description: 'Full URL of the demo showcase hub page that lists every niche.',
+          hidden: ({parent}) => !parent?.isDemo,
+        },
+        {
+          name: 'hubLinkLabel',
+          title: 'Hub link text',
+          type: 'string',
+          description: 'Text for the link back to the hub. Defaults to "View all demos".',
+          hidden: ({parent}) => !parent?.isDemo,
+        },
+      ],
+    },
   ],
 }
