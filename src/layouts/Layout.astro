@@ -1,6 +1,7 @@
 ---
 import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
+import DemoBanner from '../components/DemoBanner.astro';
 import '../styles/palette.css';
 import { getClient } from '../lib/sanity.js';
 import { stegaClean } from '@sanity/client/stega';
@@ -26,6 +27,7 @@ const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{
     fontTheme, siteName, photographerName, logoType, logoImage, favicon,
     accentColorOverride, textColorPreset, defaultPalette,
+    demo,
     "palettes": palettes[]{
       "slug": slug.current,
       bg, bgAlt, surface, text, textMuted, textMutedLight,
@@ -74,6 +76,7 @@ const faviconUrl  = cleanSettings?.favicon?.asset?._ref
   ? `https://cdn.sanity.io/images/hx5xgigp/production/${cleanSettings.favicon.asset._ref.replace('image-', '').replace(/-([a-z]+)$/, '.$1')}`
   : null;
 const photographerName  = cleanSettings?.photographerName || siteName;
+const demoSettings      = cleanSettings?.demo ?? null;
 const accentOverride    = cleanSettings?.accentColorOverride || null;
 const textColorPreset   = cleanSettings?.textColorPreset || null;
 const twitterHandle     = cleanSeo?.twitterHandle ? cleanSeo.twitterHandle.replace(/^@/, '') : null;
@@ -291,6 +294,7 @@ const schemaJSON = schemaGraph.length
 				<a href="/api/disable-preview">Exit preview</a>
 			</div>
 		)}
+		<DemoBanner demo={demoSettings} />
 		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} navVariant={navVariant} navLinks={navLinks} {blogEnabled} />
 		<slot />
 		<Footer {siteName} {blogEnabled} />
