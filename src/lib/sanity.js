@@ -12,11 +12,17 @@ const baseConfig = {
 }
 
 // Published-content client — no token needed, safe to pre-build and reuse
-// across requests. useCdn is off so edits propagate immediately; Cloudflare
-// Pages SSR responses aren't edge-cached by default, so this stays fast.
+// across requests. useCdn: true routes fetches through Sanity's CDN edge
+// (~30–80ms vs ~200–400ms hitting api.sanity.io directly) and doesn't
+// consume the project's API request quota. Trade-off is up to ~10s of
+// staleness on published content, which is invisible in practice and
+// fully sidestepped when the Sanity → CF deploy webhook rebuilds the
+// site on publish. Visual editing is unaffected: the preview client
+// below keeps useCdn: false + perspective: 'drafts' so Presentation
+// always sees real-time draft content.
 export const sanityClient = createClient({
   ...baseConfig,
-  useCdn: false,
+  useCdn: true,
   token: undefined,
   ignoreBrowserTokenWarning: true,
 })
