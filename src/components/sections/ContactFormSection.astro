@@ -38,13 +38,15 @@ const embedTitle = section?.embedTitle || 'Contact form';
 
 // Resolve effective Web3Forms access key: per-section override wins over
 // the site-wide default. Only fetched in built-in mode.
-let effectiveKey = section?.web3formsKeyOverride || '';
+// Stega-clean because the value gets posted verbatim to web3forms.com —
+// invisible stega Unicode markers corrupt the key and the API rejects it.
+let effectiveKey = stegaClean(section?.web3formsKeyOverride) || '';
 if (mode === 'built-in' && !effectiveKey) {
   const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
   const site = await client.fetch(
     `*[_type == "siteSettings" && _id == "siteSettings"][0]{ web3formsKey }`,
   );
-  effectiveKey = site?.web3formsKey || '';
+  effectiveKey = stegaClean(site?.web3formsKey) || '';
 }
 const isConfigured = mode !== 'built-in' || !!effectiveKey;
 
