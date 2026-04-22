@@ -71,52 +71,54 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     )}
 
     {mode === 'built-in' && isConfigured && (
-      <form class="contact__form reveal reveal-delay-1" data-contact-form>
-        <input type="hidden" name="access_key" value={effectiveKey} />
-        {/* Honeypot — bots fill, humans don't see */}
-        <input type="text" name="botcheck" tabindex="-1" autocomplete="off" class="contact__honeypot" aria-hidden="true" />
+      <div class="contact__form-wrap reveal reveal-delay-1">
+        <form class="contact__form" data-contact-form>
+          <input type="hidden" name="access_key" value={effectiveKey} />
+          {/* Honeypot — bots fill, humans don't see */}
+          <input type="text" name="botcheck" tabindex="-1" autocomplete="off" class="contact__honeypot" aria-hidden="true" />
 
-        {formFields.map((field: any) => (
-          <div class="contact__field">
-            <label class="contact__label" for={`cf-${field.name}`}>
-              {field.label}{field.required && <span class="contact__required" aria-hidden="true"> *</span>}
-            </label>
-            {field.type === 'textarea' ? (
-              <textarea
-                id={`cf-${field.name}`}
-                name={field.name}
-                required={!!field.required}
-                rows="6"
-                class="contact__input contact__input--textarea"
-              />
-            ) : field.type === 'select' ? (
-              <select id={`cf-${field.name}`} name={field.name} required={!!field.required} class="contact__input">
-                <option value="">Select…</option>
-                {(field.options || []).map((opt: string) => (
-                  <option value={opt}>{opt}</option>
-                ))}
-              </select>
-            ) : (
-              <input
-                id={`cf-${field.name}`}
-                name={field.name}
-                type={field.type || 'text'}
-                required={!!field.required}
-                class="contact__input"
-              />
-            )}
-          </div>
-        ))}
+          {formFields.map((field: any) => (
+            <div class="contact__field">
+              <label class="contact__label" for={`cf-${field.name}`}>
+                {field.label}{field.required && <span class="contact__required" aria-hidden="true"> *</span>}
+              </label>
+              {field.type === 'textarea' ? (
+                <textarea
+                  id={`cf-${field.name}`}
+                  name={field.name}
+                  required={!!field.required}
+                  rows="6"
+                  class="contact__input contact__input--textarea"
+                />
+              ) : field.type === 'select' ? (
+                <select id={`cf-${field.name}`} name={field.name} required={!!field.required} class="contact__input">
+                  <option value="">Select…</option>
+                  {(field.options || []).map((opt: string) => (
+                    <option value={opt}>{opt}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  id={`cf-${field.name}`}
+                  name={field.name}
+                  type={field.type || 'text'}
+                  required={!!field.required}
+                  class="contact__input"
+                />
+              )}
+            </div>
+          ))}
 
-        <button
-          type="submit"
-          class="contact__submit"
-          data-submit-text={submitText}
-          data-success-message={successMessage}
-          data-error-message={errorMessage}
-        >{submitText}</button>
+          <button
+            type="submit"
+            class="contact__submit"
+            data-submit-text={submitText}
+            data-success-message={successMessage}
+            data-error-message={errorMessage}
+          >{submitText}</button>
+        </form>
         <p class="contact__status" data-contact-status aria-live="polite"></p>
-      </form>
+      </div>
     )}
 
     {mode === 'built-in' && !isConfigured && (
@@ -145,7 +147,9 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   // The submit button carries success/error message data attrs so each
   // section can carry its own copy.
   document.querySelectorAll<HTMLFormElement>('[data-contact-form]').forEach((form) => {
-    const status = form.querySelector('[data-contact-status]') as HTMLElement | null;
+    // Status is a sibling of the form (inside .contact__form-wrap) so hiding
+    // the form on success doesn't also hide the success message.
+    const status = form.parentElement?.querySelector('[data-contact-status]') as HTMLElement | null;
     const submitBtn = form.querySelector('[type="submit"]') as HTMLButtonElement | null;
     if (!status || !submitBtn) return;
 
@@ -314,7 +318,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   .contact__submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
   .contact__status {
-    margin: 0;
+    margin: 1rem 0 0;
     min-height: 1.5em;
     font-family: var(--font-sans, var(--font-body));
     font-size: 0.9rem;
