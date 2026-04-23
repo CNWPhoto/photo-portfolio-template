@@ -98,7 +98,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     </div>
 
     {ctaText && (
-      <div class="blogteaser__cta-wrap reveal">
+      <div class="blogteaser__footer reveal">
         <a class="blogteaser__cta" href={ctaHref}>{ctaText}</a>
       </div>
     )}
@@ -191,7 +191,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     margin: 0;
   }
 
-  .blogteaser__cta-wrap { margin-top: 3rem; text-align: center; }
+  .blogteaser__footer { margin-top: 3rem; text-align: center; }
   .blogteaser__cta {
     display: inline-block;
     font-family: var(--font-sans, var(--font-body));
