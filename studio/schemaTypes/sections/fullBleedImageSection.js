@@ -35,6 +35,22 @@ export default {
       initialValue: 'overlay-card',
     },
     {
+      name: 'cardPlacement',
+      title: 'Card Placement',
+      type: 'string',
+      description: 'Which side the overlay card sits on. Only applies to the Overlay card layout.',
+      options: {
+        list: [
+          {title: 'Left', value: 'left'},
+          {title: 'Right', value: 'right'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'left',
+      hidden: ({parent}) => parent?.textContainer !== 'overlay-card',
+    },
+    {
       name: 'eyebrow',
       title: 'Eyebrow',
       type: 'string',
