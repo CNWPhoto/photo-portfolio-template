@@ -155,6 +155,10 @@ jobs:
             sanity_project_id: tl3zj8iz
             studio_url: https://coola-creative.sanity.studio
             pages_url: https://coola-creative.pages.dev
+          - slug: family-demo
+            sanity_project_id: v14sne67
+            studio_url: https://family-demo.sanity.studio
+            pages_url: https://family-demo.pages.dev
           # Add new clients here. Each slug must match the GitHub
           # Environment name pattern `client-<slug>`.
     steps:
