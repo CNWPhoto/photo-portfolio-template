@@ -34,6 +34,7 @@ const height = section?.height || 'tall';
 const parallax = !!section?.parallax;
 
 const isImageOnly = textContainer === 'image-only';
+const cardPlacement = section?.cardPlacement === 'right' ? 'right' : 'left';
 ---
 
 {isImageOnly ? (
@@ -51,6 +52,7 @@ const isImageOnly = textContainer === 'image-only';
     class:list={['fbi', `fbi--${height}`]}
     data-section-type="fullBleedImageSection"
     data-parallax={parallax ? 'true' : 'false'}
+    data-card-placement={cardPlacement}
     id={section?.sectionId || undefined}
     style={style}
   >
@@ -134,6 +136,14 @@ const isImageOnly = textContainer === 'image-only';
     max-width: 460px;
     margin: calc(4rem + 50px) 0 calc(4rem + 50px) 6vw;
     padding: 3.5rem;
+  }
+  /* Right-aligned variant: flips the horizontal offset. Same dimensions,
+     same padding, just anchored to the opposite edge. Section is flex +
+     align-items: center already, so pushing the box right is a margin
+     swap. */
+  .fbi[data-card-placement='right'] .fbi__box {
+    margin-left: auto;
+    margin-right: 6vw;
   }
   .fbi__label {
     font-family: var(--font-sans, var(--font-body));
