@@ -42,6 +42,8 @@ is in the linked phase.
 
 ## Deployment Model
 
+> **Applies equally to niche demo sites.** When you spin up an internal demo (e.g. `family-demo`, `wedding-demo`), follow the same phases — the only difference is that the "client's Cloudflare account" and "client's Sanity org" are both your own accounts, so the "admin invite" and "account switching" steps are no-ops. **Every other step, including the Phase 2.2 CF runtime env vars, still applies.**
+
 **One template repo, many Cloudflare Pages projects — one GitHub Actions workflow deploys to all of them via Direct Upload.**
 
 This is the default model for all clients. It works around a Cloudflare Pages constraint: a single GitHub account can only Git-integrate its repos to one Cloudflare account at a time, so the "connect via Git" approach can't serve multiple clients whose Pages projects live in different Cloudflare accounts. Direct Upload via GitHub Actions sidesteps that constraint entirely while preserving the single-template-repo model.
@@ -275,7 +277,11 @@ Have the client invite you as Super Administrator so you can manage her Pages pr
 | `SANITY_PREVIEW_SECRET` | Secret from Phase 1.4 | **Encrypt** |
 | `SANITY_STUDIO_URL` | `https://<client-slug>.sanity.studio` | Plaintext |
 
-> `SANITY_API_READ_TOKEN` MUST be set, or Sanity Presentation mode won't activate — drafts won't render, click-to-edit overlays stay dark. Most common first-deploy failure is forgetting this.
+> **⚠ Do not skip this step.** These env vars are set on the Cloudflare Pages project itself and are read at **runtime** by the Worker — they are separate from the GitHub Environment secrets (which are build-time only, used by GH Actions to run wrangler). If you only set the GH secrets and skip the CF runtime vars, the build will succeed and the site will load, but:
+> - `SANITY_API_READ_TOKEN` missing → Sanity Presentation mode shows "Preview mode is not configured — SANITY_API_READ_TOKEN is not set on this deployment." Drafts won't render; click-to-edit overlays stay dark.
+> - `SANITY_PREVIEW_SECRET` missing → the `/api/preview` route errors when Studio Presentation tries to activate preview mode.
+>
+> This is the single most common first-deploy omission. After adding or changing any of these vars, you must **redeploy** the Pages project (CF dash → Deployments → Retry, or push any commit to `production`).
 
 **2.3 — Create a scoped CF API token for the workflow**
 
