@@ -54,8 +54,12 @@ const fallbackImages = [
 	alt, w, h,
 }));
 
-const images = portfolio?.length
-	? portfolio.map((img: any) => {
+// Filter out images without a resolved asset — editors can leave empty
+// upload slots in Studio, which would otherwise crash urlFor() and
+// bubble up as a 404/500 on the whole portfolio page.
+const validPortfolio = (portfolio ?? []).filter((img: any) => img?.asset?._id);
+const images = validPortfolio.length
+	? validPortfolio.map((img: any) => {
 			const naturalW = img.asset?.metadata?.dimensions?.width ?? 1200;
 			const naturalH = img.asset?.metadata?.dimensions?.height ?? 800;
 			const displayW = Math.min(naturalW, 800);
