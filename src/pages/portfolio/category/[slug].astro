@@ -27,18 +27,23 @@ if (!category) {
   return new Response(null, { status: 404 });
 }
 
-const images = (portfolio?.images || []).map((img: any) => {
-  const naturalW = img.asset?.metadata?.dimensions?.width ?? 1200;
-  const naturalH = img.asset?.metadata?.dimensions?.height ?? 800;
-  const displayW = Math.min(naturalW, 800);
-  const displayH = Math.round((displayW / naturalW) * naturalH);
-  return {
-    src: urlFor(img).width(800).auto('format').url(),
-    alt: img.alt ?? img.title ?? '',
-    w: displayW,
-    h: displayH,
-  };
-});
+// Filter out images without a resolved asset — editors can leave empty
+// upload slots in Studio, which would otherwise crash urlFor() and
+// bubble up as an error on the whole category page.
+const images = (portfolio?.images || [])
+  .filter((img: any) => img?.asset?._id)
+  .map((img: any) => {
+    const naturalW = img.asset?.metadata?.dimensions?.width ?? 1200;
+    const naturalH = img.asset?.metadata?.dimensions?.height ?? 800;
+    const displayW = Math.min(naturalW, 800);
+    const displayH = Math.round((displayW / naturalW) * naturalH);
+    return {
+      src: urlFor(img).width(800).auto('format').url(),
+      alt: img.alt ?? img.title ?? '',
+      w: displayW,
+      h: displayH,
+    };
+  });
 
 const galleryColumns = portfolio?.galleryColumns || 3;
 const pageTitle = `${category.name} — Portfolio Category`;
