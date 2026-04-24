@@ -79,6 +79,17 @@ export default {
       initialValue: 'classic',
     },
     {
+      name: 'stickyNav',
+      title: 'Sticky navigation',
+      type: 'boolean',
+      description:
+        'When on, the nav bar stays visible at the top of the page as visitors scroll. Leave off for a nav that scrolls out of view with the rest of the page. (Transparent variants are always sticky — the scroll-solidify effect requires it.)',
+      initialValue: false,
+      // Hidden for transparent variants where sticky is forced on anyway —
+      // showing an ignored toggle would confuse editors.
+      hidden: ({parent}) => parent?.navVariant?.startsWith('transparent'),
+    },
+    {
       name: 'links',
       title: 'Navigation Links',
       type: 'array',

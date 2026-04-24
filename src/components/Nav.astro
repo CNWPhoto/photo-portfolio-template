@@ -10,7 +10,15 @@ const {
 	navVariant = 'classic',
 	navLinks = null,
 	blogEnabled = true,
+	stickyNav = false,
 } = Astro.props;
+
+// Transparent variants force sticky on (the scroll-solidify effect
+// requires the nav to stay pinned); non-transparent variants respect
+// the editor's toggle. Resolving this server-side keeps the data-sticky
+// attribute accurate from the first paint.
+const isStickyEffective =
+	stickyNav || (typeof navVariant === 'string' && navVariant.startsWith('transparent'));
 
 // In Sanity Presentation mode, attach data-sanity attributes to the logo
 // and the nav root so editors get click-to-edit overlays for siteSettings
@@ -64,7 +72,7 @@ const leftLinks  = isSplit ? links.slice(0, splitMid) : [];
 const rightLinks = isSplit ? links.slice(splitMid)    : links;
 ---
 
-<header class="nav" data-variant={navVariant} data-sanity={navSanityAttr}>
+<header class="nav" data-variant={navVariant} data-sticky={isStickyEffective ? 'true' : undefined} data-sanity={navSanityAttr}>
 	<div class="nav__inner">
 		{isSplit && (
 			<nav aria-label="Main navigation left" class="nav__left-nav">
@@ -570,9 +578,13 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	   (The CSS :has() approach needs to cross component scopes, which
 	   Astro's scoped-CSS compiler can't safely rewrite inside :has().)
 	═══════════════════════════════════════ */
-	/* Sticky regardless of hero — transparent variants stay pinned on
-	   every page so the nav is always visible, even on pages without
-	   the image-full hero pattern. */
+	/* Sticky gate. Two paths opt into pinning:
+	   1. Editors can flip Sticky navigation on in navSettings for any
+	      variant — the attribute lands on the <header> at render.
+	   2. Transparent variants are forced sticky regardless (the
+	      scroll-solidify effect requires the nav to stay pinned),
+	      so they match this gate via the variant-prefix selector too. */
+	.nav[data-sticky='true'],
 	.nav[data-variant^='transparent'] {
 		position: sticky;
 		top: 0;
