@@ -40,6 +40,7 @@ const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
   client.fetch(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`),
   client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{
     navVariant,
+    stickyNav,
     links[] {
       label, url, enabled, openInNewTab, isButton, linkType,
       "internalRef": internalRef->{ _type, "slug": slug.current },
@@ -143,6 +144,7 @@ const textPresetColors = (textColorPreset && LIGHT_THEMES.includes(colorTheme))
 // the whole nav object — links are used for hrefs, labels, and type checks.
 const cleanNav = nav ? stegaClean(nav) : null;
 const navVariant     = cleanNav?.navVariant || 'classic';
+const stickyNav      = !!cleanNav?.stickyNav;
 const navLinks       = cleanNav?.links ?? null;
 const blogEnabled    = blogConfig?.blogEnabled !== false;
 
@@ -296,7 +298,7 @@ const schemaJSON = schemaGraph.length
 			</div>
 		)}
 		<DemoBanner demo={demoSettings} />
-		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} navVariant={navVariant} navLinks={navLinks} {blogEnabled} />
+		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} navVariant={navVariant} navLinks={navLinks} {blogEnabled} {stickyNav} />
 		<slot />
 		<Footer {siteName} {blogEnabled} />
 		<script>
