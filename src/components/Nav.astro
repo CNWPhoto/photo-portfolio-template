@@ -553,9 +553,17 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 
 	/* ═══════════════════════════════════════
 	   VARIANT: TRANSPARENT
-	   Starts clear over hero, fills in on scroll
+	   Starts clear over hero, fills in on scroll.
+	   Gated on body[data-hero-overlay='true'] which a small inline
+	   script below sets when the page's first <main> child is a
+	   hero--image-full section. On pages without that pattern, the
+	   attribute is absent and the transparent variant falls through
+	   to the default opaque .nav styling — avoiding white text sitting
+	   invisibly on a bg-colored page.
+	   (The CSS :has() approach needs to cross component scopes, which
+	   Astro's scoped-CSS compiler can't safely rewrite inside :has().)
 	═══════════════════════════════════════ */
-	.nav[data-variant='transparent'] {
+	:global(body[data-hero-overlay='true']) .nav[data-variant='transparent'] {
 		position: sticky;
 		top: 0;
 		background: transparent;
@@ -563,23 +571,24 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	}
 
 	/* transparent state: white text/bars so it reads over hero imagery */
-	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__logo,
-	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a,
-	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links .nav__link {
+	:global(body[data-hero-overlay='true']) .nav[data-variant='transparent']:not(.nav--scrolled) .nav__logo,
+	:global(body[data-hero-overlay='true']) .nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a,
+	:global(body[data-hero-overlay='true']) .nav[data-variant='transparent']:not(.nav--scrolled) .nav__links .nav__link {
 		color: var(--white);
 	}
 
-	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a:not(.nav__inquire)::after,
-	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__links .nav__link:not(.nav__inquire)::after {
+	:global(body[data-hero-overlay='true']) .nav[data-variant='transparent']:not(.nav--scrolled) .nav__links a:not(.nav__inquire)::after,
+	:global(body[data-hero-overlay='true']) .nav[data-variant='transparent']:not(.nav--scrolled) .nav__links .nav__link:not(.nav__inquire)::after {
 		background-color: var(--white);
 	}
 
-	.nav[data-variant='transparent']:not(.nav--scrolled) .nav__hamburger-bar {
+	:global(body[data-hero-overlay='true']) .nav[data-variant='transparent']:not(.nav--scrolled) .nav__hamburger-bar {
 		background: var(--white);
 	}
 
-	/* scrolled state: opaque background returns */
-	.nav[data-variant='transparent'].nav--scrolled {
+	/* scrolled state: opaque background returns (only meaningful when
+	   the overlay mode was active in the first place) */
+	:global(body[data-hero-overlay='true']) .nav[data-variant='transparent'].nav--scrolled {
 		background: var(--bg);
 		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
 	}

@@ -27,6 +27,12 @@ const seoTitle       = homepageDoc?.seo?.seoTitle       || homepageDoc?.pageTitl
 const seoDescription = homepageDoc?.seo?.seoDescription || null;
 const ogImage        = homepageDoc?.seo?.socialImage?.asset?.url || null;
 
+// Transparent nav variant should only overlay when the first rendered
+// section is a hero in the `image-full` variant. Any other first section
+// means we render the nav opaque (same as classic variant) so its text
+// stays legible against the page background.
+const heroOverlay = hero?.enabled !== false && hero?._type === 'heroSection' && hero?.variant === 'image-full';
+
 const faqSection = sections.find((s: any) => s._type === 'faqSection');
 const faqs = faqSection?.faqs ?? null;
 const faqSchemaData = faqs?.length && faqSection?.showSchema !== false
@@ -41,7 +47,7 @@ const faqSchemaData = faqs?.length && faqSection?.showSchema !== false
 	: undefined;
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData}>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData} {heroOverlay}>
 	<main>
 		{hero && hero.enabled !== false && (
 			<SectionRenderer
