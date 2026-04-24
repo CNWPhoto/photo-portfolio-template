@@ -44,8 +44,7 @@ const image = section?.image ?? null;
       {bodyHTML && <div class="isplit__body-wrap reveal reveal-delay-2" set:html={bodyHTML} />}
       {ctaText && ctaHref && (
         <a class="isplit__link reveal reveal-delay-4" href={ctaHref}>
-          {ctaText}
-          {isFullBleed && <span class="isplit__link-arrow" aria-hidden="true">&rarr;</span>}
+          {ctaText} <span class="isplit__link-arrow" aria-hidden="true">&rarr;</span>
         </a>
       )}
     </div>
@@ -357,17 +356,15 @@ const image = section?.image ?? null;
   .isplit--image-right-full-bleed .isplit__link { text-align: right; }
   .isplit--image-left-full-bleed .isplit__link { text-align: right; }
 
-  /* Full-bleed links get a trailing arrow that slides right on hover —
-     mirrors the threecol__link treatment so the two components feel the
-     same. Scoped to full-bleed only; contained variants stay plain. */
-  .isplit--image-left-full-bleed .isplit__link-arrow,
-  .isplit--image-right-full-bleed .isplit__link-arrow {
+  /* Trailing arrow that slides right on hover — applies to every Split
+     variant (contained and full-bleed) so the link affordance matches
+     the steps section and other CTA links across the site. */
+  .isplit__link-arrow {
     display: inline-block;
-    margin-left: 0.35em;
+    margin-left: 0.15em;
     transition: transform 0.2s ease;
   }
-  .isplit--image-left-full-bleed .isplit__link:hover .isplit__link-arrow,
-  .isplit--image-right-full-bleed .isplit__link:hover .isplit__link-arrow {
+  .isplit__link:hover .isplit__link-arrow {
     transform: translateX(4px);
   }
 

@@ -65,9 +65,12 @@ const showTabs = tabs.length >= 2;
     border-bottom: 1px solid transparent;
     transition: color 0.18s, border-color 0.18s;
   }
+  /* Override the global [class*="__link"]:hover rule in Layout.astro
+     that tightens letter-spacing — tabs should keep their fixed tracking. */
   .gallery-tabs__link:hover {
     color: var(--text, #1a2744);
     border-bottom-color: var(--accent, currentColor);
+    letter-spacing: 0.2em;
   }
   .gallery-tabs__link--active {
     color: var(--accent, #8b2635);
