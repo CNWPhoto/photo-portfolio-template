@@ -631,13 +631,15 @@ const schemaJSON = schemaGraph.length
 
 	/* ══════════════════════════════════════════════════
 	   TRANSPARENT NAV — HERO PULL-UP
-	   When navVariant is transparent, hero/full-bleed image
-	   sections that are the FIRST child of <main> pull themselves
-	   up behind the sticky nav so the image fills edge-to-edge.
-	   Text-first pages are unaffected (no .hero first child).
-	   --nav-height is set in px by Nav.astro's JS on load/resize.
+	   When navVariant starts with 'transparent' (covers both
+	   the plain 'transparent' and 'transparent-split' variants),
+	   hero/full-bleed image sections that are the FIRST child of
+	   <main> pull themselves up behind the nav so the image fills
+	   edge-to-edge. Text-first pages are unaffected (no .hero
+	   first child). --nav-height is set in px by Nav.astro's JS
+	   on load/resize.
 	══════════════════════════════════════════════════ */
-	body[data-nav-variant='transparent'] main > .hero:first-child {
+	body[data-nav-variant^='transparent'] main > .hero:first-child {
 		margin-top: calc(-1 * var(--nav-height, 80px));
 	}
 </style>

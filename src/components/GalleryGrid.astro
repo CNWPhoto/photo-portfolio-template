@@ -18,21 +18,40 @@ interface Props {
 
 const { images, galleryColumns = 3 } = Astro.props;
 const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
+
+// Per-column flex containers + round-robin distribution.
+// CSS `columns` rebalances by content height and on small galleries
+// (e.g. 4 images in 3 columns) packs them 2+2+0, leaving an empty
+// trailing column. CSS Grid forces uniform row heights, defeating the
+// masonry look. Round-robin distribution into N flex columns gives
+// both: each image keeps its natural aspect ratio AND every column
+// always gets used. Clamp column count to image count so 2 images in
+// a 3-col layout renders as 2 columns instead of 3 with one empty.
+const effectiveCols = Math.max(1, Math.min(galleryColumns, images.length || 1));
+const columnBuckets: GalleryImage[][] = Array.from({ length: effectiveCols }, () => []);
+images.forEach((img, i) => columnBuckets[i % effectiveCols].push(img));
 ---
 
-<div class="portfolio__grid" style={`--gallery-columns: ${galleryColumns}`}>
-  {images.map((img, i) => (
-    <div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
-      <img
-        src={img.src}
-        alt={img.alt}
-        width={img.w}
-        height={img.h}
-        loading="lazy"
-        decoding="async"
-        class="portfolio__img"
-        data-index={i}
-      />
+<div class="portfolio__grid" style={`--gallery-columns: ${effectiveCols}`}>
+  {columnBuckets.map((bucket) => (
+    <div class="portfolio__col">
+      {bucket.map((img) => {
+        const i = images.indexOf(img);
+        return (
+          <div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
+            <img
+              src={img.src}
+              alt={img.alt}
+              width={img.w}
+              height={img.h}
+              loading="lazy"
+              decoding="async"
+              class="portfolio__img"
+              data-index={i}
+            />
+          </div>
+        );
+      })}
     </div>
   ))}
 </div>
@@ -108,24 +127,70 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
     if (e.key === 'ArrowLeft')   prev();
     if (e.key === 'ArrowRight')  next();
   });
+
+  // Responsive redistribution. The server renders at the desktop column
+  // count (round-robin). At narrower viewports the row of columns would
+  // either get too thin or show items out of reading order, so re-bucket
+  // the items on resize using the breakpoint-appropriate column count.
+  const grid = document.querySelector('.portfolio__grid');
+  if (grid) {
+    const desktopCols = Math.max(1, parseInt(getComputedStyle(grid).getPropertyValue('--gallery-columns')) || 3);
+    const items = Array.from(grid.querySelectorAll('.portfolio__item'));
+    const itemCount = items.length;
+
+    function targetCols() {
+      const w = window.innerWidth;
+      if (w <= 480) return 1;
+      if (w <= 900) return Math.min(2, itemCount || 1);
+      return Math.min(desktopCols, itemCount || 1);
+    }
+
+    function redistribute(cols) {
+      grid.innerHTML = '';
+      const buckets = Array.from({ length: cols }, () => document.createElement('div'));
+      buckets.forEach((b) => { b.className = 'portfolio__col'; grid.appendChild(b); });
+      items.forEach((item, i) => buckets[i % cols].appendChild(item));
+      grid.style.setProperty('--gallery-columns', String(cols));
+    }
+
+    let currentCols = desktopCols;
+    function maybeRedistribute() {
+      const next = targetCols();
+      if (next !== currentCols) { currentCols = next; redistribute(next); }
+    }
+    maybeRedistribute();
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(maybeRedistribute, 100);
+    });
+  }
 </script>
 
 <style>
-  /* True masonry via CSS columns — images flow top-to-bottom in each
-     column at their natural aspect ratio, so portrait and landscape
-     crops sit side by side without forcing a uniform row height. */
+  /* Flex row of fixed-share columns — each column stacks its images
+     vertically with their natural aspect ratio. True masonry without
+     either of the CSS-only failure modes: no rebalancing into empty
+     trailing columns, no uniform row heights. */
   .portfolio__grid {
-    column-count: var(--gallery-columns, 3);
-    column-gap: 15px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
     width: 100%;
     box-sizing: border-box;
     margin: 0;
     padding: 1.5rem 15px 0;
   }
 
+  .portfolio__col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
   .portfolio__item {
-    break-inside: avoid;
-    margin-bottom: 15px;
     overflow: hidden;
   }
 
@@ -230,12 +295,10 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
   .lb__next { right: 1.25rem; }
 
   @media (max-width: 900px) {
-    .portfolio__grid { column-count: 2; }
     .lb__img-wrap { max-width: calc(100vw - 100px); }
   }
 
   @media (max-width: 480px) {
-    .portfolio__grid { column-count: 1; }
     .lb__arrow { width: 40px; height: 40px; font-size: 2rem; }
     .lb__prev { left: 0.5rem; }
     .lb__next { right: 0.5rem; }
