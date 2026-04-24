@@ -96,9 +96,14 @@ const horizontalImage =
 </section>
 
 <style>
+  /* Tone-aware. Background Tone (Light/Alt/Dark) is resolved into the
+     palette by applyBackgroundTone() in the renderer, which swaps --bg
+     to the chosen shade — binding here to var(--bg) is what makes the
+     Light option actually render light. Previously hardcoded to --bg-alt,
+     so Light and Alt looked identical. */
   .pgrid {
     padding: 100px 0 128px !important;
-    background: var(--bg-alt);
+    background: var(--bg);
     color: var(--text);
   }
 

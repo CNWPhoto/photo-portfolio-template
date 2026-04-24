@@ -56,7 +56,7 @@ export const sectionBaseFields = ({groupName, withVerticalSideLabel = false} = {
       title: 'Vertical Side Label',
       type: 'string',
       description:
-        'Optional small uppercase label rendered vertically on the side of the section (e.g. "FAQs"). Leave blank to hide.',
+        'Optional label rendered vertically on the side of the section (e.g. "FAQs"). Leave blank to hide.',
       ...group,
     })
   }

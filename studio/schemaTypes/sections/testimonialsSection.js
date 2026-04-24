@@ -41,11 +41,6 @@ export default {
       initialValue: 'image-slider',
     },
     {
-      name: 'eyebrow',
-      title: 'Eyebrow',
-      type: 'string',
-    },
-    {
       name: 'heading',
       title: 'Heading',
       type: 'string',
