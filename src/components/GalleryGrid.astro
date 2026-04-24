@@ -111,9 +111,17 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 </script>
 
 <style>
+  /* CSS Grid replaces the previous CSS `columns` (masonry) layout.
+     `columns` balances by column height, which on small galleries
+     (e.g. 4 images in a 3-column layout) produces empty trailing
+     columns (2+2+0 instead of 2+1+1). Grid gives predictable
+     left-to-right, row-by-row flow at all item counts. Aspect
+     variance between images still looks natural because each image
+     keeps its own `height: auto`. */
   .portfolio__grid {
-    columns: var(--gallery-columns, 3);
-    column-gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(var(--gallery-columns, 3), 1fr);
+    gap: 15px;
     width: 100%;
     box-sizing: border-box;
     margin: 0;
@@ -121,8 +129,6 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
   }
 
   .portfolio__item {
-    break-inside: avoid;
-    margin-bottom: 15px;
     overflow: hidden;
   }
 
@@ -228,12 +234,12 @@ const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
   .lb__next { right: 1.25rem; }
 
   @media (max-width: 900px) {
-    .portfolio__grid { columns: 2; }
+    .portfolio__grid { grid-template-columns: repeat(2, 1fr); }
     .lb__img-wrap { max-width: calc(100vw - 100px); }
   }
 
   @media (max-width: 480px) {
-    .portfolio__grid { columns: 1; }
+    .portfolio__grid { grid-template-columns: 1fr; }
     .lb__arrow { width: 40px; height: 40px; font-size: 2rem; }
     .lb__prev { left: 0.5rem; }
     .lb__next { right: 0.5rem; }
