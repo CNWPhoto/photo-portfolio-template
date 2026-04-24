@@ -216,14 +216,13 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 <style>
 	/* ═══════════════════════════════════════
 	   BASE NAV (shared by all variants)
-	   Sticky by default so the nav stays visible on every page
-	   regardless of variant or whether a hero is present. Transparent
-	   variants layer their overlay treatment on top of this; non-
-	   transparent variants stay opaque throughout scroll.
+	   Non-transparent variants render in normal flow. The transparent
+	   variants opt into sticky positioning on their own (see below)
+	   so they stay pinned on every page; classic / centered / split
+	   stay non-sticky as before.
 	═══════════════════════════════════════ */
 	.nav {
-		position: sticky;
-		top: 0;
+		position: relative;
 		z-index: 100;
 		background: var(--bg);
 		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
@@ -571,9 +570,18 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	   (The CSS :has() approach needs to cross component scopes, which
 	   Astro's scoped-CSS compiler can't safely rewrite inside :has().)
 	═══════════════════════════════════════ */
-	:global(body[data-hero-overlay='true']) .nav[data-variant^='transparent'] {
+	/* Sticky regardless of hero — transparent variants stay pinned on
+	   every page so the nav is always visible, even on pages without
+	   the image-full hero pattern. */
+	.nav[data-variant^='transparent'] {
 		position: sticky;
 		top: 0;
+	}
+
+	/* Overlay treatment (transparent bg, no shadow) only when there's
+	   a hero behind it. On non-hero pages the base opaque background
+	   applies, keeping text legible. */
+	:global(body[data-hero-overlay='true']) .nav[data-variant^='transparent'] {
 		background: transparent;
 		box-shadow: none;
 	}
