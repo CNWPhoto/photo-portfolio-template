@@ -11,7 +11,6 @@ const [homepageDoc, siteData] = await Promise.all([
 	client.fetch(`*[_type == "homepagePage"][0]{
 		pageTitle,
 		seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
-		hero { ${SECTION_PROJECTION} },
 		"sections": sections[]{ ${SECTION_PROJECTION} }
 	}`),
 	client.fetch(SITE_PALETTES_QUERY),
@@ -20,18 +19,20 @@ const [homepageDoc, siteData] = await Promise.all([
 const palettes = siteData?.palettes ?? [];
 const sitePaletteSlug = siteData?.defaultPalette ?? null;
 
-const hero = homepageDoc?.hero ?? null;
 const sections = homepageDoc?.sections ?? [];
 
 const seoTitle       = homepageDoc?.seo?.seoTitle       || homepageDoc?.pageTitle || null;
 const seoDescription = homepageDoc?.seo?.seoDescription || null;
 const ogImage        = homepageDoc?.seo?.socialImage?.asset?.url || null;
 
-// Transparent nav variant should only overlay when the first rendered
-// section is a hero in the `image-full` variant. Any other first section
-// means we render the nav opaque (same as classic variant) so its text
-// stays legible against the page background.
-const heroOverlay = hero?.enabled !== false && hero?._type === 'heroSection' && hero?.variant === 'image-full';
+// Unified hero pattern: the hero (if any) lives as the first item in
+// the sections array, just like on every other page route. Transparent
+// nav overlays it only when it's a hero with variant 'image-full'.
+const firstSection = sections[0];
+const heroOverlay =
+	firstSection?._type === 'heroSection' &&
+	firstSection?.enabled !== false &&
+	firstSection?.variant === 'image-full';
 
 const faqSection = sections.find((s: any) => s._type === 'faqSection');
 const faqs = faqSection?.faqs ?? null;
@@ -49,18 +50,10 @@ const faqSchemaData = faqs?.length && faqSection?.showSchema !== false
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData} {heroOverlay}>
 	<main>
-		{hero && hero.enabled !== false && (
-			<SectionRenderer
-				section={hero}
-				isFirst={true}
-				sitePaletteSlug={sitePaletteSlug}
-				palettes={palettes}
-			/>
-		)}
 		{sections.map((section: any, i: number) => (
 			<SectionRenderer
 				section={section}
-				isFirst={!hero && i === 0}
+				isFirst={i === 0}
 				sitePaletteSlug={sitePaletteSlug}
 				palettes={palettes}
 			/>
