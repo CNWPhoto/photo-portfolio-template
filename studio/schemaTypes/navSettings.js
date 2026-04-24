@@ -72,6 +72,7 @@ export default {
           {title: 'Centered — logo centered, links below', value: 'centered'},
           {title: 'Split — logo centered, links balanced left and right', value: 'split'},
           {title: 'Transparent — starts transparent over hero, solidifies on scroll', value: 'transparent'},
+          {title: 'Transparent Split — split layout, transparent over hero', value: 'transparent-split'},
         ],
         layout: 'radio',
       },
