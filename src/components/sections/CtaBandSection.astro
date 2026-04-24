@@ -92,9 +92,15 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
 )}
 
 <style>
+  /* Tone-aware. The section's Background Tone radio (Light/Alt/Dark)
+     is resolved into the palette via applyBackgroundTone() in the
+     renderer, which swaps --bg to the chosen shade. Binding to --bg
+     (not --bg-alt) is what makes Light actually render as light;
+     previously this section ignored the toggle and always used the
+     alt shade. */
   .ctaband {
     position: relative;
-    background: var(--bg-alt);
+    background: var(--bg);
     color: var(--text);
     overflow: hidden;
   }
