@@ -17,9 +17,10 @@ interface Props {
   prevUrl?: string;      // blog pagination rel="prev"
   nextUrl?: string;      // blog pagination rel="next"
   robots?: string;       // override robots meta (e.g. "noindex, follow" for category pages)
+  heroOverlay?: boolean; // page leads with a hero--image-full section; transparent nav overlays it
 }
 
-const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb, publishDate, updatedAt, prevUrl, nextUrl, robots } = Astro.props;
+const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb, publishDate, updatedAt, prevUrl, nextUrl, robots, heroOverlay } = Astro.props;
 const isPreview = Astro.locals.isPreview ?? false;
 const client = getClient(isPreview, (Astro.locals as any).runtime?.env);
 
@@ -287,7 +288,7 @@ const schemaJSON = schemaGraph.length
 		{schemaJSON && <script type="application/ld+json" set:html={schemaJSON} />}
 		{headScripts && <Fragment set:html={headScripts} />}
 	</head>
-	<body data-nav-variant={navVariant}>
+	<body data-nav-variant={navVariant} data-hero-overlay={heroOverlay ? 'true' : undefined}>
 		{isPreview && (
 			<div class="preview-banner">
 				<span>Preview mode — draft content visible</span>
