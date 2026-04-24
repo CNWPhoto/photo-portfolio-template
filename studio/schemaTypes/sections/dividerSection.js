@@ -30,7 +30,6 @@ export default {
         list: [
           {title: 'Line', value: 'line'},
           {title: 'Dots', value: 'dots'},
-          {title: 'Ornament', value: 'ornament'},
         ],
         layout: 'radio',
       },
