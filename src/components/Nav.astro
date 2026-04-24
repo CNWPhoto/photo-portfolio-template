@@ -13,12 +13,12 @@ const {
 	stickyNav = false,
 } = Astro.props;
 
-// Transparent variants force sticky on (the scroll-solidify effect
-// requires the nav to stay pinned); non-transparent variants respect
-// the editor's toggle. Resolving this server-side keeps the data-sticky
-// attribute accurate from the first paint.
-const isStickyEffective =
-	stickyNav || (typeof navVariant === 'string' && navVariant.startsWith('transparent'));
+// Sticky is now a pure opt-in toggle for every variant — including
+// transparent. Editors who want the scroll-solidify effect on a
+// transparent nav can flip Sticky navigation on; otherwise the nav
+// overlays the hero and scrolls away with the page like any other
+// in-flow header.
+const isStickyEffective = stickyNav;
 
 // In Sanity Presentation mode, attach data-sanity attributes to the logo
 // and the nav root so editors get click-to-edit overlays for siteSettings
@@ -578,14 +578,12 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	   (The CSS :has() approach needs to cross component scopes, which
 	   Astro's scoped-CSS compiler can't safely rewrite inside :has().)
 	═══════════════════════════════════════ */
-	/* Sticky gate. Two paths opt into pinning:
-	   1. Editors can flip Sticky navigation on in navSettings for any
-	      variant — the attribute lands on the <header> at render.
-	   2. Transparent variants are forced sticky regardless (the
-	      scroll-solidify effect requires the nav to stay pinned),
-	      so they match this gate via the variant-prefix selector too. */
-	.nav[data-sticky='true'],
-	.nav[data-variant^='transparent'] {
+	/* Sticky gate — pure opt-in. Editors flip Sticky navigation on in
+	   navSettings for any variant (including transparent); the attribute
+	   lands on the <header> at render. Transparent variants are NOT
+	   force-sticky anymore — non-sticky transparent overlays the hero
+	   and scrolls away with the page. */
+	.nav[data-sticky='true'] {
 		position: sticky;
 		top: 0;
 	}
