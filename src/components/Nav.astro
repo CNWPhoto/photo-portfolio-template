@@ -711,12 +711,18 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		transform: none;
 	}
 
-	.nav--compact .nav__overlay {
+	/* The overlay div is a SIBLING of <header class="nav"> in the DOM,
+	   not a descendant — so the compact-state rule has to use the
+	   subsequent-sibling combinator, not the descendant combinator, for
+	   the overlay to actually become displayable on tablet widths
+	   (769–1024px) where the hard @media (max-width: 768px) fallback
+	   below doesn't fire but .nav--compact is active. */
+	.nav.nav--compact ~ .nav__overlay {
 		display: block;
 		pointer-events: none;
 	}
 
-	.nav--compact .nav__overlay.nav__overlay--open {
+	.nav.nav--compact ~ .nav__overlay.nav__overlay--open {
 		pointer-events: auto;
 	}
 

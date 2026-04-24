@@ -1,6 +1,6 @@
 ---
 import { toHTML } from '@portabletext/to-html';
-import { getClient } from '../lib/sanity.js';
+import { getClient, urlFor } from '../lib/sanity.js';
 import { stegaClean } from '@sanity/client/stega';
 import { createDataAttribute } from '@sanity/visual-editing/create-data-attribute';
 
@@ -31,7 +31,7 @@ const [footerDataRaw, socialDataRaw, siteDataRaw] = await Promise.all([
     legalLinks
   }`),
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`),
-  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName }`),
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName, logoType, logoImage }`),
 ]);
 
 const footerData = footerDataRaw ? stegaClean(footerDataRaw) : null;
@@ -39,6 +39,16 @@ const socialData = socialDataRaw ? stegaClean(socialDataRaw) : null;
 const siteData   = siteDataRaw ? stegaClean(siteDataRaw) : null;
 
 const photographerName = siteData?.photographerName || siteName;
+
+// Match nav-level logo behavior: when the siteSettings logoType is
+// 'image' and a logoImage asset is set, render the image in the
+// footer wordmark slot. Otherwise fall back to the site name text,
+// which flows and wraps within the footer right column.
+const footerLogoType  = siteData?.logoType || 'text';
+const footerLogoImage = siteData?.logoImage ?? null;
+const footerLogoUrl   = footerLogoType === 'image' && footerLogoImage?.asset
+  ? urlFor(footerLogoImage).height(96).auto('format').url()
+  : null;
 
 // Middle column — embed reference takes priority over the text note
 const middleCol      = footerData?.middleColumn ?? null;
@@ -131,7 +141,9 @@ const year = new Date().getFullYear();
 		</div>
 
 		<div class="footer__right">
-			<span class="footer__wordmark">{siteName}</span>
+			{footerLogoUrl
+				? <img src={footerLogoUrl} alt={siteName} class="footer__wordmark-img" decoding="async" loading="lazy" />
+				: <span class="footer__wordmark">{siteName}</span>}
 			{socialLinks.length > 0 && (
 				<div class="footer__social-row">
 					{socialLinks.map(link => (
@@ -177,10 +189,25 @@ const year = new Date().getFullYear();
 		font-family: var(--font-serif, Georgia, serif);
 		font-style: italic;
 		font-weight: 700;
-		font-size: clamp(1.4rem, 2.5vw, 2rem);
+		/* Scales down further than the old clamp so a long site name
+		   can shrink to fit the 280px right column without overflowing
+		   into neighboring content. */
+		font-size: clamp(1rem, 2.2vw, 2rem);
 		letter-spacing: 0.01em;
-		white-space: nowrap;
 		color: var(--text);
+		/* Wrap long names onto multiple lines rather than overflowing. */
+		overflow-wrap: break-word;
+		word-break: break-word;
+		max-width: 100%;
+		display: block;
+	}
+
+	.footer__wordmark-img {
+		display: block;
+		max-width: 100%;
+		max-height: 48px;
+		width: auto;
+		height: auto;
 	}
 
 	/* Social icons: horizontal row under wordmark */
