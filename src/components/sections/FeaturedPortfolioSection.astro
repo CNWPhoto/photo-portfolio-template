@@ -22,30 +22,41 @@ const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || '/portfol
 const FALLBACK_VERTICAL = 'https://images.pexels.com/photos/2253275/pexels-photo-2253275.jpeg?auto=compress&cs=tinysrgb&w=900';
 const FALLBACK_HORIZONTAL = 'https://images.pexels.com/photos/825949/pexels-photo-825949.jpeg?auto=compress&cs=tinysrgb&w=1200';
 
-// Pull from the portfolio singleton's images[] array. Find the first image
-// that's portrait (vertical) and the first that's landscape (horizontal),
-// matching the legacy PortfolioGrid two-image layout.
-// Use the preview-aware client so Presentation surfaces the portfolio
-// doc in the "Documents on this page" panel and drafts render in preview.
-const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
-const portfolio = await client.fetch(
-  `*[_type == "portfolio" && _id == "portfolio"][0]{
-    images[] {
-      _key, alt, title,
-      ...,
-      asset->{ _id, metadata { dimensions { width, height, aspectRatio }, lqip } }
-    }
-  }`,
-);
-const allImages = (portfolio?.images || []) as any[];
+// Image source resolution. Editors can override the default Portfolio-
+// singleton pull by uploading 1–2 images directly on the section. When
+// section.images has assets, those win positionally (slot 0 = vertical,
+// slot 1 = horizontal). When empty, fall through to the legacy behavior
+// of pulling the first portrait + first landscape from the Portfolio
+// singleton's images[] array.
+const sectionImages = (section?.images || []).filter((img: any) => img?.asset);
+let verticalImage: any = null;
+let horizontalImage: any = null;
 
-const isPortrait = (img: any) => {
-  const d = img?.asset?.metadata?.dimensions;
-  return d && d.height > d.width;
-};
-const verticalImage = allImages.find(isPortrait) || allImages[0] || null;
-const horizontalImage =
-  allImages.find((img) => img !== verticalImage && !isPortrait(img)) || allImages[1] || null;
+if (sectionImages.length >= 1) {
+  verticalImage = sectionImages[0] || null;
+  horizontalImage = sectionImages[1] || null;
+} else {
+  // Use the preview-aware client so Presentation surfaces the portfolio
+  // doc in the "Documents on this page" panel and drafts render in preview.
+  const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
+  const portfolio = await client.fetch(
+    `*[_type == "portfolio" && _id == "portfolio"][0]{
+      images[] {
+        _key, alt, title,
+        ...,
+        asset->{ _id, metadata { dimensions { width, height, aspectRatio }, lqip } }
+      }
+    }`,
+  );
+  const allImages = (portfolio?.images || []) as any[];
+  const isPortrait = (img: any) => {
+    const d = img?.asset?.metadata?.dimensions;
+    return d && d.height > d.width;
+  };
+  verticalImage = allImages.find(isPortrait) || allImages[0] || null;
+  horizontalImage =
+    allImages.find((img) => img !== verticalImage && !isPortrait(img)) || allImages[1] || null;
+}
 ---
 
 <section

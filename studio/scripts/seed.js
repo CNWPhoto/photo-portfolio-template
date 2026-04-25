@@ -336,6 +336,36 @@ docs.push({
   ],
 })
 
+// ── Portfolio singleton — empty stub ─────────────────────────────────
+// Studio's structure builder navigates to this doc by ID, but won't
+// create it; if seed never ships a stub, the doc doesn't exist in the
+// dataset and (a) Featured Portfolio falls back to Pexels stock images
+// and (b) ctaLink internal-link dropdowns can't reference Portfolio.
+// galleryColumns / title / byline use schema initialValues at first
+// edit; we just need the document to exist.
+docs.push({
+  _id: 'portfolio',
+  _type: 'portfolio',
+  pageTitle: 'Portfolio',
+  title: 'Portfolio',
+  byline: 'A collection of recent sessions',
+  galleryColumns: 3,
+  images: [],
+})
+
+// ── Blog page singleton — empty stub ─────────────────────────────────
+// Same reason as portfolio above. Without this, the Blog singleton
+// doesn't exist until an editor visits the Studio pane and saves —
+// so internal-link dropdowns can't reference it on a fresh dataset.
+docs.push({
+  _id: 'blogPage',
+  _type: 'blogPage',
+  blogEnabled: true,
+  pageTitle: 'Blog',
+  layout: 'list',
+  postsPerPage: 12,
+})
+
 // ── About page — content ported from legacy about.astro fallbacks ────
 docs.push({
   _id: ID.about,
