@@ -60,7 +60,9 @@ const stepsRendered = steps.map((step: any, i: number) => ({
 
     {ctaText && ctaHref && (
       <div class="hcols__footer">
-        <a href={ctaHref} class="hcols__link">{ctaText} &rarr;</a>
+        <a href={ctaHref} class="hcols__link">
+          {ctaText} <span class="hcols__link-arrow" aria-hidden="true">&rarr;</span>
+        </a>
       </div>
     )}
   </div>
@@ -177,6 +179,17 @@ const stepsRendered = steps.map((step: any, i: number) => ({
   }
 
   .hcols__link:hover { opacity: 0.7; }
+
+  /* Trailing arrow that slides right on hover — matches the SplitSection
+     and other CTA links across the site. */
+  .hcols__link-arrow {
+    display: inline-block;
+    margin-left: 0.15em;
+    transition: transform 0.2s ease;
+  }
+  .hcols__link:hover .hcols__link-arrow {
+    transform: translateX(4px);
+  }
 
   /* 4-col gets too cramped below ~1000px — wrap to 2 cols at tablet width
      before the mobile breakpoint flattens everything to 1 col. */
