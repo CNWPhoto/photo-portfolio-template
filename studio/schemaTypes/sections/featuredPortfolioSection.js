@@ -1,7 +1,10 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
 import {sectionIcon} from '../../components/SectionIcons'
+import {imageField} from '../_shared/imageField'
 
-// Featured portfolio section. Pulls items from the portfolio collection.
+// Featured portfolio section. Defaults to pulling images from the Portfolio
+// singleton (first portrait + first landscape it finds). Editors can
+// optionally override by uploading two images directly on the section.
 // See docs/page-builder-spec.md §2 (featuredPortfolioSection).
 
 export default {
@@ -41,6 +44,15 @@ export default {
       title: 'Heading',
       type: 'string',
       description: 'Optional heading rendered above the images.',
+    },
+    {
+      name: 'images',
+      title: 'Images (override)',
+      type: 'array',
+      description:
+        'Optional. Upload up to 2 images to override what this section shows. First image fills the left (narrower) slot; second fills the right (wider) slot. Leave empty to auto-pull from the Portfolio gallery (first portrait + first landscape).',
+      validation: (Rule) => Rule.max(2),
+      of: [imageField({})],
     },
     {
       name: 'ctaText',
