@@ -3,7 +3,7 @@ import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
 import DemoBanner from '../components/DemoBanner.astro';
 import '../styles/palette.css';
-import { getClient } from '../lib/sanity.js';
+import { getClient, urlFor } from '../lib/sanity.js';
 import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
@@ -74,8 +74,12 @@ const logoType    = cleanSettings?.logoType   || 'text';
 const logoImage   = cleanSettings?.logoImage  ?? null;
 const headScripts = cleanCode?.headScripts    || '';
 const bodyScripts = cleanCode?.bodyScripts    || '';
+// Use urlFor() so the URL builds against whatever project the site is
+// pointed at (PUBLIC_SANITY_PROJECT_ID env var). Hardcoding the demo's
+// project ID here meant favicons uploaded to any other client's dataset
+// 404'd because the URL pointed at the wrong CDN bucket.
 const faviconUrl  = cleanSettings?.favicon?.asset?._ref
-  ? `https://cdn.sanity.io/images/hx5xgigp/production/${cleanSettings.favicon.asset._ref.replace('image-', '').replace(/-([a-z]+)$/, '.$1')}`
+  ? urlFor(cleanSettings.favicon).width(256).auto('format').url()
   : null;
 const photographerName  = cleanSettings?.photographerName || siteName;
 const demoSettings      = cleanSettings?.demo ?? null;
