@@ -44,6 +44,10 @@ export default {
     },
 
     // ── Hero ────────────────────────────────────────────────────
+    // Mirrors the section heroSection field shape — same field names
+    // (with hero* prefix) so the underlying HeroSection component can
+    // render this page's hero exactly like a homepage hero. See
+    // src/pages/blog.astro for the synthetic section assembly.
     {
       name: 'heroImage',
       title: 'Hero Background Image',
@@ -51,15 +55,82 @@ export default {
       options: {hotspot: true, crop: true},
     },
     {
+      name: 'heroEyebrow',
+      title: 'Hero Eyebrow',
+      type: 'string',
+      description: 'Small uppercase label above the heading. Optional.',
+    },
+    {
       name: 'heroHeading',
       title: 'Hero Heading',
-      type: 'string',
+      type: 'text',
+      rows: 2,
+      description: 'Use a line break (Enter) to split onto two lines.',
     },
     {
       name: 'heroSubtext',
       title: 'Hero Subtext',
       type: 'text',
       rows: 2,
+    },
+    {
+      name: 'heroTextAlignment',
+      title: 'Hero Text Alignment',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Left', value: 'left'},
+          {title: 'Center', value: 'center'},
+          {title: 'Right', value: 'right'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'center',
+    },
+    {
+      name: 'heroTextPosition',
+      title: 'Hero Text Position',
+      type: 'string',
+      description: 'Where the text block sits over the hero image (nine-point grid).',
+      options: {
+        list: [
+          'top-left', 'top-center', 'top-right',
+          'center-left', 'center-center', 'center-right',
+          'bottom-left', 'bottom-center', 'bottom-right',
+        ],
+      },
+      initialValue: 'center-center',
+    },
+    {
+      name: 'heroHeightMode',
+      title: 'Hero Height',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Auto (55vh)', value: 'auto'},
+          {title: 'Tall (75vh)', value: 'tall'},
+          {title: 'Fullscreen (100vh)', value: 'fullscreen'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'tall',
+    },
+    {
+      name: 'heroOverlayOpacity',
+      title: 'Hero Overlay Opacity (%)',
+      type: 'number',
+      description: 'Darken the image behind the text. 0 = no overlay, 100 = solid black.',
+      initialValue: 30,
+      validation: (Rule) => Rule.min(0).max(100),
+    },
+    {
+      name: 'heroStickyBackground',
+      title: 'Sticky Hero Background',
+      type: 'boolean',
+      description:
+        'When enabled, the hero stays pinned at the top of the viewport while subsequent sections scroll up over it (curtain effect).',
+      initialValue: false,
     },
 
     // ── Layout ───────────────────────────────────────────────────

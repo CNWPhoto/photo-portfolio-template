@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import SanityImage from '../components/SanityImage.astro';
+import HeroSection from '../components/sections/HeroSection.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
 
 const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
@@ -11,9 +12,15 @@ const [pageDoc, totalCount] = await Promise.all([
     `*[_type == "blogPage"][0]{
       pageTitle,
       seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
-      heroImage { ..., asset-> },
+      heroImage { ..., asset->{ _id, metadata { dimensions { width, height, aspectRatio }, lqip } } },
+      heroEyebrow,
       heroHeading,
       heroSubtext,
+      heroTextAlignment,
+      heroTextPosition,
+      heroHeightMode,
+      heroOverlayOpacity,
+      heroStickyBackground,
       layout,
       postsPerPage
     }`,
@@ -27,14 +34,36 @@ const seoTitle       = pageDoc?.seo?.seoTitle       || pageDoc?.pageTitle || 'Bl
 const seoDescription = pageDoc?.seo?.seoDescription || null;
 const ogImage        = pageDoc?.seo?.socialImage?.asset?.url || null;
 
-const heroImgUrl  = pageDoc?.heroImage
-  ? urlFor(pageDoc.heroImage).width(1600).auto('format').url()
-  : 'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg?auto=compress&cs=tinysrgb&w=1600';
-// Niche-neutral fallbacks — these only render when the client hasn't
-// populated pageDoc.heroHeading / heroSubtext yet. Left generic so
-// forking the template doesn't require editing this file per client.
+// Niche-neutral fallbacks — only render when the editor hasn't filled
+// these in yet. Forking the template doesn't require editing this file
+// per client; editors customize via blogPage.heroHeading / heroSubtext.
 const heroHeading = pageDoc?.heroHeading || 'The Journal';
 const heroSubtext = pageDoc?.heroSubtext || 'Notes from behind the lens';
+
+// Synthesize a heroSection-shaped object so we can render the unified
+// HeroSection component instead of a hand-rolled blog hero. This buys
+// the blog page all the same options sections get (overlay opacity,
+// text position, height mode, sticky background, eyebrow, multi-line
+// heading) and replaces the previous custom CSS that was producing a
+// white-glow text-shadow on title and subtext.
+const blogHeroSection = {
+  _type: 'heroSection',
+  enabled: true,
+  variant: 'image-full',
+  eyebrow: pageDoc?.heroEyebrow || '',
+  heading: heroHeading,
+  subheading: heroSubtext,
+  images: pageDoc?.heroImage?.asset ? [pageDoc.heroImage] : [],
+  heightMode: pageDoc?.heroHeightMode || 'tall',
+  overlayOpacity: pageDoc?.heroOverlayOpacity ?? 30,
+  textPosition: pageDoc?.heroTextPosition || 'center-center',
+  textAlignment: pageDoc?.heroTextAlignment || 'center',
+  stickyBackground: !!pageDoc?.heroStickyBackground,
+};
+
+// Tell Layout this page leads with a hero, so the transparent nav
+// (if the editor has chosen one site-wide) overlays the hero correctly.
+const heroOverlay = !!pageDoc?.heroImage?.asset;
 
 const layout       = pageDoc?.layout       || 'list';
 const postsPerPage = pageDoc?.postsPerPage || 12;
@@ -106,31 +135,14 @@ function formatDate(dateStr?: string): string {
 }
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Blog" prevUrl={prevUrl ?? undefined} nextUrl={nextUrl ?? undefined}>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Blog" prevUrl={prevUrl ?? undefined} nextUrl={nextUrl ?? undefined} {heroOverlay}>
   <main>
 
-    <!-- ══ SECTION 1: Hero ══ -->
-    <section class="hero">
-      {pageDoc?.heroImage?.asset ? (
-        <SanityImage
-          image={pageDoc.heroImage}
-          sizes="100vw"
-          loading="eager"
-          class="hero__img"
-        />
-      ) : (
-        <img
-          class="hero__img"
-          src={heroImgUrl}
-          alt={heroHeading}
-          loading="eager" decoding="async" fetchpriority="high"
-        />
-      )}
-      <div class="hero__content">
-        <h1 class="hero__title">{heroHeading}</h1>
-        <p class="hero__sub">{heroSubtext}</p>
-      </div>
-    </section>
+    <!-- ══ SECTION 1: Hero ══
+         Renders via the unified HeroSection component so the blog
+         hero matches every other hero on the site. Editor controls
+         live on blogPage.hero* fields (see studio/schemaTypes/blogPage.js). -->
+    <HeroSection section={blogHeroSection} isFirst={true} />
 
     <!-- ══ SECTION 2: Posts ══ -->
     <section class="posts">
@@ -222,58 +234,12 @@ function formatDate(dateStr?: string): string {
 </Layout>
 
 <style>
-  /* ══ Hero ══ */
-  .hero {
-    position: relative;
-    height: calc(55vh + 100px);
-    min-height: 460px;
-    overflow: hidden;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-  }
-
-  /* :global() bypasses Astro's scoped-CSS rewrite so the <img> rendered
-     by the SanityImage child component (which lives in its own scope)
-     picks up this rule. Without :global(), the hero img renders at its
-     natural 1200×800 size without position/object-fit and pushes to
-     the left of the hero container. */
-  .hero :global(.hero__img) {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 30%;
-    display: block;
-  }
-
-  .hero__content {
-    position: relative;
-    z-index: 1;
-    padding: 3rem 4rem;
-    text-align: right;
-  }
-
-  .hero__title {
-    font-size: clamp(2.5rem, 6vw, 5.5rem);
-    font-style: normal;
-    color: var(--accent);
-    letter-spacing: -0.01em;
-    line-height: 1;
-    margin-bottom: 0.75rem;
-    text-shadow: 0 1px 4px rgba(255, 255, 255, 0.4);
-  }
-
-  .hero__sub {
-    font-family: var(--font-sans, system-ui, sans-serif);
-    font-style: normal;
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text);
-    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.5);
-  }
+  /* Hero markup + styling moved into the shared HeroSection component
+     (src/components/sections/HeroSection.astro). The previous custom
+     hero CSS lived here and applied a white text-shadow to the title
+     and subtext, producing a blurry-bright glow on the rendered text.
+     HeroSection uses a dark drop-shadow instead, matching the rest of
+     the site. Field schema in studio/schemaTypes/blogPage.js. */
 
   /* ══ List layout ══ */
   .posts {
