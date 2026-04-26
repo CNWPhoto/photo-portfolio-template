@@ -36,7 +36,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     {heading && <HeadingTag class="richtext__heading">{heading}</HeadingTag>}
     {bodyHTML && <div class="richtext__body reveal reveal-delay-2" set:html={bodyHTML} />}
     {ctaText && ctaHref && (
-      <div class="richtext__cta-wrap reveal reveal-delay-3">
+      <div class="richtext__footer reveal reveal-delay-3">
         <a class="richtext__cta" href={ctaHref}>{ctaText}</a>
       </div>
     )}
@@ -110,11 +110,15 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
 
   /* Optional rectangular button. Mirrors .ctaband__cta — same palette
      variables, same metrics — and inherits the global lift-on-hover
-     transition from Layout.astro's [class*="__cta"]:hover rule. */
-  .richtext__cta-wrap {
+     transition from Layout.astro's [class*="__cta"]:hover rule.
+     Wrapper avoids the __cta / __btn / __button substrings: the global
+     interaction rule uses [class*="__cta"] etc, which would match a
+     wrapper named `__cta-wrap` and cause the entire wrapper width to
+     lift on hover instead of just the button itself. */
+  .richtext__footer {
     margin-top: 2rem;
   }
-  .richtext[data-text-align='center'] .richtext__cta-wrap { text-align: center; }
+  .richtext[data-text-align='center'] .richtext__footer { text-align: center; }
 
   .richtext__cta {
     display: inline-block;
