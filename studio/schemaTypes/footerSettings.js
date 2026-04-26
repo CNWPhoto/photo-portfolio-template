@@ -24,6 +24,23 @@ export default {
       hidden: true,
     },
     {
+      name: 'backgroundTone',
+      title: 'Background Tone',
+      type: 'string',
+      description:
+        'Which background shade from the site palette the footer uses. Light is the main page background; Alt is a slightly darker shade; Dark is the full dark section color. Mirrors the per-section Background Tone control.',
+      options: {
+        list: [
+          {title: 'Light', value: 'default'},
+          {title: 'Alt (subtle darker)', value: 'alt'},
+          {title: 'Dark', value: 'dark'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'default',
+    },
+    {
       name: 'links',
       title: 'Footer Links',
       type: 'array',

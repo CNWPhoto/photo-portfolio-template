@@ -304,7 +304,7 @@ const schemaJSON = schemaGraph.length
 		<DemoBanner demo={demoSettings} />
 		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} navVariant={navVariant} navLinks={navLinks} {blogEnabled} {stickyNav} />
 		<slot />
-		<Footer {siteName} {blogEnabled} />
+		<Footer {siteName} {blogEnabled} palette={activePalette} />
 		<script>
 			// Protect images from casual right-click saving
 			document.addEventListener('contextmenu', (e) => {
