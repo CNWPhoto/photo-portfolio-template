@@ -20,6 +20,15 @@ const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
 const layout = section?.layout || 'centered';
 const caption = section?.caption || '';
+// Section height is editor-controlled but only meaningful for the
+// centered layout — split-text and overlapping-images have their own
+// height behavior. Default ('default') adds no class so existing
+// sections render exactly as before.
+const centeredHeight = section?.centeredHeight || 'default';
+const heightClass =
+  layout === 'centered' && centeredHeight !== 'default'
+    ? `ctaband--height-${centeredHeight}`
+    : null;
 
 const bgImage = section?.backgroundImage ?? null;
 const bgUrl = bgImage?.asset ? buildSrc(bgImage, 2000) : null;
@@ -65,7 +74,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   </section>
 ) : (
   <section
-    class:list={['section', 'ctaband', `ctaband--${layout}`, bgUrl ? 'ctaband--has-bg' : '']}
+    class:list={['section', 'ctaband', `ctaband--${layout}`, bgUrl ? 'ctaband--has-bg' : '', heightClass]}
     data-section-type="ctaBandSection"
     data-spacing={section?.spacing || 'normal'}
     id={section?.sectionId || undefined}
@@ -128,6 +137,29 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     align-items: center;
     text-align: center;
     gap: 1.75rem;
+  }
+
+  /* Height variants for the Centered layout. Default (no class) is
+     content-driven — section height = content + data-spacing padding,
+     identical to the historical behavior. Tall and Viewport set a
+     min-height and flex-center the inner so content sits at the
+     midpoint of the larger box. Mobile drops the min-height entirely
+     so phones never get stuck with empty space at the top/bottom of
+     a short CTA. */
+  .ctaband--height-tall,
+  .ctaband--height-viewport {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .ctaband--height-tall { min-height: 520px; }
+  .ctaband--height-viewport { min-height: 100vh; }
+
+  @media (max-width: 768px) {
+    .ctaband--height-tall,
+    .ctaband--height-viewport {
+      min-height: 0;
+    }
   }
   .ctaband--split-text-left-cta-right .ctaband__inner {
     flex-direction: row;
