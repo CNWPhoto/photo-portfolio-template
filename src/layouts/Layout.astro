@@ -543,7 +543,21 @@ const schemaJSON = schemaGraph.length
 	══════════════════════════════════════════════════ */
 
 	/* ── BORDERED / SOLID BUTTONS ─────────────────────────────
-	   Matches any element using __cta, __btn, __submit, __button */
+	   Matches any element using __cta, __btn, __submit, __button.
+	   ⚠️  ATTRIBUTE-WILDCARD GOTCHA — READ BEFORE ADDING A NEW BUTTON.
+	   The selector below uses [class*="__cta"], which substring-matches
+	   ANY class containing "__cta" — including wrapper / row / footer
+	   divs that happen to include "cta" in their name. A wrapper named
+	   `section__cta-wrap` will satisfy this selector and lift the entire
+	   wrapper width on hover, not just the button.
+	   Rule when adding a button:
+	     - The button itself: name it `section__cta` (or __btn, __submit,
+	       __button) so it picks up this hover treatment.
+	     - The button's wrapper / row: name it WITHOUT any of those four
+	       substrings — `section__footer`, `section__actions`,
+	       `section__row`, etc. Never `section__cta-wrap` or similar.
+	   See RichTextSection.astro and CtaBandSection.astro for examples
+	   of the correct pattern (`__footer` wrapper, `__cta` anchor inside). */
 	[class*="__cta"],
 	[class*="__btn"],
 	[class*="__submit"],
@@ -559,7 +573,16 @@ const schemaJSON = schemaGraph.length
 	}
 
 	/* ── ITALIC / ARROW TEXT LINKS ─────────────────────────────
-	   Matches any element using __link                         */
+	   Matches any element using __link.
+	   Same attribute-wildcard gotcha as the __cta block above —
+	   wrappers / containers must not contain "__link" in their class
+	   name or they'll pick up the letter-spacing tightening on hover.
+	   Use `__link-arrow`-shaped child class names freely (already
+	   inside the link), but name PARENTS without "link" in the BEM
+	   suffix. GalleryTabs.astro hits this with .gallery-tabs__link
+	   itself being the link — fine — but if you ever wrap a link in
+	   `section__link-row` or similar, that wrapper inherits the
+	   tracking change. */
 	[class*="__link"] {
 		transition: opacity 0.2s, letter-spacing 0.25s;
 	}

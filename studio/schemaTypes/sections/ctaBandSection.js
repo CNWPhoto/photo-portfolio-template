@@ -69,5 +69,22 @@ export default {
       },
       initialValue: 'centered',
     },
+    {
+      name: 'centeredHeight',
+      title: 'Section Height',
+      type: 'string',
+      description:
+        'Vertical size of the section. Default fits the content; Tall and Full viewport make the CTA feel like a hero-style banner. Only applies to the Centered layout.',
+      options: {
+        list: [
+          {title: 'Default (fits content)', value: 'default'},
+          {title: 'Tall', value: 'tall'},
+          {title: 'Full viewport', value: 'viewport'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'default',
+      hidden: ({parent}) => parent?.layout && parent.layout !== 'centered',
+    },
   ],
 }
