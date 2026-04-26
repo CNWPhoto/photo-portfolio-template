@@ -59,7 +59,8 @@ export default {
     {
       name: 'heading',
       title: 'Heading',
-      type: 'string',
+      type: 'text',
+      rows: 2,
       description: 'Use a line break (Enter) to split onto two lines.',
       hidden: ({parent}) => parent?.textContainer === 'image-only',
     },

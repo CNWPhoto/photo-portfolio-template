@@ -50,7 +50,8 @@ export default {
     {
       name: 'heading',
       title: 'Heading',
-      type: 'string',
+      type: 'text',
+      rows: 2,
       description: 'The H1 for this hero. Use a line break (Enter) to split onto two lines.',
     },
     {

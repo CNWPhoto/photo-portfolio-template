@@ -28,7 +28,8 @@ export default {
     {
       name: 'heading',
       title: 'Heading',
-      type: 'string',
+      type: 'text',
+      rows: 2,
       description: 'Use a line break (Enter) to split onto two lines.',
     },
     {
@@ -48,6 +49,14 @@ export default {
               title: 'Icon',
               type: 'string',
               description: 'Optional. Used by the icon-cards variant.',
+            },
+            {
+              name: 'hideMedia',
+              title: 'Hide image / icon / number',
+              type: 'boolean',
+              description:
+                'When checked, this column renders text-only (no image, no icon, no number). Useful for an image-text-image layout where the middle column is all copy.',
+              initialValue: false,
             },
             {
               name: 'title',
@@ -87,6 +96,22 @@ export default {
         layout: 'radio',
       },
       initialValue: 'image-cards',
+    },
+    {
+      name: 'columnWidths',
+      title: 'Column Widths',
+      type: 'string',
+      description:
+        'Equal gives three matching columns. Wide middle and wide outer change the proportions for editorial layouts (e.g. portrait + rich text + portrait).',
+      options: {
+        list: [
+          {title: 'Equal', value: 'equal'},
+          {title: 'Wide middle (1 / 2 / 1)', value: 'wide-middle'},
+          {title: 'Wide outer (2 / 1 / 2)', value: 'wide-outer'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'equal',
     },
     {
       name: 'alignment',
