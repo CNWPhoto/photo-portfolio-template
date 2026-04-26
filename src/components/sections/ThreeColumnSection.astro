@@ -22,18 +22,27 @@ const eyebrow = section?.eyebrow || '';
 const heading = renderHeading(section?.heading || '');
 const variant = section?.variant || 'image-cards';
 const alignment = section?.alignment || 'left';
+const columnWidths = section?.columnWidths || 'equal';
 const sideLabel = section?.verticalSideLabel || '';
 const columns = (section?.columns || []).slice(0, 3);
 while (columns.length < 3) columns.push({});
+
+// Vertical centering is only applied when the editor has explicitly
+// hidden media on at least one column — that's the signal they're
+// intentionally mixing column heights (e.g. image-text-image with a
+// short text middle). All-image / all-icon / all-number sections keep
+// top-alignment so existing layouts on Carla / demo are unchanged.
+const hasMixedMedia = columns.some((col: any) => col?.hideMedia);
 
 const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
 
 <section
-  class:list={['section', 'threecol', `threecol--${variant}`]}
+  class:list={['section', 'threecol', `threecol--${variant}`, hasMixedMedia && 'threecol--mixed-media']}
   data-section-type="threeColumnSection"
   data-spacing={section?.spacing || 'normal'}
   data-alignment={alignment}
+  data-column-widths={columnWidths}
   id={section?.sectionId || undefined}
   style={style}
 >
@@ -59,19 +68,20 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
           const delayClass = `reveal-delay-${i + 1}`;
           const colCtaText = col?.ctaText || '';
           const colCtaHref = resolveLink(col?.ctaLink, [Astro.url.hostname]);
+          const hideMedia = !!col?.hideMedia;
           return (
-            <div class:list={['threecol__col', 'reveal', delayClass]}>
-              {variant === 'image-cards' && (
+            <div class:list={['threecol__col', 'reveal', delayClass, hideMedia && 'threecol__col--no-media']}>
+              {!hideMedia && variant === 'image-cards' && (
                 <div class="threecol__img-wrap">
                   {colImg
                     ? <SanityImage image={colImg} sizes="288px" loading="lazy" class="threecol__img" />
                     : <img src={fallbackUrl(FALLBACK_IDS[i])} alt="" loading="lazy" class="threecol__img" />}
                 </div>
               )}
-              {variant === 'icon-cards' && col?.icon && (
+              {!hideMedia && variant === 'icon-cards' && col?.icon && (
                 <div class="threecol__icon" aria-hidden="true">{col.icon}</div>
               )}
-              {variant === 'numbered-steps' && (
+              {!hideMedia && variant === 'numbered-steps' && (
                 <div class="threecol__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</div>
               )}
               {col?.title && <h3 class="threecol__title">{col.title}</h3>}
@@ -157,6 +167,30 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     grid-template-columns: repeat(3, 1fr);
     gap: 2.5rem;
     padding-top: 2.75rem;
+  }
+  /* Vertical centering only when the editor has hidden media on at
+     least one column — signal that they're intentionally mixing
+     heights. A text-only column then sits with its midline at the
+     same height as the centerlines of flanking image columns.
+     Sections where every column has the same media kind keep top
+     alignment, preserving existing client layouts. */
+  .threecol--mixed-media .threecol__grid {
+    align-items: center;
+  }
+
+  /* Editorial proportions. Default 'equal' keeps the existing 1fr 1fr 1fr.
+     Wide-middle is for image-text-image with a longer center column;
+     wide-outer is the inverse for visual-feature-with-detail layouts.
+     Scoped to wider viewports so the mobile single-column stack still
+     wins at <= 900px (the 1fr override below has lower specificity than
+     this attribute selector, hence the explicit min-width gate). */
+  @media (min-width: 901px) {
+    .threecol[data-column-widths='wide-middle'] .threecol__grid {
+      grid-template-columns: 1fr 2fr 1fr;
+    }
+    .threecol[data-column-widths='wide-outer'] .threecol__grid {
+      grid-template-columns: 2fr 1fr 2fr;
+    }
   }
 
   .threecol__col {

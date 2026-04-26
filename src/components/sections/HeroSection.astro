@@ -3,6 +3,7 @@ import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { resolveLink } from '../../lib/links.js';
 import { stegaClean } from '@sanity/client/stega';
+import { renderHeading } from '../../lib/heading.js';
 
 interface Props {
   section: any;
@@ -21,7 +22,7 @@ const style = paletteToStyle(palette);
 // their markers so visual-editing overlays still work.
 const variant = stegaClean(section?.variant) || 'slider';
 const eyebrow = section?.eyebrow || '';
-const heading = section?.heading || '';
+const headingHTML = renderHeading(section?.heading || '');
 const subheading = section?.subheading || '';
 const ctaText = section?.ctaText || '';
 const ctaHref = stegaClean(resolveLink(section?.ctaLink, [Astro.url.hostname]));
@@ -81,10 +82,10 @@ const firstImage = sanityImages[0] ?? null;
         </button>
       </div>
 
-      {(eyebrow || heading || subheading) && (
+      {(eyebrow || headingHTML || subheading) && (
         <div class="hero__caption">
           {eyebrow && <p class="hero__eyebrow">{eyebrow}</p>}
-          {heading && <h1 class="hero__heading">{heading}</h1>}
+          {headingHTML && <h1 class="hero__heading" set:html={headingHTML} />}
           {subheading && <p class="hero__sub">{subheading}</p>}
           {ctaText && ctaHref && (
             <a class="hero__cta" href={ctaHref}>{ctaText}</a>
@@ -100,10 +101,10 @@ const firstImage = sanityImages[0] ?? null;
         ? <SanityImage image={firstImage} sizes="100vw" loading={isFirst ? 'eager' : 'lazy'} class="hero__bg-img" />
         : <img src={pexelsUrl(FALLBACK_HERO_IDS[0], 2000)} alt="" loading={isFirst ? 'eager' : 'lazy'} class="hero__bg-img" />}
       <div class="hero__bg-overlay" style={`background:rgba(0,0,0,${overlayOpacity})`} aria-hidden="true"></div>
-      {(eyebrow || heading || subheading || ctaText) && (
+      {(eyebrow || headingHTML || subheading || ctaText) && (
         <div class="hero__overlay-content">
           {eyebrow && <p class="hero__eyebrow">{eyebrow}</p>}
-          {heading && <h1 class="hero__heading hero__heading--overlay">{heading}</h1>}
+          {headingHTML && <h1 class="hero__heading hero__heading--overlay" set:html={headingHTML} />}
           {subheading && <p class="hero__sub hero__sub--overlay">{subheading}</p>}
           {ctaText && ctaHref && <a class="hero__cta" href={ctaHref}>{ctaText}</a>}
         </div>
@@ -114,10 +115,10 @@ const firstImage = sanityImages[0] ?? null;
   {variant === 'image-right' && (
     <div class="hero__split">
       <div class="hero__split-content">
-        {(eyebrow || heading || subheading || ctaText) && (
+        {(eyebrow || headingHTML || subheading || ctaText) && (
           <div class="hero__split-text">
             {eyebrow && <p class="hero__eyebrow">{eyebrow}</p>}
-            {heading && <h1 class="hero__heading">{heading}</h1>}
+            {headingHTML && <h1 class="hero__heading" set:html={headingHTML} />}
             {subheading && <p class="hero__sub">{subheading}</p>}
             {ctaText && ctaHref && <a class="hero__cta" href={ctaHref}>{ctaText}</a>}
           </div>

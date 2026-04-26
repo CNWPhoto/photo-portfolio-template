@@ -1,6 +1,7 @@
 ---
 import { paletteToStyle } from '../../lib/palette.js';
 import { renderBody } from '../../lib/portableText.js';
+import { resolveLink } from '../../lib/links.js';
 
 interface Props {
   section: any;
@@ -16,6 +17,8 @@ const heading = section?.heading || '';
 const bodyHTML = renderBody(section?.body, { className: 'richtext__p' });
 const textAlign = section?.textAlignment || 'left';
 const maxWidth = section?.maxWidth || 'default';
+const ctaText = section?.ctaText || '';
+const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
 
 const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
@@ -32,6 +35,11 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     {eyebrow && <p class="richtext__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
     {heading && <HeadingTag class="richtext__heading">{heading}</HeadingTag>}
     {bodyHTML && <div class="richtext__body reveal reveal-delay-2" set:html={bodyHTML} />}
+    {ctaText && ctaHref && (
+      <div class="richtext__cta-wrap reveal reveal-delay-3">
+        <a class="richtext__cta" href={ctaHref}>{ctaText}</a>
+      </div>
+    )}
   </div>
 </section>
 
@@ -98,5 +106,27 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   .richtext__body :global(a) {
     color: var(--accent);
     text-decoration: underline;
+  }
+
+  /* Optional rectangular button. Mirrors .ctaband__cta — same palette
+     variables, same metrics — and inherits the global lift-on-hover
+     transition from Layout.astro's [class*="__cta"]:hover rule. */
+  .richtext__cta-wrap {
+    margin-top: 2rem;
+  }
+  .richtext[data-text-align='center'] .richtext__cta-wrap { text-align: center; }
+
+  .richtext__cta {
+    display: inline-block;
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    padding: 1rem 2.25rem;
+    white-space: nowrap;
   }
 </style>

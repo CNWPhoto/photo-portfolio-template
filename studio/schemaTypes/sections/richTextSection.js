@@ -64,6 +64,17 @@ export default {
       ],
     },
     {
+      name: 'ctaText',
+      title: 'Button Text',
+      type: 'string',
+      description: 'Optional. Adds a rectangular button below the body. Leave blank to hide.',
+    },
+    {
+      name: 'ctaLink',
+      title: 'Button Link',
+      type: 'ctaLink',
+    },
+    {
       name: 'textAlignment',
       title: 'Text Alignment',
       type: 'string',

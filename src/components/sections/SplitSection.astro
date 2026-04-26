@@ -3,6 +3,7 @@ import SanityImage from '../SanityImage.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { resolveLink } from '../../lib/links.js';
 import { renderBody, isPortableText } from '../../lib/portableText.js';
+import { renderHeading } from '../../lib/heading.js';
 
 interface Props {
   section: any;
@@ -19,7 +20,7 @@ const FALLBACK_IMG =
 const imageLayout = section?.imageLayout || 'image-right';
 const isFullBleed = imageLayout === 'image-left-full-bleed' || imageLayout === 'image-right-full-bleed';
 const eyebrow = section?.eyebrow || '';
-const heading = section?.heading || '';
+const headingHTML = renderHeading(section?.heading || '');
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
 
@@ -40,7 +41,7 @@ const image = section?.image ?? null;
   <div class="isplit__content">
     <div class="isplit__text-wrap">
       {eyebrow && <p class="isplit__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
-      {heading && <h2 class="isplit__heading">{heading}</h2>}
+      {headingHTML && <h2 class="isplit__heading" set:html={headingHTML} />}
       {bodyHTML && <div class="isplit__body-wrap reveal reveal-delay-2" set:html={bodyHTML} />}
       {ctaText && ctaHref && (
         <a class="isplit__link reveal reveal-delay-4" href={ctaHref}>
