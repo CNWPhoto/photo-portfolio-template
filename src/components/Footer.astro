@@ -3,8 +3,9 @@ import { toHTML } from '@portabletext/to-html';
 import { getClient, urlFor } from '../lib/sanity.js';
 import { stegaClean } from '@sanity/client/stega';
 import { createDataAttribute } from '@sanity/visual-editing/create-data-attribute';
+import { applyBackgroundTone, paletteToStyle } from '../lib/palette.js';
 
-const { siteName = 'Pet Photography', blogEnabled = true } = Astro.props;
+const { siteName = 'Pet Photography', blogEnabled = true, palette = null } = Astro.props;
 
 // In Sanity Presentation mode, attach a data-sanity attribute to the
 // footer root so editors get a click-to-edit overlay that opens
@@ -23,6 +24,7 @@ const footerSanityAttr = isPreview
 const client = getClient(isPreview, (Astro.locals as any).runtime?.env);
 const [footerDataRaw, socialDataRaw, siteDataRaw] = await Promise.all([
   client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{
+    backgroundTone,
     links[] { label, url, enabled, openInNewTab },
     middleColumn {
       enabled, label, note,
@@ -39,6 +41,15 @@ const socialData = socialDataRaw ? stegaClean(socialDataRaw) : null;
 const siteData   = siteDataRaw ? stegaClean(siteDataRaw) : null;
 
 const photographerName = siteData?.photographerName || siteName;
+
+// Apply the editor-chosen background tone (Light/Alt/Dark) the same way
+// sections do — derive a tone-shifted palette and inline only the changed
+// CSS vars on the <footer> element. With no palette passed in (or the
+// default tone), this is a no-op and the footer inherits the page palette.
+const footerTone  = footerData?.backgroundTone || 'default';
+const footerStyle = palette
+  ? paletteToStyle(applyBackgroundTone(palette, footerTone))
+  : undefined;
 
 // Match nav-level logo behavior: when the siteSettings logoType is
 // 'image' and a logoImage asset is set, render the image in the
@@ -109,7 +120,7 @@ const termsUrl     = legalLinks?.terms?.url || '#';
 const year = new Date().getFullYear();
 ---
 
-<footer class="footer" id="contact" data-sanity={footerSanityAttr}>
+<footer class="footer" id="contact" data-sanity={footerSanityAttr} style={footerStyle}>
 	<hr />
 
 	<!-- Columns: left nav + right wordmark/social -->
@@ -256,10 +267,6 @@ const year = new Date().getFullYear();
 
 	.footer__col {
 		padding: 2rem 2rem 2rem 0;
-	}
-
-	.footer__col:last-child {
-		padding-right: 0;
 	}
 
 	.footer__col + .footer__col {
