@@ -181,6 +181,9 @@ export default defineConfig({
                     singleton(S, 'blogPage', 'Blog', 'blogPage'),
                     singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
                     S.divider(),
+                    singleton(S, 'termsAndConditionsPage', 'Terms & Conditions', 'termsAndConditionsPage'),
+                    singleton(S, 'privacyPolicyPage', 'Privacy Policy', 'privacyPolicyPage'),
+                    S.divider(),
                     ...unique.map((p) =>
                       S.listItem()
                         .id(p._id)

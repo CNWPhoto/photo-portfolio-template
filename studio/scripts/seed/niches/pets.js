@@ -259,6 +259,24 @@ export function buildDocs() {
     postsPerPage: 12,
   })
 
+  // ── Legal page singletons — empty stubs ──────────────────────────────
+  // Pre-create with title + empty body so editors find them ready in
+  // the Studio "Pages" pane without having to discover them. Body is
+  // intentionally empty — the rendered page noindexes itself and the
+  // footer skips the auto-link until the editor fills content in.
+  // Editors who prefer to use a third-party service (iubenda, Termly)
+  // configure footerSettings.legalLinks instead, which wins over these.
+  docs.push({
+    _id: 'termsAndConditionsPage',
+    _type: 'termsAndConditionsPage',
+    title: 'Terms and Conditions',
+  })
+  docs.push({
+    _id: 'privacyPolicyPage',
+    _type: 'privacyPolicyPage',
+    title: 'Privacy Policy',
+  })
+
   // ── About page — content ported from legacy about.astro fallbacks ────
   docs.push({
     _id: ID.about,
