@@ -12,8 +12,10 @@ Fast-path summary of the full guide below. Follow in order; detail for each step
 is in the linked phase.
 
 - [ ] **Pre-session (client does async before kickoff call):**
+  - Signs up at [sanity.io/manage](https://sanity.io/manage) with their inbox email and creates a new organization named after their business (e.g. "Smith Photography"). Sends you the organization name so you can create the project in it during the kickoff call ([Phase 1.0](#phase-1--sanity-cms)). This is required for ToS compliance and clean billing — the client's project must live in the client's organization, not yours.
   - Signs up at [web3forms.com](https://web3forms.com) with their inbox email and sends you the access key ([Phase 4](#phase-4--contact-form-web3forms)). Do this **before** the setup session — Web3Forms' verification email has a ~90-second click window and you don't want to hit it mid-call.
-- [ ] **Sanity project created** — new project, `production` dataset ([Phase 1.1](#phase-1--sanity-cms))
+- [ ] **Client invites you to their Sanity organization as Administrator** ([Phase 1.0](#phase-1--sanity-cms))
+- [ ] **Sanity project created in client's organization** — new project, `production` dataset ([Phase 1.1](#phase-1--sanity-cms))
 - [ ] **`studio/.env` set to client values** — project ID, dataset, host, **prod preview URL** ([Phase 1.2](#phase-1--sanity-cms))
 - [ ] **`sanity.config.js` updated** — `title` and `presentationTool.allowOrigins` (localhost + prod domain) ([Phase 1.2](#phase-1--sanity-cms))
 - [ ] **Studio deployed** — `cd studio && npm run deploy` (bakes preview URL at build time) ([Phase 1.2](#phase-1--sanity-cms))
@@ -135,13 +137,32 @@ These are already done in the current repo. Listed here for reference.
 
 ### PHASE 1 — Sanity (CMS)
 
-**1.1 — Create a new Sanity project**
+**1.0 — Sanity organization (client creates, you join as admin)**
+
+> **Why this matters.** Per Sanity's Spring 2025 changes ([Agencies guide](https://www.sanity.io/docs/developer-guides/agencies-navigating-the-spring-2025-organization-changes)), client projects should live in the client's own organization, not yours. This keeps billing, asset storage, and any future paid-tier upgrades on the client's side, and it's the ToS-compliant pattern. Admin role on a client's project is **not counted against any user quota** (only non-admin users count toward Sanity's free-tier user cap), so being admin on every client's project is free indefinitely.
+
+1. **Client creates their organization** — a one-time async task before kickoff:
+   - Sign up at [sanity.io/manage](https://sanity.io/manage) with the email they want as the billing/admin address.
+   - Click **Create new organization** (or accept the default personal organization that's auto-created on signup and rename it).
+   - Name it after their business (e.g. "Smith Photography"). No payment method needed — free tier covers everything below ~10K documents / 100K CDN requests / 5GB assets.
+   - Send you the organization name (it'll appear in the org switcher dropdown).
+
+2. **Client invites you as administrator** to their organization:
+   - Their org settings → **Members** → Invite by email → role **Administrator**.
+   - You accept the invite via the email link.
+   - You'll now see their org in the manage.sanity.io org switcher, and any project you create there will be owned by their org.
+
+3. **For demo niches you build for yourself** (e.g. `family-demo`, `wedding-demo`): step 1 means *you* create the org under your own Sanity account, named for the demo. The rest is identical.
+
+**1.1 — Create a new Sanity project (in the client's organization)**
 
 1. Go to [sanity.io/manage](https://sanity.io/manage)
-2. Click **Create new project**
-3. Name it: `Smith Photography`
-4. Dataset: `production` (created by default)
-5. Copy the **Project ID** from the project dashboard
+2. **Switch to the client's organization** in the top-bar org switcher (this is the critical step — projects always inherit ownership from the currently-selected org)
+3. Click **Create new project**
+4. Name it: `Smith Photography`
+5. Dataset: `production` (created by default)
+6. Copy the **Project ID** from the project dashboard
+7. Confirm the project's organization on the project Settings page. If it's not the client's org, transfer it now (see "Transferring an existing project" at the bottom of this phase)
 
 **1.2 — Deploy the Sanity Studio**
 
@@ -243,6 +264,31 @@ design out of the box.
 > 404 page, plus default blog and portfolio categories. All sections are
 > pre-configured with the correct `backgroundTone` (alt/default) and
 > `textAlignment` so the out-of-box look matches the template demo.
+
+**1.7 — Transferring an existing project to the client's organization**
+
+> **Use this for clients who came aboard before this guide existed and whose project is still in your organization.** New clients should follow Phase 1.0 + 1.1 above so the project is created in their org from day one — no transfer needed.
+
+The transfer is a built-in Sanity feature, takes ~5 minutes total, and doesn't change the project's plan, schema, content, members, datasets, or deployed Studio. The only thing that changes is which organization is responsible for billing if the project ever crosses into paid-tier territory (Carla and other photography clients almost never will — typical traffic stays well within the free tier).
+
+**Pre-transfer (the client does this once)**
+
+1. Client signs up at [sanity.io/manage](https://sanity.io/manage) and creates an organization named after their business (Phase 1.0 step 1).
+2. Client invites you as administrator on the new organization (Phase 1.0 step 2).
+
+**You initiate the transfer**
+
+1. Log into [sanity.io/manage](https://sanity.io/manage), select the client's project (e.g. `Coola Creative`).
+2. Project **Settings** → **General** → find the **Organization** section → click change/transfer.
+3. Pick the client's new organization from the dropdown.
+4. Sanity prorates the current month's plan cost between the two orgs (irrelevant on free tier; fully automatic if the project is paid).
+5. If you have admin role on both orgs, the transfer happens instantly. Otherwise the receiving org's billing manager (the client) approves it from their manage page.
+
+**After the transfer**
+
+- The project is now owned by the client's org. You remain a member at the project level with admin role — every workflow keeps working unchanged (`npm run deploy`, GitHub Actions matrix, GROQ fetches, Studio Presentation).
+- The client controls billing identity. If their site ever spikes traffic and exceeds free tier, Sanity bills them, not you.
+- If the client offboards in the future, you simply remove yourself from the project; they keep full ownership of their data and Studio with no extra coordination.
 
 ---
 
@@ -500,7 +546,8 @@ slug validator.
 
 When a client leaves (they want full ownership, you're winding down, etc.):
 
-1. **Transfer Sanity project ownership** — sanity.io/manage → their project → Members → find yourself → **Transfer Ownership** to the client's Sanity account. They must have a Sanity account first. After transfer, remove yourself as admin.
+1. **Remove yourself from their Sanity project.** With the per-client-org model (Phase 1.0), the client *already* owns their organization and project — off-boarding is just leaving as a member. Go to sanity.io/manage → their project → **Members** → find yourself → **Remove**. The client retains everything; you retain nothing.
+   - **Legacy path:** if the project is still in your organization (older client, never transferred), follow Phase 1.7 (Transferring an existing project) first to move it into the client's organization, then remove yourself from the project.
 2. **Remove their matrix entry from `.github/workflows/deploy.yml`** and delete the `client-<slug>` GitHub Environment (Settings → Environments → Delete). Commit + push. The workflow will no longer deploy to their site on future `production` pushes.
 3. **Client revokes the CF API token** that you were using for deploys — their CF dashboard → My Profile → API Tokens → find the token → Delete. This immediately cuts off your deploy access.
 4. **Client removes you as Super Admin** — her CF Account → Members → remove your email.
