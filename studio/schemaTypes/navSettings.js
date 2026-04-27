@@ -2,6 +2,8 @@
 // Each top-level link can be internal (reference to a page doc) or external,
 // and can carry an optional children[] array (max 8) to render as a dropdown.
 
+import HexColorInput from '../components/HexColorInput'
+
 const childLinkFields = [
   {
     name: 'label',
@@ -173,8 +175,9 @@ export default {
               title: 'CTA color override',
               type: 'string',
               description:
-                'Optional hex color (e.g. #ffcc00) for this CTA link only. Useful with the transparent nav variant when the accent color blends into the hero background image. Leave blank to use the site accent color.',
+                'Optional color for this CTA link only. Useful with the transparent nav variant when the accent color blends into the hero background image. Leave blank to use the site accent color.',
               hidden: ({parent}) => !parent?.isButton,
+              components: {input: HexColorInput},
               validation: (Rule) =>
                 Rule.custom((value) => {
                   if (!value) return true
