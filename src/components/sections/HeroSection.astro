@@ -100,7 +100,7 @@ const firstImage = sanityImages[0] ?? null;
       {firstImage
         ? <SanityImage image={firstImage} sizes="100vw" loading={isFirst ? 'eager' : 'lazy'} class="hero__bg-img" />
         : <img src={pexelsUrl(FALLBACK_HERO_IDS[0], 2000)} alt="" loading={isFirst ? 'eager' : 'lazy'} class="hero__bg-img" />}
-      <div class="hero__bg-overlay" style={`background:rgba(0,0,0,${overlayOpacity})`} aria-hidden="true"></div>
+      <div class="hero__bg-overlay" style={`--hero-overlay-opacity:${overlayOpacity}`} aria-hidden="true"></div>
       {(eyebrow || headingHTML || subheading || ctaText) && (
         <div class="hero__overlay-content">
           {eyebrow && <p class="hero__eyebrow">{eyebrow}</p>}
@@ -272,7 +272,11 @@ const firstImage = sanityImages[0] ?? null;
     object-fit: cover;
     object-position: center;
   }
-  .hero__bg-overlay { position: absolute; inset: 0; }
+  .hero__bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, var(--hero-overlay-opacity, 0.3));
+  }
   .hero__overlay-content {
     position: absolute;
     inset: 0;
@@ -332,12 +336,20 @@ const firstImage = sanityImages[0] ?? null;
     padding: 3.5rem 4rem;
   }
 
-  /* ── Gradient overlay — darkens toward text side ── */
+  /* ── Gradient overlay — darkens toward text side ──
+     The dark endpoint matches the editor's Overlay Opacity slider; the
+     light endpoint is ~17% of that so the gradient stays visible without
+     overpowering the image. Both endpoints scale with the slider, so
+     dragging it to 0 fully clears the overlay. */
   .hero--image-full[data-text-position$='-right']:not([data-text-position^='bottom']) .hero__bg-overlay {
-    background: linear-gradient(to right, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%) !important;
+    background: linear-gradient(to right,
+      rgba(0, 0, 0, calc(var(--hero-overlay-opacity, 0.3) * 0.17)) 0%,
+      rgba(0, 0, 0, var(--hero-overlay-opacity, 0.3)) 100%);
   }
   .hero--image-full[data-text-position$='-left']:not([data-text-position^='bottom']) .hero__bg-overlay {
-    background: linear-gradient(to left, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%) !important;
+    background: linear-gradient(to left,
+      rgba(0, 0, 0, calc(var(--hero-overlay-opacity, 0.3) * 0.17)) 0%,
+      rgba(0, 0, 0, var(--hero-overlay-opacity, 0.3)) 100%);
   }
 
   /* ══════════ image-right variant ══════════ */
@@ -379,7 +391,7 @@ const firstImage = sanityImages[0] ?? null;
     }
     .hero--image-full[data-text-position$='-right'] .hero__bg-overlay,
     .hero--image-full[data-text-position$='-left'] .hero__bg-overlay {
-      background: rgba(0, 0, 0, 0.48) !important;
+      background: rgba(0, 0, 0, var(--hero-overlay-opacity, 0.3));
     }
   }
 </style>
