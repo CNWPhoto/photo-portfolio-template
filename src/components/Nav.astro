@@ -155,6 +155,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 							<a
 								href={link.href}
 								class={link.isButton ? 'nav__link nav__inquire' : 'nav__link'}
+								style={link.isButton && link.ctaColor ? `--nav-cta-color: ${link.ctaColor}` : undefined}
 								target={link.openInNewTab ? '_blank' : undefined}
 								rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
 							>{link.label}</a>
