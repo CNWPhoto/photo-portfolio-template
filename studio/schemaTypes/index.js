@@ -11,6 +11,8 @@ import footerSettings from './footerSettings'
 import socialSettings from './socialSettings'
 import blogPage from './blogPage'
 import notFoundPage from './notFoundPage'
+import termsAndConditionsPage from './termsAndConditionsPage'
+import privacyPolicyPage from './privacyPolicyPage'
 import palette from './_shared/palette'
 import ctaLink from './_shared/ctaLink'
 import page from './page'
@@ -56,6 +58,8 @@ export const schemaTypes = [
   homepagePage,
   notFoundPage,
   blogPage,
+  termsAndConditionsPage,
+  privacyPolicyPage,
   page,
 
   // Section catalog

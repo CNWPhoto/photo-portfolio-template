@@ -1,0 +1,112 @@
+---
+// /privacy-policy — singleton-driven legal page. Editors fill the title
+// + body fields under the "Privacy Policy" pane in Studio. Footer.astro
+// auto-shows a link to this page when the body has content (unless
+// legalLinks.privacyPolicy in footerSettings is set, which wins).
+// Layout / styles mirror /terms-and-conditions for visual parity.
+import Layout from '../layouts/Layout.astro';
+import { getClient } from '../lib/sanity.js';
+import { renderBody, isPortableText } from '../lib/portableText.js';
+
+const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
+
+const doc = await client.fetch(
+  `*[_type == "privacyPolicyPage" && _id == "privacyPolicyPage"][0]{
+    title, body
+  }`,
+  {},
+  { cache: 'no-store' },
+);
+
+const title = doc?.title || 'Privacy Policy';
+const hasBody = isPortableText(doc?.body);
+const bodyHTML = hasBody ? renderBody(doc.body) : '';
+
+const robots = hasBody ? undefined : 'noindex, nofollow';
+---
+
+<Layout pageTitle={title} breadcrumb={title} robots={robots}>
+  <main class="legal">
+    <article class="legal__article">
+      <h1 class="legal__title">{title}</h1>
+      {hasBody
+        ? <div class="legal__body" set:html={bodyHTML} />
+        : <p class="legal__placeholder">Content coming soon.</p>
+      }
+    </article>
+  </main>
+</Layout>
+
+<style>
+  /* Shared legal-page layout — kept identical with /terms-and-conditions
+     so both pages render with the same typography and rhythm. */
+  .legal {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+  }
+  .legal__title {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 2rem;
+  }
+  .legal__placeholder {
+    color: var(--muted);
+    font-style: italic;
+  }
+  .legal__body :global(p) {
+    font-family: var(--font-body, Georgia, serif);
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+  .legal__body :global(h2) {
+    font-family: var(--font-heading, Georgia, serif);
+    font-style: italic;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    color: var(--text);
+    margin: 2.5rem 0 1rem;
+    line-height: 1.2;
+  }
+  .legal__body :global(h3) {
+    font-family: var(--font-heading, Georgia, serif);
+    font-style: italic;
+    font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+    color: var(--text);
+    margin: 2rem 0 0.75rem;
+    line-height: 1.2;
+  }
+  .legal__body :global(blockquote) {
+    border-left: 3px solid var(--accent);
+    padding-left: 1.5rem;
+    margin: 2rem 0;
+    font-style: italic;
+    color: var(--muted);
+  }
+  .legal__body :global(ul),
+  .legal__body :global(ol) {
+    padding-left: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .legal__body :global(li) {
+    font-family: var(--font-body, Georgia, serif);
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+  .legal__body :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .legal__body :global(strong) { font-weight: 700; }
+  .legal__body :global(em) { font-style: italic; }
+
+  @media (max-width: 600px) {
+    .legal { padding: 2.5rem 1.25rem 4rem; }
+  }
+</style>

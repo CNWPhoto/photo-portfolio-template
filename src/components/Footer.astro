@@ -22,7 +22,7 @@ const footerSanityAttr = isPreview
 // having to publish. Stega-clean the results below so the draft markers
 // don't create extra click-to-edit overlays on every footer link.
 const client = getClient(isPreview, (Astro.locals as any).runtime?.env);
-const [footerDataRaw, socialDataRaw, siteDataRaw] = await Promise.all([
+const [footerDataRaw, socialDataRaw, siteDataRaw, termsDocRaw, privacyDocRaw] = await Promise.all([
   client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{
     backgroundTone,
     links[] { label, url, enabled, openInNewTab },
@@ -34,6 +34,11 @@ const [footerDataRaw, socialDataRaw, siteDataRaw] = await Promise.all([
   }`),
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`),
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName, logoType, logoImage }`),
+  // Legal-page singletons — used to auto-link the footer when an editor
+  // has filled in the on-site Terms / Privacy pages but hasn't manually
+  // configured legalLinks (which override these when set, see below).
+  client.fetch(`*[_type == "termsAndConditionsPage" && _id == "termsAndConditionsPage"][0]{ title, "hasBody": count(body) > 0 }`),
+  client.fetch(`*[_type == "privacyPolicyPage" && _id == "privacyPolicyPage"][0]{ title, "hasBody": count(body) > 0 }`),
 ]);
 
 const footerData = footerDataRaw ? stegaClean(footerDataRaw) : null;
@@ -109,13 +114,34 @@ const configuredLinks = (footerData?.links ?? [])
 const menuLinks = (configuredLinks.length > 0 ? configuredLinks : defaultFooterLinks)
   .filter((l: any) => blogEnabled || l.href !== '/blog');
 
+// Legal links — manual override wins, on-site singleton is the
+// fallback. Three states per slot:
+//   1. legalLinks.X.enabled + url filled → use the manual link
+//      (typical for clients who outsource to iubenda / Termly / etc.)
+//   2. else if the matching singleton has body content → auto-link
+//      to /terms-and-conditions or /privacy-policy with the doc's title
+//   3. else → no link rendered.
 const legalLinks = footerData?.legalLinks ?? null;
-const showPrivacy = legalLinks?.privacyPolicy?.enabled && legalLinks?.privacyPolicy?.url;
-const showTerms   = legalLinks?.terms?.enabled && legalLinks?.terms?.url;
-const privacyLabel = legalLinks?.privacyPolicy?.label || 'Privacy Policy';
-const termsLabel   = legalLinks?.terms?.label || 'Terms';
-const privacyUrl   = legalLinks?.privacyPolicy?.url || '#';
-const termsUrl     = legalLinks?.terms?.url || '#';
+const termsDoc   = termsDocRaw ? stegaClean(termsDocRaw) : null;
+const privacyDoc = privacyDocRaw ? stegaClean(privacyDocRaw) : null;
+
+const manualPrivacyOn = !!(legalLinks?.privacyPolicy?.enabled && legalLinks?.privacyPolicy?.url);
+const manualTermsOn   = !!(legalLinks?.terms?.enabled && legalLinks?.terms?.url);
+const autoPrivacyOn   = !manualPrivacyOn && !!privacyDoc?.hasBody;
+const autoTermsOn     = !manualTermsOn   && !!termsDoc?.hasBody;
+
+const showPrivacy = manualPrivacyOn || autoPrivacyOn;
+const showTerms   = manualTermsOn   || autoTermsOn;
+
+const privacyLabel = manualPrivacyOn
+  ? (legalLinks.privacyPolicy.label || 'Privacy Policy')
+  : (privacyDoc?.title || 'Privacy Policy');
+const termsLabel = manualTermsOn
+  ? (legalLinks.terms.label || 'Terms')
+  : (termsDoc?.title || 'Terms');
+
+const privacyUrl = manualPrivacyOn ? legalLinks.privacyPolicy.url : '/privacy-policy';
+const termsUrl   = manualTermsOn   ? legalLinks.terms.url         : '/terms-and-conditions';
 
 const year = new Date().getFullYear();
 ---
