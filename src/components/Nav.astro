@@ -108,6 +108,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 								<a
 									href={link.href}
 									class={link.isButton ? 'nav__link nav__inquire' : 'nav__link'}
+									style={link.isButton && link.ctaColor ? `--nav-cta-color: ${link.ctaColor}` : undefined}
 									target={link.openInNewTab ? '_blank' : undefined}
 									rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
 								>{link.label}</a>
@@ -198,6 +199,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 						<a
 							href={link.href}
 							class={link.isButton ? 'nav__overlay-inquire' : ''}
+							style={link.isButton && link.ctaColor ? `--nav-cta-color: ${link.ctaColor}` : undefined}
 							target={link.openInNewTab ? '_blank' : undefined}
 							rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
 						>{link.label}</a>
@@ -382,7 +384,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	}
 
 	.nav__inquire {
-		color: var(--accent) !important;
+		color: var(--nav-cta-color, var(--accent)) !important;
 		transition: color 0.2s, transform 0.2s, letter-spacing 0.25s;
 	}
 
@@ -509,7 +511,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	}
 
 	.nav__overlay-inquire {
-		color: var(--accent) !important;
+		color: var(--nav-cta-color, var(--accent)) !important;
 	}
 
 	/* Mobile sub-links inside the hamburger overlay */
@@ -763,10 +765,13 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	const linksEl   = navHeader.querySelector('.nav__links') as HTMLElement;
 	const leftNavEl = navHeader.querySelector('.nav__left-nav') as HTMLElement | null;
 	const variant   = navHeader.dataset.variant || 'classic';
+	const isSticky  = navHeader.dataset.sticky === 'true';
 
 	// ── Transparent variants: solidify on scroll (covers plain
-	// 'transparent' and the new 'transparent-split' combined variant) ─
-	if (variant === 'transparent' || variant === 'transparent-split') {
+	// 'transparent' and the new 'transparent-split' combined variant).
+	// Gated on Sticky — a non-sticky transparent nav scrolls out of view,
+	// so the opaque flip would just be a flash as it leaves the viewport.
+	if ((variant === 'transparent' || variant === 'transparent-split') && isSticky) {
 		const onScroll = () => {
 			if (window.scrollY > 60) {
 				navHeader.classList.add('nav--scrolled');

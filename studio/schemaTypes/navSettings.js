@@ -71,8 +71,8 @@ export default {
           {title: 'Classic — logo left, links right', value: 'classic'},
           {title: 'Centered — logo centered, links below', value: 'centered'},
           {title: 'Split — logo centered, links balanced left and right', value: 'split'},
-          {title: 'Transparent — starts transparent over hero, solidifies on scroll', value: 'transparent'},
-          {title: 'Transparent Split — split layout, transparent over hero', value: 'transparent-split'},
+          {title: 'Transparent — overlays the hero; becomes opaque on scroll when Sticky is on', value: 'transparent'},
+          {title: 'Transparent Split — split layout overlays the hero; becomes opaque on scroll when Sticky is on', value: 'transparent-split'},
         ],
         layout: 'radio',
       },
@@ -83,11 +83,8 @@ export default {
       title: 'Sticky navigation',
       type: 'boolean',
       description:
-        'When on, the nav bar stays visible at the top of the page as visitors scroll. Leave off for a nav that scrolls out of view with the rest of the page. (Transparent variants are always sticky — the scroll-solidify effect requires it.)',
+        'When on, the nav bar stays pinned at the top of the page as visitors scroll. Leave off for a nav that scrolls out of view with the rest of the page. For Transparent and Transparent Split variants, turning Sticky on also enables the scroll-to-opaque effect (the bar starts clear over the hero, then fills in with the page background once the visitor scrolls past it). With Sticky off, transparent variants stay clear and simply scroll away with the hero.',
       initialValue: false,
-      // Hidden for transparent variants where sticky is forced on anyway —
-      // showing an ignored toggle would confuse editors.
-      hidden: ({parent}) => parent?.navVariant?.startsWith('transparent'),
     },
     {
       name: 'links',
@@ -170,6 +167,21 @@ export default {
               initialValue: false,
               description:
                 'Renders this link as an accented CTA — ideal for the last link (e.g. "Inquire").',
+            },
+            {
+              name: 'ctaColor',
+              title: 'CTA color override',
+              type: 'string',
+              description:
+                'Optional hex color (e.g. #ffcc00) for this CTA link only. Useful with the transparent nav variant when the accent color blends into the hero background image. Leave blank to use the site accent color.',
+              hidden: ({parent}) => !parent?.isButton,
+              validation: (Rule) =>
+                Rule.custom((value) => {
+                  if (!value) return true
+                  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)
+                    ? true
+                    : 'Must be a hex color like #ffcc00 or #fc0'
+                }),
             },
             {
               name: 'children',
