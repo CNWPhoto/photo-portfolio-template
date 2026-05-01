@@ -7,7 +7,7 @@ export default {
       name: 'seoTitle',
       title: 'SEO Title',
       type: 'string',
-      description: 'Overrides the page title in search results. Leave blank to use the Page Title. Ideal length: 50–60 characters.',
+      description: 'Overrides the page title in search results. Your site name is appended automatically — write just the page-specific title here (e.g. "Riverside Family Photographer", not "Riverside Family Photographer | Lavon Photography"). Leave blank to use the Page Title. Ideal length: 50–60 characters.',
     },
     {
       name: 'seoDescription',
