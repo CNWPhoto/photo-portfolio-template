@@ -159,6 +159,10 @@ jobs:
             sanity_project_id: v14sne67
             studio_url: https://family-demo.sanity.studio
             pages_url: https://family-demo.pages.dev
+          - slug: lavon-photography
+            sanity_project_id: 3a8494gh
+            studio_url: https://lavon-photography.sanity.studio
+            pages_url: https://lavon-photography.pages.dev
           # Add new clients here. Each slug must match the GitHub
           # Environment name pattern `client-<slug>`.
     steps:
