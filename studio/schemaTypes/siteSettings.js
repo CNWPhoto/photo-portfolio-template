@@ -116,6 +116,144 @@ export default {
         'Free contact-form backend. Sign up at https://web3forms.com (no account required) and paste the access key here. Used by every Contact Form section unless one overrides it. Leave blank to disable submissions.',
     },
     {
+      name: 'customFonts',
+      title: 'Custom Fonts (Override)',
+      type: 'object',
+      description:
+        'Optional. Upload your own licensed font files to override the Font Theme above. .woff2 is strongly preferred (smaller, faster). You can override heading, body, or both — empty fields fall back to the Font Theme. Only upload fonts you have a web license for.',
+      options: {collapsible: true, collapsed: true},
+      fields: [
+        {
+          name: 'heading',
+          title: 'Heading Font',
+          type: 'object',
+          fields: [
+            {
+              name: 'family',
+              title: 'CSS family name',
+              type: 'string',
+              description:
+                'A label CSS uses to reference this font. Anything unique works — e.g. "Lavon Display". Not visible to site visitors.',
+            },
+            {
+              name: 'files',
+              title: 'Font files',
+              type: 'array',
+              description:
+                'Add one file per weight/style combo. Most sites only need a single 400/normal upload here.',
+              of: [
+                {
+                  type: 'object',
+                  fields: [
+                    {
+                      name: 'file',
+                      title: 'Font file',
+                      type: 'file',
+                      options: {accept: '.woff2,.woff,.ttf,.otf'},
+                    },
+                    {
+                      name: 'weight',
+                      title: 'Weight',
+                      type: 'string',
+                      initialValue: '400',
+                      description:
+                        '100 = thin, 400 = regular, 600 = semibold, 700 = bold. Defaults to 400.',
+                    },
+                    {
+                      name: 'style',
+                      title: 'Style',
+                      type: 'string',
+                      options: {
+                        list: [
+                          {title: 'Normal', value: 'normal'},
+                          {title: 'Italic', value: 'italic'},
+                        ],
+                        layout: 'radio',
+                      },
+                      initialValue: 'normal',
+                    },
+                  ],
+                  preview: {
+                    select: {weight: 'weight', style: 'style'},
+                    prepare({weight, style}) {
+                      return {
+                        title: `Weight ${weight || '400'}`,
+                        subtitle: style || 'normal',
+                      }
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        {
+          name: 'body',
+          title: 'Body Font',
+          type: 'object',
+          fields: [
+            {
+              name: 'family',
+              title: 'CSS family name',
+              type: 'string',
+              description:
+                'A label CSS uses to reference this font. Anything unique works — e.g. "Lavon Sans". Not visible to site visitors.',
+            },
+            {
+              name: 'files',
+              title: 'Font files',
+              type: 'array',
+              description:
+                'Add one file per weight/style combo. Body text typically benefits from at least regular + bold + italic.',
+              of: [
+                {
+                  type: 'object',
+                  fields: [
+                    {
+                      name: 'file',
+                      title: 'Font file',
+                      type: 'file',
+                      options: {accept: '.woff2,.woff,.ttf,.otf'},
+                    },
+                    {
+                      name: 'weight',
+                      title: 'Weight',
+                      type: 'string',
+                      initialValue: '400',
+                      description:
+                        '100 = thin, 400 = regular, 600 = semibold, 700 = bold. Defaults to 400.',
+                    },
+                    {
+                      name: 'style',
+                      title: 'Style',
+                      type: 'string',
+                      options: {
+                        list: [
+                          {title: 'Normal', value: 'normal'},
+                          {title: 'Italic', value: 'italic'},
+                        ],
+                        layout: 'radio',
+                      },
+                      initialValue: 'normal',
+                    },
+                  ],
+                  preview: {
+                    select: {weight: 'weight', style: 'style'},
+                    prepare({weight, style}) {
+                      return {
+                        title: `Weight ${weight || '400'}`,
+                        subtitle: style || 'normal',
+                      }
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'accentColorOverride',
       title: 'Custom Accent Color',
       type: 'string',

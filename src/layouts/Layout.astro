@@ -34,6 +34,16 @@ const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
       bg, bgAlt, surface, text, textMuted, textMutedLight,
       accent, accentDark, border, sectionAlt, sectionDark,
       sectionDarkText, btnBg, btnText
+    },
+    customFonts {
+      heading {
+        family,
+        files[] { weight, style, "url": file.asset->url, "extension": file.asset->extension }
+      },
+      body {
+        family,
+        files[] { weight, style, "url": file.asset->url, "extension": file.asset->extension }
+      }
     }
   }`),
   client.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState, priceRange, areaServed, twitterHandle }`),
@@ -121,15 +131,61 @@ const rootPaletteCss = activePalette
       .join('\n')}\n}`
   : '';
 
-const FONT_MAP: Record<string, string> = {
-  'classic-editorial': 'family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Jost:wght@300;400;500;600;700',
-  'romantic-script':   'family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400;700',
-  'modern-luxury':     'family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700',
-  'soft-contemporary': 'family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700',
-  'bold-editorial':    'family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500;600;700',
-  'airy-minimal':      'family=Tenor+Sans&family=Raleway:wght@300;400;500;600;700',
+// Font themes split into heading + body params so customFonts can override
+// either side individually — when an editor uploads a custom heading font,
+// we skip the heading half of the Google Fonts URL (no wasted bytes), and
+// the same for body. If both are overridden, no Google Fonts URL is emitted
+// at all. Code below this only does work when customFonts is actually set.
+const FONT_THEMES: Record<string, {heading: string; body: string}> = {
+  'classic-editorial': {heading: 'Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700', body: 'Jost:wght@300;400;500;600;700'},
+  'romantic-script':   {heading: 'Playfair+Display:ital,wght@0,400;0,700;1,400;1,700', body: 'Lato:wght@300;400;700'},
+  'modern-luxury':     {heading: 'DM+Serif+Display:ital@0;1', body: 'DM+Sans:wght@300;400;500;600;700'},
+  'soft-contemporary': {heading: 'Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700', body: 'Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700'},
+  'bold-editorial':    {heading: 'Libre+Baskerville:ital,wght@0,400;0,700;1,400', body: 'Libre+Franklin:wght@300;400;500;600;700'},
+  'airy-minimal':      {heading: 'Tenor+Sans', body: 'Raleway:wght@300;400;500;600;700'},
 };
-const fontUrl    = `https://fonts.googleapis.com/css2?${FONT_MAP[fontTheme] ?? FONT_MAP['classic-editorial']}&display=swap`;
+
+type CustomFontFile = {weight?: string; style?: string; url?: string; extension?: string};
+const customFonts = (cleanSettings as any)?.customFonts ?? null;
+const customHeading = customFonts?.heading;
+const customBody = customFonts?.body;
+const useCustomHeading = !!(customHeading?.family && Array.isArray(customHeading?.files) && customHeading.files.some((f: CustomFontFile) => f?.url));
+const useCustomBody = !!(customBody?.family && Array.isArray(customBody?.files) && customBody.files.some((f: CustomFontFile) => f?.url));
+
+const activeTheme = FONT_THEMES[fontTheme] ?? FONT_THEMES['classic-editorial'];
+const googleFontParams: string[] = [];
+if (!useCustomHeading) googleFontParams.push(`family=${activeTheme.heading}`);
+if (!useCustomBody) googleFontParams.push(`family=${activeTheme.body}`);
+const fontUrl = googleFontParams.length > 0
+  ? `https://fonts.googleapis.com/css2?${googleFontParams.join('&')}&display=swap`
+  : null;
+
+// Build @font-face + CSS variable override block — only runs when at least
+// one custom side is configured. Output is empty string otherwise, and the
+// <style> tag below is conditionally rendered, so zero overhead when not used.
+const FORMAT_MAP: Record<string, string> = {woff2: 'woff2', woff: 'woff', ttf: 'truetype', otf: 'opentype'};
+function buildFontFaceBlock(family: string, files: CustomFontFile[]): string {
+  return files
+    .filter((f) => f?.url)
+    .map((f) => {
+      const ext = (f.extension || '').toLowerCase();
+      const format = FORMAT_MAP[ext] || 'woff2';
+      const weight = f.weight || '400';
+      const style = f.style || 'normal';
+      return `@font-face{font-family:'${family}';src:url('${f.url}') format('${format}');font-weight:${weight};font-style:${style};font-display:swap;}`;
+    })
+    .join('');
+}
+const customFontCssParts: string[] = [];
+if (useCustomHeading) {
+  customFontCssParts.push(buildFontFaceBlock(customHeading.family, customHeading.files));
+  customFontCssParts.push(`:root{--font-heading:'${customHeading.family}',Georgia,serif;}`);
+}
+if (useCustomBody) {
+  customFontCssParts.push(buildFontFaceBlock(customBody.family, customBody.files));
+  customFontCssParts.push(`:root{--font-body:'${customBody.family}',system-ui,sans-serif;}`);
+}
+const customFontCss = customFontCssParts.join('');
 
 // Text color preset palette — only applied on light themes
 const LIGHT_THEMES = ['classic-cream', 'warm-studio', 'cool-minimal', 'forest-sage'];
@@ -267,9 +323,10 @@ const schemaJSON = schemaGraph.length
 		    visualEditingBridge.js when Sanity settings change (font theme,
 		    palette, accent, text color preset) so edits reflect without a
 		    full page reload. */}
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href={fontUrl} rel="stylesheet" data-sanity-head="fonts" />
+		{fontUrl && <link rel="preconnect" href="https://fonts.googleapis.com" />}
+		{fontUrl && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
+		{fontUrl && <link href={fontUrl} rel="stylesheet" data-sanity-head="fonts" />}
+		{customFontCss && <style set:html={customFontCss} data-sanity-head="custom-fonts" />}
 		{rootPaletteCss && <style set:html={rootPaletteCss} data-sanity-head="palette" />}
 		{accentOverride && (
 			<style data-sanity-head="accent" set:html={`
