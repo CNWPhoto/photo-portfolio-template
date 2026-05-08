@@ -320,10 +320,14 @@ The template gates the plugin behind a self-serve toggle in `siteSettings.aiAssi
 
 ### Operator notes
 
-- **Default is OFF.** New clients won't see sparkle icons until they explicitly opt in. This avoids the broken-on-first-click experience for clients who haven't initialized AI Assist on their project yet.
-- **Per-client toggle.** Each client's Studio reads its OWN `siteSettings.aiAssistEnabled` (not the demo's) — bootstrap fetch in `studio/sanity.config.js` uses `process.env.SANITY_STUDIO_PROJECT_ID`, so each hosted Studio is correctly scoped.
-- **Toggle change requires a Studio refresh.** It's a load-time check, not a runtime one. Clients toggle the boolean, then hard-refresh Studio (Cmd+Shift+R / Ctrl+Shift+R). The bootstrap fetch uses `useCdn: false`, so the change is immediate, not subject to ~30-60s CDN cache.
-- **Fail closed.** If the bootstrap fetch errors, the plugin does not load. Studio keeps working without AI features rather than loading sparkle icons that error on first click.
+- **Default is OFF.** Plugin loads only when `SANITY_STUDIO_AI_ASSIST=true` is set in that client's `studio/.env.<slug>-backup`. New clients ship without that line, so no sparkle icons until you flip them on.
+- **`siteSettings.aiAssistEnabled` is the signal channel, not the switch.** A previous design used a runtime fetch of that boolean to drive plugin loading, which broke Sanity's deploy pipeline (the manifest extractor doesn't support top-level await, even though `dev` and `build` did). The boolean still lives in the schema for clients to communicate intent — when they flip it ON in Studio, that's their request to enable AI Assist, and it's your cue to update their env and redeploy their Studio.
+- **Operator action when a client wants AI on/off:**
+  1. Edit `studio/.env.<slug>-backup` — add `SANITY_STUDIO_AI_ASSIST=true` (to enable) or remove the line (to disable).
+  2. `cp studio/.env.<slug>-backup studio/.env`
+  3. `cd studio && npm run deploy`
+  4. `cp studio/.env.cnw-photo-demo-backup studio/.env` to restore demo-local config.
+- **Why not true self-serve?** Tried it — Sanity's deploy pipeline can't extract a manifest from a config that uses top-level await for an async fetch. The runtime-toggle path either needs a future Sanity feature (sync API for plugin gating) or a custom plugin wrapper that's out of scope right now. Operator-managed toggling adds ~1 minute per client per change; clients flip this rarely (once when deciding Free vs Growth), so it's an acceptable trade.
 
 ### What's wired into the schema
 
@@ -337,17 +341,16 @@ The template gates the plugin behind a self-serve toggle in `siteSettings.aiAssi
 > Your site includes Sanity AI Assist — sparkle (✨) icons next to fields that can generate content automatically (alt text from photos, SEO summaries, draft descriptions). It's an optional Sanity Growth plan feature. New Sanity projects come with a free Growth trial month so you can try it before committing.
 >
 > **First time enabling it:**
-> 1. In Studio → **Site Settings** → toggle **Enable AI Assist** ON, click Publish, then refresh Studio.
-> 2. Open any document and click a sparkle (✨) icon. The first click prompts you to "Enable Sanity AI Assist" — this generates an API token automatically.
-> 3. Done. Sparkle icons now work site-wide.
+> 1. In Studio → **Site Settings** → toggle **Enable AI Assist** ON and click Publish.
+> 2. Reach out to me (Connor) and let me know — I'll redeploy your Studio with AI features turned on. Takes about 1 minute.
+> 3. Open any document and click a sparkle (✨) icon. The first click prompts you to "Enable Sanity AI Assist" — this generates an API token automatically.
+> 4. Done. Sparkle icons now work site-wide.
 >
 > **If you stay on the free Sanity plan after the trial:**
-> 1. Site Settings → toggle **Enable AI Assist** OFF, Publish, refresh Studio.
-> 2. Sparkle icons disappear cleanly. Studio keeps working normally.
+> 1. Site Settings → toggle **Enable AI Assist** OFF and Publish.
+> 2. Let me know — I'll redeploy your Studio without the AI plugin so the sparkle icons disappear cleanly.
 >
-> **If you upgrade back to Growth later:**
-> 1. Toggle the setting back ON, Publish, refresh.
-> 2. Sparkle icons return. No code changes or redeployment needed.
+> **If you upgrade back to Growth later:** flip the toggle back ON, let me know, I'll redeploy. About 1 minute on my end each time.
 
 ---
 
