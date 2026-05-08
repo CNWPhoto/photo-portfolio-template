@@ -14,7 +14,13 @@ export const imageField = ({
   title,
   type: 'image',
   description,
-  options: {hotspot: true},
+  options: {
+    hotspot: true,
+    // When AI Assist is enabled, the sparkle icon next to Alt Text
+    // generates a description from the uploaded image. Inert (no UI)
+    // when the assist plugin isn't loaded.
+    aiAssist: {imageDescriptionField: 'alt'},
+  },
   fields: [
     {
       name: 'alt',

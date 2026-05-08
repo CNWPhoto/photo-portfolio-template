@@ -43,6 +43,7 @@ export default {
       options: {
         hotspot: true,
         crop: true,
+        aiAssist: {imageDescriptionField: 'alt'},
       },
       fields: [
         {
@@ -130,7 +131,10 @@ export default {
         },
         {
           type: 'image',
-          options: {hotspot: true},
+          options: {
+            hotspot: true,
+            aiAssist: {imageDescriptionField: 'alt'},
+          },
           validation: imageSizeWarning,
           fields: [
             {

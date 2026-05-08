@@ -1,7 +1,27 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {presentationTool, defineDocuments, defineLocations} from 'sanity/presentation'
+import {assist} from '@sanity/assist'
+import {createClient} from '@sanity/client'
 import {schemaTypes} from './schemaTypes'
+
+// AI Assist toggle — fetched once at Studio boot from this client's own
+// siteSettings.aiAssistEnabled. Self-serve: clients on the free Sanity
+// plan flip the toggle off in Studio so the plugin doesn't load and the
+// sparkle icons disappear cleanly. useCdn: false so the fetch always
+// reflects the latest toggle value (one query per Studio boot — not a
+// hot path). projectId/dataset must read from env so each per-client
+// hosted Studio reads ITS OWN toggle, not the demo's.
+const aiBootstrapClient = createClient({
+  projectId: process.env.SANITY_STUDIO_PROJECT_ID || 'hx5xgigp',
+  dataset: process.env.SANITY_STUDIO_DATASET || 'production',
+  apiVersion: '2024-01-01',
+  useCdn: false,
+})
+const aiAssistEnabled = await aiBootstrapClient
+  .fetch(`*[_id == "siteSettings"][0].aiAssistEnabled`)
+  .then((val) => val === true) // strict — undefined / null / false all mean off
+  .catch(() => false) // fail closed — never load assist on a fetch error
 
 // Singleton helper — links directly to a specific document by ID
 const singleton = (S, id, title, schemaType) =>
@@ -224,6 +244,9 @@ export default defineConfig({
 
           ]),
     }),
+    // AI Assist — gated on siteSettings.aiAssistEnabled. When off (default
+    // for new clients), the plugin doesn't load and no sparkle icons render.
+    ...(aiAssistEnabled ? [assist()] : []),
   ],
 
   schema: {

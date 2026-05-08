@@ -116,6 +116,14 @@ export default {
         'Free contact-form backend. Sign up at https://web3forms.com (no account required) and paste the access key here. Used by every Contact Form section unless one overrides it. Leave blank to disable submissions.',
     },
     {
+      name: 'aiAssistEnabled',
+      title: 'Enable AI Assist',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        "Sticking with the free Sanity plan after your trial? Toggle this OFF to hide AI features that require the Growth plan. Toggle back ON anytime if you upgrade. Note: changes take effect after refreshing Studio.",
+    },
+    {
       name: 'customFonts',
       title: 'Custom Fonts (Override)',
       type: 'object',
