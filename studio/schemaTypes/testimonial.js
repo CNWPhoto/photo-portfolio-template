@@ -33,6 +33,7 @@ export default {
       options: {
         hotspot: true,
         crop: true,
+        aiAssist: {imageDescriptionField: 'alt'},
       },
       fields: [
         {

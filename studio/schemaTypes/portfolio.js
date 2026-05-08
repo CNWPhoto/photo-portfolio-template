@@ -86,7 +86,11 @@ export default {
       of: [
         {
           type: 'image',
-          options: {hotspot: true, crop: true},
+          options: {
+            hotspot: true,
+            crop: true,
+            aiAssist: {imageDescriptionField: 'alt'},
+          },
           validation: imageSizeWarning,
           preview: {
             select: {title: 'title', subtitle: 'category', media: 'asset'},
@@ -188,7 +192,11 @@ export default {
               of: [
                 {
                   type: 'image',
-                  options: {hotspot: true, crop: true},
+                  options: {
+                    hotspot: true,
+                    crop: true,
+                    aiAssist: {imageDescriptionField: 'alt'},
+                  },
                   validation: imageSizeWarning,
                   preview: {
                     select: {title: 'title', media: 'asset'},

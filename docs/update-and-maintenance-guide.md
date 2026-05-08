@@ -312,6 +312,45 @@ Any failure here gets fixed in a branch, tested on demo, and merged during norma
 
 ---
 
+## AI Assist (Sanity Growth Plan Feature)
+
+Sanity AI Assist adds sparkle (✨) icons to text and image fields in Studio. Click one and AI generates content — alt text from an uploaded image, draft SEO descriptions, gallery copy, etc. The plugin requires a Sanity Growth plan ($15/seat/month). New Sanity projects ship with a free Growth trial month so editors can try it without commitment.
+
+The template gates the plugin behind a self-serve toggle in `siteSettings.aiAssistEnabled` so a client who downgrades back to Free after the trial can hide the sparkle icons cleanly without a code change or redeploy.
+
+### Operator notes
+
+- **Default is OFF.** New clients won't see sparkle icons until they explicitly opt in. This avoids the broken-on-first-click experience for clients who haven't initialized AI Assist on their project yet.
+- **Per-client toggle.** Each client's Studio reads its OWN `siteSettings.aiAssistEnabled` (not the demo's) — bootstrap fetch in `studio/sanity.config.js` uses `process.env.SANITY_STUDIO_PROJECT_ID`, so each hosted Studio is correctly scoped.
+- **Toggle change requires a Studio refresh.** It's a load-time check, not a runtime one. Clients toggle the boolean, then hard-refresh Studio (Cmd+Shift+R / Ctrl+Shift+R). The bootstrap fetch uses `useCdn: false`, so the change is immediate, not subject to ~30-60s CDN cache.
+- **Fail closed.** If the bootstrap fetch errors, the plugin does not load. Studio keeps working without AI features rather than loading sparkle icons that error on first click.
+
+### What's wired into the schema
+
+- **Image alt text generation** — every image field in the template (`_shared/imageField.js`, plus per-schema fields in `blogPost`, `testimonial`, `portfolio`, `galleryGridSection`) sets `options.aiAssist.imageDescriptionField: 'alt'`. When AI Assist is on, editors get a sparkle on the alt-text field that generates a description from the uploaded image.
+- **All other text / Portable Text fields** — sparkle icons appear automatically. Per-field instructions are authored by editors through the Studio UI (the "✨ Edit instructions" flow); they're stored as `assist.instruction` documents in the dataset, not in schema code. Sanity's v6 plugin model intentionally moved instruction authoring out of code, so there's no static "default prompt" we can ship per field.
+
+### Client-facing copy (paste into onboarding emails)
+
+> **AI Assist (optional)**
+>
+> Your site includes Sanity AI Assist — sparkle (✨) icons next to fields that can generate content automatically (alt text from photos, SEO summaries, draft descriptions). It's an optional Sanity Growth plan feature. New Sanity projects come with a free Growth trial month so you can try it before committing.
+>
+> **First time enabling it:**
+> 1. In Studio → **Site Settings** → toggle **Enable AI Assist** ON, click Publish, then refresh Studio.
+> 2. Open any document and click a sparkle (✨) icon. The first click prompts you to "Enable Sanity AI Assist" — this generates an API token automatically.
+> 3. Done. Sparkle icons now work site-wide.
+>
+> **If you stay on the free Sanity plan after the trial:**
+> 1. Site Settings → toggle **Enable AI Assist** OFF, Publish, refresh Studio.
+> 2. Sparkle icons disappear cleanly. Studio keeps working normally.
+>
+> **If you upgrade back to Growth later:**
+> 1. Toggle the setting back ON, Publish, refresh.
+> 2. Sparkle icons return. No code changes or redeployment needed.
+
+---
+
 ## Emergency Contacts Per Client
 
 Keep in your password manager (1Password, etc.):
