@@ -184,6 +184,9 @@ Everything is controlled by `studio/.env`. No source edits needed — `studio/sa
    SANITY_STUDIO_PREVIEW_URL=https://smith-photography.pages.dev
    # Leave SANITY_STUDIO_APP_ID unset on the first deploy — Sanity will
    # create a new application and print the generated appId.
+   # AI Assist on by default during the client's free Sanity Growth trial.
+   # If they opt out after the trial, remove this line and redeploy their Studio.
+   SANITY_STUDIO_AI_ASSIST=true
    ```
 
    - `SANITY_STUDIO_HOST` picks the `<host>.sanity.studio` subdomain — must be globally unique across all Sanity Studios.
