@@ -11,7 +11,8 @@
     "deploy": "dotenv -e .env -- sanity deploy",
     "deploy-graphql": "dotenv -e .env -- sanity graphql deploy",
     "seed": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token",
-    "seed:replace": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token -- --replace"
+    "seed:replace": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token -- --replace",
+    "seed:ai-instructions": "dotenv -e .env -- sanity exec scripts/ai-instructions/seed.js --with-user-token"
   },
   "keywords": [
     "sanity"
