@@ -23,6 +23,7 @@ is in the linked phase.
 - [ ] **Preview secret generated** ([Phase 1.4](#phase-1--sanity-cms))
 - [ ] **CORS origins added** — localhost, `*.pages.dev`, client domain ([Phase 1.5](#phase-1--sanity-cms))
 - [ ] **Dataset seeded** — `cd studio && npm run seed` populates template content ([Phase 1.6](#phase-1--sanity-cms))
+- [ ] **AI Assist instructions seeded** — `npm run seed:ai-instructions` pre-populates sparkle prompts ([Phase 1.7](#phase-1--sanity-cms))
 - [ ] **Cloudflare admin access granted** — client invites you as Super Administrator on her CF account ([Phase 2.1](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
 - [ ] **Cloudflare Pages project created (Direct Upload mode)** — in her CF account, empty project ([Phase 2.2](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
 - [ ] **Cloudflare env vars set on Pages project** — project ID, dataset, token, preview secret, studio URL, Node version ([Phase 2.2](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
@@ -268,7 +269,33 @@ design out of the box.
 > pre-configured with the correct `backgroundTone` (alt/default) and
 > `textAlignment` so the out-of-box look matches the template demo.
 
-**1.7 — Transferring an existing project to the client's organization**
+**1.7 — Seed AI Assist instructions**
+
+Pre-populates the sparkle (✨) icons in the client's Studio with starter
+prompts for SEO titles, SEO descriptions, hero subheadings, section body
+copy, pull quotes, FAQ answers, blog body, and testimonial polish. Without
+this step, editors clicking a sparkle see an empty "Add instructions" UI
+instead of ready-to-run prompts.
+
+1. With `studio/.env` still set to the client's project (from 1.5/1.6):
+   ```sh
+   cd studio
+   npm run seed:ai-instructions
+   ```
+2. The script writes 9 annotation documents (one per affected document type)
+   under `sanity.assist.schemaType.<docType>` IDs. Idempotent — safe to
+   re-run anytime to push prompt updates from `studio/scripts/ai-instructions/starter-prompts.js`.
+3. To customize prompts for a specific client (rare), edit
+   `studio/scripts/ai-instructions/starter-prompts.js` and re-run the seed
+   against that client only.
+
+> **AI Assist toggle reminder:** Sparkles appear only when
+> `SANITY_STUDIO_AI_ASSIST=true` is set in the client's `studio/.env.<slug>-backup`
+> AND the hosted Studio has been redeployed since. Default is ON for new
+> clients (see `.env.example` and the AI Assist section of
+> `docs/update-and-maintenance-guide.md`).
+
+**1.8 — Transferring an existing project to the client's organization**
 
 > **Use this for clients who came aboard before this guide existed and whose project is still in your organization.** New clients should follow Phase 1.0 + 1.1 above so the project is created in their org from day one — no transfer needed.
 
@@ -550,7 +577,7 @@ slug validator.
 When a client leaves (they want full ownership, you're winding down, etc.):
 
 1. **Remove yourself from their Sanity project.** With the per-client-org model (Phase 1.0), the client *already* owns their organization and project — off-boarding is just leaving as a member. Go to sanity.io/manage → their project → **Members** → find yourself → **Remove**. The client retains everything; you retain nothing.
-   - **Legacy path:** if the project is still in your organization (older client, never transferred), follow Phase 1.7 (Transferring an existing project) first to move it into the client's organization, then remove yourself from the project.
+   - **Legacy path:** if the project is still in your organization (older client, never transferred), follow Phase 1.8 (Transferring an existing project) first to move it into the client's organization, then remove yourself from the project.
 2. **Remove their matrix entry from `.github/workflows/deploy.yml`** and delete the `client-<slug>` GitHub Environment (Settings → Environments → Delete). Commit + push. The workflow will no longer deploy to their site on future `production` pushes.
 3. **Client revokes the CF API token** that you were using for deploys — their CF dashboard → My Profile → API Tokens → find the token → Delete. This immediately cuts off your deploy access.
 4. **Client removes you as Super Admin** — her CF Account → Members → remove your email.
