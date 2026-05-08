@@ -314,19 +314,20 @@ Any failure here gets fixed in a branch, tested on demo, and merged during norma
 
 ## AI Assist (Sanity Growth Plan Feature)
 
-Sanity AI Assist adds sparkle (✨) icons to text and image fields in Studio. Click one and AI generates content — alt text from an uploaded image, draft SEO descriptions, gallery copy, etc. The plugin requires a Sanity Growth plan ($15/seat/month). New Sanity projects ship with a free Growth trial month so editors can try it without commitment.
+Sanity AI Assist adds sparkle (✨) icons to text and image fields in Studio. Click one and AI generates content — alt text from an uploaded image, draft SEO descriptions, gallery copy, etc. The plugin requires a Sanity Growth plan ($15/seat/month). New Sanity projects ship with a free Growth trial month so editors can try it without commitment during onboarding.
 
-The template gates the plugin behind a self-serve toggle in `siteSettings.aiAssistEnabled` so a client who downgrades back to Free after the trial can hide the sparkle icons cleanly without a code change or redeploy.
+The template ships AI Assist **on by default** for new clients. The trial month is the natural sales window — most photographers will love it, the few who don't can opt out via the schema toggle and you redeploy their Studio without the plugin.
 
 ### Operator notes
 
-- **Default is OFF.** Plugin loads only when `SANITY_STUDIO_AI_ASSIST=true` is set in that client's `studio/.env.<slug>-backup`. New clients ship without that line, so no sparkle icons until you flip them on.
-- **`siteSettings.aiAssistEnabled` is the signal channel, not the switch.** A previous design used a runtime fetch of that boolean to drive plugin loading, which broke Sanity's deploy pipeline (the manifest extractor doesn't support top-level await, even though `dev` and `build` did). The boolean still lives in the schema for clients to communicate intent — when they flip it ON in Studio, that's their request to enable AI Assist, and it's your cue to update their env and redeploy their Studio.
-- **Operator action when a client wants AI on/off:**
-  1. Edit `studio/.env.<slug>-backup` — add `SANITY_STUDIO_AI_ASSIST=true` (to enable) or remove the line (to disable).
+- **Default is ON for new clients.** Every new `studio/.env.<slug>-backup` should include `SANITY_STUDIO_AI_ASSIST=true`. The `.env.example` template captures this — copy it as the starting point when onboarding a new client.
+- **`siteSettings.aiAssistEnabled` is the signal channel, not the switch.** A previous design used a runtime fetch of that boolean to drive plugin loading, which broke Sanity's deploy pipeline (the manifest extractor doesn't support top-level await, even though `dev` and `build` did). The boolean still lives in the schema for clients to communicate intent — when they flip it OFF in Studio, that's their request to disable AI Assist, and it's your cue to update their env and redeploy their Studio.
+- **Operator action when a client opts out (toggle OFF + tells you):**
+  1. Edit `studio/.env.<slug>-backup` — remove the `SANITY_STUDIO_AI_ASSIST=true` line.
   2. `cp studio/.env.<slug>-backup studio/.env`
   3. `cd studio && npm run deploy`
   4. `cp studio/.env.cnw-photo-demo-backup studio/.env` to restore demo-local config.
+- **Re-enabling later** — same dance, just add the line back.
 - **Why not true self-serve?** Tried it — Sanity's deploy pipeline can't extract a manifest from a config that uses top-level await for an async fetch. The runtime-toggle path either needs a future Sanity feature (sync API for plugin gating) or a custom plugin wrapper that's out of scope right now. Operator-managed toggling adds ~1 minute per client per change; clients flip this rarely (once when deciding Free vs Growth), so it's an acceptable trade.
 
 ### What's wired into the schema
@@ -336,21 +337,19 @@ The template gates the plugin behind a self-serve toggle in `siteSettings.aiAssi
 
 ### Client-facing copy (paste into onboarding emails)
 
-> **AI Assist (optional)**
+> **AI Assist (your free trial month)**
 >
-> Your site includes Sanity AI Assist — sparkle (✨) icons next to fields that can generate content automatically (alt text from photos, SEO summaries, draft descriptions). It's an optional Sanity Growth plan feature. New Sanity projects come with a free Growth trial month so you can try it before committing.
+> Your site includes Sanity AI Assist — sparkle (✨) icons next to fields that can generate content automatically (alt text from photos, SEO summaries, draft descriptions). It's free for the first month thanks to Sanity's Growth plan trial, then $15/month after that if you keep it.
 >
-> **First time enabling it:**
-> 1. In Studio → **Site Settings** → toggle **Enable AI Assist** ON and click Publish.
-> 2. Reach out to me (Connor) and let me know — I'll redeploy your Studio with AI features turned on. Takes about 1 minute.
-> 3. Open any document and click a sparkle (✨) icon. The first click prompts you to "Enable Sanity AI Assist" — this generates an API token automatically.
-> 4. Done. Sparkle icons now work site-wide.
+> **Try it out:**
+> 1. Open any document in Studio and click a sparkle (✨) icon. The first click prompts you to "Enable Sanity AI Assist" — this initializes the AI features automatically (one-time, no payment info needed).
+> 2. From there, every sparkle icon works — generate alt text from an image, draft an SEO description, etc. Edit and save what AI suggests, ignore what it doesn't.
 >
-> **If you stay on the free Sanity plan after the trial:**
-> 1. Site Settings → toggle **Enable AI Assist** OFF and Publish.
-> 2. Let me know — I'll redeploy your Studio without the AI plugin so the sparkle icons disappear cleanly.
+> **If you'd rather not pay $15/month after the trial:**
+> 1. In Studio → **Site Settings** → toggle **Enable AI Assist** OFF and Publish.
+> 2. Let me know — I'll redeploy your Studio without the AI plugin so the sparkle icons disappear cleanly. Takes about 1 minute on my end. Your site and content are untouched; only the editor UI changes.
 >
-> **If you upgrade back to Growth later:** flip the toggle back ON, let me know, I'll redeploy. About 1 minute on my end each time.
+> **Want it back later?** Flip the toggle back ON, let me know, I'll redeploy. Same 1 minute.
 
 ---
 

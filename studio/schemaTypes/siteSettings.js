@@ -119,9 +119,9 @@ export default {
       name: 'aiAssistEnabled',
       title: 'Enable AI Assist',
       type: 'boolean',
-      initialValue: false,
+      initialValue: true,
       description:
-        "Sticking with the free Sanity plan after your trial? Toggle this OFF to hide AI features that require the Growth plan. Toggle back ON anytime if you upgrade. Note: changes take effect after refreshing Studio.",
+        "AI Assist (the sparkle ✨ icons next to fields) is on by default during your free Sanity Growth trial month. After the trial it requires the Growth plan ($15/seat/month). To turn it off, toggle this OFF and let Connor know — he'll redeploy your Studio without the AI plugin. To turn it back on later, same process.",
     },
     {
       name: 'customFonts',
