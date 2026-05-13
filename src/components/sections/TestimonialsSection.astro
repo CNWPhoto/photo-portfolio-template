@@ -25,7 +25,7 @@ if (source === 'pickSpecific' && section?.testimonials?.length) {
   const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
   raw = await client.fetch(
     `*[_type == "testimonial"] | order(order asc)[0...$max]{
-      _id, testimonial, client,
+      _id, testimonial, client, starRating, source, sourceUrl, reviewDate,
       image { ..., asset->{ _id, metadata { dimensions { width, height } } } }
     }`,
     { max: maxCount },
@@ -33,14 +33,42 @@ if (source === 'pickSpecific' && section?.testimonials?.length) {
 }
 raw = raw || [];
 
-const testimonials = raw.map((t: any) => ({
-  image: t?.image ?? null,
-  photoSrc: t?.image ? buildSrc(t.image, 800) : '',
-  photoSrcset: t?.image ? buildSrcset(t.image, [400, 800, 1200]) : '',
-  photoAlt: t?.image?.alt ?? '',
-  quote: t?.testimonial ?? '',
-  client: t?.client ?? '',
-}));
+// Source labels for the "via [Platform]" badge. stegaClean before lookup so
+// preview-mode invisible markers don't break the equality check.
+const SOURCE_LABELS: Record<string, string> = {
+  google: 'Google',
+  facebook: 'Facebook',
+  yelp: 'Yelp',
+  other: 'Online review',
+};
+
+function formatReviewDate(d?: string): string {
+  if (!d) return '';
+  // d is ISO yyyy-mm-dd from Sanity's date type. Parse as UTC to avoid
+  // timezone drift pushing it to the previous month.
+  const [y, m] = d.split('-');
+  if (!y || !m) return '';
+  const dt = new Date(Date.UTC(Number(y), Number(m) - 1, 1));
+  return dt.toLocaleDateString('en-US', {month: 'long', year: 'numeric', timeZone: 'UTC'});
+}
+
+const testimonials = raw.map((t: any) => {
+  const src = stegaClean(t?.source) || 'direct';
+  const sourceLabel = src !== 'direct' ? SOURCE_LABELS[src] || '' : '';
+  const dateLabel = formatReviewDate(t?.reviewDate);
+  return {
+    image: t?.image ?? null,
+    photoSrc: t?.image ? buildSrc(t.image, 800) : '',
+    photoSrcset: t?.image ? buildSrcset(t.image, [400, 800, 1200]) : '',
+    photoAlt: t?.image?.alt ?? '',
+    quote: t?.testimonial ?? '',
+    client: t?.client ?? '',
+    starRating: Number.isFinite(t?.starRating) ? Math.max(0, Math.min(5, t.starRating)) : 0,
+    sourceLabel,
+    sourceUrl: t?.sourceUrl || '',
+    dateLabel,
+  };
+});
 
 const first = testimonials[0] ?? null;
 ---
@@ -55,8 +83,25 @@ const first = testimonials[0] ?? null;
     <div class="tslider__inner tslider__inner--two-col">
       {testimonials.slice(0, 2).map((t, i) => (
         <div class={`tslider__col reveal reveal-delay-${i + 1}`}>
+          {t.starRating > 0 && (
+            <div class="tslider__stars" aria-label={`${t.starRating} out of 5 stars`}>
+              {Array.from({length: 5}).map((_, n) => (
+                <span class={n < t.starRating ? 'tslider__star tslider__star--on' : 'tslider__star'} aria-hidden="true">★</span>
+              ))}
+            </div>
+          )}
           <blockquote class="tslider__quote">&ldquo;{t.quote}&rdquo;</blockquote>
           <p class="tslider__attribution">{t.client}</p>
+          {t.sourceLabel && (
+            <p class="tslider__source">
+              via {t.sourceUrl ? (
+                <a class="tslider__source-link" href={t.sourceUrl} target="_blank" rel="noopener nofollow">
+                  {t.sourceLabel}<span class="tslider__source-arrow" aria-hidden="true">↗</span>
+                </a>
+              ) : t.sourceLabel}
+              {t.dateLabel && <span class="tslider__source-date"> · {t.dateLabel}</span>}
+            </p>
+          )}
         </div>
       ))}
     </div>
@@ -78,10 +123,39 @@ const first = testimonials[0] ?? null;
       </div>
 
       <div class="tslider__content reveal reveal-delay-2">
+        <div
+          class="tslider__stars"
+          data-tslider-stars
+          aria-label={first && first.starRating > 0 ? `${first.starRating} out of 5 stars` : ''}
+          hidden={!first || first.starRating === 0}
+        >
+          {Array.from({length: 5}).map((_, n) => (
+            <span class={first && n < first.starRating ? 'tslider__star tslider__star--on' : 'tslider__star'} aria-hidden="true">★</span>
+          ))}
+        </div>
         <blockquote class="tslider__quote" data-tslider-quote>
           &ldquo;{first?.quote}&rdquo;
         </blockquote>
         <p class="tslider__attribution" data-tslider-client>{first?.client}</p>
+        <p
+          class="tslider__source"
+          data-tslider-source
+          hidden={!first?.sourceLabel}
+        >
+          <span data-tslider-source-prefix>via </span>
+          <a
+            class="tslider__source-link"
+            data-tslider-source-link
+            href={first?.sourceUrl || '#'}
+            target="_blank"
+            rel="noopener nofollow"
+            hidden={!first?.sourceUrl}
+          >
+            <span data-tslider-source-link-label>{first?.sourceLabel}</span><span class="tslider__source-arrow" aria-hidden="true">↗</span>
+          </a>
+          <span data-tslider-source-plain hidden={!!first?.sourceUrl}>{first?.sourceLabel}</span>
+          <span class="tslider__source-date" data-tslider-source-date hidden={!first?.dateLabel}>{first?.dateLabel ? ` · ${first.dateLabel}` : ''}</span>
+        </p>
 
         {testimonials.length > 1 && (
           <div class="tslider__nav">
@@ -154,6 +228,51 @@ const first = testimonials[0] ?? null;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
+    margin: 0;
+  }
+
+  .tslider__stars {
+    display: flex;
+    gap: 0.15rem;
+    margin: 0 0 1.25rem;
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+
+  .tslider__star {
+    color: var(--border);
+    transition: color 0.2s ease;
+  }
+  .tslider__star--on {
+    color: var(--text);
+  }
+
+  .tslider__source {
+    margin: 0.5rem 0 0;
+    font-family: var(--font-sans, var(--font-body));
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--muted-light, var(--muted));
+  }
+
+  .tslider__source-link {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+    transition: opacity 0.18s ease;
+  }
+  .tslider__source-link:hover { opacity: 0.7; }
+
+  .tslider__source-arrow {
+    display: inline-block;
+    margin-left: 0.2em;
+    font-size: 0.85em;
+    transform: translateY(-1px);
+  }
+
+  .tslider__source-date {
+    color: inherit;
   }
 
   .tslider__nav {
@@ -226,6 +345,12 @@ const first = testimonials[0] ?? null;
     const imgWrap  = section.querySelector('[data-tslider-img-wrap]');
     const quoteEl  = section.querySelector('[data-tslider-quote]');
     const clientEl = section.querySelector('[data-tslider-client]');
+    const starsEl  = section.querySelector('[data-tslider-stars]');
+    const sourceEl       = section.querySelector('[data-tslider-source]');
+    const sourceLinkEl   = section.querySelector('[data-tslider-source-link]');
+    const sourceLabelEl  = section.querySelector('[data-tslider-source-link-label]');
+    const sourcePlainEl  = section.querySelector('[data-tslider-source-plain]');
+    const sourceDateEl   = section.querySelector('[data-tslider-source-date]');
     const idxEl    = section.querySelector('[data-tslider-idx]');
     const prevBtn  = section.querySelector('[data-tslider-prev]');
     const nextBtn  = section.querySelector('[data-tslider-next]');
@@ -235,6 +360,46 @@ const first = testimonials[0] ?? null;
     if (!data || data.length < 2) return;
 
     let idx = 0;
+
+    function renderStars(t) {
+      if (!starsEl) return;
+      const rating = t.starRating || 0;
+      if (rating < 1) {
+        starsEl.hidden = true;
+        return;
+      }
+      starsEl.hidden = false;
+      starsEl.setAttribute('aria-label', rating + ' out of 5 stars');
+      const stars = starsEl.querySelectorAll('.tslider__star');
+      stars.forEach(function(s, n) {
+        s.classList.toggle('tslider__star--on', n < rating);
+      });
+    }
+
+    function renderSource(t) {
+      if (!sourceEl) return;
+      if (!t.sourceLabel) {
+        sourceEl.hidden = true;
+        return;
+      }
+      sourceEl.hidden = false;
+      const hasLink = !!t.sourceUrl;
+      if (sourceLinkEl) {
+        sourceLinkEl.hidden = !hasLink;
+        if (hasLink) {
+          sourceLinkEl.href = t.sourceUrl;
+          if (sourceLabelEl) sourceLabelEl.textContent = t.sourceLabel;
+        }
+      }
+      if (sourcePlainEl) {
+        sourcePlainEl.hidden = hasLink;
+        if (!hasLink) sourcePlainEl.textContent = t.sourceLabel;
+      }
+      if (sourceDateEl) {
+        sourceDateEl.hidden = !t.dateLabel;
+        sourceDateEl.textContent = t.dateLabel ? ' \u00B7 ' + t.dateLabel : '';
+      }
+    }
 
     function render(i) {
       const t = data[i];
@@ -264,6 +429,8 @@ const first = testimonials[0] ?? null;
         }
         quoteEl.textContent = '\u201C' + t.quote + '\u201D';
         clientEl.textContent = t.client;
+        renderStars(t);
+        renderSource(t);
         if (idxEl) idxEl.textContent = String(i + 1);
         quoteEl.style.opacity = '1';
       }, 280);
