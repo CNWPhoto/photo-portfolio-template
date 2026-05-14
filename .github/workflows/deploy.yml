@@ -151,6 +151,10 @@ jobs:
       fail-fast: false
       matrix:
         client:
+          - slug: blackbird-photography
+            sanity_project_id: 6nc24jar
+            studio_url: https://blackbird-photography.sanity.studio
+            pages_url: https://blackbird-photography.pages.dev
           - slug: coola-creative
             sanity_project_id: tl3zj8iz
             studio_url: https://coola-creative.sanity.studio
