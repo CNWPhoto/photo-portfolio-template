@@ -26,7 +26,7 @@ const client = getClient(isPreview, (Astro.locals as any).runtime?.env);
 
 const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
   client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{
-    fontTheme, siteName, photographerName, logoType, logoImage, favicon,
+    fontTheme, subheadingCase, siteName, photographerName, logoType, logoImage, favicon,
     accentColorOverride, textColorPreset, defaultPalette,
     demo,
     "palettes": palettes[]{
@@ -79,6 +79,7 @@ const cleanSocial = social ? stegaClean(social) : null;
 
 const colorTheme  = cleanSettings?.defaultPalette || 'classic-cream';
 const fontTheme   = cleanSettings?.fontTheme  || 'classic-editorial';
+const subheadingCase = cleanSettings?.subheadingCase || 'uppercase';
 const siteName    = cleanSettings?.siteName   || 'Pet Photography';
 const logoType    = cleanSettings?.logoType   || 'text';
 const logoImage   = cleanSettings?.logoImage  ?? null;
@@ -284,7 +285,7 @@ const schemaJSON = schemaGraph.length
 ---
 
 <!doctype html>
-<html lang="en" data-theme={colorTheme} data-font={fontTheme}>
+<html lang="en" data-theme={colorTheme} data-font={fontTheme} data-subheading-case={subheadingCase}>
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -401,6 +402,26 @@ const schemaJSON = schemaGraph.length
 </html>
 
 <style is:global>
+	/* ══════════════════════════════════════════════════
+	   SUBHEADING CASE
+	   Site-wide, controlled by siteSettings.subheadingCase
+	   (Uppercase default / Sentence case). Components that
+	   render subheading text use these vars instead of
+	   hard-coding text-transform + letter-spacing — when
+	   the editor flips the toggle, every subheading
+	   restyles together. Letter-spacing collapses for
+	   sentence case because wide tracking only reads right
+	   in uppercase.
+	══════════════════════════════════════════════════ */
+	html {
+		--subheading-transform: uppercase;
+		--subheading-letter-spacing: 0.22em;
+	}
+	html[data-subheading-case='none'] {
+		--subheading-transform: none;
+		--subheading-letter-spacing: 0;
+	}
+
 	/* ══════════════════════════════════════════════════
 	   FONT THEMES
 	   Applied via data-font on <html>.

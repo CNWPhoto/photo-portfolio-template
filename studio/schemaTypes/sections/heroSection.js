@@ -55,6 +55,21 @@ export default {
       description: 'The H1 for this hero. Use a line break (Enter) to split onto two lines.',
     },
     {
+      name: 'headingSize',
+      title: 'Heading Size',
+      type: 'string',
+      description:
+        'Large is the default editorial size. Pick Standard for longer headings or a more restrained look.',
+      options: {
+        list: [
+          {title: 'Large (default)', value: 'large'},
+          {title: 'Standard (~30% smaller)', value: 'standard'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'large',
+    },
+    {
       name: 'subheading',
       title: 'Subheading',
       type: 'string',

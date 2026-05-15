@@ -94,6 +94,21 @@ export default {
       description: 'Applies site-wide — sets heading and body typefaces',
     },
     {
+      name: 'subheadingCase',
+      title: 'Subheading Case',
+      type: 'string',
+      description:
+        'Controls how hero subheadings (and any other section subheadings) are styled site-wide. Uppercase is the editorial default; Sentence case keeps the text as you type it for a more conversational feel.',
+      options: {
+        list: [
+          {title: 'Uppercase (default)', value: 'uppercase'},
+          {title: 'Sentence case', value: 'none'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'uppercase',
+    },
+    {
       name: 'textColorPreset',
       title: 'Text Color',
       type: 'string',
