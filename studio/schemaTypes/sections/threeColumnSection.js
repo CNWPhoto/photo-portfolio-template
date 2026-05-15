@@ -34,10 +34,11 @@ export default {
     },
     {
       name: 'columns',
-      title: 'Columns',
+      title: 'Cards',
       type: 'array',
-      description: 'Exactly three columns required.',
-      validation: (Rule) => Rule.length(3).error('Three columns required'),
+      description:
+        'Three cards per row. Add a 4th, 5th, 6th+ card and they wrap onto a new row automatically. Asymmetric column widths (below) only apply when there are exactly 3 cards.',
+      validation: (Rule) => Rule.min(1).warning('Add at least one card.'),
       of: [
         {
           type: 'object',
@@ -102,7 +103,7 @@ export default {
       title: 'Column Widths',
       type: 'string',
       description:
-        'Equal gives three matching columns. Wide middle and wide outer change the proportions for editorial layouts (e.g. portrait + rich text + portrait).',
+        'Equal gives three matching columns. Wide middle and wide outer change the proportions for editorial layouts (e.g. portrait + rich text + portrait). Only applies when the section has exactly 3 cards — multi-row sections always use equal widths.',
       options: {
         list: [
           {title: 'Equal', value: 'equal'},
