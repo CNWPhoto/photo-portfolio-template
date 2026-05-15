@@ -342,16 +342,16 @@ const firstImage = sanityImages[0] ?? null;
     font-weight: 600;
   }
 
-  /* ── Standard heading size (~30% smaller than Large default) ──
+  /* ── Standard heading size (~20% smaller than Large default) ──
      Two scales — the bigger bottom-overlay variant gets its own override
      because its base size is also bigger. Other variants use the
      baseline .hero__heading rule, so one override below covers all of
      split, top-positioned overlay, and centered-text. */
   .hero[data-heading-size='standard'] .hero__heading {
-    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-size: clamp(2rem, 4.4vw, 3.4rem);
   }
   .hero[data-heading-size='standard'].hero--image-full[data-text-position^='bottom'] .hero__heading--overlay {
-    font-size: clamp(2rem, 4.85vw, 4rem);
+    font-size: clamp(2.3rem, 5.5vw, 4.6rem);
   }
   .hero--image-full[data-text-position='bottom-left'] .hero__overlay-content {
     max-width: 670px;

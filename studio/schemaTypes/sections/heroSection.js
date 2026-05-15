@@ -63,7 +63,7 @@ export default {
       options: {
         list: [
           {title: 'Large (default)', value: 'large'},
-          {title: 'Standard (~30% smaller)', value: 'standard'},
+          {title: 'Standard (~20% smaller)', value: 'standard'},
         ],
         layout: 'radio',
       },
