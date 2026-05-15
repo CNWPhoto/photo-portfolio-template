@@ -24,8 +24,11 @@ const variant = section?.variant || 'image-cards';
 const alignment = section?.alignment || 'left';
 const columnWidths = section?.columnWidths || 'equal';
 const sideLabel = section?.verticalSideLabel || '';
-const columns = (section?.columns || []).slice(0, 3);
-while (columns.length < 3) columns.push({});
+// Render however many cards the editor added. Three-up grid wraps to new
+// rows automatically when count > 3 (4 → 3+1, 6 → 3+3, 7 → 3+3+1, etc.).
+// No upper cap; if an editor adds 12 cards we render 12 cards.
+const columns = (section?.columns || []).filter(Boolean);
+const cardCount = columns.length;
 
 // Vertical centering is only applied when the editor has explicitly
 // hidden media on at least one column — that's the signal they're
@@ -43,6 +46,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   data-spacing={section?.spacing || 'normal'}
   data-alignment={alignment}
   data-column-widths={columnWidths}
+  data-card-count={cardCount}
   id={section?.sectionId || undefined}
   style={style}
 >
@@ -65,7 +69,9 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
         {columns.map((col: any, i: number) => {
           const colImg = col?.image ?? null;
           const colBody = renderBody(col?.body, { className: 'threecol__col-body' });
-          const delayClass = `reveal-delay-${i + 1}`;
+          // Cycle delay 1-2-3 per row so multi-row grids keep the staggered
+          // reveal feel (instead of running off the end at reveal-delay-4+).
+          const delayClass = `reveal-delay-${(i % 3) + 1}`;
           const colCtaText = col?.ctaText || '';
           const colCtaHref = resolveLink(col?.ctaLink, [Astro.url.hostname]);
           const hideMedia = !!col?.hideMedia;
@@ -165,7 +171,11 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   .threecol__grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2.5rem;
+    column-gap: 2.5rem;
+    /* Slightly larger row gap so wrapped rows have visual separation
+       distinct from the inter-column gap. Single-row layouts never see
+       this since there's no second row to apply it to. */
+    row-gap: 4rem;
     padding-top: 2.75rem;
   }
   /* Vertical centering only when the editor has hidden media on at
@@ -183,12 +193,15 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
      wide-outer is the inverse for visual-feature-with-detail layouts.
      Scoped to wider viewports so the mobile single-column stack still
      wins at <= 900px (the 1fr override below has lower specificity than
-     this attribute selector, hence the explicit min-width gate). */
+     this attribute selector, hence the explicit min-width gate).
+     Asymmetric layouts only make sense when there's a single row of
+     exactly 3 cards — gated on data-card-count='3' so 4+ card sections
+     always wrap as equal-width rows of three. */
   @media (min-width: 901px) {
-    .threecol[data-column-widths='wide-middle'] .threecol__grid {
+    .threecol[data-column-widths='wide-middle'][data-card-count='3'] .threecol__grid {
       grid-template-columns: 1fr 2fr 1fr;
     }
-    .threecol[data-column-widths='wide-outer'] .threecol__grid {
+    .threecol[data-column-widths='wide-outer'][data-card-count='3'] .threecol__grid {
       grid-template-columns: 2fr 1fr 2fr;
     }
   }
