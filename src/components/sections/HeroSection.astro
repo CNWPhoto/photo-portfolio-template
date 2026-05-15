@@ -31,6 +31,7 @@ const stickyBackground = !!section?.stickyBackground;
 const overlayOpacity = (section?.overlayOpacity ?? 30) / 100;
 const textPosition = stegaClean(section?.textPosition) || 'center-center';
 const textAlignment = stegaClean(section?.textAlignment) || 'center';
+const headingSize = stegaClean(section?.headingSize) || 'large';
 
 const FALLBACK_HERO_IDS = ['1108099', '2253275', '825949', '1805164', '3726314'];
 const pexelsUrl = (id: string, w = 1600) =>
@@ -46,6 +47,7 @@ const firstImage = sanityImages[0] ?? null;
   data-section-type="heroSection"
   data-text-align={textAlignment}
   data-text-position={textPosition}
+  data-heading-size={headingSize}
   id={stegaClean(section?.sectionId) || undefined}
   style={style}
 >
@@ -213,6 +215,10 @@ const firstImage = sanityImages[0] ?? null;
 
   .hero__heading {
     font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+    /* Long single words break gracefully instead of overflowing the
+       overlay container. Doesn't affect normal copy — only kicks in for
+       URL-like words or unusually long names. */
+    overflow-wrap: anywhere;
     color: var(--text);
     margin: 0 0 1.25rem;
     letter-spacing: -0.01em;
@@ -222,10 +228,14 @@ const firstImage = sanityImages[0] ?? null;
     font-family: var(--font-sans, var(--font-body));
     font-style: normal;
     font-size: 1.05rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
+    /* Letter-spacing collapses when subheadingCase = 'none' — wide
+       tracking only reads right with uppercase. Layout.astro sets the
+       --subheading-* variables based on siteSettings.subheadingCase. */
+    letter-spacing: var(--subheading-letter-spacing, 0.22em);
+    text-transform: var(--subheading-transform, uppercase);
     color: var(--muted);
     margin: 0;
+    overflow-wrap: anywhere;
   }
 
   .hero__eyebrow {
@@ -299,10 +309,11 @@ const firstImage = sanityImages[0] ?? null;
     font-family: var(--font-sans, var(--font-body));
     font-style: normal;
     font-size: 1.27rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    letter-spacing: var(--subheading-letter-spacing, 0.16em);
+    text-transform: var(--subheading-transform, uppercase);
     color: rgba(255, 255, 255, 0.85);
     line-height: 1.7;
+    overflow-wrap: anywhere;
   }
 
   /* ── Text position grid (image-full variant) ── */
@@ -329,6 +340,18 @@ const firstImage = sanityImages[0] ?? null;
   .hero--image-full[data-text-position='bottom-right'] .hero__heading--overlay {
     font-size: clamp(2.875rem, 6.9vw, 5.75rem);
     font-weight: 600;
+  }
+
+  /* ── Standard heading size (~30% smaller than Large default) ──
+     Two scales — the bigger bottom-overlay variant gets its own override
+     because its base size is also bigger. Other variants use the
+     baseline .hero__heading rule, so one override below covers all of
+     split, top-positioned overlay, and centered-text. */
+  .hero[data-heading-size='standard'] .hero__heading {
+    font-size: clamp(1.75rem, 4vw, 3rem);
+  }
+  .hero[data-heading-size='standard'].hero--image-full[data-text-position^='bottom'] .hero__heading--overlay {
+    font-size: clamp(2rem, 4.85vw, 4rem);
   }
   .hero--image-full[data-text-position='bottom-left'] .hero__overlay-content {
     max-width: 670px;
