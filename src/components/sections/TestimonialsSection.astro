@@ -61,8 +61,12 @@ const testimonials = raw.map((t: any) => {
     photoSrc: t?.image ? buildSrc(t.image, 800) : '',
     photoSrcset: t?.image ? buildSrcset(t.image, [400, 800, 1200]) : '',
     photoAlt: t?.image?.alt ?? '',
-    quote: t?.testimonial ?? '',
-    client: t?.client ?? '',
+    // stegaClean: these strings get serialized into an inline <script>
+    // for the slider AND rendered as text. Uncleaned, the content-source-
+    // map watermark (zero-width Unicode) shows as garbage after the quote
+    // and client name. Affects every client when CSM is on.
+    quote: stegaClean(t?.testimonial) ?? '',
+    client: stegaClean(t?.client) ?? '',
     starRating: Number.isFinite(t?.starRating) ? Math.max(0, Math.min(5, t.starRating)) : 0,
     sourceLabel,
     sourceUrl: t?.sourceUrl || '',
