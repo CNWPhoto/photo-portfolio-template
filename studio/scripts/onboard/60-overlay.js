@@ -296,6 +296,7 @@ async function main() {
     )
     const filledSplit = await fillSection('pageAbout', 'splitSection', {
       heading: ready(ab.heading) ? ab.heading : undefined,
+      eyebrow: ready(ab.eyebrow) ? ab.eyebrow : undefined,
       body: blocks(aboutBody),
       image: bioImg,
     })
