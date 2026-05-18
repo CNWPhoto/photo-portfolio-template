@@ -156,6 +156,17 @@ async function main() {
     }
   }
 
+  // ── homepage SEO (brand leak: donor clone keeps the donor's
+  //    seo.seoTitle, e.g. "Pet Photography - Connor Walberg", which
+  //    composes into the live <title>. Overwrite from content.seo). ──
+  if (seoPatch.defaultTitle || seoPatch.defaultDescription) {
+    const hpSeo = {_type: 'seo'}
+    if (ready(seo.defaultTitle)) hpSeo.seoTitle = seo.defaultTitle
+    if (ready(seo.defaultDescription)) hpSeo.seoDescription = seo.defaultDescription
+    await set('homepagePage', {seo: hpSeo})
+    console.log('[overlay] homepage seo (cleared donor brand leak)')
+  }
+
   // ── testimonials (replace all) ──
   const ts = (CONTENT.testimonials || []).filter((t) => ready(t.quote) && ready(t.client))
   if (ts.length) {

@@ -39,6 +39,20 @@ if (!exists) {
     production_branch: 'production',
   })
   log('cf', `created Pages project ${slug} (production_branch=production)`)
+} else {
+  // ALWAYS enforce production_branch, even on a pre-existing project. A
+  // hand-created CF Pages project defaults to production_branch=main;
+  // our matrix deploys target --branch=production, so without this the
+  // production deployment lands as a *preview* and <slug>.pages.dev
+  // keeps serving the placeholder (160-byte body → smoke test fails).
+  // This is the Phase-2.3 gotcha from the playbook, now self-healing.
+  const proj = await cf(token, 'GET', `${base}/${slug}`)
+  if (proj.production_branch !== 'production') {
+    await cf(token, 'PATCH', `${base}/${slug}`, {production_branch: 'production'})
+    log('cf', `fixed production_branch ${proj.production_branch} → production`)
+  } else {
+    log('cf', 'production_branch already = production')
+  }
 }
 
 // 2. Set production runtime env vars (the step that's easy to miss by hand).
