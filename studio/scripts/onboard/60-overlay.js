@@ -91,9 +91,22 @@ async function upload(rel) {
   if (uploaded[rel]) return uploaded[rel]
   const abs = path.join(STAGE, rel)
   if (!fs.existsSync(abs)) { console.warn(`  ⚠ missing ${rel}`); return null }
-  const asset = await withRetry(`upload ${path.basename(rel)}`, () =>
-    client.assets.upload('image', fs.readFileSync(abs), {filename: path.basename(rel)}),
-  )
+  // Sanity's image pipeline rejects .ico/.svg/.tif etc. Skip rather than
+  // abort the whole overlay — a missing favicon/logo is a Studio fixup,
+  // not a reason to lose the entire content fill.
+  if (!/\.(jpe?g|png|webp|gif|avif)$/i.test(abs)) {
+    console.warn(`  ⚠ skip unprocessable image format: ${rel}`)
+    return null
+  }
+  let asset
+  try {
+    asset = await withRetry(`upload ${path.basename(rel)}`, () =>
+      client.assets.upload('image', fs.readFileSync(abs), {filename: path.basename(rel)}),
+    )
+  } catch (e) {
+    console.warn(`  ⚠ upload failed for ${rel} (${e.message}) — skipping, not aborting`)
+    return null
+  }
   uploaded[rel] = asset._id
   return asset._id
 }
@@ -107,6 +120,39 @@ const set = (id, patch) => withRetry(`patch ${id}`, () => client.patch(id).set(p
 const create = (doc) => withRetry(`create ${doc._type}`, () => client.create(doc))
 const createOrReplace = (doc) => withRetry(`createOrReplace ${doc._id}`, () => client.createOrReplace(doc))
 const commitTx = (tx) => withRetry('transaction', () => tx.commit())
+
+const rkey = () => Math.random().toString(36).slice(2, 12)
+// Portable Text block(s) from a string (\n\n → separate blocks).
+const blocks = (s) =>
+  String(s || '')
+    .split(/\n\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => ({
+      _key: rkey(), _type: 'block', style: 'normal', markDefs: [],
+      children: [{_key: rkey(), _type: 'span', text: p, marks: []}],
+    }))
+
+// Fill-or-boilerplate: patch fields INTO the first donor section of a
+// given _type (donor-agnostic — _keys differ per donor, _types don't).
+// Only sets fields we have real content for; anything omitted keeps the
+// donor boilerplate as the visible placeholder. Never deletes a section.
+async function fillSection(docId, type, fields) {
+  const k = await client.fetch(
+    `*[_id=="${docId}"][0].sections[_type=="${type}"][0]._key`,
+  )
+  if (!k) return false
+  const patch = {}
+  for (const [field, val] of Object.entries(fields)) {
+    if (val === undefined || val === null) continue
+    patch[`sections[_key=="${k}"].${field}`] = val
+  }
+  if (Object.keys(patch).length) {
+    await set(docId, patch)
+    return true
+  }
+  return false
+}
 
 async function main() {
   if (client.config().projectId === 'hx5xgigp')
@@ -122,7 +168,9 @@ async function main() {
   await set('siteSettings', sitePatch)
   const fav = await img(ss.favicon)
   if (fav) await set('siteSettings', {favicon: fav})
-  console.log(`[overlay] siteSettings ${palette ? `(palette ${palette})` : ''}`)
+  const logo = await img(ss.logoAsset, ss.studioName)
+  if (logo) await set('siteSettings', {logo, logoType: 'image'})
+  console.log(`[overlay] siteSettings ${logo ? '(+logo)' : ''} ${palette ? `(palette ${palette})` : ''}`)
 
   // ── social ──
   const so = CONTENT.social || {}
@@ -165,6 +213,82 @@ async function main() {
     if (ready(seo.defaultDescription)) hpSeo.seoDescription = seo.defaultDescription
     await set('homepagePage', {seo: hpSeo})
     console.log('[overlay] homepage seo (cleared donor brand leak)')
+  }
+
+  // ── homepage body sections: fill-or-boilerplate ──
+  // Patch her real copy/images INTO the donor sections. Anything she
+  // doesn't have stays donor boilerplate (the visible placeholder).
+  // Never deletes a section.
+  const intro = hp.intro || {}
+  if (ready(intro.body) || ready(intro.heading)) {
+    const introImg = await img(intro.imageAsset, intro.imageAlt)
+    await fillSection('homepagePage', 'splitSection', {
+      heading: ready(intro.heading) ? intro.heading : undefined,
+      eyebrow: ready(intro.eyebrow) ? intro.eyebrow : undefined,
+      body: ready(intro.body) ? blocks(intro.body) : undefined,
+      image: introImg,
+    })
+    console.log('[overlay] homepage intro (splitSection)')
+  }
+  const wc = hp.whyChoose || {}
+  if (ready(wc.body) || ready(wc.heading)) {
+    await fillSection('homepagePage', 'fullBleedImageSection', {
+      heading: ready(wc.heading) ? wc.heading : undefined,
+      body: ready(wc.body) ? blocks(wc.body) : undefined,
+    })
+    console.log('[overlay] homepage whyChoose (fullBleedImageSection)')
+  }
+  const hiw = hp.howItWorks || {}
+  if (Array.isArray(hiw.steps) && hiw.steps.length) {
+    await fillSection('homepagePage', 'stepsSection', {
+      heading: ready(hiw.heading) ? hiw.heading : undefined,
+      eyebrow: ready(hiw.eyebrow) ? hiw.eyebrow : undefined,
+      steps: hiw.steps.map((s) => ({
+        _key: rkey(), _type: 'stepItem',
+        stepNumber: s.number, title: s.title, body: blocks(s.body),
+      })),
+    })
+    console.log(`[overlay] homepage steps (${hiw.steps.length})`)
+  }
+  if (ready(hp.testimonialsHeading)) {
+    await fillSection('homepagePage', 'testimonialsSection', {
+      heading: hp.testimonialsHeading,
+    })
+  }
+  const faqs = (CONTENT.info && CONTENT.info.faqs) || []
+  if (Array.isArray(faqs) && faqs.length && faqs.some((f) => ready(f.q))) {
+    await fillSection('homepagePage', 'faqSection', {
+      faqs: faqs.filter((f) => ready(f.q)).map((f) => ({
+        _key: rkey(), _type: 'faqItem',
+        question: f.q, answer: blocks(f.a),
+      })),
+    })
+    console.log(`[overlay] homepage FAQ (${faqs.length})`)
+  }
+
+  // ── about page: fill-or-boilerplate ──
+  const ab = CONTENT.about || {}
+  if (Array.isArray(ab.body) && ab.body.some(ready)) {
+    const aboutBody = ab.body.filter(ready).join('\n\n')
+    // about page may use splitSection or richTextSection for the bio —
+    // try both; whichever exists gets filled, the other is a no-op.
+    const filledSplit = await fillSection('aboutPage', 'splitSection', {
+      heading: ready(ab.heading) ? ab.heading : undefined,
+      body: blocks(aboutBody),
+    })
+    if (!filledSplit) {
+      await fillSection('aboutPage', 'richTextSection', {
+        heading: ready(ab.heading) ? ab.heading : undefined,
+        body: blocks(aboutBody),
+      })
+    }
+    if (ab.pullQuote && ready(ab.pullQuote.quote)) {
+      await fillSection('aboutPage', 'pullQuoteSection', {
+        quote: ab.pullQuote.quote,
+        attribution: ab.pullQuote.attribution || undefined,
+      })
+    }
+    console.log('[overlay] about page')
   }
 
   // ── testimonials (replace all) ──
