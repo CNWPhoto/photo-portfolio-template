@@ -14,7 +14,8 @@
     "seed:replace": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token -- --replace",
     "seed:ai-instructions": "dotenv -e .env -- sanity exec scripts/ai-instructions/seed.js --with-user-token",
     "blackbird:overlay": "dotenv -e .env -- sanity exec scripts/blackbird-overlay.js --with-user-token",
-    "onboard:overlay": "dotenv -e .env -- sanity exec scripts/onboard/60-overlay.js --with-user-token --"
+    "onboard:overlay": "dotenv -e .env -- sanity exec scripts/onboard/60-overlay.js --with-user-token --",
+    "onboard:blog": "dotenv -e .env -- sanity exec scripts/onboard/65-blog-import.js --with-user-token --"
   },
   "keywords": [
     "sanity"

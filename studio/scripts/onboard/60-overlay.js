@@ -156,6 +156,17 @@ async function main() {
     }
   }
 
+  // ── homepage SEO (brand leak: donor clone keeps the donor's
+  //    seo.seoTitle, e.g. "Pet Photography - Connor Walberg", which
+  //    composes into the live <title>. Overwrite from content.seo). ──
+  if (seoPatch.defaultTitle || seoPatch.defaultDescription) {
+    const hpSeo = {_type: 'seo'}
+    if (ready(seo.defaultTitle)) hpSeo.seoTitle = seo.defaultTitle
+    if (ready(seo.defaultDescription)) hpSeo.seoDescription = seo.defaultDescription
+    await set('homepagePage', {seo: hpSeo})
+    console.log('[overlay] homepage seo (cleared donor brand leak)')
+  }
+
   // ── testimonials (replace all) ──
   const ts = (CONTENT.testimonials || []).filter((t) => ready(t.quote) && ready(t.client))
   if (ts.length) {
@@ -219,6 +230,26 @@ async function main() {
       }
     }
     console.log(`[overlay] portfolio: ${pf.categories.length} categories, ${n - 1} items`)
+  }
+
+  // ── purge stale donor drafts ──
+  // `sanity dataset import` (50-donor-seed) brings the donor's DRAFT docs
+  // along with published. The overlay only writes PUBLISHED docs, so any
+  // draft remaining now is unpatched donor content. Studio shows the
+  // draft when one exists — so without this purge the editor opens the
+  // homepage and sees "Denver Dog Photographer" + donor images (looks
+  // like "nothing was pulled") while the LIVE site is correct. For a
+  // fresh onboarding the published doc is the source of truth, so drafts
+  // are safe — and necessary — to remove. Pass --keep-drafts to skip
+  // (e.g. re-running overlay after the client has started editing).
+  if (getArg('keep-drafts', {fallback: ''}) !== 'true') {
+    const draftIds = await client.fetch(`*[_id in path("drafts.**")]._id`)
+    if (draftIds.length) {
+      const tx = client.transaction()
+      draftIds.forEach((id) => tx.delete(id))
+      await withRetry('purge drafts', () => tx.commit())
+      console.log(`[overlay] purged ${draftIds.length} stale donor drafts (Studio now shows published)`)
+    }
   }
 
   console.log(`[overlay] done. Review https://${slug}.sanity.studio/`)
