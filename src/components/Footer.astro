@@ -33,7 +33,7 @@ const [footerDataRaw, socialDataRaw, siteDataRaw, termsDocRaw, privacyDocRaw] = 
     legalLinks
   }`),
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`),
-  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName, logoType, logoImage }`),
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName, logoType, logoImage, logoLarge }`),
   // Legal-page singletons — used to auto-link the footer when an editor
   // has filled in the on-site Terms / Privacy pages but hasn't manually
   // configured legalLinks (which override these when set, see below).
@@ -62,8 +62,9 @@ const footerStyle = palette
 // which flows and wraps within the footer right column.
 const footerLogoType  = siteData?.logoType || 'text';
 const footerLogoImage = siteData?.logoImage ?? null;
+const footerLogoLarge = siteData?.logoLarge === true;
 const footerLogoUrl   = footerLogoType === 'image' && footerLogoImage?.asset
-  ? urlFor(footerLogoImage).height(96).auto('format').url()
+  ? urlFor(footerLogoImage).height(footerLogoLarge ? 192 : 96).auto('format').url()
   : null;
 
 // Middle column — embed reference takes priority over the text note
@@ -179,7 +180,7 @@ const year = new Date().getFullYear();
 
 		<div class="footer__right">
 			{footerLogoUrl
-				? <img src={footerLogoUrl} alt={siteName} class="footer__wordmark-img" decoding="async" loading="lazy" />
+				? <img src={footerLogoUrl} alt={siteName} class:list={['footer__wordmark-img', footerLogoLarge && 'footer__wordmark-img--large']} decoding="async" loading="lazy" />
 				: <span class="footer__wordmark">{siteName}</span>}
 			{socialLinks.length > 0 && (
 				<div class="footer__social-row">
@@ -248,6 +249,9 @@ const year = new Date().getFullYear();
 		max-height: 48px;
 		width: auto;
 		height: auto;
+	}
+	.footer__wordmark-img--large {
+		max-height: 96px;
 	}
 
 	/* Social icons: horizontal row under wordmark */

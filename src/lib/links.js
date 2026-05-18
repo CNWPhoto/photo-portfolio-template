@@ -25,13 +25,16 @@ function stripSelfOrigin(url, selfHostnames) {
   return url
 }
 
-// Map a dereferenced internal doc to its public URL. Handles the
-// singletons that don't carry a slug (homepagePage → '/') and the ones
-// that do (portfolio, blogPage, page). The doc must have been fetched
-// with `_type` projected, e.g. `internal->{ _type, "slug": slug.current }`.
+// Map a dereferenced internal doc to its public URL. The slugless
+// singletons each have a fixed route (homepagePage → '/', portfolio →
+// '/portfolio', blogPage → '/blog'); only `page` docs carry a slug. The
+// doc must have been fetched with `_type` projected, e.g.
+// `internal->{ _type, "slug": slug.current }`.
 function pathForInternal(doc) {
   if (!doc) return null
   if (doc._type === 'homepagePage') return '/'
+  if (doc._type === 'portfolio') return '/portfolio'
+  if (doc._type === 'blogPage') return '/blog'
   const slug = doc.slug?.current || doc.slug
   if (!slug) return null
   return slug === 'home' ? '/' : `/${slug}`
@@ -52,13 +55,24 @@ export function resolveLink(link, selfHostnames = null) {
   }
 
   // ctaLink shape: { type, internal, external, anchor }
-  if (link.type === 'none' || !link.type) return null
-  if (link.type === 'external') return stripSelfOrigin(link.external || null, selfHostnames)
-  if (link.type === 'anchor') {
+  // The `type` radio and the target sub-field are separate controls, so
+  // editors routinely pick a page / paste a URL but leave type at its
+  // 'none' default — the link then silently never renders. When type is
+  // unset/'none' but exactly one target is populated, infer it. A true
+  // "no link" still resolves to null because no target is populated.
+  let type = link.type
+  if (!type || type === 'none') {
+    if (link.internal) type = 'internal'
+    else if (link.external) type = 'external'
+    else if (link.anchor) type = 'anchor'
+    else return null
+  }
+  if (type === 'external') return stripSelfOrigin(link.external || null, selfHostnames)
+  if (type === 'anchor') {
     const a = link.anchor
     if (!a) return null
     return a.startsWith('#') ? a : `#${a}`
   }
-  if (link.type === 'internal') return pathForInternal(link.internal)
+  if (type === 'internal') return pathForInternal(link.internal)
   return null
 }

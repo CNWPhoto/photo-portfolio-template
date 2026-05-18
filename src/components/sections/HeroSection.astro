@@ -213,6 +213,16 @@ const firstImage = sanityImages[0] ?? null;
     border-top: 1px solid var(--border);
   }
 
+  /* Heading and subheading share one centered measure so the sub wraps
+     to the same column width as the heading above it instead of running
+     edge-to-edge across the full caption. */
+  .hero__caption .hero__heading,
+  .hero__caption .hero__sub {
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .hero__heading {
     font-size: clamp(2.5rem, 5.5vw, 4.25rem);
     /* Long single words break gracefully instead of overflowing the

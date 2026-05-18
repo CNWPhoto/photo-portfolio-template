@@ -62,6 +62,15 @@ export default {
       validation: imageSizeWarning,
     },
     {
+      name: 'logoLarge',
+      title: 'Large logo',
+      type: 'boolean',
+      description:
+        'Display the logo image at roughly double height in the header and footer. Only applies when Logo Type is Image.',
+      initialValue: false,
+      hidden: ({document}) => document?.logoType !== 'image',
+    },
+    {
       name: 'favicon',
       title: 'Favicon',
       type: 'image',
