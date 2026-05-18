@@ -80,10 +80,10 @@ jobs:
     environment: demo
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -101,7 +101,7 @@ jobs:
           SANITY_STUDIO_URL: https://cnw-photo-demo.sanity.studio
 
       - name: Deploy to Cloudflare Pages (Direct Upload)
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         env:
           # wrangler 4.x requires these as env vars; the action's `apiToken`
           # input is ignored on v4+. Setting both keeps us forward-compat.
@@ -175,10 +175,10 @@ jobs:
           # Environment name pattern `client-<slug>`.
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -196,7 +196,7 @@ jobs:
           SANITY_STUDIO_URL: ${{ matrix.client.studio_url }}
 
       - name: Deploy to Cloudflare Pages (Direct Upload)
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
