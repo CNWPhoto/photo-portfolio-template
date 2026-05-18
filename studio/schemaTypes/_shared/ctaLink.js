@@ -42,8 +42,25 @@ export const ctaLink = {
       name: 'external',
       title: 'URL',
       type: 'url',
+      // Validate only when this is actually an external link. Sanity runs
+      // validation on hidden fields too, so an unconditional Rule.uri here
+      // would block publish whenever a stale external value lingers after
+      // the editor switched the link type to internal/anchor/none.
       validation: (Rule) =>
-        Rule.uri({allowRelative: false, scheme: ['http', 'https', 'mailto', 'tel']}),
+        Rule.custom((value, context) => {
+          if (context.parent?.type !== 'external') return true
+          if (!value) return 'Add a URL for the external link'
+          let parsed
+          try {
+            parsed = new URL(value)
+          } catch {
+            return 'Enter a full URL including https:// (relative paths are not allowed for external links)'
+          }
+          if (!['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol)) {
+            return 'URL must start with http://, https://, mailto:, or tel:'
+          }
+          return true
+        }),
       hidden: ({parent}) => parent?.type !== 'external',
     },
     {
