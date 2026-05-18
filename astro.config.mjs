@@ -6,6 +6,9 @@ import react from '@astrojs/react';
 
 export default defineConfig({
   output: 'server',
+  // Every URL ends in a trailing slash, site-wide, for every client.
+  // Astro redirects non-slashed requests to the slashed canonical.
+  trailingSlash: 'always',
   adapter: cloudflare(),
   integrations: [
     sanity({

@@ -54,8 +54,11 @@ export default defineConfig({
         origin: PREVIEW_ORIGIN,
         preview: '/',
         previewMode: {
-          enable: '/api/preview',
-          disable: '/api/disable-preview',
+          // Slashed paths: the site runs trailingSlash:'always', so the
+          // un-slashed forms 308-redirect. Pointing Presentation straight
+          // at the slashed paths removes the redirect hop entirely.
+          enable: '/api/preview/',
+          disable: '/api/disable-preview/',
         },
       },
       // Maps the URL in the Presentation iframe to the Sanity documents

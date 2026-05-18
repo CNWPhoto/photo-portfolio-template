@@ -344,8 +344,15 @@ const bodyHTML = post.body
     text-align: center;
   }
 
-  .post__body :global(ul),
+  /* Restore list markers — the global `ul { list-style: none }` reset in
+     Layout.astro strips them; blog prose needs real bullets/numbers. */
+  .post__body :global(ul) {
+    list-style: disc outside;
+    padding-left: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
   .post__body :global(ol) {
+    list-style: decimal outside;
     padding-left: 1.75rem;
     margin-bottom: 1.5rem;
   }
