@@ -18,7 +18,29 @@
 import {getCliClient} from 'sanity/cli'
 import fs from 'node:fs'
 import path from 'node:path'
-import {assertSlug, getArg, stagingDir, PALETTES} from './lib.js'
+import {fileURLToPath} from 'node:url'
+
+// NOTE: this script runs via `sanity exec` (esbuild-register / CJS), which
+// cannot import the ESM ../onboard/lib.js the way the plain-`node` scripts
+// (10–50, 70, 80) do. So the few helpers it needs are inlined here. Keep
+// PALETTES in sync with lib.js by hand (rarely changes).
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
+const SLUG_RE = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
+function assertSlug(s) {
+  if (!s || !SLUG_RE.test(s)) throw new Error(`Invalid slug "${s}"`)
+  return s
+}
+function getArg(name, {required = false, fallback} = {}) {
+  const hit = process.argv.find((a) => a.startsWith(`--${name}=`))
+  const val = hit ? hit.split('=').slice(1).join('=') : fallback
+  if (required && !val) throw new Error(`Missing required --${name}=<value>`)
+  return val
+}
+const stagingDir = (s) => path.join(REPO_ROOT, '.staging', s)
+const PALETTES = {
+  'classic-cream': 1, 'warm-studio': 1, 'dark-editorial': 1,
+  'cool-minimal': 1, 'forest-sage': 1,
+}
 
 const slug = assertSlug(getArg('slug', {required: true}))
 const palette = getArg('palette', {fallback: ''})
@@ -35,6 +57,28 @@ const ALT = (() => {
 
 const client = getCliClient()
 
+// Sanity occasionally returns a transient upstream 5xx under rapid bulk
+// asset uploads. Retry with backoff so a 25-image overlay doesn't die
+// halfway. Re-running the whole script is safe too, but this avoids the
+// manual re-run for the common transient case.
+async function withRetry(label, fn, tries = 4) {
+  let lastErr
+  for (let i = 1; i <= tries; i++) {
+    try {
+      return await fn()
+    } catch (e) {
+      lastErr = e
+      const status = e?.statusCode || e?.response?.statusCode
+      const transient = !status || status >= 500 || status === 429
+      if (!transient || i === tries) throw e
+      const wait = 800 * 2 ** (i - 1)
+      console.warn(`  ↻ ${label} failed (try ${i}/${tries}, ${status || 'no status'}) — retrying in ${wait}ms`)
+      await new Promise((r) => setTimeout(r, wait))
+    }
+  }
+  throw lastErr
+}
+
 function ready(v) {
   if (v == null) return false
   if (typeof v === 'string') return v.trim() !== '' && !/^TODO(_|$| |—|-)/.test(v.trim())
@@ -47,7 +91,9 @@ async function upload(rel) {
   if (uploaded[rel]) return uploaded[rel]
   const abs = path.join(STAGE, rel)
   if (!fs.existsSync(abs)) { console.warn(`  ⚠ missing ${rel}`); return null }
-  const asset = await client.assets.upload('image', fs.readFileSync(abs), {filename: path.basename(rel)})
+  const asset = await withRetry(`upload ${path.basename(rel)}`, () =>
+    client.assets.upload('image', fs.readFileSync(abs), {filename: path.basename(rel)}),
+  )
   uploaded[rel] = asset._id
   return asset._id
 }
@@ -57,7 +103,10 @@ async function img(rel, fallbackAlt) {
   const alt = ALT[rel] || fallbackAlt
   return {_type: 'image', asset: {_type: 'reference', _ref: id}, ...(alt ? {alt} : {})}
 }
-const set = (id, patch) => client.patch(id).set(patch).commit()
+const set = (id, patch) => withRetry(`patch ${id}`, () => client.patch(id).set(patch).commit())
+const create = (doc) => withRetry(`create ${doc._type}`, () => client.create(doc))
+const createOrReplace = (doc) => withRetry(`createOrReplace ${doc._id}`, () => client.createOrReplace(doc))
+const commitTx = (tx) => withRetry('transaction', () => tx.commit())
 
 async function main() {
   if (client.config().projectId === 'hx5xgigp')
@@ -113,11 +162,11 @@ async function main() {
     const existing = await client.fetch(`*[_type=="testimonial"]._id`)
     const tx = client.transaction()
     existing.forEach((id) => tx.delete(id))
-    if (existing.length) await tx.commit()
+    if (existing.length) await commitTx(tx)
     let order = 1
     for (const t of ts) {
       const portrait = t.imageAsset ? await img(t.imageAsset) : null
-      await client.create({
+      await create({
         _type: 'testimonial', testimonial: t.quote, client: t.client, order: order++,
         ...(t.starRating ? {starRating: t.starRating} : {}),
         ...(t.source ? {source: t.source} : {}),
@@ -134,11 +183,11 @@ async function main() {
     const items = await client.fetch(`*[_type=="portfolioItem"]._id`)
     const txd = client.transaction()
     ;[...cats, ...items].forEach((id) => txd.delete(id))
-    if (cats.length + items.length) await txd.commit()
+    if (cats.length + items.length) await commitTx(txd)
     const catId = {}
     for (const c of pf.categories) {
       const id = `portfolioCategory-${c.slug}`
-      await client.createOrReplace({
+      await createOrReplace({
         _type: 'portfolioCategory', _id: id, title: c.name,
         slug: {_type: 'slug', current: c.slug},
         ...(ready(c.description) ? {description: c.description} : {}),
@@ -160,7 +209,7 @@ async function main() {
         const rel = `${folder.replace(/\/$/, '')}/${f}`
         const image = await img(rel)
         if (!image) continue
-        await client.create({
+        await create({
           _type: 'portfolioItem',
           title: image.alt || f.replace(/\.[a-z]+$/i, '').replace(/[-_]+/g, ' '),
           slug: {_type: 'slug', current: f.replace(/\.[a-z]+$/i, '').toLowerCase()},
