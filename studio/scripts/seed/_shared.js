@@ -128,6 +128,8 @@ export const palettes = [
 
 // ── Page IDs (deterministic so navSettings can reference them) ────────
 export const ID = {
+  home: 'homepagePage',
+  portfolio: 'portfolio',
   about: 'pageAbout',
   experience: 'pageExperience',
   contact: 'pageContact',

@@ -6,7 +6,7 @@
 // niche file owns its complete docs[] array.
 
 import {
-  block, bodyText, ctaInternal, ctaExternal, sectionBase,
+  block, bodyText, ctaInternal, sectionBase,
   palettes, ID,
 } from '../_shared.js'
 
@@ -158,7 +158,7 @@ export function buildDocs() {
         source: 'latest',
         itemCount: 6,
         ctaText: 'View All',
-        ctaLink: ctaExternal('/portfolio'),
+        ctaLink: ctaInternal(ID.portfolio),
       }),
       sectionBase({
         _key: 'homeSteps', _type: 'stepsSection',
@@ -496,7 +496,7 @@ export function buildDocs() {
         heading: '404',
         body: bodyText('Page not found.'),
         ctaText: 'Back to Home',
-        ctaLink: ctaExternal('/'),
+        ctaLink: ctaInternal(ID.home),
         textContainer: 'overlay-card',
         height: 'viewport',
         overlayOpacity: 50,

@@ -7,6 +7,7 @@ const {
 	siteName = 'Pet Photography',
 	logoType = 'text',
 	logoImage = null,
+	logoLarge = false,
 	navVariant = 'classic',
 	navLinks = null,
 	blogEnabled = true,
@@ -34,6 +35,8 @@ const navSanityAttr = isPreview
 	: null;
 
 const showImageLogo = logoType === 'image' && logoImage;
+// Retina: request 2× the CSS max-height. Large doubles both.
+const logoImgHeight = logoLarge ? 192 : 96;
 
 // Default links used when nothing is configured in Sanity yet
 const defaultLinks = [
@@ -119,7 +122,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 			</nav>
 		)}
 		{showImageLogo
-			? <a href="/" class="nav__logo nav__logo--image" data-sanity={logoSanityAttr}><img src={urlFor(logoImage).height(96).auto('format').url()} alt={siteName} class="nav__logo-img" decoding="async" /></a>
+			? <a href="/" class="nav__logo nav__logo--image" data-sanity={logoSanityAttr}><img src={urlFor(logoImage).height(logoImgHeight).auto('format').url()} alt={siteName} class:list={['nav__logo-img', logoLarge && 'nav__logo-img--large']} decoding="async" /></a>
 			: <a href="/" class="nav__logo" data-sanity={logoSanityAttr}>{siteName}</a>
 		}
 		<nav aria-label="Main navigation">
@@ -190,7 +193,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 			<span aria-hidden="true">&times;</span>
 		</button>
 		{showImageLogo
-			? <a href="/" class="nav__overlay-logo nav__overlay-logo--image"><img src={urlFor(logoImage).height(96).auto('format').url()} alt={siteName} class="nav__logo-img" decoding="async" /></a>
+			? <a href="/" class="nav__overlay-logo nav__overlay-logo--image"><img src={urlFor(logoImage).height(logoImgHeight).auto('format').url()} alt={siteName} class:list={['nav__logo-img', logoLarge && 'nav__logo-img--large']} decoding="async" /></a>
 			: <a href="/" class="nav__overlay-logo">{siteName}</a>
 		}
 		<nav aria-label="Mobile navigation">
@@ -270,6 +273,9 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		display: block;
 		max-height: 48px;
 		width: auto;
+	}
+	.nav__logo-img--large {
+		max-height: 96px;
 	}
 
 	.nav__links {
