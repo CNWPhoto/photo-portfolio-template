@@ -277,6 +277,10 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	.nav__logo-img--large {
 		max-height: 96px;
 	}
+	/* Don't let the 2x logo crowd the hamburger when the nav collapses. */
+	.nav--compact .nav__logo-img--large {
+		max-height: 60px;
+	}
 
 	.nav__links {
 		display: flex;
@@ -737,6 +741,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	@media (max-width: 768px) {
 		.nav__inner    { padding: 20px 1.5rem; }
 		.nav__logo     { font-size: clamp(0.9rem, 4.5vw, 2rem); min-width: 0; flex-shrink: 1; margin-right: 1rem; }
+		.nav__logo-img--large { max-height: 60px; }
 		.nav__links    { display: none; }
 		.nav__hamburger { display: flex; flex-shrink: 0; }
 		.nav__overlay  { display: block; pointer-events: none; }

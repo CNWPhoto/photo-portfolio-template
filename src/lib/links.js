@@ -30,14 +30,16 @@ function stripSelfOrigin(url, selfHostnames) {
 // '/portfolio', blogPage → '/blog'); only `page` docs carry a slug. The
 // doc must have been fetched with `_type` projected, e.g.
 // `internal->{ _type, "slug": slug.current }`.
+// Paths are emitted slashed to match astro.config `trailingSlash: 'always'`
+// so internal CTAs don't eat a 308 redirect hop on every click.
 function pathForInternal(doc) {
   if (!doc) return null
   if (doc._type === 'homepagePage') return '/'
-  if (doc._type === 'portfolio') return '/portfolio'
-  if (doc._type === 'blogPage') return '/blog'
+  if (doc._type === 'portfolio') return '/portfolio/'
+  if (doc._type === 'blogPage') return '/blog/'
   const slug = doc.slug?.current || doc.slug
   if (!slug) return null
-  return slug === 'home' ? '/' : `/${slug}`
+  return slug === 'home' ? '/' : `/${slug}/`
 }
 
 export function resolveLink(link, selfHostnames = null) {
