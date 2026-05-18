@@ -67,29 +67,94 @@ function parseDate(body) {
   return isNaN(d) ? null : d.toISOString().slice(0, 10)
 }
 
-function bodyParagraphs(html, title) {
-  let b = html
-    .replace(/<(script|style|nav|header|footer|form)[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<\/(p|div|h[1-6]|li|br)>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
-  b = dec(b).replace(/[ \t]+/g, ' ')
-  // Drop everything up to and including the date line (chrome + title).
-  const dm = b.match(
-    /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}\b/,
-  )
-  if (dm) b = b.slice(b.indexOf(dm[0]) + dm[0].length)
-  // Cut common footer boilerplate.
-  for (const stop of ['Join the VIP', '© ', 'All Rights Reserved', 'Kelly Mac Studios Home', 'Read More', 'Previous Post', 'Next Post']) {
-    const i = b.indexOf(stop)
-    if (i > 200) b = b.slice(0, i)
+// Parse a block's inner HTML into styled runs, preserving strong/em.
+// Pixieset wraps text in <span data-default-color>; strip those, keep
+// <strong>/<b> → 'strong', <em>/<i> → 'em'. <br> → soft space.
+function inlineRuns(inner) {
+  const runs = []
+  let bold = 0
+  let ital = 0
+  let buf = ''
+  const flush = () => {
+    if (!buf) return
+    const marks = []
+    if (bold > 0) marks.push('strong')
+    if (ital > 0) marks.push('em')
+    runs.push({text: buf, marks})
+    buf = ''
   }
+  const re = /<\/?([a-z0-9]+)\b[^>]*>|([^<]+)/gi
+  let m
+  while ((m = re.exec(inner))) {
+    if (m[2] != null) {
+      buf += dec(m[2])
+      continue
+    }
+    const tag = m[1].toLowerCase()
+    const close = m[0][1] === '/'
+    if (tag === 'strong' || tag === 'b') {
+      flush()
+      bold += close ? -1 : 1
+    } else if (tag === 'em' || tag === 'i') {
+      flush()
+      ital += close ? -1 : 1
+    } else if (tag === 'br') {
+      buf += ' '
+    }
+    // span/other inline tags: ignored (text kept)
+  }
+  flush()
+  // merge adjacent runs with identical marks, trim
+  const out = []
+  for (const r of runs) {
+    r.text = r.text.replace(/\s+/g, ' ')
+    if (!r.text.trim()) continue
+    const prev = out[out.length - 1]
+    if (prev && prev.marks.join() === r.marks.join()) prev.text += r.text
+    else out.push(r)
+  }
+  if (out.length) {
+    out[0].text = out[0].text.replace(/^\s+/, '')
+    out[out.length - 1].text = out[out.length - 1].text.replace(/\s+$/, '')
+  }
+  return out
+}
+
+// Structured body: array of {s:style, li?:'bullet'|'number', runs:[]}.
+// Pixieset post copy lives in <div class="text__text">… regions; within
+// them block tags are clean h2/h3/p/blockquote/ul/ol with empty
+// <p><br></p> spacers. 65-blog-import maps this to Portable Text.
+function bodyStructured(html, title) {
+  const regions = [...html.matchAll(/<div class="text__text">([\s\S]*?)<\/div>/gi)]
+    .map((x) => x[1])
+    .join('\n')
+  const src = regions || html
   const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '')
   const nt = norm(title)
-  return b
-    .split(/\n+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 40 && norm(s) !== nt) // drop the repeated title line (case/punct-insensitive)
-    .slice(0, 60)
+  const blocks = []
+  const blockRe = /<(h2|h3|p|blockquote)\b[^>]*>([\s\S]*?)<\/\1>|<(ul|ol)\b[^>]*>([\s\S]*?)<\/\3>/gi
+  let m
+  while ((m = blockRe.exec(src))) {
+    if (m[3]) {
+      // list
+      const li = m[3].toLowerCase() === 'ol' ? 'number' : 'bullet'
+      for (const liM of m[4].matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)) {
+        const runs = inlineRuns(liM[1])
+        if (runs.length) blocks.push({s: 'normal', li, runs})
+      }
+      continue
+    }
+    const tag = m[1].toLowerCase()
+    const runs = inlineRuns(m[2])
+    const plain = runs.map((r) => r.text).join('').trim()
+    if (!plain) continue // skip <p><br></p> spacers
+    if (norm(plain) === nt) continue // drop repeated title
+    const s = tag === 'h2' ? 'h2' : tag === 'h3' ? 'h3' : tag === 'blockquote' ? 'blockquote' : 'normal'
+    blocks.push({s, runs})
+  }
+  // Trim trailing related-post chrome: cut once we hit short title-ish
+  // headings at the end (heuristic — same as before, but structural).
+  return blocks.slice(0, 120)
 }
 
 async function dl(u, dest) {
@@ -134,9 +199,10 @@ async function main() {
       const fn = `${postSlug}${path.extname(new URL(coverUrl).pathname) || '.jpg'}`
       if (await dl(coverUrl, path.join(COVERS, fn))) cover = `blog/covers/${fn}`
     }
-    const body = bodyParagraphs(html, title)
+    const body = bodyStructured(html, title)
     out.push({title, slug: postSlug, url: p, publishDate, excerpt, cover, body})
-    log('blog', `✓ ${title.slice(0, 60)}${publishDate ? ` (${publishDate})` : ' (no date)'} — ${body.length}¶`)
+    const heads = body.filter((b) => b.s === 'h2' || b.s === 'h3').length
+    log('blog', `✓ ${title.slice(0, 55)}${publishDate ? ` (${publishDate})` : ' (no date)'} — ${body.length} blk, ${heads} hd`)
   }
 
   fs.writeFileSync(path.join(BLOG, 'posts.json'), JSON.stringify(out, null, 2))

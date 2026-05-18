@@ -40,11 +40,33 @@ async function withRetry(label, fn, tries = 4) {
   }
 }
 const key = () => Math.random().toString(36).slice(2, 14)
-function blocks(paras) {
-  return (paras || []).map((t) => ({
-    _key: key(), _type: 'block', style: 'normal', markDefs: [],
-    children: [{_key: key(), _type: 'span', text: t, marks: []}],
-  }))
+// body items are structured blocks {s:style, li?:'bullet'|'number',
+// runs:[{text,marks}]} from 15-scrape-blog. Back-compat: a plain string
+// (older posts.json) → a normal paragraph.
+function blocks(items) {
+  return (items || [])
+    .map((b) => {
+      if (typeof b === 'string') {
+        if (!b.trim()) return null
+        return {
+          _key: key(), _type: 'block', style: 'normal', markDefs: [],
+          children: [{_key: key(), _type: 'span', text: b, marks: []}],
+        }
+      }
+      const runs = (b.runs || []).filter((r) => r && r.text)
+      if (!runs.length) return null
+      return {
+        _key: key(), _type: 'block',
+        style: b.s || 'normal',
+        ...(b.li ? {listItem: b.li, level: 1} : {}),
+        markDefs: [],
+        children: runs.map((r) => ({
+          _key: key(), _type: 'span', text: r.text,
+          marks: Array.isArray(r.marks) ? r.marks : [],
+        })),
+      }
+    })
+    .filter(Boolean)
 }
 
 async function main() {
