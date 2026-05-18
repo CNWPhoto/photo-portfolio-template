@@ -148,8 +148,12 @@ async function main() {
     let n = 1
     for (const [folder, target] of Object.entries(pf.imageMap || {})) {
       const dir = path.join(STAGE, folder.replace(/\/$/, ''))
-      const catSlug = target.replace(/^originals\//, '').replace(/\/$/, '') in catId ? target : Object.keys(catId)[0]
-      const useCat = catId[folder] || catId[Object.keys(catId)[0]]
+      // imageMap value is the destination category slug. Honor it; fall
+      // back to the first category only if it's unknown.
+      const useCat = catId[target] || catId[Object.keys(catId)[0]]
+      if (!catId[target]) {
+        console.warn(`  ⚠ imageMap target "${target}" not a known category — using ${Object.keys(catId)[0]}`)
+      }
       if (!fs.existsSync(dir)) continue
       for (const f of fs.readdirSync(dir).sort()) {
         if (f.startsWith('.')) continue
