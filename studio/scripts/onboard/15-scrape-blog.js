@@ -35,16 +35,17 @@ const NAMED = {
   rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”', ndash: '–',
   mdash: '—', hellip: '…',
 }
-const dec = (s) =>
+// Entity decode WITHOUT trimming (preserves inter-run boundary spaces —
+// dec()'s .trim() was collapsing "the session " + "is" + " the goal"
+// into "sessionisthe goal"). Also handles entities Pixieset emits
+// without a trailing semicolon, e.g. <p>&nbsp</p> spacers.
+const decKeep = (s) =>
   (s || '')
-    // numeric (decimal &#039; / &#39; and hex &#x27;) — handles Pixieset's
-    // zero-padded entities the old hardcoded list missed.
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-    .replace(/&([a-z]+);/gi, (m, name) => NAMED[name.toLowerCase()] ?? m)
-    // &amp; last in case earlier passes exposed e.g. &amp;#039;
-    .replace(/&amp;/g, '&')
-    .trim()
+    .replace(/&#(\d+);?/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);?/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&([a-z]+);?/gi, (m, name) => NAMED[name.toLowerCase()] ?? m)
+    .replace(/&amp;?/g, '&')
+const dec = (s) => decKeep(s).trim()
 
 async function text(u) {
   const r = await fetch(u, {headers: UA})
@@ -87,7 +88,7 @@ function inlineRuns(inner) {
   let m
   while ((m = re.exec(inner))) {
     if (m[2] != null) {
-      buf += dec(m[2])
+      buf += decKeep(m[2])
       continue
     }
     const tag = m[1].toLowerCase()
