@@ -72,7 +72,9 @@ export default {
     {
       name: 'subheading',
       title: 'Subheading',
-      type: 'string',
+      type: 'text',
+      rows: 2,
+      description: 'Use a line break (Enter) to split onto two lines.',
     },
     {
       name: 'ctaText',
