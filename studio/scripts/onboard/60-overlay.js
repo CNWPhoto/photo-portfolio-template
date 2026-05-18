@@ -169,7 +169,9 @@ async function main() {
   const fav = await img(ss.favicon)
   if (fav) await set('siteSettings', {favicon: fav})
   const logo = await img(ss.logoAsset, ss.studioName)
-  if (logo) await set('siteSettings', {logo, logoType: 'image'})
+  // schema field is `logoImage` (NOT `logo`) — and logoType must be
+  // 'image' for the nav to render it instead of the text wordmark.
+  if (logo) await set('siteSettings', {logoImage: logo, logoType: 'image'})
   console.log(`[overlay] siteSettings ${logo ? '(+logo)' : ''} ${palette ? `(palette ${palette})` : ''}`)
 
   // ── social ──
@@ -191,16 +193,32 @@ async function main() {
   // ── homepage hero + intro ──
   const hp = CONTENT.homepage || {}
   if (hp.hero && ready(hp.hero.heading)) {
-    const heroImg = await img(hp.hero.imageAsset, `${ss.studioName || ''} hero`)
+    // The hero is a slider — fill it with several images so it rotates
+    // (her real site rotated a hero gallery). Lead with the chosen
+    // hero image, then pad from the gallery bucket up to 6 total.
+    const heroImgs = []
+    const lead = await img(hp.hero.imageAsset, `${ss.studioName || ''} hero`)
+    if (lead) heroImgs.push({_key: rkey(), ...lead})
+    const gdir = path.join(STAGE, 'originals', 'gallery')
+    if (fs.existsSync(gdir)) {
+      for (const f of fs.readdirSync(gdir).sort()) {
+        if (heroImgs.length >= 6) break
+        if (f.startsWith('.')) continue
+        const rel = `originals/gallery/${f}`
+        if (rel === hp.hero.imageAsset) continue
+        const gi = await img(rel)
+        if (gi) heroImgs.push({_key: rkey(), ...gi})
+      }
+    }
     const hero = await client.fetch(`*[_id=="homepagePage"][0].sections[_type=="heroSection"][0]._key`)
     if (hero) {
       const patch = {
         [`sections[_key=="${hero}"].heading`]: hp.hero.heading,
       }
       if (ready(hp.hero.subheading)) patch[`sections[_key=="${hero}"].subheading`] = hp.hero.subheading
-      if (heroImg) patch[`sections[_key=="${hero}"].images`] = [{_key: Math.random().toString(36).slice(2, 12), ...heroImg}]
+      if (heroImgs.length) patch[`sections[_key=="${hero}"].images`] = heroImgs
       await set('homepagePage', patch)
-      console.log('[overlay] homepage hero')
+      console.log(`[overlay] homepage hero (${heroImgs.length} images)`)
     }
   }
 
@@ -267,28 +285,33 @@ async function main() {
   }
 
   // ── about page: fill-or-boilerplate ──
+  // /about is served by [...slug].astro → *[_type=="page" && slug=="about"]
+  // i.e. the `pageAbout` doc (NOT the legacy `aboutPage` singleton).
   const ab = CONTENT.about || {}
   if (Array.isArray(ab.body) && ab.body.some(ready)) {
     const aboutBody = ab.body.filter(ready).join('\n\n')
-    // about page may use splitSection or richTextSection for the bio —
-    // try both; whichever exists gets filled, the other is a no-op.
-    const filledSplit = await fillSection('aboutPage', 'splitSection', {
+    const bioImg = await img(
+      (hp.intro && hp.intro.imageAsset) || undefined,
+      `${ss.studioPhotographer || ''} portrait`,
+    )
+    const filledSplit = await fillSection('pageAbout', 'splitSection', {
       heading: ready(ab.heading) ? ab.heading : undefined,
       body: blocks(aboutBody),
+      image: bioImg,
     })
     if (!filledSplit) {
-      await fillSection('aboutPage', 'richTextSection', {
+      await fillSection('pageAbout', 'richTextSection', {
         heading: ready(ab.heading) ? ab.heading : undefined,
         body: blocks(aboutBody),
       })
     }
     if (ab.pullQuote && ready(ab.pullQuote.quote)) {
-      await fillSection('aboutPage', 'pullQuoteSection', {
+      await fillSection('pageAbout', 'pullQuoteSection', {
         quote: ab.pullQuote.quote,
         attribution: ab.pullQuote.attribution || undefined,
       })
     }
-    console.log('[overlay] about page')
+    console.log(`[overlay] about page (pageAbout)${filledSplit ? '' : ' [no splitSection!]'}`)
   }
 
   // ── testimonials (replace all) ──
@@ -311,49 +334,37 @@ async function main() {
     console.log(`[overlay] testimonials: ${ts.length}`)
   }
 
-  // ── portfolio categories + items ──
+  // ── portfolio ──
+  // This template renders the portfolio from an images[] ARRAY on the
+  // `portfolio` singleton (the portfolio page AND the homepage featured
+  // section both read *[_id=="portfolio"].images[]). It does NOT use
+  // portfolioItem/portfolioCategory docs at all — populating those was
+  // the bug behind "portfolio shows seed placeholders". Replace
+  // portfolio.images with her gallery images instead.
   const pf = CONTENT.portfolio || {}
-  if (pf.categories && pf.categories.length) {
-    const cats = await client.fetch(`*[_type=="portfolioCategory"]._id`)
-    const items = await client.fetch(`*[_type=="portfolioItem"]._id`)
-    const txd = client.transaction()
-    ;[...cats, ...items].forEach((id) => txd.delete(id))
-    if (cats.length + items.length) await commitTx(txd)
-    const catId = {}
-    for (const c of pf.categories) {
-      const id = `portfolioCategory-${c.slug}`
-      await createOrReplace({
-        _type: 'portfolioCategory', _id: id, title: c.name,
-        slug: {_type: 'slug', current: c.slug},
-        ...(ready(c.description) ? {description: c.description} : {}),
-      })
-      catId[c.slug] = id
+  const galleryDir = path.join(STAGE, 'originals', 'gallery')
+  if (fs.existsSync(galleryDir)) {
+    const imgs = []
+    for (const f of fs.readdirSync(galleryDir).sort()) {
+      if (f.startsWith('.')) continue
+      const image = await img(`originals/gallery/${f}`)
+      if (image) imgs.push({_key: rkey(), ...image})
     }
-    let n = 1
-    for (const [folder, target] of Object.entries(pf.imageMap || {})) {
-      const dir = path.join(STAGE, folder.replace(/\/$/, ''))
-      // imageMap value is the destination category slug. Honor it; fall
-      // back to the first category only if it's unknown.
-      const useCat = catId[target] || catId[Object.keys(catId)[0]]
-      if (!catId[target]) {
-        console.warn(`  ⚠ imageMap target "${target}" not a known category — using ${Object.keys(catId)[0]}`)
-      }
-      if (!fs.existsSync(dir)) continue
-      for (const f of fs.readdirSync(dir).sort()) {
-        if (f.startsWith('.')) continue
-        const rel = `${folder.replace(/\/$/, '')}/${f}`
-        const image = await img(rel)
-        if (!image) continue
-        await create({
-          _type: 'portfolioItem',
-          title: image.alt || f.replace(/\.[a-z]+$/i, '').replace(/[-_]+/g, ' '),
-          slug: {_type: 'slug', current: f.replace(/\.[a-z]+$/i, '').toLowerCase()},
-          category: {_type: 'reference', _ref: useCat},
-          image, order: n++,
-        })
-      }
+    if (imgs.length) {
+      await set('portfolio', {images: imgs})
+      console.log(`[overlay] portfolio.images set (${imgs.length} images)`)
     }
-    console.log(`[overlay] portfolio: ${pf.categories.length} categories, ${n - 1} items`)
+    // Clean up the orphan portfolioItem/portfolioCategory docs an earlier
+    // overlay version created — this template never reads them.
+    const orphans = await client.fetch(
+      `*[_type=="portfolioItem" || _type=="portfolioCategory"]._id`,
+    )
+    if (orphans.length) {
+      const txo = client.transaction()
+      orphans.flatMap((id) => [id, `drafts.${id}`]).forEach((id) => txo.delete(id))
+      await commitTx(txo)
+      console.log(`[overlay] removed ${orphans.length} unused portfolioItem/Category docs`)
+    }
   }
 
   // ── purge stale donor drafts ──
