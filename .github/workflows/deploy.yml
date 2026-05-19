@@ -202,7 +202,24 @@ jobs:
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
           SANITY_STUDIO_URL: ${{ matrix.client.studio_url }}
 
-      - name: Deploy to Cloudflare Pages (Direct Upload)
+      # Workers deploy — same proven pattern as the demo job, templated
+      # per client by slug. Requires the client-<slug> environment's
+      # CF_API_TOKEN to be re-scoped to the "Edit Cloudflare Workers"
+      # permission set (Pages-scoped tokens fail at secret/deploy).
+      - name: Upload Worker secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
+          SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
+          STUDIO_URL: ${{ matrix.client.studio_url }}
+        run: |
+          node -e "const fs=require('fs');fs.writeFileSync('/tmp/secrets.json',JSON.stringify({SANITY_API_READ_TOKEN:process.env.SANITY_API_READ_TOKEN,SANITY_PREVIEW_SECRET:process.env.SANITY_PREVIEW_SECRET,SANITY_STUDIO_URL:process.env.STUDIO_URL}))"
+          npx wrangler secret bulk /tmp/secrets.json --name ${{ matrix.client.slug }}
+          rm -f /tmp/secrets.json
+
+      - name: Deploy to Cloudflare Workers
+        id: deploy
         uses: cloudflare/wrangler-action@v4
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -210,28 +227,19 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ matrix.client.slug }} --branch=production --commit-dirty=true
+          command: deploy --name ${{ matrix.client.slug }}
 
       - name: Smoke test
         run: |
-          URL="${{ matrix.client.pages_url }}"
-          echo "Smoke testing ${URL}"
-          sleep 15
-          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" "$URL")
-          BODY=$(curl -sL "$URL")
+          URL="${{ steps.deploy.outputs.deployment-url }}"
+          echo "Smoke testing ${{ matrix.client.slug }}: ${URL}"
+          if [ -z "$URL" ]; then echo "::error::${{ matrix.client.slug }} — no deployment-url"; exit 1; fi
+          sleep 10
+          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" "${URL}/")
+          BODY=$(curl -sL "${URL}/")
           BODY_LEN=${#BODY}
-          echo "Status: $STATUS"
-          echo "Body length: $BODY_LEN bytes"
-          if [ "$STATUS" != "200" ]; then
-            echo "::error::Smoke test failed for ${{ matrix.client.slug }} — HTTP $STATUS"
-            exit 1
-          fi
-          if [ "$BODY_LEN" -lt 5000 ]; then
-            echo "::error::Smoke test failed for ${{ matrix.client.slug }} — body $BODY_LEN bytes"
-            exit 1
-          fi
-          if ! echo "$BODY" | grep -qi '<title>'; then
-            echo "::error::Smoke test failed for ${{ matrix.client.slug }} — no <title>"
-            exit 1
-          fi
-          echo "✓ Smoke test passed for ${{ matrix.client.slug }}"
+          echo "Status: $STATUS  Body length: $BODY_LEN bytes"
+          if [ "$STATUS" != "200" ]; then echo "::error::${{ matrix.client.slug }} — HTTP $STATUS"; exit 1; fi
+          if [ "$BODY_LEN" -lt 5000 ]; then echo "::error::${{ matrix.client.slug }} — body $BODY_LEN bytes"; exit 1; fi
+          if ! echo "$BODY" | grep -qi '<title>'; then echo "::error::${{ matrix.client.slug }} — no <title>"; exit 1; fi
+          echo "✓ Smoke test passed for ${{ matrix.client.slug }}: ${URL}"
