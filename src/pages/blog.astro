@@ -4,7 +4,7 @@ import SanityImage from '../components/SanityImage.astro';
 import HeroSection from '../components/sections/HeroSection.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
 
-const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
+const client = getClient(Astro.locals.isPreview);
 const currentPage = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10));
 
 const [pageDoc, totalCount] = await Promise.all([

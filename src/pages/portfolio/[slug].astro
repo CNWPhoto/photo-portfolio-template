@@ -6,10 +6,7 @@ import { getClient, urlFor } from '../../lib/sanity.js';
 
 const { slug } = Astro.params;
 
-const portfolioDoc = await getClient(
-  Astro.locals.isPreview,
-  (Astro.locals as any).runtime?.env,
-).fetch(
+const portfolioDoc = await getClient(Astro.locals.isPreview).fetch(
   `*[_type == "portfolio"][0]{
     pageTitle,
     seo { seoTitle, seoDescription, socialImage { asset->{ url } } },

@@ -38,7 +38,7 @@ if (sectionImages.length >= 1) {
 } else {
   // Use the preview-aware client so Presentation surfaces the portfolio
   // doc in the "Documents on this page" panel and drafts render in preview.
-  const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
+  const client = getClient(Astro.locals.isPreview);
   const portfolio = await client.fetch(
     `*[_type == "portfolio" && _id == "portfolio"][0]{
       images[] {

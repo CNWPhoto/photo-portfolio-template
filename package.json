@@ -9,7 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^12.6.13",
+    "@astrojs/cloudflare": "^13.5.2",
     "@astrojs/react": "^5.0.5",
     "@portabletext/to-html": "^5.0.2",
     "@sanity/astro": "^3.4.0",
@@ -17,7 +17,7 @@
     "@sanity/image-url": "^2.1.1",
     "@sanity/preview-url-secret": "^4.0.6",
     "@sanity/visual-editing": "^5.3.6",
-    "astro": "^5.18.1",
+    "astro": "^6.3.5",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   }
