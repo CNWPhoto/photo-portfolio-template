@@ -197,7 +197,10 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: dist/server
+          # Run from repo root: adapter v13 writes .wrangler/deploy/config.json
+          # there as a redirect to dist/server/wrangler.json. Setting
+          # workingDirectory: dist/server makes wrangler see BOTH configs and
+          # error. The redirect resolves main/assets correctly from root.
           command: deploy
           secrets: |
             SANITY_API_READ_TOKEN
