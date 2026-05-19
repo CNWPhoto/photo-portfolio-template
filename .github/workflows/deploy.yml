@@ -177,6 +177,14 @@ jobs:
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
           SANITY_STUDIO_URL: https://cnw-photo-demo.sanity.studio
 
+      # Pin the worker name in the adapter-generated config so the deploy
+      # AND the secret-put (which both read `name` from wrangler.json)
+      # target the same worker. This is the per-client name-injection
+      # pattern the fleet cutover will use (slug instead of the hardcode).
+      - name: Set worker name
+        run: |
+          node -e "const f='dist/server/wrangler.json';const c=require('./'+f);c.name='cnw-photo-demo-w6';require('fs').writeFileSync(f,JSON.stringify(c));console.log('worker name ->',c.name)"
+
       - name: Deploy to Cloudflare Workers (isolated proof)
         id: deploy
         uses: cloudflare/wrangler-action@v4
@@ -190,7 +198,7 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: dist/server
-          command: deploy --name cnw-photo-demo-w6
+          command: deploy
           secrets: |
             SANITY_API_READ_TOKEN
             SANITY_PREVIEW_SECRET
