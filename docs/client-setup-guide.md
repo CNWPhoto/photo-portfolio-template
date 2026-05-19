@@ -1,5 +1,5 @@
 # Client Site Setup Guide
-## Deploying a New Photography Portfolio to Cloudflare Pages
+## Deploying a New Photography Portfolio to Cloudflare Workers
 
 This guide covers everything needed to launch a new client site from scratch —
 from Sanity to Cloudflare to live domain. Follow the steps in order.
@@ -24,14 +24,12 @@ is in the linked phase.
 - [ ] **CORS origins added** — localhost, `*.pages.dev`, client domain ([Phase 1.5](#phase-1--sanity-cms))
 - [ ] **Dataset seeded** — `cd studio && npm run seed` populates template content ([Phase 1.6](#phase-1--sanity-cms))
 - [ ] **AI Assist instructions seeded** — `npm run seed:ai-instructions` pre-populates sparkle prompts ([Phase 1.7](#phase-1--sanity-cms))
-- [ ] **Cloudflare admin access granted** — client invites you as Super Administrator on her CF account ([Phase 2.1](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
-- [ ] **Cloudflare Pages project created (Direct Upload mode)** — in her CF account, empty project ([Phase 2.2](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
-- [ ] **Cloudflare env vars set on Pages project** — project ID, dataset, token, preview secret, studio URL, Node version ([Phase 2.2](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
-- [ ] **CF API token generated** — scoped to client's account, given to workflow via GH secret ([Phase 2.3](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
-- [ ] **Matrix entry added to `.github/workflows/deploy.yml`** ([Phase 2.4](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
-- [ ] **GH Environment `client-<slug>` created with 4 secrets** ([Phase 2.5](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
-- [ ] **First workflow deploy triggered via `main → production` merge** ([Phase 2.6](#phase-2--cloudflare-pages-direct-upload-via-github-actions))
-- [ ] **Canonical host picked (apex vs www) + custom domains wired + DNS propagated** ([Phase 3](#phase-3--domain-setup))
+- [ ] **Cloudflare admin access granted** — client invites you as Super Administrator on her CF account ([Phase 2.1](#phase-2--cloudflare-workers-deploy-via-github-actions))
+- [ ] **CF API token generated** — "Edit Cloudflare Workers" template scoped to client's account ([Phase 2.2](#phase-2--cloudflare-workers-deploy-via-github-actions))
+- [ ] **Matrix entry added to `.github/workflows/deploy.yml`** ([Phase 2.3](#phase-2--cloudflare-workers-deploy-via-github-actions))
+- [ ] **GH Environment `client-<slug>` created with 4 secrets** ([Phase 2.4](#phase-2--cloudflare-workers-deploy-via-github-actions))
+- [ ] **First single-client deploy via `workflow_dispatch only_client=<slug>` (Worker created, secrets pushed, smoke passed)** ([Phase 2.5](#phase-2--cloudflare-workers-deploy-via-github-actions))
+- [ ] **Custom domain attached to Worker** (apex + www if applicable) ([Phase 3](#phase-3--domain-setup))
 - [ ] **`seoSettings.siteUrl` set in Studio to canonical host** — drives canonical tag, sitemap, JSON-LD ([Phase 3.3](#phase-3--domain-setup))
 - [ ] **`SANITY_STUDIO_PREVIEW_URL` flipped to canonical host** — re-run `npm run deploy` ([Phase 3.4](#phase-3--domain-setup))
 - [ ] **Web3Forms contact key added** ([Phase 4](#phase-4--contact-form-web3forms))
@@ -45,41 +43,46 @@ is in the linked phase.
 
 ## Deployment Model
 
-> **Applies equally to niche demo sites.** When you spin up an internal demo (e.g. `family-demo`, `wedding-demo`), follow the same phases — the only difference is that the "client's Cloudflare account" and "client's Sanity org" are both your own accounts, so the "admin invite" and "account switching" steps are no-ops. **Every other step, including the Phase 2.2 CF runtime env vars, still applies.**
+> **Applies equally to niche demo sites.** When you spin up an internal demo (e.g. `family-demo`, `wedding-demo`), follow the same phases — the only difference is that the "client's Cloudflare account" and "client's Sanity org" are both your own accounts, so the "admin invite" and "account switching" steps are no-ops. **Every other step still applies.**
 
-**One template repo, many Cloudflare Pages projects — one GitHub Actions workflow deploys to all of them via Direct Upload.**
+**One template repo, many Cloudflare Workers — one GitHub Actions workflow deploys to all of them.**
 
-This is the default model for all clients. It works around a Cloudflare Pages constraint: a single GitHub account can only Git-integrate its repos to one Cloudflare account at a time, so the "connect via Git" approach can't serve multiple clients whose Pages projects live in different Cloudflare accounts. Direct Upload via GitHub Actions sidesteps that constraint entirely while preserving the single-template-repo model.
+This is the default model for all clients. Cloudflare's GitHub Git integration is single-account, so a "connect via Git" approach can't serve multiple clients whose accounts differ. Cloudflare's own recommendation for multi-account: use the Wrangler CLI from GitHub Actions with a per-account API token. That's what this workflow does.
 
 ### How it works
 
 - The template lives in your private GitHub repo (`photo-portfolio-template`). **One repo, shared by every client.** No forking.
-- Each client gets their own **Sanity project**, created in *your* Sanity account so schema updates and deploys go through you. The client is added as an **Editor** (Sanity's free tier includes 3 users per project).
-- Each client gets their own **Cloudflare Pages project** (**Direct Upload mode — not Git-connected**), created in *her* Cloudflare account. You're invited as Super Administrator on her account, or you use a scoped CF API token she generated for you.
-- A single GitHub Actions workflow in the template repo (`.github/workflows/deploy.yml`) builds and deploys via `wrangler pages deploy` using each client's CF API token (stored as a per-client GitHub Environment secret).
-- **Branch promotion model**: pushing to `main` deploys only to the demo (canary). To push to clients, merge `main → production` and push — GH Actions fans out to every client in the matrix.
-- Her **domain** lives on her Cloudflare account, wired to her Pages project via Custom Domains.
+- Each client gets their own **Sanity project**, created in *their* Sanity organization (the client is the owner / Admin; you're invited as Administrator for support). Sanity ToS-compliant and clean billing.
+- Each client gets their own **Cloudflare Worker** (`<client-slug>`), deployed via `wrangler deploy` from GitHub Actions into *their* Cloudflare account. Astro 6 + `@astrojs/cloudflare` v13 emits the Worker entry + static-asset bundle; `wrangler` uploads both. Runtime secrets are pushed as Worker secrets by the same workflow (no separate CF-dashboard env-var step).
+- You're invited as Super Administrator on the client's CF account (for support / domain attach), or she generates the scoped CF API token herself.
+- **Branch promotion model**:
+  - Push to `main` → deploys only to the demo Worker (canary).
+  - Merge `main → production` and push → matrix fans out to every client Worker in parallel.
+  - `workflow_dispatch` with `only_client=<slug>` → deploys exactly one client (staged cutover / per-client redeploy without a fan-out).
+- Her **domain** is attached as a Worker Custom Domain (Phase 3) — Cloudflare auto-manages DNS + cert.
 - Her **Studio** is deployed to `<clientslug>.sanity.studio` via `npm run deploy` from your terminal, baked with her values from `studio/.env`.
 
 ### Release flow at a glance
 
 ```
 # iterate
-git push origin main                  → Demo rebuilds + smoke test
+git push origin main                  → Demo Worker rebuilds + smoke test
 # verify demo
 git checkout production
 git merge main
-git push origin production            → Demo + every client rebuild in parallel
-# break glass
-git revert HEAD && git push           → Clients roll back automatically
+git push origin production            → Demo + every client Worker rebuild in parallel
+# one-off redeploy of a single client
+gh workflow run deploy.yml --ref main -f only_client=<slug>
+# break glass (full revert)
+git revert HEAD && git push           → Workers redeploy previous good version
 ```
 
-See `docs/emergency-playbook.md` for break-glass scenarios and rollback procedures.
+For instant per-client rollback to a previous version without a git revert, see `wrangler rollback` in `docs/emergency-playbook.md`.
 
 ### What she owns
 
-- The Cloudflare account (billing, DNS, Pages project, domain)
-- The Sanity project (she's added as Editor; transfer to her on offboarding)
+- The Cloudflare account (billing, DNS, Worker, domain)
+- The Sanity project + organization (her org; you're Admin for support)
 - The Web3Forms account for contact form submissions
 - Her domain and registrar
 
@@ -87,7 +90,7 @@ See `docs/emergency-playbook.md` for break-glass scenarios and rollback procedur
 
 - The template code in the private GitHub repo
 - The GitHub Actions workflow and per-client environment secrets
-- Administrative access to her Sanity project (until transfer)
+- Administrative access to her Sanity project (for support; remove on offboarding)
 - A scoped CF API token in her CF account that allows the workflow to deploy
 
 ### Forking for one-off client customization
@@ -322,69 +325,48 @@ The transfer is a built-in Sanity feature, takes ~5 minutes total, and doesn't c
 
 ---
 
-### PHASE 2 — Cloudflare Pages (Direct Upload via GitHub Actions)
+### PHASE 2 — Cloudflare Workers (deploy via GitHub Actions)
 
-The client's CF Pages project lives in her CF account but is **not Git-connected**. Instead, the template's GitHub Actions workflow builds and uploads to it using a scoped CF API token.
+The site deploys to a Cloudflare Worker in the client's account. Astro 6 + `@astrojs/cloudflare` v13 produces a Worker (`dist/server/`) + static assets (`dist/client/`); the GitHub Actions workflow runs `wrangler secret bulk` + `wrangler deploy --name <slug>` using a scoped CF API token. (Cloudflare's GitHub Git integration is single-account, so CI + per-account API token is the recommended multi-account pattern. **Runtime secrets are pushed as Worker secrets by the workflow — there is no separate "CF dashboard env vars" step like the legacy Pages model had.**)
 
 **2.1 — Admin access to the client's Cloudflare account**
 
-Have the client invite you as Super Administrator so you can manage her Pages project from your dashboard. Same as before:
+Have the client invite you as Super Administrator so you can manage her Worker / domain from your dashboard:
 
 1. Client → her CF account → **Manage Account → Members → Invite**
 2. Your email, role: **Super Administrator - All Privileges**
 3. You accept the invite, use the account switcher whenever you need to work on her site
 
-(Super Admin is optional if she'll generate the CF API token herself and hand it to you — but it makes troubleshooting easier.)
+(Super Admin is optional if she'll generate the CF API token herself and hand it to you — but it makes troubleshooting and the domain cutover much easier.)
 
-**2.2 — Create a Cloudflare Pages project (Direct Upload mode)**
+**2.2 — Create a scoped CF API token for the workflow**
 
-1. In your CF dashboard, **switch to the client's account** via the account picker.
-2. Workers & Pages → Create application → Pages → **Upload assets**.
-3. Project name: `<client-slug>` (e.g. `coola-creative` — this becomes `coola-creative.pages.dev`).
-4. Don't actually upload anything yet — CF will create an empty project. The first real deploy will come from GitHub Actions in step 2.6.
-5. Settings → Environment Variables → Production — add these 6 (values below):
-
-| Variable | Value | Encryption |
-|---|---|---|
-| `NODE_VERSION` | `20` | Plaintext |
-| `PUBLIC_SANITY_PROJECT_ID` | Client's Sanity project ID | Plaintext |
-| `PUBLIC_SANITY_DATASET` | `production` | Plaintext |
-| `SANITY_API_READ_TOKEN` | Viewer token from Phase 1.3 | **Encrypt** |
-| `SANITY_PREVIEW_SECRET` | Secret from Phase 1.4 | **Encrypt** |
-| `SANITY_STUDIO_URL` | `https://<client-slug>.sanity.studio` | Plaintext |
-
-> **⚠ Do not skip this step.** These env vars are set on the Cloudflare Pages project itself and are read at **runtime** by the Worker — they are separate from the GitHub Environment secrets (which are build-time only, used by GH Actions to run wrangler). If you only set the GH secrets and skip the CF runtime vars, the build will succeed and the site will load, but:
-> - `SANITY_API_READ_TOKEN` missing → Sanity Presentation mode shows "Preview mode is not configured — SANITY_API_READ_TOKEN is not set on this deployment." Drafts won't render; click-to-edit overlays stay dark.
-> - `SANITY_PREVIEW_SECRET` missing → the `/api/preview` route errors when Studio Presentation tries to activate preview mode.
->
-> This is the single most common first-deploy omission. After adding or changing any of these vars, you must **redeploy** the Pages project (CF dash → Deployments → Retry, or push any commit to `production`).
-
-**2.3 — Create a scoped CF API token for the workflow**
-
-This token lets GitHub Actions push Direct Upload deploys to her account without needing Super Admin or browser login.
+This token lets GitHub Actions deploy the Worker, push secrets, and (later) attach the custom domain.
 
 1. In CF dashboard, **while switched to the client's account**, click your profile → **My Profile → API Tokens → Create Token**.
-2. Select the template: **Edit Cloudflare Pages — Account**.
-3. Account Resources → Include → **the client's account only** (one account).
-4. Leave other settings at defaults. Click Continue → Create Token.
-5. Copy the token immediately (shown once). This goes into the GitHub Environment secret in step 2.5.
+2. Select the template: **Edit Cloudflare Workers**. (Not "Edit Cloudflare Pages" — that's the legacy template and will fail with error code `9106` / `10000` on the first deploy.)
+3. **Account Resources → Include → the client's account only** (one account).
+4. **Zone Resources → Include → All zones** (this is bounded by the account scope above, so it really means "all zones in this client's account" — needed for the custom-domain attach in Phase 3).
+5. Leave other settings at defaults. Continue → Create Token.
+6. **Copy the entire token immediately** (shown once). Don't include surrounding whitespace — invalid/mis-pasted tokens fail with error code `9109`.
 
-Also grab the **Account ID** from the CF dashboard URL or the right sidebar of the Workers & Pages overview — it's a 32-char hex string.
+Also grab the **Account ID** from the CF dashboard URL or sidebar (32-char hex). This is the same value used for legacy Pages deploys; if the `client-<slug>` GitHub Environment already exists with `CF_ACCOUNT_ID` set, leave it as-is.
 
-**2.4 — Add the client to the workflow matrix**
+**2.3 — Add the client to the workflow matrix**
 
-Edit `.github/workflows/deploy.yml` in the template repo. Inside the `clients` job → `strategy.matrix.client` list, add a new entry:
+Edit `.github/workflows/deploy.yml` in the template repo. Inside the `clients` job → `strategy.matrix.client` list, add:
 
 ```yaml
 - slug: <client-slug>                              # e.g. coola-creative
   sanity_project_id: <client-sanity-project-id>    # e.g. tl3zj8iz
   studio_url: https://<client-slug>.sanity.studio
-  pages_url: https://<client-slug>.pages.dev
 ```
 
-Commit the change; do NOT push to `production` yet (we'll do that after secrets are in place).
+Also add the same `slug → sanity_project_id, studio_url` mapping to the `client-one` job's `case` block in the same file (single-client dispatch path uses it). *Top-of-mind TODO:* consolidate these to a single client registry — they live in two places today.
 
-**2.5 — Create the `client-<slug>` GitHub Environment with secrets**
+Commit + push the change. (No `production` push needed yet — Phase 2.5 uses single-client dispatch.)
+
+**2.4 — Create the `client-<slug>` GitHub Environment with secrets**
 
 GitHub template repo → Settings → **Environments** → **New environment** → name it `client-<slug>` (must match the matrix entry — e.g. `client-coola-creative`).
 
@@ -392,33 +374,47 @@ Add these 4 **Environment secrets**:
 
 | Secret | Value |
 |---|---|
-| `CF_API_TOKEN` | CF API token from 2.3 (scoped to client's account) |
+| `CF_API_TOKEN` | CF API token from 2.2 ("Edit Cloudflare Workers" scope) |
 | `CF_ACCOUNT_ID` | Client's CF Account ID |
-| `SANITY_API_READ_TOKEN` | Viewer token from Phase 1.3 (same value as CF Pages env var) |
-| `SANITY_PREVIEW_SECRET` | Preview secret from Phase 1.4 (same value as CF Pages env var) |
+| `SANITY_API_READ_TOKEN` | Viewer token from Phase 1.3 |
+| `SANITY_PREVIEW_SECRET` | Preview secret from Phase 1.4 |
 
-Environment secrets are scoped per-client — one client's workflow run can only see its own environment's secrets, never another client's.
+Environment secrets are scoped per-client — one client's workflow run can only see its own environment's secrets. The Sanity secrets are read at deploy time and uploaded as Worker secrets by the workflow's `wrangler secret bulk` step; no separate CF-dashboard env-var step is needed.
 
-**2.6 — Trigger the first deploy**
+**2.5 — Deploy the client (single-client dispatch)**
 
-Now push `main → production` to fire the workflow:
+Use the staged single-client dispatch (no production fan-out — only this client deploys):
+
+GitHub → repo → **Actions → Deploy → Run workflow** → branch `main` → **`only_client`** input → `<client-slug>` → Run.
+
+Or via CLI:
 
 ```sh
-git checkout production
-git merge main
-git push origin production
+gh workflow run deploy.yml --ref main -f only_client=<client-slug>
 ```
 
-The workflow runs:
-1. Demo canary (must succeed before clients run)
-2. Fan-out to every matrix entry in parallel, including the new client
-3. Smoke tests each deployed URL
+The job runs from a clean checkout:
 
-Watch at `https://github.com/CNWPhoto/photo-portfolio-template/actions`. The run is typically 3–5 minutes total.
+1. Build the Astro site with the client's PUBLIC Sanity vars.
+2. `wrangler secret bulk --name <slug>` — uploads `SANITY_API_READ_TOKEN`, `SANITY_PREVIEW_SECRET`, `SANITY_STUDIO_URL` as **Worker secrets** (creates the Worker on first run).
+3. `wrangler deploy --name <slug>` — uploads the Worker + static assets. Cloudflare auto-provisions a `SESSION` KV namespace per Worker — no manual step.
+4. Smoke test — hits the deployed `*.workers.dev` URL: 200, body > 5 KB, `<title>` present, trailing-slash 308.
 
-**2.7 — Verify the first deploy**
+Watch at `https://github.com/CNWPhoto/photo-portfolio-template/actions`. Typical run: 1–2 minutes.
 
-Visit `https://<client-slug>.pages.dev` — you should see the seeded template content from Phase 1.6 (homepage, about/experience/contact/404 pages with real palettes and section layouts). If it's blank or broken, see `docs/emergency-playbook.md` → "Blank page or 500 error" — almost always a missing CF Pages env var.
+**2.6 — Verify the first deploy**
+
+The smoke step prints the deployed URL — `https://<client-slug>.<account-subdomain>.workers.dev` (the account subdomain is per-CF-account, e.g. `kelly-8f1`, `melanie-d31`). Visit it; you should see the seeded template content from Phase 1.6.
+
+If it's blank or broken, see `docs/emergency-playbook.md`. Common first-deploy failures:
+
+- **Secret-step error `9106` or `10000`** — Pages-scoped CF token. Re-create with the "Edit Cloudflare Workers" template (Phase 2.2).
+- **Secret-step error `9109`** — invalid token (often a mis-paste with trailing whitespace, or saved blank). Recreate and re-paste cleanly.
+- **Deploy succeeds, page 500s with "Preview mode is not configured"** — `SANITY_API_READ_TOKEN` wasn't in the `client-<slug>` GH Environment when the secret-bulk step ran. Fix the env secret and re-dispatch — the Worker re-uses its existing KV namespace.
+
+**2.7 — Promote to production matrix (optional)**
+
+Single-client dispatch is sufficient for first-deploy and per-client redeploys. To get the client into the normal `main → production` fan-out as well, just ensure the matrix entry from 2.3 is on `main` and merge `main → production` whenever you want a full-fleet redeploy (covered in `docs/update-and-maintenance-guide.md`).
 
 ---
 
@@ -437,25 +433,33 @@ Visit `https://<client-slug>.pages.dev` — you should see the seeded template c
 
 Before wiring domains, decide which host is canonical — `smithphotography.com` (apex) or `www.smithphotography.com`. The other becomes a 301 redirect to it.
 
-- **No SEO difference on Cloudflare Pages** — redirect is 301, flows PageRank fully.
-- **Default to apex** unless the client's existing branding (logo, print material, email signature) uses `www`. Shorter, cleaner in share links, matches how most clients think about their domain.
+- **Default to apex** unless the client's existing branding uses `www`. Shorter, cleaner in share links, matches how most clients think about their domain.
 - Once picked, four settings have to align with the choice — see 3.3 and 3.4 below. If any of them drift, canonicals/sitemap/JSON-LD will advertise the non-canonical host, which Google treats as a soft signal to ignore the canonical.
 
-**3.3 — Connect custom domains to Pages**
+**3.3 — Attach the custom domain(s) to the Worker**
 
-1. Pages project → **Custom Domains → Set up a custom domain**
-2. Enter the **canonical host first** — whichever is added first becomes canonical; the other auto-redirects to it. To flip later, remove both and re-add in the desired order.
-3. Cloudflare adds the CNAME automatically.
-4. Add the non-canonical host as a second custom domain — Cloudflare auto-creates a 301 redirect to the canonical.
-5. SSL certificates provision automatically for both (5–15 minutes).
-6. Verify redirect direction with `curl`:
+For a **brand-new** client (Worker is the first thing on the hostname — no existing DNS records):
+
+1. In CF dashboard (switched to client's account) → **Workers & Pages → `<client-slug>` (the Worker) → Settings → Domains & Routes → Add → Custom Domain**.
+2. Enter the **canonical host first** (e.g. `smithphotography.com`). Cloudflare creates the proxied DNS record + issues the cert (~minutes).
+3. Add `www.smithphotography.com` (or whichever non-canonical) the same way. By default Workers serves both directly — apply a **www↔apex Redirect Rule at the zone level** if you want one to 301 to the other (see *www-canonical redirect* in `docs/update-and-maintenance-guide.md`).
+4. Verify:
 
    ```sh
-   curl -sI https://smithphotography.com | grep -i location        # should be empty (canonical)
-   curl -sI https://www.smithphotography.com | grep -i location    # should 301 → apex
+   curl -sI https://smithphotography.com/ | head -1                  # HTTP/2 200
+   curl -sI https://www.smithphotography.com/ | grep -i location     # 301 → apex (if redirect rule set)
    ```
 
-   Reverse expected behavior if `www` is canonical.
+For a **client being migrated from the legacy Pages model** (existing Pages project owns the hostname's DNS records):
+
+The Worker "Add Custom Domain" dialog will refuse with `Hostname already has externally managed DNS records (A, CNAME, etc). Delete them first.` — Cloudflare won't silently swap them. Sequence (brief bounded downtime; pick a low-traffic moment):
+
+1. Old Pages project → **Custom domains → remove** the hostname. This drops the Pages-managed CNAME.
+2. (If a manual A/CNAME for the hostname remains in the zone's DNS → DNS → Records, note it for rollback then delete it. Pages-managed records auto-clear in step 1.)
+3. Immediately add the hostname as a **Custom Domain on the Worker** — it'll accept it now (no conflict), create the record, issue the cert (~minute or two).
+4. Repeat for `www` if it was also on Pages. Doing apex first keeps `www` serving via Pages during apex transition (and vice versa) — one host always available.
+5. Rollback if anything's wrong before the cert activates: re-add the hostname on the old Pages project (it recreates its record) — back on the old site in minutes.
+6. **Local DNS negative-cache gotcha:** your machine may continue showing NXDOMAIN for `www` for a few minutes after the move — public resolvers (1.1.1.1, 8.8.8.8) and the authoritative NS will show the truth. `sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder` clears local cache.
 
 **3.4 — Align canonical host across Sanity + Studio + Search Console**
 
@@ -468,7 +472,7 @@ Before wiring domains, decide which host is canonical — `smithphotography.com`
 
    If left blank, canonicals are omitted and sitemap falls back to request origin — fine for pre-launch, **not acceptable for production**.
 3. **`SANITY_STUDIO_PREVIEW_URL`** — update `studio/.env` to the canonical host, then re-run `cd studio && npm run deploy`. Baked into the hosted Studio at build time; must match the canonical host so Presentation iframes the canonical origin (not the redirect source).
-4. **Redeploy the Astro site** so the new `siteUrl` is picked up — push a no-op commit or retry latest deployment in CF Pages.
+4. **Redeploy the Worker** so the new `siteUrl` is baked into rendered pages. Either push any commit on `main` (re-runs the demo Worker) or `gh workflow run deploy.yml -f only_client=<client-slug>` for just that client.
 5. **Google Search Console** (can be done at pre-launch, Phase 6) — add the canonical host as the **primary property** and submit `https://<canonical>/sitemap.xml`. Adding the non-canonical host as a second property is optional but useful for catching stray inbound links.
 
 ---

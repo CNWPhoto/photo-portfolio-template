@@ -19,28 +19,32 @@ At session end:
 
 ---
 
-## Deployment model (Path B — Direct Upload via GitHub Actions)
+## Deployment model — Cloudflare Workers via GitHub Actions
 
-**One template repo → one workflow → N client sites on Cloudflare Pages, each in the client's CF account.** Direct Upload (not Git-connected) sidesteps CF's per-repo-per-account constraint that blocks the naive "Git-integrate this repo to every client's CF account" pattern.
+**One template repo → one workflow → N client sites on Cloudflare Workers, each in the client's CF account.** Astro 6 + `@astrojs/cloudflare` v13 emits a Worker (`dist/server/` + adapter-generated `wrangler.json`) with static assets (`dist/client/`). Deploy is `wrangler deploy --name <slug>` driven by GitHub Actions per `client-<slug>` Environment + a per-account `CF_API_TOKEN` (Cloudflare's GitHub Git integration is single-account, so CI + per-account API token is the recommended multi-account pattern — and it sidesteps the constraint that originally drove the legacy Path B Pages model).
 
 Branch model:
-- **`main`** — demo canary. Every push deploys only to `cnw-photo-demo.pages.dev`. Iterate freely here.
-- **`production`** — client fan-out. Merging `main → production` triggers the workflow's matrix to deploy to every client in parallel.
+- **`main`** — demo canary. Every push deploys only to the demo Worker (`cnw-photo-demo` → `cnw-photo-demo.<acct>.workers.dev`). Iterate freely here.
+- **`production`** — client fan-out. Merging `main → production` triggers the matrix to deploy every client to its own Worker.
+- **`workflow_dispatch` with `only_client=<slug>`** — staged single-client cutover / per-client redeploy without a fan-out.
 
 Workflow file: [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)
 
+Per-client CF API token must use the **"Edit Cloudflare Workers"** permission template (Account = that client's account, Zone = All zones — bounded by the account scope above it). Token gotchas: error code `9106`/`10000` = Pages-scoped token (re-scope to Workers); `9109` = invalid/mis-pasted token (recreate, copy without whitespace).
+
 **Before touching the workflow, a GitHub Environment secret, or the client matrix**, read:
 
-1. [`docs/client-setup-guide.md`](./docs/client-setup-guide.md) — Phase 2 covers the Direct Upload workflow setup end to end (CF API token, GH Environment creation, matrix entry).
-2. [`docs/update-and-maintenance-guide.md`](./docs/update-and-maintenance-guide.md) — branch promotion, adding/removing clients, monitoring.
-3. [`docs/emergency-playbook.md`](./docs/emergency-playbook.md) — field manual for every break scenario, rollback commands, dataset restore, credential rotation.
+1. [`docs/client-setup-guide.md`](./docs/client-setup-guide.md) — end-to-end Workers onboarding (token, GH Environment, matrix entry, custom domain).
+2. [`docs/update-and-maintenance-guide.md`](./docs/update-and-maintenance-guide.md) — branch promotion, single-client dispatch, adding/removing clients, monitoring.
+3. [`docs/emergency-playbook.md`](./docs/emergency-playbook.md) — Worker rollback (`wrangler rollback`), domain-rollback, dataset restore, credential rotation.
+
+The previous deployment model (Cloudflare Pages Direct Upload, "Path B") was migrated to Workers on **2026-05-19** (Astro 6 / adapter v13 is Workers-first; Cloudflare consolidated all new investment into Workers). Old Pages projects may linger briefly as a rollback safety net but are no longer the deploy target.
 
 ## In-progress / recently completed
 
-- **Page builder rewrite** — merged into `main` via `3486335`. Archive tags exist: `archive/page-builder-rewrite` (commit `cd23ec5` = Phase 13 completion) and `archive/about-page-builder` (commit `7d5c740` = spec). The rewrite branches have been deleted locally and on origin.
-- **SEO audit fixes** — landed on `main` in 4 commits (`9530ba7` redirects, `fde2c7d` viewport, `11a4485` FAQ flatten, `7c3ef3e` resolveLink self-origin strip). Demo site verified post-deploy.
-- **Studio config env-driven** — `studio/sanity.config.js` and `studio/sanity.cli.js` read title/allowOrigins/appId from env. Per-client deploys are now pure `.env` swaps.
-- **Path B deploy workflow** — `.github/workflows/deploy.yml` with demo canary + production branch gate + smoke tests. First client (Coola Creative) onboarding in progress.
+- **Pages → Workers migration (2026-05-19)** — all 5 sites (demo + 4 clients) live on Astro 6 / Cloudflare Workers. Coola is the only client on a real custom domain (`coolacreative.com`, with `www` 301→apex via the pre-existing zone redirect rule); the others run on `*.workers.dev` until they go live. See `wiki/decisions/workers-deploy-via-gh-actions` in the sibling astro-brain vault for the architectural decision.
+- **Page builder rewrite** — merged into `main` via `3486335`. Archive tags: `archive/page-builder-rewrite` (`cd23ec5` = Phase 13), `archive/about-page-builder` (`7d5c740` = spec).
+- **Studio config env-driven** — `studio/sanity.config.js` / `studio/sanity.cli.js` read title/allowOrigins/appId from env. Per-client Studio deploys are pure `.env` swaps (covers `*.workers.dev` and `*.pages.dev` origins).
 
 The Sanity production dataset for the demo project (`hx5xgigp`) is backed up at `~/sanity-backup-2026-04-11.tar.gz` for restore via `npx sanity dataset import`. Snapshot each client's dataset before any destructive operation.
 

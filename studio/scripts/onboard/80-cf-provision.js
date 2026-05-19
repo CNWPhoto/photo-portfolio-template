@@ -1,17 +1,19 @@
-// 80-cf-provision.js — create the client's Cloudflare Pages project and
-// set its production runtime env vars, via the CF API.
+// 80-cf-provision.js — DEPRECATED (Workers migration, 2026-05-19).
 //
-//   node studio/scripts/onboard/80-cf-provision.js \
-//     --slug=kelly-mac-studios \
-//     --cf-token=... --cf-account=... \
-//     --sanity-read-token=... --preview-secret=...
+// This script was the Pages-era automation: it created a CF Pages
+// project in the client's account and set its 4 runtime env vars (the
+// easy-to-miss CF dashboard step). On the Workers model both are
+// obsolete:
+//   - The Worker is created on first `wrangler deploy --name <slug>`.
+//   - Runtime secrets are uploaded as Worker secrets by the workflow's
+//     `wrangler secret bulk` step from the `client-<slug>` GitHub
+//     Environment — there is no separate CF-dashboard env-var step.
 //
-// Replaces the manual Phase-2 clickwork: creates the Pages project in
-// Direct Upload mode with production_branch=production, and sets the 4
-// runtime env vars (the easy-to-miss step). The first real asset deploy
-// still comes from the GH Actions matrix (70-gh-env.js wires that).
+// Onboarding step replaced by: `gh workflow run deploy.yml --ref main
+// -f only_client=<slug>` after 70-gh-env.js has populated the GH
+// Environment secrets. See studio/scripts/onboard/README.md.
 //
-// Idempotent: if the project already exists we just (re)apply env vars.
+// Kept for reference until the next cleanup pass; do not run.
 
 import {assertSlug, getArg, readEnvBackup, cf, log} from './lib.js'
 
