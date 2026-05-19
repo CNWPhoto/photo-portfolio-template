@@ -31,12 +31,15 @@ const PREVIEW_ORIGIN = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhos
 // Every origin that might iframe the deployed Studio. Baked at build time.
 // - localhost for local Astro dev
 // - *.pages.dev wildcard covers every Cloudflare Pages preview subdomain
+// - *.workers.dev wildcard covers Cloudflare Workers deploys (Astro 6 +
+//   adapter v13 — the deploy target the fleet is migrating to)
 // - PREVIEW_ORIGIN covers whatever we're currently pointing the hosted
-//   Studio at (client domain after DNS, the .pages.dev URL before).
+//   Studio at (client domain after DNS, the platform URL before).
 // Dedup at the bottom so a localhost PREVIEW_ORIGIN doesn't double-list.
 const ALLOW_ORIGINS = [
   'http://localhost:4321',
   'https://*.pages.dev',
+  'https://*.workers.dev',
   PREVIEW_ORIGIN,
 ].filter((v, i, arr) => v && arr.indexOf(v) === i)
 
