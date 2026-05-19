@@ -65,6 +65,11 @@ on:
   push:
     branches: [main, production]
   workflow_dispatch:
+    inputs:
+      only_client:
+        description: 'Cut over ONLY this client slug to Workers (blank = normal demo behavior). Used for staged per-client cutover without a production fan-out.'
+        required: false
+        default: ''
 
 env:
   NODE_VERSION: '22'
@@ -76,6 +81,8 @@ jobs:
   # ════════════════════════════════════════════════════════════════════
   demo:
     name: Demo (canary)
+    # Skip the demo redeploy when a single-client cutover is dispatched.
+    if: github.event_name != 'workflow_dispatch' || inputs.only_client == ''
     runs-on: ubuntu-latest
     environment: demo
     steps:
@@ -243,3 +250,88 @@ jobs:
           if [ "$BODY_LEN" -lt 5000 ]; then echo "::error::${{ matrix.client.slug }} — body $BODY_LEN bytes"; exit 1; fi
           if ! echo "$BODY" | grep -qi '<title>'; then echo "::error::${{ matrix.client.slug }} — no <title>"; exit 1; fi
           echo "✓ Smoke test passed for ${{ matrix.client.slug }}: ${URL}"
+
+  # ════════════════════════════════════════════════════════════════════
+  # 3. Single-client cutover — manual (workflow_dispatch w/ only_client).
+  #    Deploys ONE client to Workers without a production fan-out, for
+  #    staged migration + per-client redeploys. NOTE: slug→config is
+  #    duplicated from the clients matrix here; consolidating both to a
+  #    shared client registry is the top scaling follow-up.
+  # ════════════════════════════════════════════════════════════════════
+  client-one:
+    name: Cutover — ${{ inputs.only_client }}
+    if: github.event_name == 'workflow_dispatch' && inputs.only_client != ''
+    runs-on: ubuntu-latest
+    environment: client-${{ inputs.only_client }}
+    steps:
+      - name: Resolve client config
+        id: cfg
+        run: |
+          case "${{ inputs.only_client }}" in
+            kelly-mac-studios) PID=qva1dysl; STU=https://kelly-mac-studios.sanity.studio;;
+            blackbird-photography) PID=6nc24jar; STU=https://blackbird-photography.sanity.studio;;
+            coola-creative) PID=tl3zj8iz; STU=https://coola-creative.sanity.studio;;
+            family-demo) PID=v14sne67; STU=https://family-demo.sanity.studio;;
+            lavon-photography) PID=3a8494gh; STU=https://lavon-photography.sanity.studio;;
+            *) echo "::error::unknown client '${{ inputs.only_client }}'"; exit 1;;
+          esac
+          echo "pid=$PID" >> "$GITHUB_OUTPUT"
+          echo "stu=$STU" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          PUBLIC_SANITY_PROJECT_ID: ${{ steps.cfg.outputs.pid }}
+          PUBLIC_SANITY_DATASET: production
+          SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
+          SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
+          SANITY_STUDIO_URL: ${{ steps.cfg.outputs.stu }}
+
+      - name: Upload Worker secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
+          SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
+          STUDIO_URL: ${{ steps.cfg.outputs.stu }}
+        run: |
+          node -e "const fs=require('fs');fs.writeFileSync('/tmp/secrets.json',JSON.stringify({SANITY_API_READ_TOKEN:process.env.SANITY_API_READ_TOKEN,SANITY_PREVIEW_SECRET:process.env.SANITY_PREVIEW_SECRET,SANITY_STUDIO_URL:process.env.STUDIO_URL}))"
+          npx wrangler secret bulk /tmp/secrets.json --name ${{ inputs.only_client }}
+          rm -f /tmp/secrets.json
+
+      - name: Deploy to Cloudflare Workers
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: deploy --name ${{ inputs.only_client }}
+
+      - name: Smoke test
+        run: |
+          URL="${{ steps.deploy.outputs.deployment-url }}"
+          echo "Cutover ${{ inputs.only_client }}: ${URL}"
+          if [ -z "$URL" ]; then echo "::error::no deployment-url"; exit 1; fi
+          sleep 10
+          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" "${URL}/")
+          BODY=$(curl -sL "${URL}/"); BODY_LEN=${#BODY}
+          echo "Status: $STATUS  Body length: $BODY_LEN bytes"
+          if [ "$STATUS" != "200" ]; then echo "::error::${{ inputs.only_client }} — HTTP $STATUS"; exit 1; fi
+          if [ "$BODY_LEN" -lt 5000 ]; then echo "::error::${{ inputs.only_client }} — body $BODY_LEN bytes"; exit 1; fi
+          if ! echo "$BODY" | grep -qi '<title>'; then echo "::error::${{ inputs.only_client }} — no <title>"; exit 1; fi
+          echo "✓ ${{ inputs.only_client }} Workers smoke passed: ${URL}"
