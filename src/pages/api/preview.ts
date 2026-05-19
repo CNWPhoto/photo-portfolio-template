@@ -1,7 +1,4 @@
 import type { APIRoute } from 'astro'
-// Astro 6 / @astrojs/cloudflare v13: runtime secrets via this virtual
-// module (request-scoped), replacing the removed Astro.locals.runtime.env.
-import { env as cloudflareEnv } from 'cloudflare:workers'
 
 // Sanity Presentation generates an ephemeral `sanity-preview-secret` per open
 // and we validate it by round-tripping to the Sanity API with our viewer token.
@@ -9,13 +6,14 @@ import { env as cloudflareEnv } from 'cloudflare:workers'
 // @sanity/preview-url-secret or the Sanity client fails at module-load time
 // (which on Cloudflare Workers causes the whole route to be unavailable).
 
-export const GET: APIRoute = async ({ request, cookies, redirect }) => {
+export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
   // Read token from multiple sources in priority order:
-  // 1. Cloudflare Workers runtime env (secrets, set via CF dashboard)
-  // 2. import.meta.env (build-time bundled, for local dev)
+  // 1. Cloudflare runtime env (secrets, set via CF Pages dashboard)
+  // 2. import.meta.env (build-time bundled, for local dev and Vercel)
   // 3. process.env (Node fallback)
+  const runtimeEnv = (locals as any)?.runtime?.env ?? {}
   const token =
-    (cloudflareEnv as any)?.SANITY_API_READ_TOKEN ||
+    runtimeEnv.SANITY_API_READ_TOKEN ||
     import.meta.env.SANITY_API_READ_TOKEN ||
     (typeof process !== 'undefined' ? process.env?.SANITY_API_READ_TOKEN : undefined)
 

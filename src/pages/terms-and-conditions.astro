@@ -7,7 +7,7 @@ import Layout from '../layouts/Layout.astro';
 import { getClient } from '../lib/sanity.js';
 import { renderBody, isPortableText } from '../lib/portableText.js';
 
-const client = getClient(Astro.locals.isPreview);
+const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
 
 const doc = await client.fetch(
   `*[_type == "termsAndConditionsPage" && _id == "termsAndConditionsPage"][0]{
