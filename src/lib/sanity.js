@@ -1,6 +1,10 @@
 import { createClient } from '@sanity/client'
 import { createClient as createStegaClient } from '@sanity/client/stega'
 import imageUrlBuilder from '@sanity/image-url'
+// Astro 6 / @astrojs/cloudflare v13 removed `Astro.locals.runtime.env`.
+// Runtime secrets now come from this virtual module (request-scoped on
+// workerd — only read it inside request handlers, never at module init).
+import { env as cloudflareEnv } from 'cloudflare:workers'
 
 // Base config — project ID and dataset come from PUBLIC_ env vars so they
 // can be inlined at build time without leaking secrets (they are safe for
@@ -28,15 +32,15 @@ export const sanityClient = createClient({
 })
 
 // Reads a secret env var from multiple sources in priority order:
-// 1. runtimeEnv — Cloudflare Pages runtime bindings (Astro.locals.runtime.env)
-// 2. import.meta.env — Vite build-time bundled values (local dev, Vercel)
+// 1. cloudflareEnv — Cloudflare Workers runtime bindings (Astro 6 / adapter
+//    v13; replaces the removed Astro.locals.runtime.env)
+// 2. import.meta.env — Vite build-time bundled values (local dev)
 // 3. process.env — Node fallback
-// This layered lookup means the same code works on Cloudflare (runtime-only
-// secrets), Vercel (build-time env), and local dev (.env file) without any
-// per-platform configuration.
-function readEnv(runtimeEnv, key) {
+// Same code works on Cloudflare (runtime-only secrets) and local dev
+// (.env file) without per-platform configuration.
+function readEnv(key) {
   return (
-    runtimeEnv?.[key] ||
+    cloudflareEnv?.[key] ||
     import.meta.env[key] ||
     (typeof process !== 'undefined' ? process.env?.[key] : undefined)
   )
@@ -48,9 +52,9 @@ function readEnv(runtimeEnv, key) {
 // runtime-only by default.
 const PREVIEW_FETCH_TIMEOUT_MS = 6000
 
-function createPreviewClient(runtimeEnv) {
-  const token = readEnv(runtimeEnv, 'SANITY_API_READ_TOKEN')
-  const studioUrl = readEnv(runtimeEnv, 'SANITY_STUDIO_URL') || 'http://localhost:3333'
+function createPreviewClient() {
+  const token = readEnv('SANITY_API_READ_TOKEN')
+  const studioUrl = readEnv('SANITY_STUDIO_URL') || 'http://localhost:3333'
 
   // Use the stega-enabled subpath export (@sanity/client/stega) so rendered
   // text is encoded with invisible markers that link back to the source
@@ -89,15 +93,11 @@ function createPreviewClient(runtimeEnv) {
   return client
 }
 
-// Returns a client for either preview or published mode.
-//
-// For preview mode to work on Cloudflare Pages, pass the runtime env from
-// your page: `getClient(Astro.locals.isPreview, Astro.locals.runtime?.env)`.
-// Omitting runtimeEnv still works (falls back to build-time env vars), but
-// on CF Pages that means the token won't be available and stega will be
-// disabled — so overlays and click-to-edit won't function in Presentation.
-export function getClient(isPreview = false, runtimeEnv = undefined) {
-  if (isPreview) return createPreviewClient(runtimeEnv)
+// Returns a client for either preview or published mode. Runtime secrets
+// are read from the `cloudflare:workers` env inside readEnv(), so callers
+// just pass the preview flag: `getClient(Astro.locals.isPreview)`.
+export function getClient(isPreview = false) {
+  if (isPreview) return createPreviewClient()
   return sanityClient
 }
 

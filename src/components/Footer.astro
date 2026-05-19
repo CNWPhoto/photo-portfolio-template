@@ -21,7 +21,7 @@ const footerSanityAttr = isPreview
 // photographer name in the copyright line) appear in the iframe without
 // having to publish. Stega-clean the results below so the draft markers
 // don't create extra click-to-edit overlays on every footer link.
-const client = getClient(isPreview, (Astro.locals as any).runtime?.env);
+const client = getClient(isPreview);
 const [footerDataRaw, socialDataRaw, siteDataRaw, termsDocRaw, privacyDocRaw] = await Promise.all([
   client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{
     backgroundTone,

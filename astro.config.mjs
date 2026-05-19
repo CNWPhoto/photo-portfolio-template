@@ -9,7 +9,9 @@ export default defineConfig({
   // Every URL ends in a trailing slash, site-wide, for every client.
   // Astro redirects non-slashed requests to the slashed canonical.
   trailingSlash: 'always',
-  adapter: cloudflare(),
+  // adapter v13 replaced `runtime` options with `platformProxy`; enable it
+  // so local dev/preview (now workerd via the CF Vite plugin) sees bindings.
+  adapter: cloudflare({ platformProxy: { enabled: true } }),
   integrations: [
     sanity({
       projectId: process.env.PUBLIC_SANITY_PROJECT_ID || 'hx5xgigp',
