@@ -4,6 +4,3 @@ node_modules/
 studio/node_modules/
 dist/
 .DS_Store
-
-# Cloudflare/wrangler local miniflare state
-.wrangler/
