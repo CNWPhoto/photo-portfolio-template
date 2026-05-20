@@ -45,14 +45,14 @@ name: Deploy
 # ──────────────────────────────────────────────────────────────────────
 # Environments (Settings → Environments in the template repo):
 #
-#   demo                        ← cnw-photo-demo.pages.dev
-#     CF_API_TOKEN              CF account token scoped to Pages:Edit
+#   demo                        ← cnw-photo-demo.<acct>.workers.dev
+#     CF_API_TOKEN              CF token using "Edit Cloudflare Workers" template
 #     CF_ACCOUNT_ID             numeric account ID
 #     SANITY_API_READ_TOKEN     read token for hx5xgigp
 #     SANITY_PREVIEW_SECRET     32-byte hex preview secret
 #
-#   client-coola-creative       ← coola-creative.pages.dev
-#     CF_API_TOKEN              CF token scoped to Carla's account
+#   client-coola-creative       ← coolacreative.com (custom domain)
+#     CF_API_TOKEN              CF token scoped to Carla's account (Workers template)
 #     CF_ACCOUNT_ID             Carla's CF account ID
 #     SANITY_API_READ_TOKEN     read token for tl3zj8iz
 #     SANITY_PREVIEW_SECRET     32-byte hex preview secret
@@ -168,25 +168,23 @@ jobs:
           - slug: kelly-mac-studios
             sanity_project_id: qva1dysl
             studio_url: https://kelly-mac-studios.sanity.studio
-            pages_url: https://kelly-mac-studios.pages.dev
           - slug: blackbird-photography
             sanity_project_id: 6nc24jar
             studio_url: https://blackbird-photography.sanity.studio
-            pages_url: https://blackbird-photography.pages.dev
           - slug: coola-creative
             sanity_project_id: tl3zj8iz
             studio_url: https://coola-creative.sanity.studio
-            pages_url: https://coola-creative.pages.dev
           - slug: family-demo
             sanity_project_id: v14sne67
             studio_url: https://family-demo.sanity.studio
-            pages_url: https://family-demo.pages.dev
           - slug: lavon-photography
             sanity_project_id: 3a8494gh
             studio_url: https://lavon-photography.sanity.studio
-            pages_url: https://lavon-photography.pages.dev
           # Add new clients here. Each slug must match the GitHub
-          # Environment name pattern `client-<slug>`.
+          # Environment name pattern `client-<slug>`. studio_url is the
+          # hosted Studio URL on sanity.studio (drives SANITY_STUDIO_URL
+          # at build time for stega). The Worker public URL doesn't need
+          # to live here — it's derived from the slug at deploy time.
     steps:
       - name: Checkout
         uses: actions/checkout@v6
