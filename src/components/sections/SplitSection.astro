@@ -35,6 +35,7 @@ const image = section?.image ?? null;
   class:list={['isplit', `isplit--${imageLayout}`]}
   data-section-type="splitSection"
   data-text-align={section?.textAlignment || 'left'}
+  data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
   id={section?.sectionId || undefined}
   style={style}
 >
@@ -490,6 +491,33 @@ const image = section?.image ?? null;
       padding-right: 0;
       padding-left: 0;
       max-width: none;
+    }
+
+    /* ── Mobile flip-order override ──
+       When the editor checks "Flip image/text order on mobile", swap the
+       stacking order across all four variants. Matches the specificity of
+       the per-variant mobile order rules above so the override actually
+       wins. Image gets order:1, content gets order:2 (or vice-versa) based
+       on what each variant's default mobile order is. */
+    .isplit--image-right[data-mobile-flip-order='true'] .isplit__content {
+      order: 2;
+    }
+    .isplit--image-right[data-mobile-flip-order='true'] .isplit__image {
+      order: 1;
+    }
+    .isplit--image-left[data-mobile-flip-order='true'] .isplit__image {
+      order: 2;
+    }
+    .isplit--image-left[data-mobile-flip-order='true'] .isplit__content {
+      order: 1;
+    }
+    .isplit--image-right-full-bleed[data-mobile-flip-order='true'] .isplit__content,
+    .isplit--image-left-full-bleed[data-mobile-flip-order='true'] .isplit__content {
+      order: 1;
+    }
+    .isplit--image-right-full-bleed[data-mobile-flip-order='true'] .isplit__image,
+    .isplit--image-left-full-bleed[data-mobile-flip-order='true'] .isplit__image {
+      order: 2;
     }
   }
 

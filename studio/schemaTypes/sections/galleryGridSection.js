@@ -67,15 +67,33 @@ export default {
           {title: '3 columns', value: 'grid-3'},
           {title: '4 columns', value: 'grid-4'},
           {title: 'Masonry', value: 'masonry'},
+          {title: 'Carousel (slider)', value: 'carousel'},
         ],
         layout: 'radio',
       },
       initialValue: 'grid-3',
     },
     {
+      name: 'carouselHeight',
+      title: 'Carousel — Height',
+      type: 'string',
+      description: 'Only used when Layout is Carousel.',
+      options: {
+        list: [
+          {title: 'Standard (480px)', value: 'standard'},
+          {title: 'Tall (640px)', value: 'tall'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'standard',
+      hidden: ({parent}) => parent?.layout !== 'carousel',
+    },
+    {
       name: 'gap',
       title: 'Gap',
       type: 'string',
+      description: 'Spacing between images. Applies to grid, masonry, and carousel layouts.',
       options: {
         list: [
           {title: 'Tight', value: 'tight'},
@@ -91,6 +109,7 @@ export default {
       name: 'lightbox',
       title: 'Click to enlarge (lightbox)',
       type: 'boolean',
+      description: 'Ignored for the Carousel layout.',
       initialValue: true,
     },
   ],
