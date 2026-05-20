@@ -4,3 +4,9 @@ node_modules/
 studio/node_modules/
 dist/
 .DS_Store
+
+# Cloudflare/wrangler local miniflare state
+.wrangler/
+
+# Per-client onboarding scratch (content.json, originals, manifests)
+.staging/

@@ -42,7 +42,7 @@ const embedTitle = section?.embedTitle || 'Contact form';
 // invisible stega Unicode markers corrupt the key and the API rejects it.
 let effectiveKey = stegaClean(section?.web3formsKeyOverride) || '';
 if (mode === 'built-in' && !effectiveKey) {
-  const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
+  const client = getClient(Astro.locals.isPreview);
   const site = await client.fetch(
     `*[_type == "siteSettings" && _id == "siteSettings"][0]{ web3formsKey }`,
   );

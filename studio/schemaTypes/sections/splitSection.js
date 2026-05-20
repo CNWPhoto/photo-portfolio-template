@@ -77,5 +77,13 @@ export default {
       },
       initialValue: 'left',
     },
+    {
+      name: 'mobileFlipOrder',
+      title: 'Flip image/text order on mobile',
+      type: 'boolean',
+      description:
+        'When on, swap the stacking order of the image and text on mobile (≤900px). Off by default — the section keeps its current mobile order.',
+      initialValue: false,
+    },
   ],
 }

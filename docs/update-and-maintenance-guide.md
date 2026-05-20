@@ -8,7 +8,7 @@
 Your private GitHub repo is the single source of truth for all care plan client sites. A single GitHub Actions workflow (`.github/workflows/deploy.yml`) builds the site once per client (with their Sanity env vars) and uploads the result directly to their Cloudflare account via Direct Upload (not Git-connected).
 
 ```
-Push to main            → Demo canary only (cnw-photo-demo.pages.dev)
+Push to main            → Demo canary only (Worker: cnw-photo-demo.<acct>.workers.dev)
                            Verify it looks right before promoting.
 
 Push to production      → Demo canary + fan-out to every care plan client
@@ -68,11 +68,11 @@ git merge feature/new-section
 git push origin main
 ```
 
-GitHub Actions fires the `demo` job. Watch at `https://github.com/CNWPhoto/photo-portfolio-template/actions`. The workflow builds, deploys to `cnw-photo-demo.pages.dev` via Direct Upload, then runs a smoke test (200 status, non-empty body, `<title>` present). Typical run: ~90 seconds.
+GitHub Actions fires the `demo` job. Watch at `https://github.com/CNWPhoto/photo-portfolio-template/actions`. The workflow builds, pushes Worker secrets via `wrangler secret bulk`, then `wrangler deploy --name cnw-photo-demo`, then a smoke test against the deployed Worker URL (200, non-empty body, `<title>`, trailing-slash redirect). Typical run: ~90 seconds.
 
 ### Step 4 — Verify demo
 
-Visit `https://cnw-photo-demo.pages.dev` and check:
+Visit the demo Worker URL (shown in the workflow's smoke step output) and check:
 - Homepage loads with expected content
 - Navigation works
 - No browser console errors
@@ -91,7 +91,7 @@ git push origin production
 GH Actions re-runs the demo canary, and on its success fans out to every matrix entry in parallel. Each matrix job:
 1. Checks out the code.
 2. Builds with that client's env vars from `client-<slug>` Environment secrets.
-3. Uploads to that client's CF Pages project via `wrangler pages deploy`.
+3. Pushes Worker secrets (`wrangler secret bulk`) and deploys the Worker (`wrangler deploy --name <slug>`) into that client's CF account.
 4. Smoke-tests the deployed URL.
 
 Clients are independent — one failure doesn't stop the others (`fail-fast: false`).
@@ -204,15 +204,26 @@ projectId: process.env.SANITY_STUDIO_PROJECT_ID || 'your-template-id',
 
 Full scenarios + step-by-step recovery commands live in `docs/emergency-playbook.md`. Quick reference:
 
-**Roll back one client (10 seconds)**:
-CF dashboard → client's account → Workers & Pages → their project → Deployments → last known-good → ⋯ → **Rollback to this deployment**.
+**Roll back one client to the previous Worker version (seconds, no rebuild):**
+```sh
+# from your terminal, with the client-<slug> environment available
+CLOUDFLARE_API_TOKEN=<client-token> CLOUDFLARE_ACCOUNT_ID=<acct> \
+  npx wrangler rollback --name <client-slug>
+# (you'll be prompted to pick a previous Version ID, or pass --message + an ID)
+```
+Or via dashboard: CF → client's account → Workers & Pages → `<client-slug>` Worker → **Deployments** tab → choose a previous Version ID → **Rollback**. No build required — instant.
 
-**Roll back all care plan clients (2–5 minutes, automatic)**:
+**Roll back one client via redeploy of an older commit:**
+```sh
+gh workflow run deploy.yml --ref <older-commit-sha-or-tag> -f only_client=<client-slug>
+```
+
+**Roll back the entire fleet (2–5 minutes, automated):**
 ```sh
 git checkout production
 git revert HEAD
 git push origin production
-# Workflow fires, clients redeploy to previous good state
+# Matrix fires, every client redeploys to the previous good state
 ```
 
 Use `git revert` (not `git reset --hard`) — keeps history clean and avoids force-pushing. See `docs/emergency-playbook.md` for force-push and other recovery scenarios.
@@ -221,20 +232,24 @@ Use `git revert` (not `git reset --hard`) — keeps history clean and avoids for
 
 ## Adding a New Care Plan Client
 
-1. Complete the full setup in `docs/client-setup-guide.md` (Sanity + CF Pages + domain + Web3Forms).
+1. Complete the full setup in `docs/client-setup-guide.md` (Sanity + CF token + GH Environment + domain + Web3Forms).
 2. Add their entry to the `matrix.client` list in `.github/workflows/deploy.yml`:
    ```yaml
    - slug: <client-slug>
      sanity_project_id: <sanity-id>
      studio_url: https://<slug>.sanity.studio
-     pages_url: https://<slug>.pages.dev
    ```
+   Also add the same `slug → sanity_project_id, studio_url` mapping to the `client-one` job's `case` block (used by `workflow_dispatch only_client=<slug>`). *Top-of-mind TODO:* consolidate to a single client registry — duplicated in two places today.
 3. Create GitHub Environment `client-<slug>` (Settings → Environments → New) with 4 secrets:
-   - `CF_API_TOKEN` (scoped to client's CF account)
+   - `CF_API_TOKEN` (re-scoped to client's CF account with the **"Edit Cloudflare Workers"** template — Account = that account, Zone = All zones)
    - `CF_ACCOUNT_ID`
    - `SANITY_API_READ_TOKEN`
    - `SANITY_PREVIEW_SECRET`
-4. Commit the workflow change, merge `main → production`, push — their first deploy runs alongside everyone else's.
+4. **First deploy via single-client dispatch** (recommended — staged, not a full fan-out):
+   ```sh
+   gh workflow run deploy.yml --ref main -f only_client=<client-slug>
+   ```
+   Verify it lands green (deploys the Worker, pushes secrets, smoke passes). For the next normal cycle, merging `main → production` includes them in the fan-out.
 5. Add to your uptime monitor (see Monitoring section below).
 
 ---
@@ -255,7 +270,7 @@ Their site keeps running on whatever the last deploy was. You stop deploying new
 **What she owns at handoff:**
 - The source code (fork or zip)
 - Her Sanity project and all content
-- Her Cloudflare account, Pages project, custom domain, DNS
+- Her Cloudflare account, Worker (`<slug>`), custom domain, DNS
 - Her Web3Forms account
 - Her domain registration
 

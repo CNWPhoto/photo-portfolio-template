@@ -8,7 +8,7 @@ import { getClient } from '../../lib/sanity.js';
 import { renderBody, isPortableText } from '../../lib/portableText.js';
 
 const { slug } = Astro.params;
-const client = getClient(Astro.locals.isPreview, (Astro.locals as any).runtime?.env);
+const client = getClient(Astro.locals.isPreview);
 
 const [post, siteSettings, blogPage] = await Promise.all([
   client.fetch(

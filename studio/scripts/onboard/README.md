@@ -10,7 +10,7 @@ fails, fix and re-run just that one. Numbered for order.
 2. Creates / logs into Cloudflare → invites Connor as **Super Administrator**.
 3. Signs up at web3forms.com, clicks the verification email within 90s, sends Connor the access key.
 
-You provide, from the above: the **Sanity project id**, a **Sanity Viewer API token** (sanity.io/manage → API → Tokens), a **scoped CF API token** + **CF account id**, and the **Web3Forms key**.
+You provide, from the above: the **Sanity project id**, a **Sanity Viewer API token** (sanity.io/manage → API → Tokens), a **CF API token scoped with the "Edit Cloudflare Workers" template** (Account = client's account, Zone = All zones), the **CF account id**, and the **Web3Forms key**.
 
 ## The flow
 
@@ -52,12 +52,25 @@ cp studio/.env.dev-snapshot studio/.env && rm studio/.env.dev-snapshot
 # ── Needs CF + GH access ──────────────────────────────────────────────
 node studio/scripts/onboard/70-gh-env.js --slug=<slug> \
   --cf-token=… --cf-account=… --sanity-read-token=… --preview-secret=…
-node studio/scripts/onboard/80-cf-provision.js --slug=<slug> \
-  --cf-token=… --cf-account=… --sanity-read-token=… --preview-secret=…
+
+# 80-cf-provision.js is OBSOLETE on the Workers model — Worker is created
+# on first `wrangler deploy`, and runtime secrets are pushed by the
+# workflow's `wrangler secret bulk` step. Skip it.
+
+# Add the matrix entry (deploy.yml `clients` job) AND the client-one job's
+# slug→config case mapping. Both still hand-edited today; consolidating
+# to a shared client registry is the top scaling follow-up.
 
 git add .github/workflows/deploy.yml studio/.env.<slug>-backup
 git commit -m "chore: onboard <slug>"
-git push origin main                       # demo canary
+git push origin main                       # demo canary rebuilds
+
+# First deploy for the new client — staged, single-client (no fan-out):
+gh workflow run deploy.yml --ref main -f only_client=<slug>
+# Verify the smoke step lands green; the workflow creates the Worker on
+# first deploy and uploads secrets. No production push needed yet.
+
+# When ready to include them in the normal fleet fan-out:
 git checkout production && git merge main --no-ff && git push origin production
 git checkout main                          # back to dev
 
