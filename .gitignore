@@ -7,3 +7,6 @@ dist/
 
 # Cloudflare/wrangler local miniflare state
 .wrangler/
+
+# Per-client onboarding scratch (content.json, originals, manifests)
+.staging/
