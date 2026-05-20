@@ -24,14 +24,14 @@
   "dependencies": {
     "@sanity/assist": "^6.0.6",
     "@sanity/vision": "5.25.1",
-    "react": "^19.1",
+    "react": "^19.2",
     "react-dom": "^19.1",
     "sanity": "5.25.1",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
     "@sanity/eslint-config-studio": "^6.0.0",
-    "@types/react": "^19.1",
+    "@types/react": "^19.2",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9.28",
     "prettier": "^3.5",
