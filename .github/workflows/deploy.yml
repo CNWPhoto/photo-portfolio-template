@@ -165,6 +165,9 @@ jobs:
       fail-fast: false
       matrix:
         client:
+          - slug: karen-conrad-photography
+            sanity_project_id: hydwn002
+            studio_url: https://karen-conrad-photography.sanity.studio
           - slug: kelly-mac-studios
             sanity_project_id: qva1dysl
             studio_url: https://kelly-mac-studios.sanity.studio
@@ -271,6 +274,7 @@ jobs:
             coola-creative) PID=tl3zj8iz; STU=https://coola-creative.sanity.studio;;
             family-demo) PID=v14sne67; STU=https://family-demo.sanity.studio;;
             lavon-photography) PID=3a8494gh; STU=https://lavon-photography.sanity.studio;;
+            karen-conrad-photography) PID=hydwn002; STU=https://karen-conrad-photography.sanity.studio;;
             *) echo "::error::unknown client '${{ inputs.only_client }}'"; exit 1;;
           esac
           echo "pid=$PID" >> "$GITHUB_OUTPUT"
