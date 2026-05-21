@@ -4,6 +4,16 @@ Cloudflare Cache API in Astro middleware, so visitor HTML serves from the CF edg
 
 Two prior ship attempts crashed the demo Worker with `HTTP 404 + 0-byte body` (commits `cce5aba` and `0dd1872`, both reverted). This plan exists because we don't yet know the root cause and the retry needs to be diagnostic-first.
 
+## Context pickup for the implementing session
+
+Read this first before touching code:
+
+- **Authorized approach**: provision a second Worker named `cnw-photo-cache-test` in Connor's existing CF account (same account as `cnw-photo-demo`). Deploy the experimental code there via local `wrangler deploy --name cnw-photo-cache-test`, NOT via GH Actions. Use `wrangler tail --name cnw-photo-cache-test` to capture the actual runtime error from the prior failed attempts. **Demo and all 5 clients stay untouched the entire time.**
+- **Cache API does not work on `*.workers.dev`** per Cloudflare docs and our empirical verification. The test worker URL will be `cnw-photo-cache-test.connor-213.workers.dev` which is workers.dev → caching will be a no-op there. **Final verification must happen on a custom domain** — only Coola (`coolacreative.com`) qualifies today. Plan: use `cnw-photo-cache-test` to diagnose the crash; once the crash is fixed, do a one-off `workflow_dispatch only_client=coola-creative` deploy from the experimental branch to verify caching actually activates. Roll back instantly if anything goes wrong.
+- **What we already know**: setting `Cache-Control` or `Cloudflare-CDN-Cache-Control` headers alone does NOT activate edge caching for Worker SSR responses. Cache API (`caches.default.match` / `put`) is required. The previous two crashes were both inside the `next()`-to-cache plumbing, not in the cache lookup itself. The likely root cause class is response-body / header reconstruction — see Step 1.
+- **Worktree off `main`** so all experiments are isolated. Don't push the experimental branch to `main` until verification passes.
+- **`wrangler tail` is the key tool** that wasn't used in the prior attempts. It surfaces the actual thrown error from the deployed Worker. The instant the test deploy 404s, `tail` will tell you why.
+
 ## Pre-flight checklist
 
 Before any code changes:
@@ -17,7 +27,7 @@ Before any code changes:
   cd ../photo-portfolio-template-cache-experiment
   ```
 
-## Step 1 — Reproduce the failure with logging
+## Step 1 — Reproduce the failure with logging on cnw-photo-cache-test
 
 Before writing the fix, see the actual error. Copy the attempt #2 middleware from commit `0dd1872` (the buffer-and-reconstruct version), but wrap the body-handling block in instrumentation:
 
@@ -33,12 +43,32 @@ try {
 }
 ```
 
-Push the worktree branch to a deploy target you control — either:
+Deploy the worktree branch to the `cnw-photo-cache-test` Worker via direct local wrangler — bypassing GH Actions, which is hard-coded to `cnw-photo-demo`:
 
-- A second demo Worker (e.g. `cnw-photo-cache-test`) you provision manually in your account, OR
-- Use `wrangler dev --remote` to run it against CF's actual edge from your laptop
+```sh
+# From the worktree directory, after npm install and npm run build:
+cd dist
+CLOUDFLARE_API_TOKEN=<demo-cf-token> CLOUDFLARE_ACCOUNT_ID=<demo-account-id> \
+  npx wrangler deploy --name cnw-photo-cache-test
+# The wrangler-action used by CI uses --name override, so this works.
+```
 
-**Do not push the worktree branch to `main`.** The `main` push triggers the production demo deploy; we keep that stable.
+Once deployed, tail it in a separate terminal:
+
+```sh
+CLOUDFLARE_API_TOKEN=<demo-cf-token> CLOUDFLARE_ACCOUNT_ID=<demo-account-id> \
+  npx wrangler tail --name cnw-photo-cache-test
+```
+
+Then curl `https://cnw-photo-cache-test.connor-213.workers.dev/` and watch `tail` print the actual error. The CF tokens for the demo account live in the `demo` GH Environment — fetch via:
+
+```sh
+# Tokens never leave your local shell. They're not committed anywhere.
+gh secret list --env demo
+# Read the values from GitHub Settings → Environments → demo when prompted.
+```
+
+**Do not push the worktree branch to `main`.** The `main` push triggers the production demo deploy on `cnw-photo-demo`; we keep that stable. The experimental branch lives only locally + on `cnw-photo-cache-test`.
 
 Then `wrangler tail --name <test-worker>` and curl the URL. The console.log/error lines tell you what's actually happening — likely candidates:
 
