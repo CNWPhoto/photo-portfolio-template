@@ -10,11 +10,17 @@ import {assertSlug, getArg, withClientEnv, readEnvBackup, sh, STUDIO_DIR, log} f
 
 const slug = assertSlug(getArg('slug', {required: true}))
 const env = readEnvBackup(slug)
+// Add the specific origins this client needs — no wildcards. The Sanity
+// CLI prompts interactively for wildcard confirmation (non-tty error in
+// CI/scripts), and per-client specific origins are tighter security
+// anyway. If a new origin is ever needed (e.g. custom domain after DNS
+// migration), re-run this script after updating SANITY_STUDIO_PREVIEW_URL
+// in the env backup, or use the Sanity Manage UI ad-hoc.
 const origins = [
   'http://localhost:4321',
-  'https://*.pages.dev',
-  `https://${slug}.pages.dev`,
-]
+  env.SANITY_STUDIO_PREVIEW_URL,
+  `https://${slug}.sanity.studio`,
+].filter(Boolean)
 
 await withClientEnv(slug, async () => {
   for (const o of origins) {

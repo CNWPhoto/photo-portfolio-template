@@ -44,18 +44,33 @@ for (const [name, val] of Object.entries(secrets)) {
   log('gh-env', `secret ${name} set`)
 }
 
-// ── deploy.yml matrix insert ──
+// ── deploy.yml matrix + dispatch-case insert ──
 const ymlPath = path.join(REPO_ROOT, '.github/workflows/deploy.yml')
 let yml = fs.readFileSync(ymlPath, 'utf8')
+
+// Matrix entry. pages_url field was dropped post-Workers; the workflow
+// only reads `studio_url` (drives SANITY_STUDIO_URL for stega).
 if (yml.includes(`slug: ${slug}`)) {
-  log('gh-env', `matrix already contains ${slug} — skipping yml edit`)
+  log('gh-env', `matrix already contains ${slug} — skipping matrix edit`)
 } else {
-  const entry = `          - slug: ${slug}\n            sanity_project_id: ${projectId}\n            studio_url: https://${slug}.sanity.studio\n            pages_url: https://${slug}.pages.dev\n`
-  // insert right after `        client:` line, keeping alpha-ish order is
-  // nice-to-have but not required (matrix order is irrelevant to CI).
+  const entry = `          - slug: ${slug}\n            sanity_project_id: ${projectId}\n            studio_url: https://${slug}.sanity.studio\n`
   yml = yml.replace(/(\n {8}client:\n)/, `$1${entry}`)
-  fs.writeFileSync(ymlPath, yml)
   log('gh-env', `inserted ${slug} into deploy.yml matrix`)
 }
 
-log('gh-env', 'NEXT: commit deploy.yml, then 80-cf-provision.js')
+// Dispatch `case` line — drives the workflow_dispatch single-client path.
+// Inserted right before the `*)` default branch.
+const caseLine = `            ${slug}) PID=${projectId}; STU=https://${slug}.sanity.studio;;`
+if (yml.includes(`${slug}) PID=`)) {
+  log('gh-env', `dispatch case already contains ${slug} — skipping case edit`)
+} else {
+  yml = yml.replace(
+    /(\n {12}\*\) echo "::error::unknown client)/,
+    `\n${caseLine}$1`,
+  )
+  log('gh-env', `inserted ${slug} into dispatch case block`)
+}
+
+fs.writeFileSync(ymlPath, yml)
+
+log('gh-env', 'NEXT: commit deploy.yml, then trigger workflow_dispatch')

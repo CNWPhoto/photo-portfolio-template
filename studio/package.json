@@ -9,6 +9,7 @@
     "start": "dotenv -e .env -- sanity start",
     "build": "dotenv -e .env -- sanity build",
     "deploy": "dotenv -e .env -- sanity deploy",
+    "deploy-all": "node scripts/deploy-all-studios.js",
     "deploy-graphql": "dotenv -e .env -- sanity graphql deploy",
     "seed": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token",
     "seed:replace": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token -- --replace",

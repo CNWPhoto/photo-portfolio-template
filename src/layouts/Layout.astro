@@ -24,8 +24,16 @@ const { pageTitle, seoDescription, ogImage, schemaData, breadcrumb, publishDate,
 const isPreview = Astro.locals.isPreview ?? false;
 const client = getClient(isPreview);
 
-const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
-  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{
+// One Sanity round-trip for every settings singleton this Layout needs.
+// Previously six parallel client.fetch() calls — each one its own HTTP
+// request + JSON parse + Sanity-SDK overhead. Workers Free has a 10ms CPU
+// budget per invocation, and ~5 of those were burning ~8ms of fetch
+// overhead before the page even started rendering. Combining into a
+// single multi-singleton projection keeps every per-field selection
+// identical (same downstream code) while collapsing the network + parse
+// cost to one trip.
+const layoutData = await client.fetch(`{
+  "settings": *[_type == "siteSettings" && _id == "siteSettings"][0]{
     fontTheme, subheadingCase, siteName, photographerName, logoType, logoImage, logoLarge, favicon,
     accentColorOverride, textColorPreset, defaultPalette,
     demo,
@@ -45,10 +53,10 @@ const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
         files[] { weight, style, "url": file.asset->url, "extension": file.asset->extension }
       }
     }
-  }`),
-  client.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState, priceRange, areaServed, twitterHandle }`),
-  client.fetch(`*[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts }`),
-  client.fetch(`*[_type == "navSettings" && _id == "navSettings"][0]{
+  },
+  "seo": *[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState, priceRange, areaServed, twitterHandle },
+  "code": *[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts },
+  "nav": *[_type == "navSettings" && _id == "navSettings"][0]{
     navVariant,
     stickyNav,
     links[] {
@@ -59,10 +67,16 @@ const [settings, seo, code, nav, blogConfig, social] = await Promise.all([
         "internalRef": internalRef->{ _type, "slug": slug.current }
       }
     }
-  }`),
-  client.fetch(`*[_type == "blogPage" && _id == "blogPage"][0]{ blogEnabled }`),
-  client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok }`),
-]);
+  },
+  "blogConfig": *[_type == "blogPage" && _id == "blogPage"][0]{ blogEnabled },
+  "social": *[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok }
+}`);
+const settings = layoutData?.settings ?? null;
+const seo = layoutData?.seo ?? null;
+const code = layoutData?.code ?? null;
+const nav = layoutData?.nav ?? null;
+const blogConfig = layoutData?.blogConfig ?? null;
+const social = layoutData?.social ?? null;
 
 // Every query result in preview mode is stega-contaminated — invisible
 // markers inside string fields break map lookups (FONT_MAP[fontTheme]),
