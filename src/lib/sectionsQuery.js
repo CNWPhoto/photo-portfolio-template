@@ -4,34 +4,45 @@
 // Generic projection for a section: spread all fields, then deeply expand
 // every known asset reference and dereference linked docs. Each section
 // component picks the fields it needs from the result.
+//
+// `metadata.dimensions` only projects width + height. `aspectRatio` is on
+// the dimensions object too but no component reads it; `getDimensions()`
+// destructures `{ width, height }` only. `lqip` is similarly fetched-but-
+// unused on every section image — `SanityImage` doesn't render it. Blog
+// post hero (`blog/[slug].astro`) uses lqip and keeps its own projection.
+//
+// Referenced docs (`testimonials[]->`, etc.) get explicit projections
+// rather than bare `->` because a bare deref pulls the entire target doc
+// — every field, `_rev`, `_createdAt`, and (in preview) stega markers on
+// each editable string. Section components only consume a known subset.
 export const SECTION_PROJECTION = /* groq */ `
   ...,
   image {
     ...,
     asset->{
       _id,
-      metadata { dimensions { width, height, aspectRatio }, lqip }
+      metadata { dimensions { width, height } }
     }
   },
   backgroundImage {
     ...,
     asset->{
       _id,
-      metadata { dimensions { width, height, aspectRatio }, lqip }
+      metadata { dimensions { width, height } }
     }
   },
   foregroundImage {
     ...,
     asset->{
       _id,
-      metadata { dimensions { width, height, aspectRatio }, lqip }
+      metadata { dimensions { width, height } }
     }
   },
   images[] {
     ...,
     asset->{
       _id,
-      metadata { dimensions { width, height, aspectRatio }, lqip }
+      metadata { dimensions { width, height } }
     }
   },
   columns[] {
@@ -40,7 +51,7 @@ export const SECTION_PROJECTION = /* groq */ `
       ...,
       asset->{
         _id,
-        metadata { dimensions { width, height, aspectRatio }, lqip }
+        metadata { dimensions { width, height } }
       }
     },
     ctaLink {
@@ -54,7 +65,7 @@ export const SECTION_PROJECTION = /* groq */ `
       ...,
       asset->{
         _id,
-        metadata { dimensions { width, height, aspectRatio }, lqip }
+        metadata { dimensions { width, height } }
       }
     }
   },
@@ -62,11 +73,24 @@ export const SECTION_PROJECTION = /* groq */ `
     ...,
     internal->{ _type, "slug": slug.current }
   },
-  testimonials[]->,
-  items[]->,
-  specificPosts[]->,
+  testimonials[]->{
+    _id, testimonial, client, starRating, source, sourceUrl, reviewDate,
+    image {
+      ...,
+      asset->{ _id, metadata { dimensions { width, height } } }
+    }
+  },
+  items[]->{ question, answer },
+  specificPosts[]->{
+    _id, title, "slug": slug.current, publishDate, excerpt,
+    coverImage {
+      ...,
+      asset->{ _id, metadata { dimensions { width, height } } }
+    },
+    "categories": categories[]->{ name, "slug": slug.current }
+  },
   filterByCategory->{ "slug": slug.current, name },
-  embed->
+  embed->{ rawHtml, containerWidth, containerHeight }
 `
 
 // Top-level palette query — returns the palettes array and the default

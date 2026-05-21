@@ -14,7 +14,7 @@ const [post, siteSettings, blogPage] = await Promise.all([
   client.fetch(
     `*[_type == "blogPost" && slug.current == $slug][0]{
       title, publishDate, _updatedAt, excerpt,
-      coverImage { asset->{ _id, metadata { dimensions { width, height, aspectRatio }, lqip } }, alt },
+      coverImage { asset->{ _id, metadata { dimensions { width, height }, lqip } }, alt },
       body,
       "categories": categories[]->{ name, "slug": slug.current }
     }`,
