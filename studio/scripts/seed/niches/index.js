@@ -8,9 +8,11 @@
 // back to 'pets' for backward compatibility with the original seed.js.
 
 import pets from './pets.js'
+import karenConrad from './karen-conrad.js'
 
 export const niches = {
   [pets.slug]: pets,
+  [karenConrad.slug]: karenConrad,
   // [families.slug]: families,
   // [weddings.slug]: weddings,
 }
