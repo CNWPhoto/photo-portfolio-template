@@ -44,7 +44,7 @@ if (sectionImages.length >= 1) {
       images[] {
         _key, alt, title,
         ...,
-        asset->{ _id, metadata { dimensions { width, height, aspectRatio }, lqip } }
+        asset->{ _id, metadata { dimensions { width, height } } }
       }
     }`,
   );

@@ -12,7 +12,7 @@ const [pageDoc, totalCount] = await Promise.all([
     `*[_type == "blogPage"][0]{
       pageTitle,
       seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
-      heroImage { ..., asset->{ _id, metadata { dimensions { width, height, aspectRatio }, lqip } } },
+      heroImage { ..., asset->{ _id, metadata { dimensions { width, height } } } },
       heroEyebrow,
       heroHeading,
       heroSubtext,
@@ -75,7 +75,7 @@ const posts = await client.fetch(
   `*[_type == "blogPost" && defined(slug.current)] | order(publishDate desc) [$skip...$end]{
     _id, title, slug, publishDate, excerpt,
     "categories": categories[]->{ name, "slug": slug.current },
-    coverImage { ..., asset->{ _id, url, metadata { dimensions { width, height }, lqip } } }
+    coverImage { ..., asset->{ _id, url, metadata { dimensions { width, height } } } }
   }`,
   { skip, end: skip + postsPerPage },
   { cache: 'no-store' }
