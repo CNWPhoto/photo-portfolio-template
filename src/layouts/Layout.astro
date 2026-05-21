@@ -368,9 +368,28 @@ const schemaJSON = schemaGraph.length
 	</head>
 	<body data-nav-variant={navVariant} data-hero-overlay={heroOverlay ? 'true' : undefined}>
 		{isPreview && (
-			<div class="preview-banner">
-				<span>Preview mode — draft content visible</span>
-				<a href="/api/disable-preview">Exit preview</a>
+			<div class="preview-banner" data-preview-banner role="status" aria-live="polite">
+				<span class="preview-banner__text">
+					<strong class="preview-banner__lead">You're previewing your latest edits.</strong>
+					<span class="preview-banner__sub">Visitors continue to see your published site as normal. This bar only appears for you.</span>
+				</span>
+				<a
+					class="preview-banner__action"
+					href={`/api/disable-preview?return=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`}
+				>
+					View as visitor
+				</a>
+				<script is:inline>
+					// Hide the banner inside Sanity Presentation's iframe — the editor
+					// already knows they're editing, so the bar is just noise there.
+					// The check has to run on the rendered DOM, so it lives next to the
+					// element it controls and uses display:none rather than removing
+					// the node (lets us flip it back if the iframe state changes).
+					if (window.top !== window.self) {
+						const b = document.querySelector('[data-preview-banner]');
+						if (b) b.style.display = 'none';
+					}
+				</script>
 			</div>
 		)}
 		<DemoBanner demo={demoSettings} />
@@ -722,29 +741,71 @@ const schemaJSON = schemaGraph.length
 
 	/* ══════════════════════════════════════════════════
 	   PREVIEW BANNER
+	   Shown only to authenticated editors (cookie-gated by middleware).
+	   Soft informational bar — explicitly NOT a warning colour — so
+	   editors don't worry their site is "in draft mode." Copy leads
+	   with reassurance about what visitors see.
 	══════════════════════════════════════════════════ */
 	.preview-banner {
 		position: fixed;
-		bottom: 1rem;
-		left: 50%;
-		transform: translateX(-50%);
+		bottom: 0;
+		left: 0;
+		right: 0;
 		z-index: 9999;
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		justify-content: center;
+		gap: 1.5rem;
+		background: #eef2f9;
+		color: #1a2744;
+		font-family: system-ui, -apple-system, sans-serif;
+		font-size: 0.875rem;
+		line-height: 1.4;
+		padding: 0.75rem 1.25rem;
+		border-top: 1px solid #cdd6e6;
+		box-shadow: 0 -4px 16px rgba(26, 39, 68, 0.06);
+		animation: previewBannerSlideUp 0.2s ease-out;
+	}
+	.preview-banner__text {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.125rem;
+	}
+	.preview-banner__lead {
+		font-weight: 600;
+	}
+	.preview-banner__sub {
+		font-size: 0.75rem;
+		color: #4b5d80;
+		font-weight: 400;
+	}
+	.preview-banner__action {
+		flex-shrink: 0;
+		padding: 0.45rem 1rem;
 		background: #1a2744;
 		color: #f5f3ef;
-		font-family: system-ui, sans-serif;
-		font-size: 0.8125rem;
-		padding: 0.5rem 1rem;
-		border-radius: 2rem;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-		white-space: nowrap;
-	}
-	.preview-banner a {
-		color: #c9a96e;
-		text-decoration: underline;
+		text-decoration: none;
 		font-weight: 600;
+		border-radius: 1.25rem;
+		font-size: 0.8125rem;
+		transition: background 0.15s ease;
+	}
+	.preview-banner__action:hover {
+		background: #2a3a5c;
+	}
+	@keyframes previewBannerSlideUp {
+		from { transform: translateY(100%); opacity: 0; }
+		to   { transform: translateY(0);    opacity: 1; }
+	}
+	@media (max-width: 640px) {
+		.preview-banner {
+			flex-direction: column;
+			gap: 0.5rem;
+			padding: 0.65rem 1rem 0.75rem;
+			text-align: center;
+		}
+		.preview-banner__text { align-items: center; }
 	}
 
 
