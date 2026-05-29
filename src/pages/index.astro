@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import SectionRenderer from '../components/SectionRenderer.astro';
 import { getClient } from '../lib/sanity.js';
 import { SECTION_PROJECTION, SITE_PALETTES_QUERY } from '../lib/sectionsQuery.js';
-import { portableTextToString } from '../lib/portableText.js';
+import { buildFaqSchema } from '../lib/faqSchema.js';
 
 const client = getClient(Astro.locals.isPreview);
 
@@ -34,18 +34,7 @@ const heroOverlay =
 	firstSection?.enabled !== false &&
 	firstSection?.variant === 'image-full';
 
-const faqSection = sections.find((s: any) => s._type === 'faqSection');
-const faqs = faqSection?.faqs ?? null;
-const faqSchemaData = faqs?.length && faqSection?.showSchema !== false
-	? [{
-		'@type': 'FAQPage',
-		mainEntity: faqs.map((f: any) => ({
-			'@type': 'Question',
-			name: f.question,
-			acceptedAnswer: { '@type': 'Answer', text: portableTextToString(f.answer) },
-		})),
-	}]
-	: undefined;
+const faqSchemaData = buildFaqSchema(sections);
 ---
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData} {heroOverlay}>

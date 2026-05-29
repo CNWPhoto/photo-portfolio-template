@@ -19,11 +19,16 @@ const baseConfig = {
 // across requests. useCdn: true routes fetches through Sanity's CDN edge
 // (~30–80ms vs ~200–400ms hitting api.sanity.io directly) and doesn't
 // consume the project's API request quota. Trade-off is up to ~10s of
-// staleness on published content, which is invisible in practice and
-// fully sidestepped when the Sanity → CF deploy webhook rebuilds the
-// site on publish. Visual editing is unaffected: the preview client
-// below keeps useCdn: false + perspective: 'drafts' so Presentation
-// always sees real-time draft content.
+// staleness on published content.
+//
+// Note: this is an SSR site (astro.config output: 'server'), so there is
+// NO build-time rebuild on publish — pages render on demand. Visitor-facing
+// freshness after a publish is therefore governed by this ~10s CDN lag PLUS
+// the edge-cache TTL in src/middleware.ts. A future Sanity-webhook → CF
+// cache-purge would make publishes appear within seconds (see the
+// edge-caching plan). Visual editing is unaffected: the preview client
+// below keeps useCdn: false + perspective: 'drafts' so Presentation always
+// sees real-time draft content.
 export const sanityClient = createClient({
   ...baseConfig,
   useCdn: true,
@@ -38,7 +43,7 @@ export const sanityClient = createClient({
 // 3. process.env — Node fallback
 // Same code works on Cloudflare (runtime-only secrets) and local dev
 // (.env file) without per-platform configuration.
-function readEnv(key) {
+export function readEnv(key) {
   return (
     cloudflareEnv?.[key] ||
     import.meta.env[key] ||
@@ -47,9 +52,9 @@ function readEnv(key) {
 }
 
 // Preview client factory — creates a new Sanity client per request using
-// whatever runtime env is available. This is the only way to get secrets
-// working on Cloudflare Pages, where env vars set via the dashboard are
-// runtime-only by default.
+// whatever runtime env is available. On Cloudflare Workers the read token
+// is a runtime-only secret (uploaded via `wrangler secret`), so the client
+// must be built per-request rather than at module load.
 const PREVIEW_FETCH_TIMEOUT_MS = 6000
 
 function createPreviewClient() {
