@@ -80,7 +80,6 @@ export const SECTION_PROJECTION = /* groq */ `
       asset->{ _id, metadata { dimensions { width, height } } }
     }
   },
-  items[]->{ question, answer },
   specificPosts[]->{
     _id, title, "slug": slug.current, publishDate, excerpt,
     coverImage {

@@ -13,6 +13,22 @@ type Entry = { loc: string; lastmod: string; changefreq: string; priority: strin
 
 const fmt = (iso?: string) => (iso ? iso.slice(0, 10) : new Date().toISOString().slice(0, 10));
 
+// Escape the five XML predefined entities — `loc` is built from
+// editor-controlled siteUrl + slugs, and a stray `&` produces a sitemap
+// that fails to parse entirely.
+const xmlEscape = (s: string) =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+// Canonical URLs are slashed (astro.config trailingSlash: 'always'), so the
+// sitemap must list slashed locs too — otherwise every entry 308-redirects
+// and advertises a non-canonical URL. Root stays bare.
+const slashed = (loc: string) => (loc.endsWith('/') ? loc : `${loc}/`);
+
 export const GET: APIRoute = async () => {
   const [seo, singletons, pages, blogPosts, blogCats, portfolioCats] = await Promise.all([
     sanityClient.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl }`),
@@ -142,7 +158,7 @@ export const GET: APIRoute = async () => {
 ${urls
   .map(
     ({ loc, lastmod, changefreq, priority }) => `  <url>
-    <loc>${loc}</loc>
+    <loc>${xmlEscape(slashed(loc))}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>

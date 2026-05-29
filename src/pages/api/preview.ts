@@ -22,15 +22,16 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
   if (!token) {
     return new Response(
       'Preview mode is not configured. SANITY_API_READ_TOKEN is not set on this deployment. ' +
-        'On Cloudflare Pages, make sure it is set as a runtime env var or secret and the site has been redeployed.',
+        'On Cloudflare Workers, upload it via `wrangler secret` (the deploy workflow does this) and redeploy.',
       { status: 500 },
     )
   }
 
-  let validatePreviewUrl, getClient
+  let validatePreviewUrl, getClient, mintPreviewToken
   try {
     ;({ validatePreviewUrl } = await import('@sanity/preview-url-secret'))
     ;({ getClient } = await import('../../lib/sanity.js'))
+    ;({ mintPreviewToken } = await import('../../lib/previewToken'))
   } catch (err) {
     return new Response(
       `Preview mode module load failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -53,7 +54,10 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
   const safeRedirect =
     redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/'
 
-  cookies.set('__sanity_preview', 'true', {
+  // Signed token, not the constant "true" — see lib/previewToken.ts. The
+  // read token used to validate the secret above doubles as the HMAC key.
+  const signedToken = await mintPreviewToken(token)
+  cookies.set('__sanity_preview', signedToken, {
     path: '/',
     httpOnly: true,
     sameSite: 'none',
