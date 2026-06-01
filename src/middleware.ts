@@ -31,10 +31,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // actually carry a cookie pay the verification cost — visitor traffic
   // (no cookie) short-circuits to isPreview=false.
   const previewCookie = context.cookies.get('__sanity_preview')?.value
+  const __dbgKey = readEnv('SANITY_API_READ_TOKEN')
   const isPreview = previewCookie
-    ? await verifyPreviewToken(previewCookie, readEnv('SANITY_API_READ_TOKEN'))
+    ? await verifyPreviewToken(previewCookie, __dbgKey)
     : false
   context.locals.isPreview = isPreview
+  const __dbg = `cookie=${!!previewCookie};keyPresent=${!!__dbgKey};isPreview=${isPreview}`
 
   const cfContext: { waitUntil?: (p: Promise<unknown>) => void } | undefined =
     (context.locals as any).cfContext
@@ -67,6 +69,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // ── Fresh render path ─────────────────────────────────────────────────
   const response = await next()
+  response.headers.set('X-Preview-Debug', __dbg)
   const contentType = response.headers.get('content-type') || ''
   const isHtml = HTML_CONTENT_TYPES.some((t) => contentType.includes(t))
   if (!isHtml) return response
