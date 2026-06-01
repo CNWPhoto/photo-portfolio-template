@@ -27,11 +27,10 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
     )
   }
 
-  let validatePreviewUrl, getClient, mintPreviewToken
+  let validatePreviewUrl, getClient
   try {
     ;({ validatePreviewUrl } = await import('@sanity/preview-url-secret'))
     ;({ getClient } = await import('../../lib/sanity.js'))
-    ;({ mintPreviewToken } = await import('../../lib/previewToken'))
   } catch (err) {
     return new Response(
       `Preview mode module load failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -54,10 +53,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
   const safeRedirect =
     redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/'
 
-  // Signed token, not the constant "true" — see lib/previewToken.ts. The
-  // read token used to validate the secret above doubles as the HMAC key.
-  const signedToken = await mintPreviewToken(token)
-  cookies.set('__sanity_preview', signedToken, {
+  cookies.set('__sanity_preview', 'true', {
     path: '/',
     httpOnly: true,
     sameSite: 'none',
