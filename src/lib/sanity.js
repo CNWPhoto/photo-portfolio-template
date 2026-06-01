@@ -43,7 +43,7 @@ export const sanityClient = createClient({
 // 3. process.env — Node fallback
 // Same code works on Cloudflare (runtime-only secrets) and local dev
 // (.env file) without per-platform configuration.
-export function readEnv(key) {
+function readEnv(key) {
   return (
     cloudflareEnv?.[key] ||
     import.meta.env[key] ||

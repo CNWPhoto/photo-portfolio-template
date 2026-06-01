@@ -1,6 +1,4 @@
 import { defineMiddleware } from 'astro:middleware'
-import { readEnv } from './lib/sanity.js'
-import { verifyPreviewToken } from './lib/previewToken'
 
 // HTML edge-caching at the Cloudflare Worker.
 //
@@ -24,16 +22,13 @@ const HTML_CONTENT_TYPES = ['text/html', 'application/xhtml+xml']
 const CACHE_TTL_SECONDS = 60
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  // Preview mode is gated by a SIGNED cookie, not the mere presence of a
-  // value. The cookie carries an HMAC token minted by /api/preview after a
-  // valid Sanity preview-secret handshake; a hand-forged cookie fails
-  // verification and is treated as a normal visitor. Only requests that
-  // actually carry a cookie pay the verification cost — visitor traffic
-  // (no cookie) short-circuits to isPreview=false.
-  const previewCookie = context.cookies.get('__sanity_preview')?.value
-  const isPreview = previewCookie
-    ? await verifyPreviewToken(previewCookie, readEnv('SANITY_API_READ_TOKEN'))
-    : false
+  // Preview mode: set by /api/preview after a valid Sanity preview-secret
+  // handshake. Presentation runs the site in a third-party iframe, so the
+  // cookie must survive that context — a value-only check keeps the
+  // editor session working across iframe loads and the bridge's in-place
+  // refreshes. (A prior signed-token version broke in-flight Presentation
+  // sessions; see the 2026-06-01 session notes before reintroducing it.)
+  const isPreview = context.cookies.get('__sanity_preview')?.value === 'true'
   context.locals.isPreview = isPreview
 
   const cfContext: { waitUntil?: (p: Promise<unknown>) => void } | undefined =
