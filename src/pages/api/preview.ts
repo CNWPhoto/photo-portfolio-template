@@ -9,7 +9,7 @@ import { env as cloudflareEnv } from 'cloudflare:workers'
 // @sanity/preview-url-secret or the Sanity client fails at module-load time
 // (which on Cloudflare Workers causes the whole route to be unavailable).
 
-export const GET: APIRoute = async ({ request, cookies, redirect }) => {
+export const GET: APIRoute = async ({ request }) => {
   // Read token from multiple sources in priority order:
   // 1. Cloudflare Workers runtime env (secrets, set via CF dashboard)
   // 2. import.meta.env (build-time bundled, for local dev)
@@ -53,13 +53,22 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
   const safeRedirect =
     redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/'
 
-  cookies.set('__sanity_preview', 'true', {
-    path: '/',
-    httpOnly: true,
-    sameSite: 'none',
-    secure: true,
-    maxAge: 60 * 60,
+  // Presentation runs the site as a cross-site iframe inside Studio, so
+  // __sanity_preview is a THIRD-PARTY cookie. Chrome / Safari ITP / Firefox
+  // all block plain SameSite=None third-party cookies now, which silently
+  // turns off draft rendering (isPreview=false) in the iframe — no overlays,
+  // no "Documents on this page". `Partitioned` (CHIPS) opts the cookie into
+  // partitioned storage so it's allowed in the iframe while staying isolated
+  // per top-level site. Requires Secure + SameSite=None (both set).
+  //
+  // Astro's cookie helper has no `partitioned` option yet, so the Set-Cookie
+  // header is written manually and the response returned directly (can't use
+  // the `redirect()` helper, which would emit its own headers).
+  const cookie =
+    `__sanity_preview=true; Path=/; Max-Age=3600; HttpOnly; Secure; ` +
+    `SameSite=None; Partitioned`
+  return new Response(null, {
+    status: 307,
+    headers: { Location: safeRedirect, 'Set-Cookie': cookie },
   })
-
-  return redirect(safeRedirect, 307)
 }
