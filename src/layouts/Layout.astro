@@ -226,7 +226,13 @@ const blogEnabled    = blogConfig?.blogEnabled !== false;
 
 // ── Structured data (JSON-LD @graph) ─────────────────────────────────────────
 const canonicalBase = (cleanSeo?.siteUrl || '').replace(/\/$/, '');
-const canonicalUrl  = canonicalBase ? `${canonicalBase}${Astro.url.pathname}` : null;
+// publicPath: when the blog is served at a custom base (e.g.
+// /lenaweepetcollective/) the middleware rewrites the request to the
+// physical /blog/ route, so Astro.url here would read /blog/. canonicalPath
+// (set by the middleware) preserves the real public path for canonical +
+// breadcrumbs. Falls back to Astro.url for every normal page.
+const publicPath   = (Astro.locals as any).canonicalPath ?? Astro.url.pathname;
+const canonicalUrl  = canonicalBase ? `${canonicalBase}${publicPath}` : null;
 const schemaGraph: Record<string, any>[] = [];
 
 if (canonicalBase) {
@@ -271,8 +277,9 @@ if (canonicalBase) {
     ...(sameAs.length ? { sameAs } : {}),
   });
 
-  // BreadcrumbList — auto-generated from URL path + breadcrumb label
-  const urlPath = Astro.url.pathname;
+  // BreadcrumbList — auto-generated from URL path + breadcrumb label.
+  // Use publicPath so a custom blog base shows in the crumb, not /blog.
+  const urlPath = publicPath;
   if (breadcrumb && urlPath && urlPath !== '/') {
     const segments = urlPath.split('/').filter(Boolean);
     const crumbs: Record<string, any>[] = [
