@@ -5,6 +5,7 @@ import HeroSection from '../components/sections/HeroSection.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
 
 const client = getClient(Astro.locals.isPreview);
+const blogBase = (Astro.locals as any).blogBase || 'blog';
 const currentPage = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10));
 
 const [pageDoc, totalCount] = await Promise.all([
@@ -152,7 +153,7 @@ function formatDate(dateStr?: string): string {
           <div class="cards__grid">
             {displayPosts.map((post, i) => (
               <article class={`card reveal-fade reveal-delay-${Math.min((i % 3) + 1, 3)}`}>
-                <a href={`/blog/${post.slug.current}`} class="card__img-link" tabindex="-1" aria-hidden="true">
+                <a href={`/${blogBase}/${post.slug.current}`} class="card__img-link" tabindex="-1" aria-hidden="true">
                   <img
                     class="card__img"
                     src={postImgUrl(post)}
@@ -165,10 +166,10 @@ function formatDate(dateStr?: string): string {
                 </a>
                 <div class="card__body">
                   {post.categories?.[0] && (
-                    <a class="card__category" href={`/blog/category/${post.categories[0].slug}`}>{post.categories[0].name}</a>
+                    <a class="card__category" href={`/${blogBase}/category/${post.categories[0].slug}`}>{post.categories[0].name}</a>
                   )}
                   <h2 class="card__title">
-                    <a href={`/blog/${post.slug.current}`}>{post.title}</a>
+                    <a href={`/${blogBase}/${post.slug.current}`}>{post.title}</a>
                   </h2>
                   {post.excerpt && <p class="card__excerpt">{post.excerpt}</p>}
                   {post.publishDate && <p class="card__date">{formatDate(post.publishDate)}</p>}
@@ -181,7 +182,7 @@ function formatDate(dateStr?: string): string {
           <div class="posts__list">
             {displayPosts.map((post, i) => (
               <article class={`posts__item ${i % 2 === 1 ? 'posts__item--reversed' : ''}`}>
-                <a href={`/blog/${post.slug.current}`} class="posts__item-inner">
+                <a href={`/${blogBase}/${post.slug.current}`} class="posts__item-inner">
                   <div class="posts__img-col">
                     {post.coverImage?.asset ? (
                       <SanityImage

@@ -1,4 +1,21 @@
 import { defineMiddleware } from 'astro:middleware'
+import { getClient } from './lib/sanity.js'
+
+// Configurable blog base path. Source of truth: blogPage.slug (the sitemap
+// reads the same field). Cached per Worker isolate so this costs at most one
+// Sanity read per cold isolate, not one per request. Default 'blog' → the
+// routing block in onRequest is a no-op, so every other client is unaffected.
+let _blogBase: string | undefined
+async function getBlogBase(): Promise<string> {
+  if (_blogBase !== undefined) return _blogBase
+  try {
+    const slug = await getClient(false).fetch<string | null>(`*[_id=="blogPage"][0].slug.current`)
+    _blogBase = ((slug || 'blog').replace(/^\/+|\/+$/g, '')) || 'blog'
+  } catch {
+    _blogBase = 'blog'
+  }
+  return _blogBase
+}
 
 // HTML edge-caching at the Cloudflare Worker.
 //
@@ -31,6 +48,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isPreview = context.cookies.get('__sanity_preview')?.value === 'true'
   context.locals.isPreview = isPreview
 
+  // ── Configurable blog base path ───────────────────────────────────────
+  // When blogPage.slug !== 'blog' (e.g. 'lenaweepetcollective'):
+  //   • /<base>/…  renders the physical /blog/… routes (internal rewrite)
+  //   • /blog/…    301s to /<base>/…  (canonical; no duplicate content)
+  // locals.canonicalPath carries the public path so canonical tags +
+  // breadcrumbs emit /<base>/… instead of the internal /blog/… .
+  const blogBase = await getBlogBase()
+  ;(context.locals as any).blogBase = blogBase
+  let rewritePath: string | undefined
+  if (blogBase !== 'blog') {
+    const p = context.url.pathname
+    if (p === '/blog' || p.startsWith('/blog/')) {
+      return context.redirect(p.replace(/^\/blog/, `/${blogBase}`) + context.url.search, 301)
+    }
+    if (p === `/${blogBase}` || p.startsWith(`/${blogBase}/`)) {
+      ;(context.locals as any).canonicalPath = p
+      rewritePath = p.replace(new RegExp(`^/${blogBase}`), '/blog')
+    }
+  }
+
   const cfContext: { waitUntil?: (p: Promise<unknown>) => void } | undefined =
     (context.locals as any).cfContext
   const waitUntil = cfContext?.waitUntil?.bind(cfContext)
@@ -61,7 +98,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // ── Fresh render path ─────────────────────────────────────────────────
-  const response = await next()
+  const response = rewritePath ? await next(rewritePath) : await next()
   const contentType = response.headers.get('content-type') || ''
   const isHtml = HTML_CONTENT_TYPES.some((t) => contentType.includes(t))
   if (!isHtml) return response

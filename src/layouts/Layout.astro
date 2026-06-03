@@ -226,7 +226,13 @@ const blogEnabled    = blogConfig?.blogEnabled !== false;
 
 // ── Structured data (JSON-LD @graph) ─────────────────────────────────────────
 const canonicalBase = (cleanSeo?.siteUrl || '').replace(/\/$/, '');
-const canonicalUrl  = canonicalBase ? `${canonicalBase}${Astro.url.pathname}` : null;
+// publicPath: when the blog is served at a custom base (e.g.
+// /lenaweepetcollective/) the middleware rewrites the request to the
+// physical /blog/ route, so Astro.url here would read /blog/. canonicalPath
+// (set by the middleware) preserves the real public path for canonical +
+// breadcrumbs. Falls back to Astro.url for every normal page.
+const publicPath   = (Astro.locals as any).canonicalPath ?? Astro.url.pathname;
+const canonicalUrl  = canonicalBase ? `${canonicalBase}${publicPath}` : null;
 const schemaGraph: Record<string, any>[] = [];
 
 if (canonicalBase) {
@@ -271,8 +277,9 @@ if (canonicalBase) {
     ...(sameAs.length ? { sameAs } : {}),
   });
 
-  // BreadcrumbList — auto-generated from URL path + breadcrumb label
-  const urlPath = Astro.url.pathname;
+  // BreadcrumbList — auto-generated from URL path + breadcrumb label.
+  // Use publicPath so a custom blog base shows in the crumb, not /blog.
+  const urlPath = publicPath;
   if (breadcrumb && urlPath && urlPath !== '/') {
     const segments = urlPath.split('/').filter(Boolean);
     const crumbs: Record<string, any>[] = [
@@ -430,6 +437,43 @@ const schemaJSON = schemaGraph.length
 			if (window.self !== window.top) {
 				import('../lib/visualEditingBridge.js').then((m) => m.mount());
 			}
+		</script>
+
+		<!-- Wrap trademark glyphs (® ™ ℠) site-wide in a small superscript so
+		     they never render at full heading/logo size. Text nodes only —
+		     skips scripts/styles and anything already wrapped (e.g. the nav
+		     wordmark, which is wrapped at build time). -->
+		<script is:inline>
+			(function () {
+				var RX = /[®™℠]/;
+				var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+					acceptNode: function (n) {
+						if (!RX.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+						var p = n.parentNode;
+						if (!p) return NodeFilter.FILTER_REJECT;
+						var t = p.nodeName;
+						if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEXTAREA' || t === 'OPTION') return NodeFilter.FILTER_REJECT;
+						if (p.classList && p.classList.contains('brand-tm')) return NodeFilter.FILTER_REJECT;
+						return NodeFilter.FILTER_ACCEPT;
+					},
+				});
+				var nodes = [], n;
+				while ((n = walker.nextNode())) nodes.push(n);
+				nodes.forEach(function (node) {
+					var frag = document.createDocumentFragment();
+					node.nodeValue.split(/([®™℠])/).forEach(function (part) {
+						if (RX.test(part) && part.length === 1) {
+							var s = document.createElement('sup');
+							s.className = 'brand-tm';
+							s.textContent = part;
+							frag.appendChild(s);
+						} else if (part) {
+							frag.appendChild(document.createTextNode(part));
+						}
+					});
+					node.parentNode.replaceChild(frag, node);
+				});
+			})();
 		</script>
 	</body>
 </html>

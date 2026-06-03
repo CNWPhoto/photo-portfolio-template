@@ -29,8 +29,9 @@ const [post, siteSettings, blogPage] = await Promise.all([
   ),
 ]);
 
+const blogBase = (Astro.locals as any).blogBase || 'blog';
 if (!post) {
-  return Astro.redirect('/blog');
+  return Astro.redirect(`/${blogBase}`);
 }
 
 // Adjacent posts (only fetched if pagination is enabled). "Previous" is the
@@ -158,7 +159,7 @@ const bodyHTML = post.body
           <ul class="post__categories">
             {post.categories.map((c: any) => (
               <li>
-                <a class="post__category" href={`/blog/category/${c.slug}`}>{c.name}</a>
+                <a class="post__category" href={`/${blogBase}/category/${c.slug}`}>{c.name}</a>
               </li>
             ))}
           </ul>

@@ -17,6 +17,7 @@
   --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Spacing tokens — desktop */
+  --section-pad-narrow: 1.5rem;
   --section-pad-compact: 3rem;
   --section-pad-normal: 6rem;
   --section-pad-spacious: 9rem;
@@ -25,6 +26,7 @@
 /* Spacing tokens — mobile */
 @media (max-width: 900px) {
   :root {
+    --section-pad-narrow: 1.25rem;
     --section-pad-compact: 2rem;
     --section-pad-normal: 4rem;
     --section-pad-spacious: 6rem;
@@ -39,7 +41,22 @@
   background: var(--bg);
 }
 
+/* Trademark glyph (® ™ ℠) rendered as a small raised superscript wherever it
+   appears — wrapped at build (nav wordmark) and at runtime (everywhere else)
+   in <sup class="brand-tm">. Keeps ® from rendering at full heading/logo size. */
+.brand-tm {
+  font-size: 0.32em;
+  line-height: 0;
+  position: relative;
+  top: -0.62em;
+  font-weight: 400;
+  margin-left: 0.06em;
+}
+
 /* Per-section spacing applied via [data-spacing] attr on <section> */
+section[data-spacing='narrow'] {
+  padding-block: var(--section-pad-narrow);
+}
 section[data-spacing='compact'] {
   padding-block: var(--section-pad-compact);
 }

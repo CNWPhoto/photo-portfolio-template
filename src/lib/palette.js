@@ -18,6 +18,7 @@ const PALETTE_TO_VAR = [
   ['sectionAlt', '--section-alt'],
   ['sectionDark', '--section-dark'],
   ['sectionDarkText', '--section-dark-text'],
+  ['vibrant', '--vibrant'],
   ['btnBg', '--btn-bg'],
   ['btnText', '--btn-text'],
 ]
@@ -80,25 +81,59 @@ export function applyBackgroundTone(palette, tone) {
       border: palette.sectionDarkText || palette.border,
     }
   }
+  if (tone === 'vibrant') {
+    const bg = palette.vibrant || palette.accent || palette.sectionDark || palette.text
+    // Auto-contrast: light text on a dark vibrant, dark text on a light one,
+    // using the palette's own light/dark text colors. No editor decision.
+    const fg = isDarkColor(bg)
+      ? palette.sectionDarkText || palette.bg || '#ffffff'
+      : palette.text || '#1a1a1a'
+    return {
+      ...palette,
+      bg,
+      bgAlt: bg,
+      surface: bg,
+      text: fg,
+      textMuted: fg,
+      textMutedLight: fg,
+      border: fg,
+      // The site accent now blends into the band; remap links + buttons to a
+      // contrasting inverse (e.g. a white button with vibrant-colored text) so
+      // CTAs stay visible.
+      accent: fg,
+      accentDark: fg,
+      btnBg: fg,
+      btnText: bg,
+    }
+  }
   return palette
 }
 
-// Relative-luminance check on the palette's background color.
-// Returns true when the palette is "dark" (luminance < 0.5) so callers can
-// flip nav color when overlaid on the first section.
-export function isDarkPalette(palette) {
-  if (!palette?.bg) return false
-  const hex = palette.bg.replace('#', '')
-  const full = hex.length === 3
-    ? hex.split('').map((c) => c + c).join('')
-    : hex
-  if (full.length !== 6) return false
-  const r = parseInt(full.slice(0, 2), 16) / 255
-  const g = parseInt(full.slice(2, 4), 16) / 255
-  const b = parseInt(full.slice(4, 6), 16) / 255
+// WCAG relative luminance of a hex color (0 = black … 1 = white).
+function relLuminance(hex) {
+  const h = (hex || '').replace('#', '')
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h
+  if (full.length !== 6) return 1
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255)
   const lin = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))
-  const luminance = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
-  return luminance < 0.5
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+}
+
+// True when a color wants LIGHT text on top — decided by WCAG contrast ratio
+// (white-text contrast vs black-text contrast), not a raw luminance threshold.
+// A mid-light color like gold (#c9a96e) correctly prefers dark text. Used to
+// auto-pick contrasting text for the Vibrant section tone.
+export function isDarkColor(hex) {
+  const L = relLuminance(hex)
+  const whiteContrast = (1 + 0.05) / (L + 0.05)
+  const blackContrast = (L + 0.05) / 0.05
+  return whiteContrast >= blackContrast
+}
+
+// True when the palette's background is dark — callers flip nav color when the
+// nav overlays the first section.
+export function isDarkPalette(palette) {
+  return !!palette?.bg && isDarkColor(palette.bg)
 }
 
 // Hardcoded fallback palettes for legacy data-theme strings. Mirror the
@@ -110,6 +145,7 @@ const LEGACY_THEMES = {
     text: '#1a2744', textMuted: '#4a5568', textMutedLight: '#8a94a6',
     accent: '#8b2635', accentDark: '#6b1c28', border: '#d4cfc6',
     sectionAlt: '#edeae4', sectionDark: '#1a2744', sectionDarkText: '#f5f3ef',
+    vibrant: '#d8a23a',
     btnBg: '#8b2635', btnText: '#ffffff',
   },
   'warm-studio': {
@@ -117,6 +153,7 @@ const LEGACY_THEMES = {
     text: '#2c1810', textMuted: '#6b4c3b', textMutedLight: '#a88070',
     accent: '#c9702a', accentDark: '#a85a20', border: '#e8d5c0',
     sectionAlt: '#f5ead9', sectionDark: '#2c1810', sectionDarkText: '#fdf6ee',
+    vibrant: '#2e8b82',
     btnBg: '#c9702a', btnText: '#ffffff',
   },
   'dark-editorial': {
@@ -124,6 +161,7 @@ const LEGACY_THEMES = {
     text: '#f0ede8', textMuted: '#a0998e', textMutedLight: '#6b645c',
     accent: '#c9a96e', accentDark: '#a8895a', border: '#3a3a3a',
     sectionAlt: '#252525', sectionDark: '#111111', sectionDarkText: '#f0ede8',
+    vibrant: '#c5543c',
     btnBg: '#c9a96e', btnText: '#1a1a1a',
   },
   'cool-minimal': {
@@ -131,6 +169,7 @@ const LEGACY_THEMES = {
     text: '#1c2b3a', textMuted: '#4a5e6e', textMutedLight: '#8a99a6',
     accent: '#4a7c9e', accentDark: '#3a6480', border: '#d0d8de',
     sectionAlt: '#eef1f4', sectionDark: '#1c2b3a', sectionDarkText: '#f8f9fa',
+    vibrant: '#e76f51',
     btnBg: '#4a7c9e', btnText: '#ffffff',
   },
   'forest-sage': {
@@ -138,6 +177,7 @@ const LEGACY_THEMES = {
     text: '#1e2d1f', textMuted: '#4a5e4b', textMutedLight: '#8a9e8b',
     accent: '#5a7a4e', accentDark: '#456040', border: '#ccd6c8',
     sectionAlt: '#e4ebe0', sectionDark: '#1e2d1f', sectionDarkText: '#f2f4f0',
+    vibrant: '#c0613a',
     btnBg: '#5a7a4e', btnText: '#ffffff',
   },
 }

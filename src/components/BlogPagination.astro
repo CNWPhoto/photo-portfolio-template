@@ -15,11 +15,12 @@ interface Props {
 
 const { prev, next } = Astro.props;
 if (!prev && !next) return null;
+const blogBase = (Astro.locals as any).blogBase || 'blog';
 ---
 
 <nav class="postnav" aria-label="Blog pagination">
   {prev ? (
-    <a href={`/blog/${prev.slug}`} class="postnav__link postnav__link--prev">
+    <a href={`/${blogBase}/${prev.slug}`} class="postnav__link postnav__link--prev">
       <span class="postnav__label">&larr; Previous Post</span>
       <span class="postnav__title">{prev.title}</span>
     </a>
@@ -27,7 +28,7 @@ if (!prev && !next) return null;
     <span class="postnav__spacer" />
   )}
   {next ? (
-    <a href={`/blog/${next.slug}`} class="postnav__link postnav__link--next">
+    <a href={`/${blogBase}/${next.slug}`} class="postnav__link postnav__link--next">
       <span class="postnav__label">Next Post &rarr;</span>
       <span class="postnav__title">{next.title}</span>
     </a>

@@ -36,9 +36,31 @@ export const palette = {
       name: 'slug',
       title: 'Slug',
       type: 'slug',
-      description: 'Used to reference this palette from sections',
+      description:
+        'Unique id used to reference this palette. New palettes get a unique slug automatically; click "Generate" to derive a clean one from the name. Each palette must be unique.',
       options: {source: 'name', maxLength: 64},
-      validation: (Rule) => Rule.required(),
+      // New palettes (incl. duplicated ones) default to a unique slug so they
+      // can't silently inherit an existing palette's slug — the bug that let a
+      // "Michelle" palette collide with the stock "warm-studio".
+      initialValue: () => ({
+        _type: 'slug',
+        current: `palette-${Math.random().toString(36).slice(2, 8)}`,
+      }),
+      validation: (Rule) => [
+        Rule.required(),
+        // Non-blocking warning if two palettes share a slug (e.g. after a
+        // duplicate) — the active palette is matched by slug, so collisions
+        // shadow one another. Regenerate to resolve.
+        Rule.custom((slug, context) => {
+          const current = slug?.current
+          if (!current) return true
+          const palettes = context?.document?.palettes || []
+          const count = palettes.filter((p) => p?.slug?.current === current).length
+          return count > 1
+            ? 'Another palette already uses this slug — regenerate so each palette is unique.'
+            : true
+        }).warning(),
+      ],
     },
     colorField('bg', 'Background', 'Page background'),
     colorField('bgAlt', 'Background Alt', 'Alternate background (cards, surfaces)'),
@@ -52,6 +74,11 @@ export const palette = {
     colorField('sectionAlt', 'Section Alt', 'Alternate section background'),
     colorField('sectionDark', 'Section Dark', 'Dark section background'),
     colorField('sectionDarkText', 'Section Dark Text', 'Text color on dark sections'),
+    colorField(
+      'vibrant',
+      'Vibrant',
+      'Bold/colorful section background for the "Vibrant" tone. Pick a punchy brand color — text auto-contrasts (light on dark, dark on light).',
+    ),
     colorField('btnBg', 'Button Background', 'Button background color'),
     colorField('btnText', 'Button Text', 'Button text color'),
   ],
