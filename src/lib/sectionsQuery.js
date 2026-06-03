@@ -102,7 +102,7 @@ export const SITE_PALETTES_QUERY = /* groq */ `
       "slug": slug.current,
       bg, bgAlt, surface, text, textMuted, textMutedLight,
       accent, accentDark, border, sectionAlt, sectionDark,
-      sectionDarkText, btnBg, btnText
+      sectionDarkText, vibrant, btnBg, btnText
     },
     defaultPalette
   }
