@@ -41,7 +41,7 @@ const layoutData = await client.fetch(`{
       "slug": slug.current,
       bg, bgAlt, surface, text, textMuted, textMutedLight,
       accent, accentDark, border, sectionAlt, sectionDark,
-      sectionDarkText, btnBg, btnText
+      sectionDarkText, vibrant, btnBg, btnText
     },
     customFonts {
       heading {
@@ -137,6 +137,7 @@ const PALETTE_TO_VAR: Array<[string, string]> = [
   ['sectionAlt', '--section-alt'],
   ['sectionDark', '--section-dark'],
   ['sectionDarkText', '--section-dark-text'],
+  ['vibrant', '--vibrant'],
   ['btnBg', '--btn-bg'],
   ['btnText', '--btn-text'],
 ];
