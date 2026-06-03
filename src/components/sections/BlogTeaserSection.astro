@@ -21,7 +21,8 @@ const showCategory = section?.showCategory !== false;
 const showExcerpt = section?.showExcerpt !== false;
 const showDate = section?.showDate !== false;
 const ctaText = section?.ctaText || '';
-const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || '/blog';
+const blogBase = (Astro.locals as any).blogBase || 'blog';
+const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]) || `/${blogBase}`;
 
 const client = getClient(Astro.locals.isPreview);
 let posts: any[] = [];
@@ -69,7 +70,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     <div class="blogteaser__grid">
       {posts.map((post) => (
         <article class="blogteaser__card">
-          <a href={`/blog/${post.slug}`} class="blogteaser__anchor">
+          <a href={`/${blogBase}/${post.slug}`} class="blogteaser__anchor">
             {post?.coverImage?.asset && (
               <div class="blogteaser__img-wrap">
                 <SanityImage
