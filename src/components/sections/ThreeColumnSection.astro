@@ -110,8 +110,15 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     background: var(--bg);
     color: var(--text);
     position: relative;
-    padding: 6rem 0 !important;
+    /* Default = normal section padding. The !important is kept (it guards
+       against inherited section resets), so the data-spacing overrides below
+       must also be !important to win. */
+    padding: var(--section-pad-normal) 0 !important;
   }
+  /* Respect the Vertical Padding field (data-spacing) — see palette.css tokens. */
+  .threecol[data-spacing='narrow'] { padding-block: var(--section-pad-narrow) !important; }
+  .threecol[data-spacing='compact'] { padding-block: var(--section-pad-compact) !important; }
+  .threecol[data-spacing='spacious'] { padding-block: var(--section-pad-spacious) !important; }
 
   .threecol__outer {
     display: grid;

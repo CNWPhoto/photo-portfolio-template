@@ -438,6 +438,43 @@ const schemaJSON = schemaGraph.length
 				import('../lib/visualEditingBridge.js').then((m) => m.mount());
 			}
 		</script>
+
+		<!-- Wrap trademark glyphs (® ™ ℠) site-wide in a small superscript so
+		     they never render at full heading/logo size. Text nodes only —
+		     skips scripts/styles and anything already wrapped (e.g. the nav
+		     wordmark, which is wrapped at build time). -->
+		<script is:inline>
+			(function () {
+				var RX = /[®™℠]/;
+				var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+					acceptNode: function (n) {
+						if (!RX.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+						var p = n.parentNode;
+						if (!p) return NodeFilter.FILTER_REJECT;
+						var t = p.nodeName;
+						if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEXTAREA' || t === 'OPTION') return NodeFilter.FILTER_REJECT;
+						if (p.classList && p.classList.contains('brand-tm')) return NodeFilter.FILTER_REJECT;
+						return NodeFilter.FILTER_ACCEPT;
+					},
+				});
+				var nodes = [], n;
+				while ((n = walker.nextNode())) nodes.push(n);
+				nodes.forEach(function (node) {
+					var frag = document.createDocumentFragment();
+					node.nodeValue.split(/([®™℠])/).forEach(function (part) {
+						if (RX.test(part) && part.length === 1) {
+							var s = document.createElement('sup');
+							s.className = 'brand-tm';
+							s.textContent = part;
+							frag.appendChild(s);
+						} else if (part) {
+							frag.appendChild(document.createTextNode(part));
+						}
+					});
+					node.parentNode.replaceChild(frag, node);
+				});
+			})();
+		</script>
 	</body>
 </html>
 
