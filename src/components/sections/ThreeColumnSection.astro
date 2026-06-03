@@ -185,6 +185,12 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     row-gap: 4rem;
     padding-top: 2.75rem;
   }
+  /* No heading/eyebrow → the head isn't rendered, so the grid is the first
+     child. Drop the top padding (meant to clear the head) so a heading-less
+     row — e.g. the trust badges — sits vertically centered, not top-heavy. */
+  .threecol__inner > .threecol__grid:first-child {
+    padding-top: 0;
+  }
   /* Vertical centering only when the editor has hidden media on at
      least one column — signal that they're intentionally mixing
      heights. A text-only column then sits with its midline at the
