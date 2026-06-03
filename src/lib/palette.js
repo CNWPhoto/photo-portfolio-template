@@ -18,6 +18,7 @@ const PALETTE_TO_VAR = [
   ['sectionAlt', '--section-alt'],
   ['sectionDark', '--section-dark'],
   ['sectionDarkText', '--section-dark-text'],
+  ['vibrant', '--vibrant'],
   ['btnBg', '--btn-bg'],
   ['btnText', '--btn-text'],
 ]
@@ -80,25 +81,59 @@ export function applyBackgroundTone(palette, tone) {
       border: palette.sectionDarkText || palette.border,
     }
   }
+  if (tone === 'vibrant') {
+    const bg = palette.vibrant || palette.accent || palette.sectionDark || palette.text
+    // Auto-contrast: light text on a dark vibrant, dark text on a light one,
+    // using the palette's own light/dark text colors. No editor decision.
+    const fg = isDarkColor(bg)
+      ? palette.sectionDarkText || palette.bg || '#ffffff'
+      : palette.text || '#1a1a1a'
+    return {
+      ...palette,
+      bg,
+      bgAlt: bg,
+      surface: bg,
+      text: fg,
+      textMuted: fg,
+      textMutedLight: fg,
+      border: fg,
+      // The site accent now blends into the band; remap links + buttons to a
+      // contrasting inverse (e.g. a white button with vibrant-colored text) so
+      // CTAs stay visible.
+      accent: fg,
+      accentDark: fg,
+      btnBg: fg,
+      btnText: bg,
+    }
+  }
   return palette
 }
 
-// Relative-luminance check on the palette's background color.
-// Returns true when the palette is "dark" (luminance < 0.5) so callers can
-// flip nav color when overlaid on the first section.
-export function isDarkPalette(palette) {
-  if (!palette?.bg) return false
-  const hex = palette.bg.replace('#', '')
-  const full = hex.length === 3
-    ? hex.split('').map((c) => c + c).join('')
-    : hex
-  if (full.length !== 6) return false
-  const r = parseInt(full.slice(0, 2), 16) / 255
-  const g = parseInt(full.slice(2, 4), 16) / 255
-  const b = parseInt(full.slice(4, 6), 16) / 255
+// WCAG relative luminance of a hex color (0 = black … 1 = white).
+function relLuminance(hex) {
+  const h = (hex || '').replace('#', '')
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h
+  if (full.length !== 6) return 1
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255)
   const lin = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))
-  const luminance = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
-  return luminance < 0.5
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+}
+
+// True when a color wants LIGHT text on top — decided by WCAG contrast ratio
+// (white-text contrast vs black-text contrast), not a raw luminance threshold.
+// A mid-light color like gold (#c9a96e) correctly prefers dark text. Used to
+// auto-pick contrasting text for the Vibrant section tone.
+export function isDarkColor(hex) {
+  const L = relLuminance(hex)
+  const whiteContrast = (1 + 0.05) / (L + 0.05)
+  const blackContrast = (L + 0.05) / 0.05
+  return whiteContrast >= blackContrast
+}
+
+// True when the palette's background is dark — callers flip nav color when the
+// nav overlays the first section.
+export function isDarkPalette(palette) {
+  return !!palette?.bg && isDarkColor(palette.bg)
 }
 
 // Hardcoded fallback palettes for legacy data-theme strings. Mirror the

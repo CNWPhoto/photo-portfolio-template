@@ -74,6 +74,11 @@ export const palette = {
     colorField('sectionAlt', 'Section Alt', 'Alternate section background'),
     colorField('sectionDark', 'Section Dark', 'Dark section background'),
     colorField('sectionDarkText', 'Section Dark Text', 'Text color on dark sections'),
+    colorField(
+      'vibrant',
+      'Vibrant',
+      'Bold/colorful section background for the "Vibrant" tone. Pick a punchy brand color — text auto-contrasts (light on dark, dark on light).',
+    ),
     colorField('btnBg', 'Button Background', 'Button background color'),
     colorField('btnText', 'Button Text', 'Button text color'),
   ],
