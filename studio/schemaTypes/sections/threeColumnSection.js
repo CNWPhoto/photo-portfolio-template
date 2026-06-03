@@ -33,6 +33,21 @@ export default {
       description: 'Use a line break (Enter) to split onto two lines.',
     },
     {
+      name: 'spacing',
+      title: 'Vertical Padding',
+      type: 'string',
+      description:
+        'Default uses the standard section padding. Narrow tightens it to a slim band (~25px top and bottom) — handy for a compact row of cards.',
+      options: {
+        list: [
+          {title: 'Default', value: 'normal'},
+          {title: 'Narrow (~25px)', value: 'narrow'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'normal',
+    },
+    {
       name: 'columns',
       title: 'Cards',
       type: 'array',

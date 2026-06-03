@@ -38,6 +38,11 @@ const showImageLogo = logoType === 'image' && logoImage;
 // Retina: request 2× the CSS max-height. Large doubles both.
 const logoImgHeight = logoLarge ? 192 : 96;
 
+// Wrap a trademark glyph (® ™ ℠) in a small superscript so it doesn't render
+// at the full wordmark size. siteName is stegaClean'd in Layout → plain text,
+// safe to set:html.
+const brandMarkup = (siteName || '').replace(/([®™℠])/g, '<sup class="brand-tm">$1</sup>');
+
 // Default links used when nothing is configured in Sanity yet
 const defaultLinks = [
 	{ label: 'Experience', url: '/experience', enabled: true, openInNewTab: false, isButton: false, linkType: 'external' },
@@ -123,7 +128,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		)}
 		{showImageLogo
 			? <a href="/" class="nav__logo nav__logo--image" data-sanity={logoSanityAttr}><img src={urlFor(logoImage).height(logoImgHeight).auto('format').url()} alt={siteName} class:list={['nav__logo-img', logoLarge && 'nav__logo-img--large']} decoding="async" /></a>
-			: <a href="/" class="nav__logo" data-sanity={logoSanityAttr}>{siteName}</a>
+			: <a href="/" class="nav__logo" data-sanity={logoSanityAttr} set:html={brandMarkup}></a>
 		}
 		<nav aria-label="Main navigation">
 			<ul class={`nav__links${isSplit ? ' nav__links--right' : ''}`}>
@@ -194,7 +199,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		</button>
 		{showImageLogo
 			? <a href="/" class="nav__overlay-logo nav__overlay-logo--image"><img src={urlFor(logoImage).height(logoImgHeight).auto('format').url()} alt={siteName} class:list={['nav__logo-img', logoLarge && 'nav__logo-img--large']} decoding="async" /></a>
-			: <a href="/" class="nav__overlay-logo">{siteName}</a>
+			: <a href="/" class="nav__overlay-logo" set:html={brandMarkup}></a>
 		}
 		<nav aria-label="Mobile navigation">
 			<ul class="nav__overlay-links">
@@ -263,6 +268,17 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	}
 
 	.nav__logo:hover { opacity: 0.7; }
+
+	/* Trademark glyph (®/™) as a small superscript so it doesn't render at
+	   the full wordmark size. Applies to both the in-flow and overlay logos. */
+	.nav__logo .brand-tm,
+	.nav__overlay-logo .brand-tm {
+		font-size: 0.42em;
+		vertical-align: super;
+		line-height: 0;
+		font-weight: 600;
+		margin-left: 0.04em;
+	}
 
 	.nav__logo--image {
 		display: flex;
