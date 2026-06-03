@@ -270,6 +270,10 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     font-weight: 600;
     margin: 0 0 1rem;
   }
+  /* When the title is the only thing in the column (e.g. a text-only badge
+     row), drop its bottom margin so the text sits centered in the band
+     instead of pushed up by the gap meant to separate it from a body. */
+  .threecol__title:last-child { margin-bottom: 0; }
   .threecol__body :global(p),
   .threecol__body :global(.threecol__col-body) {
     font-size: 0.9375rem;

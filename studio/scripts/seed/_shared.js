@@ -82,6 +82,7 @@ export const palettes = [
     text: '#1a2744', textMuted: '#4a5568', textMutedLight: '#8a94a6',
     accent: '#8b2635', accentDark: '#6b1c28', border: '#d4cfc6',
     sectionAlt: '#edeae4', sectionDark: '#1a2744', sectionDarkText: '#f5f3ef',
+    vibrant: '#d8a23a',
     btnBg: '#8b2635', btnText: '#ffffff',
   },
   {
@@ -92,6 +93,7 @@ export const palettes = [
     text: '#2c1810', textMuted: '#6b4c3b', textMutedLight: '#a88070',
     accent: '#c9702a', accentDark: '#a85a20', border: '#e8d5c0',
     sectionAlt: '#f5ead9', sectionDark: '#2c1810', sectionDarkText: '#fdf6ee',
+    vibrant: '#2e8b82',
     btnBg: '#c9702a', btnText: '#ffffff',
   },
   {
@@ -102,6 +104,7 @@ export const palettes = [
     text: '#f0ede8', textMuted: '#a0998e', textMutedLight: '#6b645c',
     accent: '#c9a96e', accentDark: '#a8895a', border: '#3a3a3a',
     sectionAlt: '#252525', sectionDark: '#111111', sectionDarkText: '#f0ede8',
+    vibrant: '#c5543c',
     btnBg: '#c9a96e', btnText: '#1a1a1a',
   },
   {
@@ -112,6 +115,7 @@ export const palettes = [
     text: '#1c2b3a', textMuted: '#4a5e6e', textMutedLight: '#8a99a6',
     accent: '#4a7c9e', accentDark: '#3a6480', border: '#d0d8de',
     sectionAlt: '#eef1f4', sectionDark: '#1c2b3a', sectionDarkText: '#f8f9fa',
+    vibrant: '#e76f51',
     btnBg: '#4a7c9e', btnText: '#ffffff',
   },
   {
@@ -122,6 +126,7 @@ export const palettes = [
     text: '#1e2d1f', textMuted: '#4a5e4b', textMutedLight: '#8a9e8b',
     accent: '#5a7a4e', accentDark: '#456040', border: '#ccd6c8',
     sectionAlt: '#e4ebe0', sectionDark: '#1e2d1f', sectionDarkText: '#f2f4f0',
+    vibrant: '#c0613a',
     btnBg: '#5a7a4e', btnText: '#ffffff',
   },
 ]
