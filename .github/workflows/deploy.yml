@@ -170,6 +170,9 @@ jobs:
       fail-fast: false
       matrix:
         client:
+          - slug: wedding-demo
+            sanity_project_id: boa9509d
+            studio_url: https://wedding-demo.sanity.studio
           - slug: pets-in-focus
             sanity_project_id: tryjma1z
             studio_url: https://pets-in-focus.sanity.studio
@@ -284,6 +287,7 @@ jobs:
             lavon-photography) PID=3a8494gh; STU=https://lavon-photography.sanity.studio;;
             karen-conrad-photography) PID=hydwn002; STU=https://karen-conrad-photography.sanity.studio;;
             pets-in-focus) PID=tryjma1z; STU=https://pets-in-focus.sanity.studio;;
+            wedding-demo) PID=boa9509d; STU=https://wedding-demo.sanity.studio;;
             *) echo "::error::unknown client '${{ inputs.only_client }}'"; exit 1;;
           esac
           echo "pid=$PID" >> "$GITHUB_OUTPUT"
