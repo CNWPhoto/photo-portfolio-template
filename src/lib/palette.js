@@ -83,9 +83,9 @@ export function applyBackgroundTone(palette, tone) {
   }
   if (tone === 'vibrant') {
     const bg = palette.vibrant || palette.accent || palette.sectionDark || palette.text
-    // Auto-contrast: light text on a dark vibrant, dark text on a light one,
-    // using the palette's own light/dark text colors. No editor decision.
-    const fg = isDarkColor(bg)
+    // Prefer the palette's light text on the band; fall back to dark text only
+    // for pale vibrants where white wouldn't be legible. No editor decision.
+    const fg = prefersLightText(bg)
       ? palette.sectionDarkText || palette.bg || '#ffffff'
       : palette.text || '#1a1a1a'
     return {
@@ -121,13 +121,22 @@ function relLuminance(hex) {
 
 // True when a color wants LIGHT text on top — decided by WCAG contrast ratio
 // (white-text contrast vs black-text contrast), not a raw luminance threshold.
-// A mid-light color like gold (#c9a96e) correctly prefers dark text. Used to
-// auto-pick contrasting text for the Vibrant section tone.
+// A mid-light color like gold (#c9a96e) correctly prefers dark text. Used for
+// the nav-overlay color flip (isDarkPalette).
 export function isDarkColor(hex) {
   const L = relLuminance(hex)
   const whiteContrast = (1 + 0.05) / (L + 0.05)
   const blackContrast = (L + 0.05) / 0.05
   return whiteContrast >= blackContrast
+}
+
+// Vibrant bands prefer LIGHT text (the convention for bold colors), falling
+// back to dark only when white text would be illegible (white-on-color < 3:1,
+// WCAG AA Large — e.g. a pale gold/amber vibrant). Intentionally different from
+// isDarkColor's pure max-contrast pick: a saturated mid-tone (e.g. #E63772)
+// reads better with white text even when dark scores marginally higher.
+export function prefersLightText(hex) {
+  return (1 + 0.05) / (relLuminance(hex) + 0.05) >= 3
 }
 
 // True when the palette's background is dark — callers flip nav color when the
