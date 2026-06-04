@@ -24,7 +24,11 @@ import {getArg, readEnvBackup, STUDIO_DIR, log} from './onboard/lib.js'
 
 const __filename = fileURLToPath(import.meta.url)
 
-const concurrency = Number(getArg('concurrency', {fallback: 5}))
+// SEQUENTIAL by default. `sanity deploy` builds into a shared dir under
+// studio/, so running deploys concurrently lets the builds clobber each other
+// and a host can get uploaded with another client's bundle (wrong projectId
+// baked in). Only raise concurrency once each deploy builds in isolation.
+const concurrency = Number(getArg('concurrency', {fallback: 1}))
 const onlyArg = getArg('only')
 const includeDemo = process.argv.includes('--include-demo')
 

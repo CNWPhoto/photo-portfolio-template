@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { applyBackgroundTone, isDarkColor } from '../src/lib/palette.js'
+import { applyBackgroundTone, isDarkColor, prefersLightText } from '../src/lib/palette.js'
 
 const base = {
   bg: '#ffffff',
@@ -19,6 +19,12 @@ describe('isDarkColor', () => {
   it('handles 3-digit hex', () => expect(isDarkColor('#000')).toBe(true))
 })
 
+describe('prefersLightText', () => {
+  it('saturated magenta prefers light text', () => expect(prefersLightText('#E63772')).toBe(true))
+  it('pale gold prefers dark text', () => expect(prefersLightText('#c9a96e')).toBe(false))
+  it('navy prefers light text', () => expect(prefersLightText('#2d4262')).toBe(true))
+})
+
 describe('applyBackgroundTone — vibrant', () => {
   it('uses the vibrant color as background', () => {
     expect(applyBackgroundTone({ ...base, vibrant: '#2d4262' }, 'vibrant').bg).toBe('#2d4262')
@@ -29,9 +35,14 @@ describe('applyBackgroundTone — vibrant', () => {
     expect(p.text).toBe('#fafafa') // palette.sectionDarkText
   })
 
-  it('auto-picks DARK text on a light vibrant', () => {
+  it('auto-picks DARK text on a pale vibrant where white would be illegible', () => {
     const p = applyBackgroundTone({ ...base, vibrant: '#c9a96e' }, 'vibrant')
     expect(p.text).toBe('#111111') // palette.text
+  })
+
+  it('prefers LIGHT text on a saturated mid-tone (e.g. magenta) even if dark scores higher', () => {
+    const p = applyBackgroundTone({ ...base, vibrant: '#E63772' }, 'vibrant')
+    expect(p.text).toBe('#fafafa') // sectionDarkText — white passes AA Large on the band
   })
 
   it('remaps button to a contrasting inverse', () => {
