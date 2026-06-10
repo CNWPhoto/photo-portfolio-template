@@ -118,6 +118,7 @@ export async function cf(token, method, urlPath, body) {
 export const DONORS = {
   'cnw-photo-demo': 'hx5xgigp',
   'family-demo': 'v14sne67',
+  'wedding-demo': 'boa9509d',
   'coola-creative': 'tl3zj8iz',
   'lavon-photography': '3a8494gh',
   'blackbird-photography': '6nc24jar',
