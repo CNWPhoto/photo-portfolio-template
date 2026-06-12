@@ -4,6 +4,11 @@
 
 const FIVE_MB = 5 * 1024 * 1024
 
+// Editor-facing tip for multi-image array fields. Native Studio behavior —
+// surfaced in the field description because editors keep missing it.
+export const BULK_UPLOAD_TIP =
+  '💡 Upload many at once: Cmd/Shift-select multiple files in the upload dialog, or drag several files from your computer straight onto this list. Drag thumbnails to reorder.'
+
 export const imageField = ({
   name = 'image',
   title = 'Image',

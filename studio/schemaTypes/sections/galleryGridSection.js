@@ -1,6 +1,6 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
 import {sectionIcon} from '../../components/SectionIcons'
-import {imageField} from '../_shared/imageField'
+import {imageField, BULK_UPLOAD_TIP} from '../_shared/imageField'
 
 // Manual image grid (not pulled from portfolio).
 // See docs/page-builder-spec.md §2 (galleryGridSection).
@@ -32,6 +32,7 @@ export default {
       name: 'images',
       title: 'Images',
       type: 'array',
+      description: BULK_UPLOAD_TIP,
       of: [
         {
           ...imageField({}),
