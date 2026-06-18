@@ -170,6 +170,9 @@ jobs:
       fail-fast: false
       matrix:
         client:
+          - slug: everlight-education
+            sanity_project_id: jj2etxl1
+            studio_url: https://everlight-education.sanity.studio
           - slug: heatherjl-photography
             sanity_project_id: 7n71940p
             studio_url: https://heatherjl-photography.sanity.studio
@@ -292,6 +295,7 @@ jobs:
             pets-in-focus) PID=tryjma1z; STU=https://pets-in-focus.sanity.studio;;
             wedding-demo) PID=boa9509d; STU=https://wedding-demo.sanity.studio;;
             heatherjl-photography) PID=7n71940p; STU=https://heatherjl-photography.sanity.studio;;
+            everlight-education) PID=jj2etxl1; STU=https://everlight-education.sanity.studio;;
             *) echo "::error::unknown client '${{ inputs.only_client }}'"; exit 1;;
           esac
           echo "pid=$PID" >> "$GITHUB_OUTPUT"
