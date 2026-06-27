@@ -32,6 +32,7 @@ const overlayOpacity = (section?.overlayOpacity ?? 30) / 100;
 const textPosition = stegaClean(section?.textPosition) || 'center-center';
 const textAlignment = stegaClean(section?.textAlignment) || 'center';
 const headingSize = stegaClean(section?.headingSize) || 'large';
+const mobileTextBelow = !!section?.mobileTextBelow;
 
 const FALLBACK_HERO_IDS = ['1108099', '2253275', '825949', '1805164', '3726314'];
 const pexelsUrl = (id: string, w = 1600) =>
@@ -48,6 +49,7 @@ const firstImage = sanityImages[0] ?? null;
   data-text-align={textAlignment}
   data-text-position={textPosition}
   data-heading-size={headingSize}
+  data-mobile-text-below={mobileTextBelow ? 'true' : undefined}
   id={stegaClean(section?.sectionId) || undefined}
   style={style}
 >
@@ -415,6 +417,44 @@ const firstImage = sanityImages[0] ?? null;
     .hero--image-full[data-text-position$='-right'] .hero__bg-overlay,
     .hero--image-full[data-text-position$='-left'] .hero__bg-overlay {
       background: rgba(0, 0, 0, var(--hero-overlay-opacity, 0.3));
+    }
+
+    /* ── Text-below-image (opt-in, image-full only) ──
+       Restructures the absolute overlay into a normal stack on phones:
+       image on top, text below on the section background. Gated entirely
+       on data-mobile-text-below so every other hero is untouched. */
+    .hero--image-full[data-mobile-text-below='true'] .hero__bg {
+      height: auto;
+      min-height: 0;
+    }
+    .hero--image-full[data-mobile-text-below='true'] :global(.hero__bg-img) {
+      position: static;
+      width: 100%;
+      height: 52vh;
+      min-height: 320px;
+      object-fit: cover;
+      display: block;
+    }
+    .hero--image-full[data-mobile-text-below='true'] .hero__bg-overlay {
+      display: none;
+    }
+    .hero--image-full[data-mobile-text-below='true'] .hero__overlay-content {
+      position: static;
+      inset: auto;
+      max-width: none;
+      padding: 2rem 1.5rem;
+      justify-content: flex-start;
+      align-items: flex-start;
+      text-align: left;
+      pointer-events: auto;
+      color: var(--text);
+    }
+    .hero--image-full[data-mobile-text-below='true'] .hero__heading--overlay {
+      color: var(--text);
+      text-shadow: none;
+    }
+    .hero--image-full[data-mobile-text-below='true'] .hero__sub--overlay {
+      color: var(--muted);
     }
   }
 </style>

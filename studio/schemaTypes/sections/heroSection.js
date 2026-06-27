@@ -116,6 +116,15 @@ export default {
       initialValue: 'center-left',
     },
     {
+      name: 'mobileTextBelow',
+      title: 'On mobile, show text below the image',
+      type: 'boolean',
+      description:
+        'Single full-width image variant only. On phones (≤900px) the heading, subheading, and button move below the image instead of being overlaid on it. Off by default — text stays overlaid.',
+      initialValue: false,
+      hidden: ({parent}) => parent?.variant !== 'image-full',
+    },
+    {
       name: 'heightMode',
       title: 'Height',
       type: 'string',
