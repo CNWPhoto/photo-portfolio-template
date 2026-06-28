@@ -40,17 +40,20 @@ const CACHE_TTL_SECONDS = 60
 
 // Security headers for SSR HTML responses. `public/_headers` only applies to
 // statically-served assets on Cloudflare — server-rendered pages bypass it
-// entirely, so without this the pages ship with none of these. The CSP
-// `frame-ancestors` is the important one: it explicitly lets the Sanity
-// Studio iframe the site for Presentation/visual-editing (we deliberately do
-// NOT send X-Frame-Options, which would forbid that framing). Mirrors the
-// rules in public/_headers so SSR and static responses match.
+// entirely, so without this the pages ship with none of these.
+//
+// NOTE: deliberately NO `Content-Security-Policy: frame-ancestors` here.
+// Presentation frames the SSR page inside the Sanity Studio, which is itself
+// embedded in the Sanity dashboard — so the ancestor chain includes Sanity
+// origins beyond *.sanity.studio. A frame-ancestors allowlist blocked the
+// preview (regression, 2026-06-28). The SSR pages send no X-Frame-Options
+// either, so framing stays unrestricted exactly as it was before security
+// headers were added. (Clickjacking on draft-preview pages is low-value.)
 const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
   'X-XSS-Protection': '1; mode=block',
-  'Content-Security-Policy': "frame-ancestors 'self' https://*.sanity.studio http://localhost:3333",
 }
 function applySecurityHeaders(headers: Headers): void {
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v)
