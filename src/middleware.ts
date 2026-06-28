@@ -38,6 +38,24 @@ const HTML_CONTENT_TYPES = ['text/html', 'application/xhtml+xml']
 // requests bypass the cache entirely.
 const CACHE_TTL_SECONDS = 60
 
+// Security headers for SSR HTML responses. `public/_headers` only applies to
+// statically-served assets on Cloudflare — server-rendered pages bypass it
+// entirely, so without this the pages ship with none of these. The CSP
+// `frame-ancestors` is the important one: it explicitly lets the Sanity
+// Studio iframe the site for Presentation/visual-editing (we deliberately do
+// NOT send X-Frame-Options, which would forbid that framing). Mirrors the
+// rules in public/_headers so SSR and static responses match.
+const SECURITY_HEADERS: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+  'X-XSS-Protection': '1; mode=block',
+  'Content-Security-Policy': "frame-ancestors 'self' https://*.sanity.studio http://localhost:3333",
+}
+function applySecurityHeaders(headers: Headers): void {
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v)
+}
+
 export const onRequest = defineMiddleware(async (context, next) => {
   // Preview mode: set by /api/preview after a valid Sanity preview-secret
   // handshake. Presentation runs the site in a third-party iframe, so the
@@ -89,6 +107,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       const headers = new Headers(cached.headers)
       headers.set('Cache-Control', 'no-store, must-revalidate')
       headers.set('X-Cache-Status', 'HIT')
+      applySecurityHeaders(headers)
       return new Response(cached.body, {
         status: cached.status,
         statusText: cached.statusText,
@@ -105,6 +124,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   response.headers.set('Cache-Control', 'no-store, must-revalidate')
   response.headers.set('X-Cache-Status', 'MISS')
+  applySecurityHeaders(response.headers)
 
   // ── Cache write ───────────────────────────────────────────────────────
   // Clone for the cache; the original streams straight to the browser.
