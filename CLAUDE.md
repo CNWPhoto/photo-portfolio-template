@@ -86,18 +86,23 @@ confusion when editing content or debugging Presentation.
 
 1. **`studio/.env` is for local Studio only.** It's gitignored. `SANITY_STUDIO_PREVIEW_URL` inside it controls which origin local Studio's iframe loads.
 2. **Hosted Studio is built once per deploy.** Its preview URL is baked in from `studio/.env` at the moment `npm run deploy` runs. Editing `.env` afterwards does **not** change what the hosted Studio points at.
-3. **Before running `npm run deploy`, flip `.env` to the production URL:**
+3. **Before running `npm run deploy`, flip `.env` to the production URL** (the client's
+   workers.dev host or custom domain — the same value as their `studio/.env.<slug>-backup`):
    ```env
-   SANITY_STUDIO_PREVIEW_URL=https://cnw-photo-demo.pages.dev
+   SANITY_STUDIO_PREVIEW_URL=https://cnw-photo-demo.connor-213.workers.dev
    ```
-   Otherwise the hosted Studio will try to load `localhost:4321` from whoever's using it, which won't work.
+   Otherwise the hosted Studio will try to load `localhost:4321` from whoever's using it, which
+   won't work. (In practice, prefer `npx dotenv -e .env.<slug>-backup -- sanity deploy` or
+   `npm run deploy-all` — no `.env` swap at all.)
 4. **After `npm run deploy`, flip `.env` back to `http://localhost:4321`** so local Studio keeps iframing local Astro for continued dev.
 5. **`presentationTool.allowOrigins`** in `sanity.config.js` must list every origin either Studio might iframe — local + all deployed domains. If you see "Blocked preview URL" warnings, add the origin there.
 
 ### Deploying Astro vs deploying Studio
 
 These are **separate** deploy steps:
-- **Astro** auto-deploys on `git push` via Cloudflare Pages. No manual step.
+- **Astro** deploys via GitHub Actions to Cloudflare Workers: pushing `main` deploys only the
+  demo canary; clients deploy on `main → production` merges (full fan-out) or per-client
+  `workflow_dispatch` with `only_client=<slug>`.
 - **Sanity Studio** is deployed manually per-client via `cd studio && npm run deploy`. Only re-run when Studio code/schema/config changes — not needed for content edits.
 
 ## Architecture

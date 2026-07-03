@@ -3,9 +3,15 @@
 //   node studio/scripts/onboard/20-env.js \
 //     --slug=kelly-mac-studios \
 //     --project-id=<sanity project id> \
-//     --title="Kelly Mac Studios"
+//     --title="Kelly Mac Studios" \
+//     --preview-url=https://<slug>.<account-subdomain>.workers.dev
 //
 // AppId is left blank; 30-studio-deploy.js fills it after the first deploy.
+// --preview-url is required: there is no guessable default post-Workers
+// (the workers.dev host embeds the client's account subdomain, and the old
+// `<slug>.pages.dev` fallback produced silently-wrong Studio previews).
+// Use http://localhost:4321 as an interim when the CF account doesn't
+// exist yet (see the Everlight onboarding).
 
 import fs from 'node:fs'
 import {assertSlug, getArg, envBackupPath, log} from './lib.js'
@@ -13,7 +19,7 @@ import {assertSlug, getArg, envBackupPath, log} from './lib.js'
 const slug = assertSlug(getArg('slug', {required: true}))
 const projectId = getArg('project-id', {required: true})
 const title = getArg('title', {required: true})
-const previewUrl = getArg('preview-url', {fallback: `https://${slug}.pages.dev`})
+const previewUrl = getArg('preview-url', {required: true})
 
 const body = `# ── ${title} ──
 # Restore via: cp studio/.env.${slug}-backup studio/.env
@@ -24,7 +30,7 @@ SANITY_STUDIO_DATASET=production
 SANITY_STUDIO_HOST=${slug}
 SANITY_STUDIO_TITLE=${title}
 
-# Canonical preview URL — soft-launch pages.dev until a custom domain.
+# Canonical preview URL — workers.dev host (or custom domain after cutover).
 SANITY_STUDIO_PREVIEW_URL=${previewUrl}
 
 # Pinned by 30-studio-deploy.js after the first deploy.
