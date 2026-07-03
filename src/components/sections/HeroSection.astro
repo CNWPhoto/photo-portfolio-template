@@ -460,6 +460,49 @@ const firstImage = sanityImages[0] ?? null;
 </style>
 
 <script>
+  // ── Hero heading auto-fit ──────────────────────────────────────────────
+  // Display-size headings can carry a single word wider than the hero text
+  // box (custom fonts especially — real metrics only arrive once the face
+  // loads). The CSS safety net (`overflow-wrap: anywhere`) then breaks the
+  // word mid-glyph, which reads as a typo. This guard shrinks the heading
+  // font just enough that the longest unbreakable word fits, and only
+  // activates when something would actually break — headings that already
+  // fit are untouched. No-JS falls back to today's mid-word break.
+  const fitHeading = (el: HTMLElement) => {
+    el.style.fontSize = '';               // reset so CSS clamp() re-derives base
+    // The limit is the PARENT's content width, not the heading's own
+    // clientWidth: in the overlay the heading is a flex item, so an
+    // over-long word makes the element itself expand to the word's width
+    // (overflow lands on the parent) and self-relative checks never fire.
+    const parent = el.parentElement;
+    if (!parent) return;
+    const pcs = getComputedStyle(parent);
+    const limit = parent.clientWidth - parseFloat(pcs.paddingLeft) - parseFloat(pcs.paddingRight);
+    if (!(limit > 0)) return;
+    el.style.overflowWrap = 'normal';     // widest word must force measurable overflow
+    const base = parseFloat(getComputedStyle(el).fontSize);
+    let size = base;
+    const min = base * 0.55;              // never shrink below ~half — copy that long needs editing
+    let guard = 24;
+    while (el.scrollWidth > limit + 1 && size > min && guard-- > 0) {
+      size *= 0.96;
+      el.style.fontSize = `${size}px`;
+    }
+    el.style.overflowWrap = '';
+  };
+  const fitAllHeadings = () => {
+    document.querySelectorAll<HTMLElement>('.hero .hero__heading').forEach(fitHeading);
+  };
+  // Fonts change metrics after swap — fit once now (fallback metrics) and
+  // again when the real faces finish loading.
+  fitAllHeadings();
+  if (document.fonts?.ready) document.fonts.ready.then(fitAllHeadings);
+  let fitTimer: ReturnType<typeof setTimeout>;
+  window.addEventListener('resize', () => {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitAllHeadings, 150);
+  });
+
   document.querySelectorAll('[data-hero-track]').forEach((trackEl) => {
     const track = trackEl as HTMLElement;
     const viewport = track.parentElement as HTMLElement;
