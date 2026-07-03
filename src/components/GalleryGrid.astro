@@ -153,6 +153,13 @@ images.forEach((img) => {
         Number(b.querySelector('img')?.dataset.index ?? 0),
     );
     const itemCount = items.length;
+    // Template for JS-created columns. document.createElement('div') +
+    // className loses Astro's scoped-style attribute (data-astro-cid-*),
+    // so the scoped .portfolio__col rules (flex-direction, the 15px
+    // vertical gap) silently don't apply to re-bucketed columns.
+    // cloneNode(false) copies the server-rendered element with ALL its
+    // attributes and no children.
+    const colTemplate = grid.querySelector('.portfolio__col');
 
     function targetCols() {
       const w = window.innerWidth;
@@ -163,7 +170,8 @@ images.forEach((img) => {
 
     function redistribute(cols) {
       grid.innerHTML = '';
-      const buckets = Array.from({ length: cols }, () => document.createElement('div'));
+      const buckets = Array.from({ length: cols }, () =>
+        colTemplate ? (colTemplate.cloneNode(false)) : document.createElement('div'));
       buckets.forEach((b) => { b.className = 'portfolio__col'; grid.appendChild(b); });
       // Greedy shortest-column by cumulative aspect ratio — mirrors the
       // server-side distribution so breakpoint changes don't reintroduce
