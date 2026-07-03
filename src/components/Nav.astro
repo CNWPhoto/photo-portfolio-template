@@ -253,6 +253,14 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 		align-items: center;
 		justify-content: space-between;
 		padding: 20px 1.5rem;
+		/* Fill the header bar. The header computes as a flex container in
+		   some configs (e.g. image logo), which would otherwise let this
+		   inner shrink to its content width — collapsing the logo↔links
+		   gap to ~0 and tripping the fit-detection into a false
+		   mobile-hamburger fallback on desktop. flex+width keep it full
+		   width so justify-content: space-between can actually spread. */
+		flex: 1 1 auto;
+		width: 100%;
 	}
 
 	.nav__logo {

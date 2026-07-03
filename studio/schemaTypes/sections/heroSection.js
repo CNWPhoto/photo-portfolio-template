@@ -1,5 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
-import {imageField} from '../_shared/imageField'
+import {imageField, BULK_UPLOAD_TIP} from '../_shared/imageField'
 import {ctaLink} from '../_shared/ctaLink'
 import {sectionIcon} from '../../components/SectionIcons'
 
@@ -37,8 +37,7 @@ export default {
       name: 'images',
       title: 'Images',
       type: 'array',
-      description:
-        'For the slider variant, upload 4–8 photos. For other variants only the first image is used.',
+      description: `For the slider variant, upload 4–8 photos. For other variants only the first image is used. ${BULK_UPLOAD_TIP}`,
       of: [imageField({required: false})],
     },
     {
@@ -115,6 +114,15 @@ export default {
         ],
       },
       initialValue: 'center-left',
+    },
+    {
+      name: 'mobileTextBelow',
+      title: 'On mobile, show text below the image',
+      type: 'boolean',
+      description:
+        'Single full-width image variant only. On phones (≤900px) the heading, subheading, and button move below the image instead of being overlaid on it. Off by default — text stays overlaid.',
+      initialValue: false,
+      hidden: ({parent}) => parent?.variant !== 'image-full',
     },
     {
       name: 'heightMode',

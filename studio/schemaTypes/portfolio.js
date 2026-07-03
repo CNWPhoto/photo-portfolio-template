@@ -1,4 +1,5 @@
 import {imageSizeWarning, altTextWarning} from './_shared/imageValidation'
+import {BULK_UPLOAD_TIP} from './_shared/imageField'
 import {validatePageSlug} from './_shared/slugValidator'
 
 export default {
@@ -81,8 +82,7 @@ export default {
       name: 'images',
       title: 'Portfolio Images',
       type: 'array',
-      description:
-        'Drag to reorder. When the upload dialog opens you can select multiple files at once to bulk-upload.',
+      description: BULK_UPLOAD_TIP,
       of: [
         {
           type: 'image',
@@ -187,8 +187,7 @@ export default {
               name: 'images',
               title: 'Gallery Images',
               type: 'array',
-              description:
-                'Drag to reorder. Bulk-upload supported. Categories on these images are not used — categories only filter the main portfolio gallery.',
+              description: `${BULK_UPLOAD_TIP} Categories on these images are not used — categories only filter the main portfolio gallery.`,
               of: [
                 {
                   type: 'image',

@@ -38,6 +38,27 @@ const HTML_CONTENT_TYPES = ['text/html', 'application/xhtml+xml']
 // requests bypass the cache entirely.
 const CACHE_TTL_SECONDS = 60
 
+// Security headers for SSR HTML responses. `public/_headers` only applies to
+// statically-served assets on Cloudflare — server-rendered pages bypass it
+// entirely, so without this the pages ship with none of these.
+//
+// NOTE: deliberately NO `Content-Security-Policy: frame-ancestors` here.
+// Presentation frames the SSR page inside the Sanity Studio, which is itself
+// embedded in the Sanity dashboard — so the ancestor chain includes Sanity
+// origins beyond *.sanity.studio. A frame-ancestors allowlist blocked the
+// preview (regression, 2026-06-28). The SSR pages send no X-Frame-Options
+// either, so framing stays unrestricted exactly as it was before security
+// headers were added. (Clickjacking on draft-preview pages is low-value.)
+const SECURITY_HEADERS: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+  'X-XSS-Protection': '1; mode=block',
+}
+function applySecurityHeaders(headers: Headers): void {
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v)
+}
+
 export const onRequest = defineMiddleware(async (context, next) => {
   // Preview mode: set by /api/preview after a valid Sanity preview-secret
   // handshake. Presentation runs the site in a third-party iframe, so the
@@ -89,6 +110,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       const headers = new Headers(cached.headers)
       headers.set('Cache-Control', 'no-store, must-revalidate')
       headers.set('X-Cache-Status', 'HIT')
+      applySecurityHeaders(headers)
       return new Response(cached.body, {
         status: cached.status,
         statusText: cached.statusText,
@@ -105,6 +127,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   response.headers.set('Cache-Control', 'no-store, must-revalidate')
   response.headers.set('X-Cache-Status', 'MISS')
+  applySecurityHeaders(response.headers)
 
   // ── Cache write ───────────────────────────────────────────────────────
   // Clone for the cache; the original streams straight to the browser.

@@ -32,6 +32,7 @@ const overlayOpacity = (section?.overlayOpacity ?? 30) / 100;
 const textPosition = stegaClean(section?.textPosition) || 'center-center';
 const textAlignment = stegaClean(section?.textAlignment) || 'center';
 const headingSize = stegaClean(section?.headingSize) || 'large';
+const mobileTextBelow = !!section?.mobileTextBelow;
 
 const FALLBACK_HERO_IDS = ['1108099', '2253275', '825949', '1805164', '3726314'];
 const pexelsUrl = (id: string, w = 1600) =>
@@ -48,6 +49,7 @@ const firstImage = sanityImages[0] ?? null;
   data-text-align={textAlignment}
   data-text-position={textPosition}
   data-heading-size={headingSize}
+  data-mobile-text-below={mobileTextBelow ? 'true' : undefined}
   id={stegaClean(section?.sectionId) || undefined}
   style={style}
 >
@@ -339,7 +341,7 @@ const firstImage = sanityImages[0] ?? null;
   }
   .hero--image-full[data-text-position='bottom-right'] .hero__heading--overlay {
     font-size: clamp(2.875rem, 6.9vw, 5.75rem);
-    font-weight: 600;
+    font-weight: var(--heading-weight, 600);
   }
 
   /* ── Standard heading size (~20% smaller than Large default) ──
@@ -416,10 +418,99 @@ const firstImage = sanityImages[0] ?? null;
     .hero--image-full[data-text-position$='-left'] .hero__bg-overlay {
       background: rgba(0, 0, 0, var(--hero-overlay-opacity, 0.3));
     }
+
+    /* ── Text-below-image (opt-in, image-full only) ──
+       Restructures the absolute overlay into a normal stack on phones:
+       image on top, text below on the section background. Gated entirely
+       on data-mobile-text-below so every other hero is untouched. */
+    .hero--image-full[data-mobile-text-below='true'] .hero__bg {
+      height: auto;
+      min-height: 0;
+    }
+    .hero--image-full[data-mobile-text-below='true'] :global(.hero__bg-img) {
+      position: static;
+      width: 100%;
+      height: 52vh;
+      min-height: 320px;
+      object-fit: cover;
+      display: block;
+    }
+    .hero--image-full[data-mobile-text-below='true'] .hero__bg-overlay {
+      display: none;
+    }
+    .hero--image-full[data-mobile-text-below='true'] .hero__overlay-content {
+      position: static;
+      inset: auto;
+      max-width: none;
+      padding: 2rem 1.5rem;
+      justify-content: flex-start;
+      align-items: flex-start;
+      text-align: left;
+      pointer-events: auto;
+      color: var(--text);
+    }
+    .hero--image-full[data-mobile-text-below='true'] .hero__heading--overlay {
+      color: var(--text);
+      text-shadow: none;
+    }
+    .hero--image-full[data-mobile-text-below='true'] .hero__sub--overlay {
+      color: var(--muted);
+    }
   }
 </style>
 
 <script>
+  // ── Hero heading auto-fit ──────────────────────────────────────────────
+  // Display-size headings can carry a single word wider than the hero text
+  // box (custom fonts especially — real metrics only arrive once the face
+  // loads). The CSS safety net (`overflow-wrap: anywhere`) then breaks the
+  // word mid-glyph, which reads as a typo. This guard shrinks the heading
+  // font just enough that the longest unbreakable word fits, and only
+  // activates when something would actually break — headings that already
+  // fit are untouched. No-JS falls back to today's mid-word break.
+  const fitHeading = (el: HTMLElement) => {
+    el.style.fontSize = '';               // reset so CSS clamp() re-derives base
+    // The limit is the PARENT's content width, not the heading's own
+    // clientWidth: in the overlay the heading is a flex item, so an
+    // over-long word makes the element itself expand to the word's width
+    // (overflow lands on the parent) and self-relative checks never fire.
+    const parent = el.parentElement;
+    if (!parent) return;
+    // Sub-heading scales by the same ratio as the fitted heading so the
+    // two never converge in size (unfitted state: sub resets to its CSS size).
+    const sub = parent.querySelector<HTMLElement>('.hero__sub');
+    if (sub) sub.style.fontSize = '';
+    const pcs = getComputedStyle(parent);
+    const limit = parent.clientWidth - parseFloat(pcs.paddingLeft) - parseFloat(pcs.paddingRight);
+    if (!(limit > 0)) return;
+    el.style.overflowWrap = 'normal';     // widest word must force measurable overflow
+    const base = parseFloat(getComputedStyle(el).fontSize);
+    let size = base;
+    const min = base * 0.55;              // never shrink below ~half — copy that long needs editing
+    let guard = 24;
+    while (el.scrollWidth > limit + 1 && size > min && guard-- > 0) {
+      size *= 0.96;
+      el.style.fontSize = `${size}px`;
+    }
+    el.style.overflowWrap = '';
+    if (sub && size < base) {
+      const subBase = parseFloat(getComputedStyle(sub).fontSize);
+      sub.style.fontSize = `${(subBase * size) / base}px`;
+    }
+  };
+  const fitAllHeadings = () => {
+    document.querySelectorAll<HTMLElement>('.hero .hero__heading').forEach(fitHeading);
+  };
+  // Fonts change metrics after swap — fit once now (fallback metrics) and
+  // again when the real faces finish loading.
+  fitAllHeadings();
+  if (document.fonts?.ready) document.fonts.ready.then(fitAllHeadings);
+  let fitTimer: ReturnType<typeof setTimeout>;
+  window.addEventListener('resize', () => {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitAllHeadings, 150);
+  });
+
   document.querySelectorAll('[data-hero-track]').forEach((trackEl) => {
     const track = trackEl as HTMLElement;
     const viewport = track.parentElement as HTMLElement;
