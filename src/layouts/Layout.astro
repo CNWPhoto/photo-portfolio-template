@@ -194,13 +194,19 @@ function buildFontFaceBlock(family: string, files: CustomFontFile[]): string {
     .join('');
 }
 const customFontCssParts: string[] = [];
+// The var overrides carry !important deliberately: fontTheme is always
+// defaulted (see ~line 95), so <html data-font='…'> always matches a theme
+// rule at specificity 0,1,1 — a plain :root override (0,1,0) loses in every
+// configuration and the custom family never resolves on any element.
+// !important wins the cascade regardless of selector specificity, while the
+// theme rule still supplies whichever side isn't custom.
 if (useCustomHeading) {
   customFontCssParts.push(buildFontFaceBlock(customHeading.family, customHeading.files));
-  customFontCssParts.push(`:root{--font-heading:'${customHeading.family}',Georgia,serif;}`);
+  customFontCssParts.push(`:root{--font-heading:'${customHeading.family}',Georgia,serif !important;}`);
 }
 if (useCustomBody) {
   customFontCssParts.push(buildFontFaceBlock(customBody.family, customBody.files));
-  customFontCssParts.push(`:root{--font-body:'${customBody.family}',system-ui,sans-serif;}`);
+  customFontCssParts.push(`:root{--font-body:'${customBody.family}',system-ui,sans-serif !important;}`);
 }
 const customFontCss = customFontCssParts.join('');
 
