@@ -89,6 +89,16 @@ async function main() {
     await client.patch('seoSettings').set({siteUrl: ''}).commit({visibility: 'sync'})
     console.log('✓ blanked seoSettings.siteUrl')
   }
+
+  // Donor datasets carry a placeholder Web3Forms key so the contact form
+  // renders — but submissions silently fail. Make sure nobody forgets.
+  const formKey = await client.fetch(`*[_id=="siteSettings"][0].web3formsKey`)
+  if (!formKey || formKey === 'demo-placeholder-key') {
+    console.log(
+      '\n⚠️  web3formsKey is ' + (formKey ? 'the demo placeholder' : 'empty') + ' — the contact form will NOT deliver messages.' +
+      '\n   Before launch: create a free key at web3forms.com and set it in Site Settings.',
+    )
+  }
   console.log('\nDone.\n')
 }
 
