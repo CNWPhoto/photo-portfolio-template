@@ -35,7 +35,7 @@ const client = getClient(isPreview);
 const layoutData = await client.fetch(`{
   "settings": *[_type == "siteSettings" && _id == "siteSettings"][0]{
     fontTheme, subheadingCase, siteName, photographerName, logoType, logoImage, logoLarge, favicon,
-    accentColorOverride, textColorPreset, defaultPalette,
+    accentColorOverride, textColorPreset, defaultPalette, headingWeight, bodyWeight,
     demo,
     "palettes": palettes[]{
       "slug": slug.current,
@@ -94,6 +94,13 @@ const cleanSocial = social ? stegaClean(social) : null;
 const colorTheme  = cleanSettings?.defaultPalette || 'classic-cream';
 const fontTheme   = cleanSettings?.fontTheme  || 'classic-editorial';
 const subheadingCase = cleanSettings?.subheadingCase || 'uppercase';
+const allowedFontWeights = new Set(['300', '400', '500', '600', '700']);
+const headingWeight = allowedFontWeights.has(cleanSettings?.headingWeight)
+  ? cleanSettings.headingWeight
+  : null;
+const bodyWeight = allowedFontWeights.has(cleanSettings?.bodyWeight)
+  ? cleanSettings.bodyWeight
+  : null;
 const siteName    = cleanSettings?.siteName   || 'Pet Photography';
 const logoType    = cleanSettings?.logoType   || 'text';
 const logoImage   = cleanSettings?.logoImage  ?? null;
@@ -147,6 +154,13 @@ const rootPaletteCss = activePalette
       .filter(Boolean)
       .join('\n')}\n}`
   : '';
+const typographyCss = [
+  headingWeight ? `  --heading-weight: ${headingWeight};` : null,
+  bodyWeight ? `  --body-weight: ${bodyWeight};` : null,
+]
+  .filter(Boolean)
+  .join('\n');
+const typographyOverrideCss = typographyCss ? `:root {\n${typographyCss}\n}` : '';
 
 // Font themes split into heading + body params so customFonts can override
 // either side individually — when an editor uploads a custom heading font,
@@ -357,6 +371,7 @@ const schemaJSON = schemaGraph.length
 		{fontUrl && <link href={fontUrl} rel="stylesheet" data-sanity-head="fonts" />}
 		{customFontCss && <style set:html={customFontCss} data-sanity-head="custom-fonts" />}
 		{rootPaletteCss && <style set:html={rootPaletteCss} data-sanity-head="palette" />}
+		{typographyOverrideCss && <style set:html={typographyOverrideCss} data-sanity-head="typography" />}
 		{accentOverride && (
 			<style data-sanity-head="accent" set:html={`
 				:root, [data-theme] {
@@ -602,6 +617,7 @@ const schemaJSON = schemaGraph.length
 		background: var(--bg);
 		color: var(--text);
 		font-family: var(--font-body);
+		font-weight: var(--body-weight, 400);
 		font-size: 1.328rem;
 		line-height: 1.8;
 		-webkit-font-smoothing: antialiased;
@@ -621,7 +637,7 @@ const schemaJSON = schemaGraph.length
 	h3,
 	h4 {
 		font-family: var(--font-heading);
-		font-weight: normal;
+		font-weight: var(--heading-weight, normal);
 		font-style: italic;
 		line-height: 1.2;
 		margin: 0;

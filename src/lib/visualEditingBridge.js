@@ -57,7 +57,15 @@ const HTML_ATTRS_TO_SYNC = ['data-theme', 'data-font']
 // <head> elements tagged with data-sanity-head in Layout.astro. Each value is
 // unique per concern so we can match the same slot across old and new DOM.
 // Missing-in-new = remove from live DOM; present-in-new = insert/replace.
-const HEAD_MARKERS = ['fonts', 'palette', 'accent', 'text-preset', 'theme-color']
+const HEAD_MARKERS = [
+  'fonts',
+  'custom-fonts',
+  'palette',
+  'typography',
+  'accent',
+  'text-preset',
+  'theme-color',
+]
 
 function syncHtmlAttrs(newHtml) {
   const liveHtml = document.documentElement

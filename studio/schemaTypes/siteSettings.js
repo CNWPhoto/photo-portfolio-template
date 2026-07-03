@@ -103,6 +103,40 @@ export default {
       description: 'Applies site-wide — sets heading and body typefaces',
     },
     {
+      name: 'headingWeight',
+      title: 'Heading Weight',
+      type: 'string',
+      description:
+        'Optional site-wide override for heading thickness. Use Theme Default unless headings look too heavy or too light. Using a custom heading font? Set this to the same number as your uploaded file’s Weight so it renders exactly as designed. Note: some built-in themes only ship certain weights — the browser uses the nearest available.',
+      options: {
+        list: [
+          {title: 'Theme Default', value: 'default'},
+          {title: 'Light', value: '300'},
+          {title: 'Regular', value: '400'},
+          {title: 'Medium', value: '500'},
+          {title: 'Semibold', value: '600'},
+          {title: 'Bold', value: '700'},
+        ],
+      },
+      initialValue: 'default',
+    },
+    {
+      name: 'bodyWeight',
+      title: 'Body Weight',
+      type: 'string',
+      description:
+        'Optional site-wide override for paragraph and body copy thickness. Most sites should keep Theme Default. Using a custom body font? Set this to match your uploaded file’s Weight.',
+      options: {
+        list: [
+          {title: 'Theme Default', value: 'default'},
+          {title: 'Light', value: '300'},
+          {title: 'Regular', value: '400'},
+          {title: 'Medium', value: '500'},
+        ],
+      },
+      initialValue: 'default',
+    },
+    {
       name: 'subheadingCase',
       title: 'Subheading Case',
       type: 'string',
@@ -189,7 +223,7 @@ export default {
                       type: 'string',
                       initialValue: '400',
                       description:
-                        '100 = thin, 400 = regular, 600 = semibold, 700 = bold. Defaults to 400.',
+                        'Set this to the REAL weight of the file you uploaded (100 = thin, 400 = regular, 600 = semibold, 700 = bold). To make the site render exactly this face, also set the matching Heading/Body Weight setting above to the same number — otherwise the browser may fake a bolder or lighter version.',
                     },
                     {
                       name: 'style',
@@ -253,7 +287,7 @@ export default {
                       type: 'string',
                       initialValue: '400',
                       description:
-                        '100 = thin, 400 = regular, 600 = semibold, 700 = bold. Defaults to 400.',
+                        'Set this to the REAL weight of the file you uploaded (100 = thin, 400 = regular, 600 = semibold, 700 = bold). To make the site render exactly this face, also set the matching Heading/Body Weight setting above to the same number — otherwise the browser may fake a bolder or lighter version.',
                     },
                     {
                       name: 'style',

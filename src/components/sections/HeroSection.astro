@@ -341,7 +341,7 @@ const firstImage = sanityImages[0] ?? null;
   }
   .hero--image-full[data-text-position='bottom-right'] .hero__heading--overlay {
     font-size: clamp(2.875rem, 6.9vw, 5.75rem);
-    font-weight: 600;
+    font-weight: var(--heading-weight, 600);
   }
 
   /* ── Standard heading size (~20% smaller than Large default) ──
