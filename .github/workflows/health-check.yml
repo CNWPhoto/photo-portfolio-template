@@ -1,0 +1,91 @@
+# Fleet health check — every 15 minutes, curl every deployed site (and its
+# hosted Studio) and fail loudly if anything is down or serving empty HTML.
+#
+# Client list is derived from studio/.env.*-backup files — the same
+# per-client source of truth the Studio deploys use, so new onboardings are
+# picked up automatically (20-env.js creates the backup) and nothing here
+# needs editing per client. localhost preview URLs (pre-Cloudflare clients,
+# e.g. an onboarding whose CF account doesn't exist yet) are skipped.
+#
+# Failure = red run + GitHub's failed-workflow notification. Roadmap P0 #3
+# (docs: raw/docs/2026-07-02-hardening-roadmap.md in the astro-brain vault).
+
+name: Fleet health check
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check fleet
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check every client site + Studio
+        run: |
+          set -u
+          FAILURES=""
+
+          # curl with one retry — a single transient blip shouldn't page anyone.
+          fetch() { # $1=url → body on stdout, rc!=0 on hard failure
+            curl -sS --max-time 20 --retry 1 --retry-delay 10 "$1"
+          }
+
+          check_site() { # $1=slug $2=url
+            local body
+            if ! body=$(fetch "$2"); then
+              FAILURES="$FAILURES\n$1: $2 unreachable"
+              echo "::error::$1 site unreachable: $2"
+              return
+            fi
+            # Marker asserts real SSR content, not an error/placeholder page:
+            # every section-rendered page emits data-section-type.
+            case "$body" in
+              *data-section-type*) echo "OK   site   $1" ;;
+              *)
+                FAILURES="$FAILURES\n$1: $2 returned HTML without section content"
+                echo "::error::$1 site serving empty/error HTML: $2"
+                ;;
+            esac
+          }
+
+          check_studio() { # $1=slug
+            local url="https://$1.sanity.studio/"
+            local code
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 --retry 1 --retry-delay 10 "$url" || echo 000)
+            # Unauthenticated requests 302 to the Sanity login — that IS a
+            # healthy Studio (verified against the live fleet). Only 4xx/5xx
+            # or no response counts as down.
+            case "$code" in
+              200|301|302|307|308) echo "OK   studio $1 ($code)" ;;
+              *)
+                FAILURES="$FAILURES\n$1: Studio $url returned $code"
+                echo "::error::$1 Studio returned $code: $url"
+                ;;
+            esac
+          }
+
+          for f in studio/.env.*-backup; do
+            slug=${f#studio/.env.}; slug=${slug%-backup}
+            url=$(grep -E '^SANITY_STUDIO_PREVIEW_URL=' "$f" | cut -d= -f2- | tr -d '[:space:]')
+            case "$url" in
+              http://localhost*|'')
+                echo "SKIP site   $slug (no deployed URL yet: '${url:-none}')" ;;
+              *)
+                check_site "$slug" "$url" ;;
+            esac
+            check_studio "$slug"
+          done
+
+          if [ -n "$FAILURES" ]; then
+            printf '\n══ FAILURES ══%b\n' "$FAILURES"
+            exit 1
+          fi
+          echo "Fleet healthy."
