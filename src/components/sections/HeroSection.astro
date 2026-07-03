@@ -476,6 +476,10 @@ const firstImage = sanityImages[0] ?? null;
     // (overflow lands on the parent) and self-relative checks never fire.
     const parent = el.parentElement;
     if (!parent) return;
+    // Sub-heading scales by the same ratio as the fitted heading so the
+    // two never converge in size (unfitted state: sub resets to its CSS size).
+    const sub = parent.querySelector<HTMLElement>('.hero__sub');
+    if (sub) sub.style.fontSize = '';
     const pcs = getComputedStyle(parent);
     const limit = parent.clientWidth - parseFloat(pcs.paddingLeft) - parseFloat(pcs.paddingRight);
     if (!(limit > 0)) return;
@@ -489,6 +493,10 @@ const firstImage = sanityImages[0] ?? null;
       el.style.fontSize = `${size}px`;
     }
     el.style.overflowWrap = '';
+    if (sub && size < base) {
+      const subBase = parseFloat(getComputedStyle(sub).fontSize);
+      sub.style.fontSize = `${(subBase * size) / base}px`;
+    }
   };
   const fitAllHeadings = () => {
     document.querySelectorAll<HTMLElement>('.hero .hero__heading').forEach(fitHeading);
