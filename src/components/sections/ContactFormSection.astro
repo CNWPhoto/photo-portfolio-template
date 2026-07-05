@@ -50,6 +50,13 @@ if (mode === 'built-in' && !effectiveKey) {
 }
 const isConfigured = mode !== 'built-in' || !!effectiveKey;
 
+// Donor-seeded sites ship with this placeholder so the form RENDERS during
+// build-out — but submissions silently fail for real visitors. Editors get
+// a warning banner in Presentation preview only; the public form is
+// unchanged (renders normally, submit shows the error message).
+const isPlaceholderKey = effectiveKey === 'demo-placeholder-key';
+const showPlaceholderWarning = isPlaceholderKey && (Astro.locals.isPreview ?? false);
+
 const HeadingTag = isFirst ? 'h1' : 'h2';
 ---
 
@@ -61,6 +68,13 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   style={style}
 >
   <hr />
+  {showPlaceholderWarning && (
+    <div class="contact__placeholder-warning" role="status">
+      <strong>Heads-up (only you can see this):</strong> this contact form is using a
+      placeholder key, so messages visitors send will <strong>not</strong> be delivered.
+      Create a free key at web3forms.com and paste it in Site Settings → Web3Forms Access Key.
+    </div>
+  )}
   <div class="contact__inner">
     {(eyebrow || heading || bodyHTML) && (
       <div class="contact__info">
@@ -194,6 +208,21 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
 </script>
 
 <style>
+  /* Editor-only warning (rendered in Presentation preview exclusively).
+     Informational amber, not alarm-red — the site isn't broken for
+     visitors; only submissions are undeliverable until a real key lands. */
+  .contact__placeholder-warning {
+    max-width: 720px;
+    margin: 1.5rem auto 0;
+    padding: 0.9rem 1.25rem;
+    background: #fdf3dc;
+    color: #6b4d12;
+    border: 1px solid #ecd9a8;
+    border-radius: 4px;
+    font-family: system-ui, sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
   .contact {
     background: var(--bg);
     color: var(--text);

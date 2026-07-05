@@ -6,15 +6,21 @@ import { getClient } from './lib/sanity.js'
 // Sanity read per cold isolate, not one per request. Default 'blog' → the
 // routing block in onRequest is a no-op, so every other client is unaffected.
 let _blogBase: string | undefined
+// On fetch failure we fall back to 'blog' but only for 60s — permanently
+// memoizing the error pinned a client's custom blog base to '/blog' for the
+// whole isolate lifetime (an editor's slug change silently stopped routing).
+let _blogBaseErrAt = 0
 async function getBlogBase(): Promise<string> {
   if (_blogBase !== undefined) return _blogBase
+  if (Date.now() - _blogBaseErrAt < 60_000) return 'blog'
   try {
     const slug = await getClient(false).fetch<string | null>(`*[_id=="blogPage"][0].slug.current`)
     _blogBase = ((slug || 'blog').replace(/^\/+|\/+$/g, '')) || 'blog'
+    return _blogBase
   } catch {
-    _blogBase = 'blog'
+    _blogBaseErrAt = Date.now()
+    return 'blog'
   }
-  return _blogBase
 }
 
 // HTML edge-caching at the Cloudflare Worker.
@@ -58,6 +64,22 @@ const SECURITY_HEADERS: Record<string, string> = {
 function applySecurityHeaders(headers: Headers): void {
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v)
 }
+
+// Branded last-resort page for render failures (Sanity outage/timeout, or
+// any uncaught exception during SSR). Deliberately static and fetch-free —
+// when rendering is broken, this must not depend on anything that can also
+// break. Served with 503 + Retry-After and never cached; the meta refresh
+// retries for the visitor automatically once the blip passes.
+const RENDER_FALLBACK_HTML = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="20">
+<meta name="robots" content="noindex">
+<title>Temporarily unavailable</title>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;background:#f5f3ef;color:#1a2744;text-align:center;padding:2rem}p{font-family:system-ui,sans-serif;color:#4a5568;line-height:1.6}</style>
+</head><body><div><h1>We&rsquo;ll be right back</h1>
+<p>This site is briefly unavailable while it reconnects.<br>It retries automatically &mdash; or refresh in a few seconds.</p>
+</div></body></html>`
 
 export const onRequest = defineMiddleware(async (context, next) => {
   // Preview mode: set by /api/preview after a valid Sanity preview-secret
@@ -120,7 +142,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // ── Fresh render path ─────────────────────────────────────────────────
-  const response = rewritePath ? await next(rewritePath) : await next()
+  // Render guard: a Sanity outage/timeout (or any uncaught render error)
+  // previously bubbled to Cloudflare's raw error page. Serve the branded
+  // fallback instead — production only, so dev keeps Astro's error overlay.
+  let response: Response
+  try {
+    response = rewritePath ? await next(rewritePath) : await next()
+  } catch (err) {
+    if (!import.meta.env.PROD) throw err
+    console.error(
+      '[ssr] render failed, serving fallback:',
+      err instanceof Error ? err.stack || err.message : String(err),
+    )
+    const headers = new Headers({
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store, must-revalidate',
+      'Retry-After': '30',
+    })
+    applySecurityHeaders(headers)
+    return new Response(RENDER_FALLBACK_HTML, { status: 503, headers })
+  }
   const contentType = response.headers.get('content-type') || ''
   const isHtml = HTML_CONTENT_TYPES.some((t) => contentType.includes(t))
   if (!isHtml) return response

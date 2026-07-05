@@ -1,6 +1,19 @@
 import {imageSizeWarning} from './_shared/imageValidation'
 import HexColorInput from '../components/HexColorInput'
 import PaletteSelectInput from '../components/PaletteSelectInput'
+// Curated Google Fonts catalog — shared with src/lib (single source of
+// truth; the site's Layout builds the css2 URL from the same entries).
+import {fontCatalog} from '../../src/lib/fontCatalog.js'
+
+const themeDefaultOption = {title: '— Theme default —', value: 'default'}
+const headingFontList = [
+  themeDefaultOption,
+  ...fontCatalog.filter((f) => f.use.includes('heading')).map((f) => ({title: f.label, value: f.slug})),
+]
+const bodyFontList = [
+  themeDefaultOption,
+  ...fontCatalog.filter((f) => f.use.includes('body')).map((f) => ({title: f.label, value: f.slug})),
+]
 
 const fontThemeList = [
   { title: 'Classic Editorial', value: 'classic-editorial' },
@@ -22,6 +35,14 @@ export default {
       return {title: 'Website Theme Settings'}
     },
   },
+  fieldsets: [
+    {
+      name: 'advancedFonts',
+      title: 'Advanced font controls',
+      description: 'Fine-tuning and brand font uploads. Most sites never need these.',
+      options: {collapsible: true, collapsed: true},
+    },
+  ],
   fields: [
     {
       name: 'rebuildNote',
@@ -103,11 +124,30 @@ export default {
       description: 'Applies site-wide — sets heading and body typefaces',
     },
     {
+      name: 'headingFont',
+      title: 'Heading Font',
+      type: 'string',
+      description:
+        'Overrides just the HEADING font of the Font Theme — pick any font from the list and the site loads it automatically. Have a purchased/brand font file instead? Use Custom Fonts under Advanced.',
+      options: {list: headingFontList},
+      initialValue: 'default',
+    },
+    {
+      name: 'bodyFont',
+      title: 'Body Font',
+      type: 'string',
+      description:
+        'Overrides just the BODY (paragraph) font of the Font Theme. Most sites read best keeping this on Theme default.',
+      options: {list: bodyFontList},
+      initialValue: 'default',
+    },
+    {
       name: 'headingWeight',
       title: 'Heading Weight',
       type: 'string',
+      fieldset: 'advancedFonts',
       description:
-        'Optional site-wide override for heading thickness. Use Theme Default unless headings look too heavy or too light. Using a custom heading font? Set this to the same number as your uploaded file’s Weight so it renders exactly as designed. Note: some built-in themes only ship certain weights — the browser uses the nearest available.',
+        'Optional site-wide override for heading thickness. Use Theme Default unless headings look too heavy or too light. Fonts that don’t ship a chosen weight render the nearest available. (Uploaded heading font files always render exactly as designed — this setting doesn’t alter them.)',
       options: {
         list: [
           {title: 'Theme Default', value: 'default'},
@@ -124,8 +164,9 @@ export default {
       name: 'bodyWeight',
       title: 'Body Weight',
       type: 'string',
+      fieldset: 'advancedFonts',
       description:
-        'Optional site-wide override for paragraph and body copy thickness. Most sites should keep Theme Default. Using a custom body font? Set this to match your uploaded file’s Weight.',
+        'Optional site-wide override for paragraph and body copy thickness. Most sites should keep Theme Default.',
       options: {
         list: [
           {title: 'Theme Default', value: 'default'},
@@ -182,142 +223,22 @@ export default {
         "AI Assist (the sparkle ✨ icons next to fields) is on by default during your free Sanity Growth trial month. After the trial it requires the Growth plan ($15/seat/month). To turn it off, toggle this OFF and let Connor know — he'll redeploy your Studio without the AI plugin. To turn it back on later, same process.",
     },
     {
-      name: 'customFonts',
-      title: 'Custom Fonts (Override)',
-      type: 'object',
+      name: 'headingFontFile',
+      title: 'Heading font file',
+      type: 'file',
+      fieldset: 'advancedFonts',
       description:
-        'Optional. Upload your own licensed font files to override the Font Theme above. .woff2 is strongly preferred (smaller, faster). You can override heading, body, or both — empty fields fall back to the Font Theme. Only upload fonts you have a web license for.',
-      options: {collapsible: true, collapsed: true},
-      fields: [
-        {
-          name: 'heading',
-          title: 'Heading Font',
-          type: 'object',
-          fields: [
-            {
-              name: 'family',
-              title: 'CSS family name',
-              type: 'string',
-              description:
-                'A label CSS uses to reference this font. Anything unique works — e.g. "Lavon Display". Not visible to site visitors.',
-            },
-            {
-              name: 'files',
-              title: 'Font files',
-              type: 'array',
-              description:
-                'Add one file per weight/style combo. Most sites only need a single 400/normal upload here.',
-              of: [
-                {
-                  type: 'object',
-                  fields: [
-                    {
-                      name: 'file',
-                      title: 'Font file',
-                      type: 'file',
-                      options: {accept: '.woff2,.woff,.ttf,.otf'},
-                    },
-                    {
-                      name: 'weight',
-                      title: 'Weight',
-                      type: 'string',
-                      initialValue: '400',
-                      description:
-                        'Set this to the REAL weight of the file you uploaded (100 = thin, 400 = regular, 600 = semibold, 700 = bold). To make the site render exactly this face, also set the matching Heading/Body Weight setting above to the same number — otherwise the browser may fake a bolder or lighter version.',
-                    },
-                    {
-                      name: 'style',
-                      title: 'Style',
-                      type: 'string',
-                      options: {
-                        list: [
-                          {title: 'Normal', value: 'normal'},
-                          {title: 'Italic', value: 'italic'},
-                        ],
-                        layout: 'radio',
-                      },
-                      initialValue: 'normal',
-                    },
-                  ],
-                  preview: {
-                    select: {weight: 'weight', style: 'style'},
-                    prepare({weight, style}) {
-                      return {
-                        title: `Weight ${weight || '400'}`,
-                        subtitle: style || 'normal',
-                      }
-                    },
-                  },
-                },
-              ],
-            },
-          ],
-        },
-        {
-          name: 'body',
-          title: 'Body Font',
-          type: 'object',
-          fields: [
-            {
-              name: 'family',
-              title: 'CSS family name',
-              type: 'string',
-              description:
-                'A label CSS uses to reference this font. Anything unique works — e.g. "Lavon Sans". Not visible to site visitors.',
-            },
-            {
-              name: 'files',
-              title: 'Font files',
-              type: 'array',
-              description:
-                'Add one file per weight/style combo. Body text typically benefits from at least regular + bold + italic.',
-              of: [
-                {
-                  type: 'object',
-                  fields: [
-                    {
-                      name: 'file',
-                      title: 'Font file',
-                      type: 'file',
-                      options: {accept: '.woff2,.woff,.ttf,.otf'},
-                    },
-                    {
-                      name: 'weight',
-                      title: 'Weight',
-                      type: 'string',
-                      initialValue: '400',
-                      description:
-                        'Set this to the REAL weight of the file you uploaded (100 = thin, 400 = regular, 600 = semibold, 700 = bold). To make the site render exactly this face, also set the matching Heading/Body Weight setting above to the same number — otherwise the browser may fake a bolder or lighter version.',
-                    },
-                    {
-                      name: 'style',
-                      title: 'Style',
-                      type: 'string',
-                      options: {
-                        list: [
-                          {title: 'Normal', value: 'normal'},
-                          {title: 'Italic', value: 'italic'},
-                        ],
-                        layout: 'radio',
-                      },
-                      initialValue: 'normal',
-                    },
-                  ],
-                  preview: {
-                    select: {weight: 'weight', style: 'style'},
-                    prepare({weight, style}) {
-                      return {
-                        title: `Weight ${weight || '400'}`,
-                        subtitle: style || 'normal',
-                      }
-                    },
-                  },
-                },
-              ],
-            },
-          ],
-        },
-      ],
+        'Have a purchased/brand font? Just upload the file — nothing else to set. Applies to headings site-wide (overrides the Font Theme and Heading Font choices). .woff2 is smallest/fastest; .woff, .ttf and .otf also work. Only upload fonts you have a web license for.',
+      options: {accept: '.woff2,.woff,.ttf,.otf'},
+    },
+    {
+      name: 'bodyFontFile',
+      title: 'Body font file',
+      type: 'file',
+      fieldset: 'advancedFonts',
+      description:
+        'Optional body-text upload — same idea: just add the file. Most sites read best with a standard body font from the Body Font list.',
+      options: {accept: '.woff2,.woff,.ttf,.otf'},
     },
     {
       name: 'accentColorOverride',

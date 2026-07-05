@@ -19,17 +19,27 @@ interface Props {
 const { images, galleryColumns = 3 } = Astro.props;
 const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 
-// Per-column flex containers + round-robin distribution.
+// Per-column flex containers + GREEDY shortest-column distribution.
 // CSS `columns` rebalances by content height and on small galleries
 // (e.g. 4 images in 3 columns) packs them 2+2+0, leaving an empty
 // trailing column. CSS Grid forces uniform row heights, defeating the
-// masonry look. Round-robin distribution into N flex columns gives
-// both: each image keeps its natural aspect ratio AND every column
-// always gets used. Clamp column count to image count so 2 images in
-// a 3-col layout renders as 2 columns instead of 3 with one empty.
+// masonry look. Per-column flex containers give both: natural aspect
+// ratios AND every column used. Distribution is greedy-by-height, not
+// round-robin: each image goes to the currently shortest column,
+// measured by cumulative aspect ratio (all columns share equal width,
+// so rendered height ∝ h/w). Round-robin by index piled tall portraits
+// into one column by luck of ordering — up to ~1150px of blank space
+// under the short columns on real client galleries. Clamp column count
+// to image count so 2 images in a 3-col layout renders as 2 columns.
 const effectiveCols = Math.max(1, Math.min(galleryColumns, images.length || 1));
 const columnBuckets: GalleryImage[][] = Array.from({ length: effectiveCols }, () => []);
-images.forEach((img, i) => columnBuckets[i % effectiveCols].push(img));
+const colHeights = new Array(effectiveCols).fill(0);
+images.forEach((img) => {
+  let shortest = 0;
+  for (let c = 1; c < effectiveCols; c++) if (colHeights[c] < colHeights[shortest]) shortest = c;
+  columnBuckets[shortest].push(img);
+  colHeights[shortest] += img.h && img.w ? img.h / img.w : 1;
+});
 ---
 
 <div class="portfolio__grid" style={`--gallery-columns: ${effectiveCols}`}>
@@ -135,8 +145,21 @@ images.forEach((img, i) => columnBuckets[i % effectiveCols].push(img));
   const grid = document.querySelector('.portfolio__grid');
   if (grid) {
     const desktopCols = Math.max(1, parseInt(getComputedStyle(grid).getPropertyValue('--gallery-columns')) || 3);
-    const items = Array.from(grid.querySelectorAll('.portfolio__item'));
+    // DOM order is column-major (server renders per-column buckets), so
+    // sort by the original image index to re-bucket in reading order.
+    const items = Array.from(grid.querySelectorAll('.portfolio__item')).sort(
+      (a, b) =>
+        Number(a.querySelector('img')?.dataset.index ?? 0) -
+        Number(b.querySelector('img')?.dataset.index ?? 0),
+    );
     const itemCount = items.length;
+    // Template for JS-created columns. document.createElement('div') +
+    // className loses Astro's scoped-style attribute (data-astro-cid-*),
+    // so the scoped .portfolio__col rules (flex-direction, the 15px
+    // vertical gap) silently don't apply to re-bucketed columns.
+    // cloneNode(false) copies the server-rendered element with ALL its
+    // attributes and no children.
+    const colTemplate = grid.querySelector('.portfolio__col');
 
     function targetCols() {
       const w = window.innerWidth;
@@ -147,9 +170,22 @@ images.forEach((img, i) => columnBuckets[i % effectiveCols].push(img));
 
     function redistribute(cols) {
       grid.innerHTML = '';
-      const buckets = Array.from({ length: cols }, () => document.createElement('div'));
+      const buckets = Array.from({ length: cols }, () =>
+        colTemplate ? (colTemplate.cloneNode(false)) : document.createElement('div'));
       buckets.forEach((b) => { b.className = 'portfolio__col'; grid.appendChild(b); });
-      items.forEach((item, i) => buckets[i % cols].appendChild(item));
+      // Greedy shortest-column by cumulative aspect ratio — mirrors the
+      // server-side distribution so breakpoint changes don't reintroduce
+      // the round-robin imbalance (blank space under short columns).
+      const heights = new Array(cols).fill(0);
+      items.forEach((item) => {
+        const img = item.querySelector('img');
+        const w = Number(img?.getAttribute('width')) || 1;
+        const h = Number(img?.getAttribute('height')) || 1;
+        let shortest = 0;
+        for (let c = 1; c < cols; c++) if (heights[c] < heights[shortest]) shortest = c;
+        buckets[shortest].appendChild(item);
+        heights[shortest] += h / w;
+      });
       grid.style.setProperty('--gallery-columns', String(cols));
     }
 

@@ -34,6 +34,12 @@ export const sanityClient = createClient({
   useCdn: true,
   token: undefined,
   ignoreBrowserTokenWarning: true,
+  // Abort published-content fetches that stall (Sanity blip, network) after
+  // 8s instead of hanging the render indefinitely. The rejection surfaces to
+  // the middleware's render guard, which serves the branded 503 fallback.
+  // (The preview client has its own 6s per-fetch timeout below that resolves
+  // null instead — editors' parallel draft queries degrade per-field.)
+  timeout: 8000,
 })
 
 // Reads a secret env var from multiple sources in priority order:
