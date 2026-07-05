@@ -77,9 +77,17 @@ export default function PresentationNavigator() {
     }
   }, [client, load])
 
-  // Current iframe path, with the trailing slash normalized off for
-  // comparison so both /about and /about/ highlight the About entry.
-  const current = (params?.preview || '/').split('?')[0].replace(/\/+$/, '') || '/'
+  // Current iframe path for highlighting. The preview param is a relative
+  // path right after navigate(), but a full URL (origin + query) after a
+  // reload — parse the pathname either way, and normalize the trailing
+  // slash so /about and /about/ both highlight the About entry.
+  let current = params?.preview || '/'
+  try {
+    current = new URL(current, 'http://relative.invalid').pathname
+  } catch {
+    current = '/'
+  }
+  current = current.replace(/\/+$/, '') || '/'
   const isActive = (href) => (href.replace(/\/+$/, '') || '/') === current
 
   const items = useMemo(() => {
