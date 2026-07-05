@@ -1,4 +1,4 @@
-import {imageSizeWarning, altTextWarning} from './_shared/imageValidation'
+import {imageSizeWarning, altTextWarning, emptyImagesWarning} from './_shared/imageValidation'
 import {BULK_UPLOAD_TIP} from './_shared/imageField'
 import {validatePageSlug} from './_shared/slugValidator'
 
@@ -57,7 +57,8 @@ export default {
       name: 'galleryColumns',
       title: 'Gallery Columns',
       type: 'number',
-      description: 'Number of columns in the masonry grid on desktop. Choose 2, 3, or 4.',
+      description:
+        'Columns in the masonry grid on desktop — phones always show 1 and tablets 2, so this only changes large screens. Pick 2 to show off big detailed images, 4 for large collections where overview matters more than size.',
       initialValue: 3,
       options: {
         list: [
@@ -83,6 +84,7 @@ export default {
       title: 'Portfolio Images',
       type: 'array',
       description: BULK_UPLOAD_TIP,
+      validation: emptyImagesWarning,
       of: [
         {
           type: 'image',

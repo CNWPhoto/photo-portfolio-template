@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import GalleryTabs from '../components/GalleryTabs.astro';
 import GalleryGrid from '../components/GalleryGrid.astro';
+import ImagePlaceholder from '../components/ImagePlaceholder.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
 
 const portfolioDoc = await getClient(Astro.locals.isPreview).fetch(
@@ -31,45 +32,26 @@ const byline         = portfolioDoc?.byline         || 'A collection of recent d
 const galleryColumns = portfolioDoc?.galleryColumns || 3;
 const portfolio      = portfolioDoc?.images;
 
-// TODO:NICHE — swap fallback Pexels IDs and alt text for your niche
-const fallbackImages = [
-	{ id: '1108099',  alt: 'Golden retriever in warm afternoon light',    w: 800, h: 1067 },
-	{ id: '2253275',  alt: 'Dog exploring in golden afternoon light',     w: 800, h: 533  },
-	{ id: '825949',   alt: 'Dog portrait in natural light',               w: 800, h: 1067 },
-	{ id: '1254140',  alt: 'Dog running through an open field',           w: 800, h: 533  },
-	{ id: '3726314',  alt: 'Dog looking curiously at the camera',         w: 800, h: 1067 },
-	{ id: '1805164',  alt: 'Playful dog in soft afternoon light',         w: 800, h: 533  },
-	{ id: '2607544',  alt: 'Dog portrait with soft bokeh background',     w: 800, h: 1067 },
-	{ id: '3196887',  alt: 'Happy dog outdoors in sunshine',              w: 800, h: 533  },
-	{ id: '4587998',  alt: 'Close-up dog portrait outdoors',              w: 800, h: 1067 },
-	{ id: '4587991',  alt: 'Dog at rest in warm natural light',           w: 800, h: 533  },
-	{ id: '1633794',  alt: 'Dog in dappled forest light',                 w: 800, h: 1067 },
-	{ id: '2607546',  alt: 'Dog portrait, candid expression',             w: 800, h: 533  },
-].map(({ id, alt, w, h }) => ({
-	src: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${h}&fit=crop`,
-	fullSrc: `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1600`,
-	alt, w, h,
-}));
-
 // Filter out images without a resolved asset — editors can leave empty
 // upload slots in Studio, which would otherwise crash urlFor() and
 // bubble up as a 404/500 on the whole portfolio page.
+// An empty portfolio renders palette placeholders below (never stock — P1 #8).
 const validPortfolio = (portfolio ?? []).filter((img: any) => img?.asset?._id);
-const images = validPortfolio.length
-	? validPortfolio.map((img: any) => {
-			const naturalW = img.asset?.metadata?.dimensions?.width ?? 1200;
-			const naturalH = img.asset?.metadata?.dimensions?.height ?? 800;
-			const displayW = Math.min(naturalW, 800);
-			const displayH = Math.round((displayW / naturalW) * naturalH);
-			return {
-				src: urlFor(img).width(800).auto('format').url(),
-				fullSrc: urlFor(img).width(2000).auto('format').url(),
-				alt: img.alt ?? img.title ?? '',
-				w: displayW,
-				h: displayH,
-			};
-	  })
-	: fallbackImages;
+const images = validPortfolio.map((img: any) => {
+	const naturalW = img.asset?.metadata?.dimensions?.width ?? 1200;
+	const naturalH = img.asset?.metadata?.dimensions?.height ?? 800;
+	const displayW = Math.min(naturalW, 800);
+	const displayH = Math.round((displayW / naturalW) * naturalH);
+	return {
+		src: urlFor(img).width(800).auto('format').url(),
+		fullSrc: urlFor(img).width(2000).auto('format').url(),
+		alt: img.alt ?? img.title ?? '',
+		w: displayW,
+		h: displayH,
+	};
+});
+
+const PLACEHOLDER_RATIOS = ['4/5', '3/2', '4/5', '3/2', '4/5', '3/2'];
 
 // Tabs: default (/portfolio) + each additionalGallery with a slug.
 const extraGalleries = (portfolioDoc?.additionalGalleries ?? []).filter(
@@ -92,7 +74,13 @@ const tabs = [
 			<h1 class="portfolio__title">{pageTitle}</h1>
 		</div>
 		<GalleryTabs tabs={tabs} activeSlug="" />
-		<GalleryGrid images={images} galleryColumns={galleryColumns} />
+		{images.length
+			? <GalleryGrid images={images} galleryColumns={galleryColumns} />
+			: <div class="portfolio__empty">
+					{PLACEHOLDER_RATIOS.map((ratio) => (
+						<ImagePlaceholder aspectRatio={ratio} size="w" />
+					))}
+				</div>}
 	</main>
 </Layout>
 
@@ -109,6 +97,21 @@ const tabs = [
 		min-height: 100vh;
 		width: 100%;
 		overflow-x: hidden;
+	}
+
+	/* Empty-portfolio state: simple responsive grid of palette placeholders,
+	   mirroring the masonry gallery's 15px gutters. */
+	.portfolio__empty {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 15px;
+		padding: 2rem 3rem 3rem;
+	}
+	@media (max-width: 900px) {
+		.portfolio__empty { grid-template-columns: repeat(2, 1fr); }
+	}
+	@media (max-width: 480px) {
+		.portfolio__empty { grid-template-columns: 1fr; padding: 2rem 1.25rem 3rem; }
 	}
 
 	.portfolio__header {

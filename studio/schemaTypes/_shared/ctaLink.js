@@ -6,6 +6,17 @@ export const ctaLink = {
   name: 'ctaLink',
   title: 'CTA Link',
   type: 'object',
+  // Non-blocking nudge when the sibling ctaText is filled in but the link
+  // type is still "No link" — the button either won't render or won't go
+  // anywhere, which editors otherwise only discover on the live site.
+  validation: (Rule) =>
+    Rule.custom((value, context) => {
+      const ctaText = context.parent?.ctaText
+      if (ctaText && (!value?.type || value.type === 'none')) {
+        return 'Button text is set but Link Type is "No link" — pick where the button should go, or clear the button text.'
+      }
+      return true
+    }).warning(),
   fields: [
     {
       name: 'type',

@@ -88,6 +88,8 @@ export default {
       name: 'overlayOpacity',
       title: 'Overlay Opacity (%)',
       type: 'number',
+      description:
+        'Darkens the image behind the text. Raise it when the text is hard to read over a bright or busy photo; 0 = no overlay, 100 = solid black.',
       initialValue: 30,
       validation: (Rule) => Rule.min(0).max(100),
     },

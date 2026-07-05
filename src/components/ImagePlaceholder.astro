@@ -1,0 +1,26 @@
+---
+// Palette-colored placeholder for empty image slots (P1 #8). Replaces the
+// old Pexels stock fallbacks so client sites never render third-party stock
+// photos: an empty slot shows a quiet tonal block derived from the section's
+// palette custom properties, with a faint image glyph.
+//
+// Sizing is inherited from the layout context: pass the slot's class so the
+// parent's :global(.<class>) rules apply. Where the layout derives size from
+// the image's intrinsic ratio (sliders, carousels, masonry), pass aspectRatio
+// and which axis the parent constrains via `size`.
+interface Props {
+  class?: string;
+  /** e.g. "3/2" — needed when the layout doesn't size the slot itself */
+  aspectRatio?: string;
+  /** axis the parent constrains: 'w' (width-driven) | 'h' (height-driven) */
+  size?: 'w' | 'h';
+}
+const { class: klass, aspectRatio, size } = Astro.props;
+const dims = size === 'w' ? 'height:auto;' : size === 'h' ? 'width:auto;' : '';
+const style = aspectRatio ? `aspect-ratio:${aspectRatio};${dims}` : dims || undefined;
+---
+
+<!-- Styling lives in src/styles/palette.css (.img-ph) — global, because
+     FullBleedImageSection applies the class directly without rendering
+     this component. -->
+<div class:list={['img-ph', klass]} style={style} aria-hidden="true"></div>

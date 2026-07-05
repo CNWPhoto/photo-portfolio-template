@@ -14,11 +14,10 @@ interface Props {
 const { section, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
-const FALLBACK_BG =
-  'https://images.pexels.com/photos/1629781/pexels-photo-1629781.jpeg?auto=compress&cs=tinysrgb&w=2000';
-
+// Empty slot → the bg div itself becomes a palette placeholder (img-ph
+// supplies background + glyph; the fbi height rules keep sizing it).
 const image = section?.image ?? null;
-const bgUrl = image?.asset ? buildSrc(image, 2000) : FALLBACK_BG;
+const bgUrl = image?.asset ? buildSrc(image, 2000) : null;
 
 const headingHTML = renderHeading(section?.heading || '');
 const bodyHTML = isPortableText(section?.body)
@@ -45,7 +44,7 @@ const cardPlacement = section?.cardPlacement === 'right' ? 'right' : 'left';
     id={section?.sectionId || undefined}
     style={style}
   >
-    <div class="fbi-imgonly__img" style={`background-image:url('${bgUrl}')`} aria-hidden="true" />
+    <div class:list={['fbi-imgonly__img', !bgUrl && 'img-ph']} style={bgUrl ? `background-image:url('${bgUrl}')` : undefined} aria-hidden="true" />
   </section>
 ) : (
   <section
@@ -56,7 +55,7 @@ const cardPlacement = section?.cardPlacement === 'right' ? 'right' : 'left';
     id={section?.sectionId || undefined}
     style={style}
   >
-    <div class="fbi__bg" style={`background-image:url('${bgUrl}')`} aria-hidden="true"></div>
+    <div class:list={['fbi__bg', !bgUrl && 'img-ph']} style={bgUrl ? `background-image:url('${bgUrl}')` : undefined} aria-hidden="true"></div>
     <div class="fbi__overlay" style={`background:rgba(0,0,0,${overlayOpacity})`} aria-hidden="true"></div>
     <div class="fbi__box">
       {eyebrow && <p class="fbi__label reveal reveal-delay-1">{eyebrow}</p>}

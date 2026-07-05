@@ -66,3 +66,27 @@ section[data-spacing='normal'] {
 section[data-spacing='spacious'] {
   padding-block: var(--section-pad-spacious);
 }
+
+/* ── Image placeholder (empty slots — see ImagePlaceholder.astro) ──
+   Palette-colored tonal block with a faint image glyph. Replaces the old
+   Pexels stock fallbacks: sections apply it via the <ImagePlaceholder>
+   component, or directly as a class on background-image divs (FullBleed).
+   Sizing comes from the layout context; this only paints. */
+.img-ph {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text, #1a1a1a) 7%, var(--bg, #f4f2ee));
+}
+.img-ph::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: clamp(28px, 16%, 52px);
+  aspect-ratio: 1;
+  background-color: var(--text, #1a1a1a);
+  opacity: 0.14;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 4H3a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1zm-1 2v9.09l-3.3-3.3a1 1 0 0 0-1.4 0L12 15.09l-2.3-2.3a1 1 0 0 0-1.4 0L4 17.09V6h16zM8.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 4H3a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1zm-1 2v9.09l-3.3-3.3a1 1 0 0 0-1.4 0L12 15.09l-2.3-2.3a1 1 0 0 0-1.4 0L4 17.09V6h16zM8.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z'/%3E%3C/svg%3E") center / contain no-repeat;
+}

@@ -55,7 +55,7 @@ export default {
       title: 'Nav Theme Over Hero',
       type: 'string',
       description:
-        'Controls nav text color when overlaid on the first section. "Auto" picks based on the first section\'s background.',
+        'Controls nav text color when overlaid on the first section. Leave on "Auto" — it picks based on the first section\'s background color. Override only if Auto guesses wrong, e.g. white nav text disappearing over a bright hero photo (pick Dark) or dark text over a night shot (pick Light).',
       options: {
         list: [
           {title: 'Auto', value: 'auto'},

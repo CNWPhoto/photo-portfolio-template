@@ -76,6 +76,17 @@ git checkout main                          # back to dev
 
 # ── Web3Forms (whenever the key arrives) ──────────────────────────────
 #   Studio → Site & Theme → Web3Forms Access Key → paste → publish
+
+# ── Domain cutover (whenever the client goes live on their real domain) ──
+# Prereq: the domain's zone exists in the client's CF account (nameservers
+# already moved). Then one command does: CF custom-domain attach, env-backup
+# preview URL, CORS, seoSettings.siteUrl, Studio redeploy, smoke test —
+# and prints the manual follow-ups (www redirect rule, Search Console).
+CF_API_TOKEN=… node studio/scripts/onboard/90-domain-cutover.js \
+  --slug=<slug> --domain=<canonical host> --account-id=<cf account id>
+# Pick the canonical host deliberately (apex vs www) — see the vault's
+# www-canonical-host pattern. Re-runnable; --skip-cf if the domain was
+# already attached in the dashboard.
 ```
 
 ## Recovery / gotchas
@@ -102,4 +113,5 @@ git checkout main                          # back to dev
 - Client account signups + admin invites (human/legal step).
 - The copy voice pass (Checkpoint 1) — the scrape gives raw material;
   finished prose is a human edit. This is by design.
-- Custom domain / DNS (Phase 3) — separate, infrequent, per-client.
+- Nameserver moves into the client's CF account (client/registrar step).
+  Everything after that is `90-domain-cutover.js`.

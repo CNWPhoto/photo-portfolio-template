@@ -48,18 +48,20 @@ export const palette = {
       }),
       validation: (Rule) => [
         Rule.required(),
-        // Non-blocking warning if two palettes share a slug (e.g. after a
-        // duplicate) — the active palette is matched by slug, so collisions
-        // shadow one another. Regenerate to resolve.
+        // Blocking error if two palettes share a slug (e.g. after a
+        // duplicate) — the active palette is matched by slug, so a collision
+        // silently shadows one palette with the other. Escalated from a
+        // warning (P2 #11): editors kept publishing past the nudge and only
+        // noticed when the wrong colors rendered.
         Rule.custom((slug, context) => {
           const current = slug?.current
           if (!current) return true
           const palettes = context?.document?.palettes || []
           const count = palettes.filter((p) => p?.slug?.current === current).length
           return count > 1
-            ? 'Another palette already uses this slug — regenerate so each palette is unique.'
+            ? 'Another palette already uses this slug — click "Generate" so each palette is unique.'
             : true
-        }).warning(),
+        }).error(),
       ],
     },
     colorField('bg', 'Background', 'Page background'),

@@ -1,5 +1,6 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
 import {imageField, BULK_UPLOAD_TIP} from '../_shared/imageField'
+import {emptyImagesWarning} from '../_shared/imageValidation'
 import {ctaLink} from '../_shared/ctaLink'
 import {sectionIcon} from '../../components/SectionIcons'
 
@@ -39,6 +40,7 @@ export default {
       type: 'array',
       description: `For the slider variant, upload 4–8 photos. For other variants only the first image is used. ${BULK_UPLOAD_TIP}`,
       of: [imageField({required: false})],
+      validation: emptyImagesWarning,
     },
     {
       name: 'eyebrow',
