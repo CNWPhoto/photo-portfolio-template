@@ -14,8 +14,12 @@ export const ctaLink = {
       const ctaText = context.parent?.ctaText
       if (!ctaText) return true
       const type = value?.type
-      if (!type || type === 'none') {
-        return 'Button text is set but Link Type is "No link" — pick where the button should go, or clear the button text.'
+      const hasTarget = Boolean(value?.internal?._ref || value?.external || value?.anchor)
+      // Mirrors resolveLink's render behavior: an unset/'none' type with a
+      // populated target still renders (the type is inferred), so only the
+      // truly-targetless cases get the nudge.
+      if ((!type || type === 'none') && !hasTarget) {
+        return 'Button text is set but the link has no destination — pick where the button should go, or clear the button text.'
       }
       if (type === 'internal' && !value?.internal?._ref) {
         return 'Button text is set but no page is chosen — pick the page this button should go to.'

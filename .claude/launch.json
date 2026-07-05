@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "demo",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "PUBLIC_SANITY_PROJECT_ID=hx5xgigp PUBLIC_SANITY_DATASET=production npm run dev"],
+      "port": 4321
+    },
+    {
+      "name": "studio",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd studio && npm run dev"],
+      "port": 3333
+    }
+  ]
+}
