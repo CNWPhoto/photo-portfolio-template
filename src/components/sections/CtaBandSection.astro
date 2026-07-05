@@ -1,5 +1,6 @@
 ---
 import SanityImage from '../SanityImage.astro';
+import ImagePlaceholder from '../ImagePlaceholder.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { renderHeading } from '../../lib/heading.js';
 import { resolveLink } from '../../lib/links.js';
@@ -34,9 +35,6 @@ const bgImage = section?.backgroundImage ?? null;
 const bgUrl = bgImage?.asset ? buildSrc(bgImage, 2000) : null;
 const fgImage = section?.foregroundImage ?? null;
 
-const FALLBACK_BG = 'https://images.pexels.com/photos/3726314/pexels-photo-3726314.jpeg?auto=compress&cs=tinysrgb&w=600&h=750&fit=crop';
-const FALLBACK_FG = 'https://images.pexels.com/photos/1254140/pexels-photo-1254140.jpeg?auto=compress&cs=tinysrgb&w=500&h=640&fit=crop';
-
 const isOverlapping = layout === 'overlapping-images';
 
 const HeadingTag = isFirst ? 'h1' : 'h2';
@@ -56,7 +54,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
         <div class="ctaband__oi-back">
           {bgImage
             ? <SanityImage image={bgImage} sizes="(max-width:900px) 100vw, 75vw" loading="lazy" class="ctaband__oi-back-img" />
-            : <img src={FALLBACK_BG} alt="" width="600" height="750" loading="lazy" decoding="async" />}
+            : <ImagePlaceholder class="ctaband__oi-back-img" />}
         </div>
       </div>
       <div class="ctaband__oi-content">
@@ -68,7 +66,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
       <div class="ctaband__oi-front">
         {fgImage
           ? <SanityImage image={fgImage} sizes="(max-width:900px) 80vw, 40vw" loading="lazy" class="ctaband__oi-front-img" />
-          : <img src={FALLBACK_FG} alt="" width="500" height="640" loading="lazy" decoding="async" />}
+          : <ImagePlaceholder class="ctaband__oi-front-img" aspectRatio="25/32" size="w" />}
       </div>
     </div>
   </section>

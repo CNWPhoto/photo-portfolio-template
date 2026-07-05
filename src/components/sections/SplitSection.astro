@@ -1,5 +1,6 @@
 ---
 import SanityImage from '../SanityImage.astro';
+import ImagePlaceholder from '../ImagePlaceholder.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { resolveLink } from '../../lib/links.js';
 import { renderBody, isPortableText } from '../../lib/portableText.js';
@@ -13,9 +14,6 @@ interface Props {
 
 const { section, isFirst = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
-
-const FALLBACK_IMG =
-  'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1200';
 
 const imageLayout = section?.imageLayout || 'image-right';
 const isFullBleed = imageLayout === 'image-left-full-bleed' || imageLayout === 'image-right-full-bleed';
@@ -60,7 +58,7 @@ const image = section?.image ?? null;
           loading={isFirst ? 'eager' : 'lazy'}
           class="isplit__img"
         />
-      : <img src={FALLBACK_IMG} alt="" class="isplit__img" loading="lazy" />
+      : <ImagePlaceholder class="isplit__img" />
     }
   </div>
 </section>

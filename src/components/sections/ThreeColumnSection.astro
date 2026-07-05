@@ -1,5 +1,6 @@
 ---
 import SanityImage from '../SanityImage.astro';
+import ImagePlaceholder from '../ImagePlaceholder.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { renderHeading } from '../../lib/heading.js';
 import { renderBody } from '../../lib/portableText.js';
@@ -13,10 +14,6 @@ interface Props {
 
 const { section, isFirst = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
-
-const FALLBACK_IDS = ['1108099', '2253275', '825949'];
-const fallbackUrl = (id: string) =>
-  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800`;
 
 const eyebrow = section?.eyebrow || '';
 const heading = renderHeading(section?.heading || '');
@@ -81,7 +78,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
                 <div class="threecol__img-wrap">
                   {colImg
                     ? <SanityImage image={colImg} sizes="288px" loading="lazy" class="threecol__img" />
-                    : <img src={fallbackUrl(FALLBACK_IDS[i])} alt="" loading="lazy" class="threecol__img" />}
+                    : <ImagePlaceholder class="threecol__img" />}
                 </div>
               )}
               {!hideMedia && variant === 'icon-cards' && col?.icon && (
