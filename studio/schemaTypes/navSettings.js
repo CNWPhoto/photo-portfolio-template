@@ -46,7 +46,9 @@ const childLinkFields = [
       ],
       layout: 'radio',
     },
-    initialValue: 'external',
+    // Internal-first: nav links almost always point at the site's own
+    // pages, and the picker beats pasted URLs for portability.
+    initialValue: 'internal',
   },
   {
     name: 'internalRef',
@@ -154,7 +156,8 @@ export default {
                 ],
                 layout: 'radio',
               },
-              initialValue: 'external',
+              // Internal-first — see childLinkFields.linkType.
+              initialValue: 'internal',
             },
             {
               name: 'internalRef',

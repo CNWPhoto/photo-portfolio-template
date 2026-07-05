@@ -3,6 +3,7 @@ import {structureTool} from 'sanity/structure'
 import {presentationTool, defineDocuments, defineLocations} from 'sanity/presentation'
 import {assist} from '@sanity/assist'
 import {schemaTypes} from './schemaTypes'
+import PresentationNavigator from './components/PresentationNavigator'
 
 // AI Assist toggle — controlled by SANITY_STUDIO_AI_ASSIST in studio/.env
 // per client. We tried fetching siteSettings.aiAssistEnabled at config
@@ -53,6 +54,16 @@ export default defineConfig({
   plugins: [
     presentationTool({
       allowOrigins: ALLOW_ORIGINS,
+      // Page-selector panel (toggled by the list icon next to the URL bar).
+      // Editors click pages/posts to move the preview instead of typing
+      // paths — new pages appear in the list automatically.
+      components: {
+        unstable_navigator: {
+          component: PresentationNavigator,
+          minWidth: 180,
+          maxWidth: 320,
+        },
+      },
       previewUrl: {
         origin: PREVIEW_ORIGIN,
         preview: '/',

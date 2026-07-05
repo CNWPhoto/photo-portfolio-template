@@ -7,13 +7,18 @@ export const ctaLink = {
   title: 'CTA Link',
   type: 'object',
   // Non-blocking nudge when the sibling ctaText is filled in but the link
-  // type is still "No link" — the button either won't render or won't go
-  // anywhere, which editors otherwise only discover on the live site.
+  // has nowhere to go — the button either won't render or won't navigate,
+  // which editors otherwise only discover on the live site.
   validation: (Rule) =>
     Rule.custom((value, context) => {
       const ctaText = context.parent?.ctaText
-      if (ctaText && (!value?.type || value.type === 'none')) {
+      if (!ctaText) return true
+      const type = value?.type
+      if (!type || type === 'none') {
         return 'Button text is set but Link Type is "No link" — pick where the button should go, or clear the button text.'
+      }
+      if (type === 'internal' && !value?.internal?._ref) {
+        return 'Button text is set but no page is chosen — pick the page this button should go to.'
       }
       return true
     }).warning(),
@@ -22,16 +27,20 @@ export const ctaLink = {
       name: 'type',
       title: 'Link Type',
       type: 'string',
+      // Internal-first: linking to your own pages is the common case, and
+      // the page picker beats pasted absolute URLs (those break when the
+      // site moves domains — resolveLink strips self-origins defensively,
+      // but not needing the paste at all is better).
       options: {
         list: [
-          {title: 'No link', value: 'none'},
           {title: 'Internal page', value: 'internal'},
           {title: 'External URL', value: 'external'},
           {title: 'Anchor on this page', value: 'anchor'},
+          {title: 'No link', value: 'none'},
         ],
         layout: 'radio',
       },
-      initialValue: 'none',
+      initialValue: 'internal',
     },
     {
       name: 'internal',
