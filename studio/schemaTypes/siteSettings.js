@@ -1,6 +1,19 @@
 import {imageSizeWarning} from './_shared/imageValidation'
 import HexColorInput from '../components/HexColorInput'
 import PaletteSelectInput from '../components/PaletteSelectInput'
+// Curated Google Fonts catalog — shared with src/lib (single source of
+// truth; the site's Layout builds the css2 URL from the same entries).
+import {fontCatalog} from '../../src/lib/fontCatalog.js'
+
+const themeDefaultOption = {title: '— Theme default —', value: 'default'}
+const headingFontList = [
+  themeDefaultOption,
+  ...fontCatalog.filter((f) => f.use.includes('heading')).map((f) => ({title: f.label, value: f.slug})),
+]
+const bodyFontList = [
+  themeDefaultOption,
+  ...fontCatalog.filter((f) => f.use.includes('body')).map((f) => ({title: f.label, value: f.slug})),
+]
 
 const fontThemeList = [
   { title: 'Classic Editorial', value: 'classic-editorial' },
@@ -103,11 +116,29 @@ export default {
       description: 'Applies site-wide — sets heading and body typefaces',
     },
     {
+      name: 'headingFont',
+      title: 'Heading Font',
+      type: 'string',
+      description:
+        'Overrides just the HEADING font of the Font Theme — pick any font from the list and the site loads it automatically. Have a purchased/brand font file instead? Use Custom Fonts under Advanced.',
+      options: {list: headingFontList},
+      initialValue: 'default',
+    },
+    {
+      name: 'bodyFont',
+      title: 'Body Font',
+      type: 'string',
+      description:
+        'Overrides just the BODY (paragraph) font of the Font Theme. Most sites read best keeping this on Theme default.',
+      options: {list: bodyFontList},
+      initialValue: 'default',
+    },
+    {
       name: 'headingWeight',
       title: 'Heading Weight',
       type: 'string',
       description:
-        'Optional site-wide override for heading thickness. Use Theme Default unless headings look too heavy or too light. Using a custom heading font? Set this to the same number as your uploaded file’s Weight so it renders exactly as designed. Note: some built-in themes only ship certain weights — the browser uses the nearest available.',
+        'Optional site-wide override for heading thickness. Use Theme Default unless headings look too heavy or too light. Using an uploaded custom font? Set this to the same number as your file’s Weight so it renders exactly as designed. Fonts that don’t ship a chosen weight render the nearest available.',
       options: {
         list: [
           {title: 'Theme Default', value: 'default'},
@@ -183,7 +214,7 @@ export default {
     },
     {
       name: 'customFonts',
-      title: 'Custom Fonts (Override)',
+      title: 'Custom Fonts (Advanced — brand font files)',
       type: 'object',
       description:
         'Optional. Upload your own licensed font files to override the Font Theme above. .woff2 is strongly preferred (smaller, faster). You can override heading, body, or both — empty fields fall back to the Font Theme. Only upload fonts you have a web license for.',

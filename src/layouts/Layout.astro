@@ -4,6 +4,7 @@ import Nav from '../components/Nav.astro';
 import DemoBanner from '../components/DemoBanner.astro';
 import '../styles/palette.css';
 import { getClient, urlFor } from '../lib/sanity.js';
+import { fontBySlug, fontDisplayName } from '../lib/fontCatalog.js';
 import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
@@ -36,6 +37,7 @@ const layoutData = await client.fetch(`{
   "settings": *[_type == "siteSettings" && _id == "siteSettings"][0]{
     fontTheme, subheadingCase, siteName, photographerName, logoType, logoImage, logoLarge, favicon,
     accentColorOverride, textColorPreset, defaultPalette, headingWeight, bodyWeight,
+    headingFont, bodyFont,
     demo,
     "palettes": palettes[]{
       "slug": slug.current,
@@ -184,9 +186,21 @@ const useCustomHeading = !!(customHeading?.family && Array.isArray(customHeading
 const useCustomBody = !!(customBody?.family && Array.isArray(customBody?.files) && customBody.files.some((f: CustomFontFile) => f?.url));
 
 const activeTheme = FONT_THEMES[fontTheme] ?? FONT_THEMES['classic-editorial'];
+
+// Curated Google Font picks (siteSettings.headingFont / bodyFont). Per-side
+// precedence: uploaded custom font > curated pick > font theme. Values are
+// catalog slugs; 'default' or anything unknown resolves to undefined and
+// the theme side applies untouched. The catalog is pre-verified against
+// Google's css2 API (scripts/verify-font-catalog.mjs) — an unknown family
+// or weight in a css2 URL would 400 the ENTIRE request and drop every font.
+const headingPick = !useCustomHeading ? fontBySlug[cleanSettings?.headingFont] : undefined;
+const bodyPick = !useCustomBody ? fontBySlug[cleanSettings?.bodyFont] : undefined;
+const css2Param = (f: {family: string; axes: string | null}) =>
+  `family=${f.family}${f.axes ? `:${f.axes}` : ''}`;
+
 const googleFontParams: string[] = [];
-if (!useCustomHeading) googleFontParams.push(`family=${activeTheme.heading}`);
-if (!useCustomBody) googleFontParams.push(`family=${activeTheme.body}`);
+if (!useCustomHeading) googleFontParams.push(headingPick ? css2Param(headingPick) : `family=${activeTheme.heading}`);
+if (!useCustomBody) googleFontParams.push(bodyPick ? css2Param(bodyPick) : `family=${activeTheme.body}`);
 const fontUrl = googleFontParams.length > 0
   ? `https://fonts.googleapis.com/css2?${googleFontParams.join('&')}&display=swap`
   : null;
@@ -221,6 +235,15 @@ if (useCustomHeading) {
 if (useCustomBody) {
   customFontCssParts.push(buildFontFaceBlock(customBody.family, customBody.files));
   customFontCssParts.push(`:root{--font-body:'${customBody.family}',system-ui,sans-serif !important;}`);
+}
+// Curated picks reuse the identical override mechanism (and therefore the
+// same cascade behavior and bridge head-swap slot). No @font-face needed —
+// the Google css2 stylesheet supplies the faces; we only repoint the vars.
+if (headingPick) {
+  customFontCssParts.push(`:root{--font-heading:'${fontDisplayName(headingPick.family)}',${headingPick.fallback} !important;}`);
+}
+if (bodyPick) {
+  customFontCssParts.push(`:root{--font-body:'${fontDisplayName(bodyPick.family)}',${bodyPick.fallback} !important;}`);
 }
 const customFontCss = customFontCssParts.join('');
 
