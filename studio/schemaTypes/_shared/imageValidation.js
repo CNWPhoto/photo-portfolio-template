@@ -22,6 +22,15 @@ export const imageSizeWarning = (Rule) => [
   }).warning(),
 ]
 
+// Empty-gallery warning for images[] array fields. Since P1 #8, empty slots
+// render a neutral palette placeholder on the live site instead of stock
+// photos — this nudge tells editors that's what visitors will see.
+export const emptyImagesWarning = (Rule) =>
+  Rule.custom((value) => {
+    if (Array.isArray(value) && value.some((img) => img?.asset?._ref)) return true
+    return 'No images yet — visitors will see a neutral placeholder block until you add some.'
+  }).warning()
+
 // Alt text warning for the standard `alt` subfield. Spread into a field's
 // validation array so editors are nudged to add alt text without being blocked.
 export const altTextWarning = (Rule) =>

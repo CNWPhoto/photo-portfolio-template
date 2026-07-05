@@ -4,6 +4,30 @@
 
 import HexColorInput from '../components/HexColorInput'
 
+// A link with no target renders dead in the nav — require the field that
+// matches the chosen link type (P2 #11). Exemptions: top-level links with
+// "Show in navigation" off, and dropdown parents (links with children act
+// as menu openers, e.g. PIF's "Giving Back" — their sub-links carry the
+// targets). Sub-links have neither toggle nor children, so always required.
+// Validation only fires for the visible field (Sanity validates hidden
+// fields too, so each rule checks linkType itself).
+const isExemptNavParent = (parent) =>
+  parent?.enabled === false || (Array.isArray(parent?.children) && parent.children.length > 0)
+
+const requireInternalRef = (Rule) =>
+  Rule.custom((value, context) => {
+    if (context.parent?.linkType !== 'internal') return true
+    if (isExemptNavParent(context.parent)) return true
+    return value?._ref ? true : 'Choose the page this link should go to.'
+  })
+
+const requireUrl = (Rule) =>
+  Rule.custom((value, context) => {
+    if (context.parent?.linkType === 'internal') return true
+    if (isExemptNavParent(context.parent)) return true
+    return value && value.trim() !== '' ? true : 'Add the URL this link should go to.'
+  })
+
 const childLinkFields = [
   {
     name: 'label',
@@ -36,6 +60,7 @@ const childLinkFields = [
     ],
     weak: true,
     hidden: ({parent}) => parent?.linkType !== 'internal',
+    validation: requireInternalRef,
   },
   {
     name: 'url',
@@ -43,6 +68,7 @@ const childLinkFields = [
     type: 'string',
     description: 'Use /page-name for internal pages, or a full URL for external links.',
     hidden: ({parent}) => parent?.linkType === 'internal',
+    validation: requireUrl,
   },
   {
     name: 'openInNewTab',
@@ -142,6 +168,7 @@ export default {
               ],
               weak: true,
               hidden: ({parent}) => parent?.linkType !== 'internal',
+              validation: requireInternalRef,
             },
             {
               name: 'url',
@@ -149,6 +176,7 @@ export default {
               type: 'string',
               description: 'Use /page-name for internal pages, or a full URL for external links.',
               hidden: ({parent}) => parent?.linkType === 'internal',
+              validation: requireUrl,
             },
             {
               name: 'enabled',

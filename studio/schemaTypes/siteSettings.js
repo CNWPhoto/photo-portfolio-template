@@ -196,7 +196,8 @@ export default {
       name: 'textColorPreset',
       title: 'Text Color',
       type: 'string',
-      description: 'Override the main text color on light-background themes. Leave blank to use the theme default.',
+      description:
+        'Override the main text color on light-background themes. Leave on Theme Default unless body text reads too soft (pick Charcoal or True Black for more contrast) or too harsh (pick a Gray to soften it). Has no effect on dark themes.',
       options: {
         list: [
           {title: 'Theme Default', value: ''},
