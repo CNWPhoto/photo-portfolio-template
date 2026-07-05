@@ -83,11 +83,22 @@ function syncHeadMarkers(newDoc) {
     const selector = `[data-sanity-head="${marker}"]`
     const next = newDoc.querySelector(selector)
     const curr = document.head.querySelector(selector)
-    if (next && curr) curr.replaceWith(next)
+    // Skip identical elements: replacing an unchanged <link> makes the
+    // browser re-evaluate the stylesheet (visible FOUT on every edit).
+    if (next && curr && next.outerHTML !== curr.outerHTML) curr.replaceWith(next)
     else if (next && !curr) document.head.appendChild(next)
     else if (!next && curr) curr.remove()
   }
 }
+
+// Server HTML from the previous refresh, per selector + URL. Lets us skip
+// body swaps whose server output didn't change — e.g. a font or palette
+// pick only alters <head> markers, so replacing <main> would just flash
+// every image and reset slider/scroll state for nothing. Compared against
+// the PREVIOUS FETCH (not the live DOM, which client scripts mutate —
+// reveal classes, slider clones — so it never matches server HTML).
+let lastServerHtml = {}
+let lastServerUrl = null
 
 // Fetch the current URL and swap a known set of body-level elements in
 // place. Falls back to a full page reload on any failure so editors never
@@ -107,22 +118,34 @@ async function swapInPlace() {
     const html = await res.text()
     const doc = new DOMParser().parseFromString(html, 'text/html')
 
-    let swappedMain = false
+    // Navigation invalidates the baseline (different page, different HTML).
+    if (lastServerUrl !== window.location.href) {
+      lastServerHtml = {}
+      lastServerUrl = window.location.href
+    }
+
+    let mainPresent = false
     for (const selector of SWAP_SELECTORS) {
       const newEl = doc.querySelector(selector)
       const oldEl = document.querySelector(selector)
       if (newEl && oldEl) {
+        if (selector === 'main') mainPresent = true
+        // Unchanged since the last refresh → the edit didn't touch this
+        // region (head-only changes like fonts/palette land here). Skip
+        // the swap so images don't flash and slider state survives.
+        if (lastServerHtml[selector] === newEl.outerHTML) continue
+        lastServerHtml[selector] = newEl.outerHTML
         oldEl.replaceWith(newEl)
-        if (selector === 'main') swappedMain = true
       } else if (newEl && !oldEl) {
         // New element appeared on the server (e.g. doc-marker added by a
         // recent code change) but isn't in the live DOM yet. Append it to
         // body so visual-editing's MutationObserver picks it up on this
         // refresh instead of waiting for the next full page load.
+        lastServerHtml[selector] = newEl.outerHTML
         document.body.appendChild(newEl)
       }
     }
-    if (!swappedMain) throw new Error('refresh: <main> missing')
+    if (!mainPresent) throw new Error('refresh: <main> missing')
 
     syncHtmlAttrs(doc.documentElement)
     syncHeadMarkers(doc)
@@ -140,7 +163,38 @@ async function swapInPlace() {
   }
 }
 
+// Pre-fetch the current page once at mount (after idle) so the very first
+// edit already has a baseline to diff against — otherwise the first font
+// pick still swaps everything once. Only fills slots swapInPlace hasn't
+// already populated, so it can never clobber a fresher baseline.
+async function seedBaseline() {
+  try {
+    const res = await fetch(window.location.href, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { 'X-Visual-Editing-Refresh': '1' },
+    })
+    if (!res.ok) return
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html')
+    if (lastServerUrl !== window.location.href) {
+      lastServerHtml = {}
+      lastServerUrl = window.location.href
+    }
+    for (const selector of SWAP_SELECTORS) {
+      const el = doc.querySelector(selector)
+      if (el && lastServerHtml[selector] === undefined) {
+        lastServerHtml[selector] = el.outerHTML
+      }
+    }
+  } catch {
+    // Baseline is an optimization — swaps still work without it.
+  }
+}
+
 export function mount() {
+  if ('requestIdleCallback' in window) requestIdleCallback(() => seedBaseline())
+  else setTimeout(seedBaseline, 1000)
+
   enableVisualEditing({
     history: buildHistoryAdapter(),
     refresh: (payload) => {
