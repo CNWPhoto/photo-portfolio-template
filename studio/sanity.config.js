@@ -1,6 +1,7 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {presentationTool, defineDocuments, defineLocations} from 'sanity/presentation'
+import {map} from 'rxjs'
 import {assist} from '@sanity/assist'
 import {schemaTypes} from './schemaTypes'
 import PresentationNavigator from './components/PresentationNavigator'
@@ -197,56 +198,65 @@ export default defineConfig({
             // ── Pages ────────────────────────────────────────────────────
             // Flat list: every `page` doc (About, Experience, Contact, and
             // any custom pages) is inlined under the singletons, not hidden
-            // behind a second "Pages" click. The async fetch returns a
-            // fresh list on each open of the group.
+            // behind a second "Pages" click. Uses a LIVE query
+            // (documentStore.listenQuery) rather than a one-shot client.fetch:
+            // the fetch version was a static snapshot, so a page deleted from
+            // this list stayed visible until a manual Studio refresh. The
+            // listener re-emits the list on every create / delete / rename.
             S.listItem()
               .title('📄 Pages')
               .id('pagesGroup')
-              .child(async () => {
-                const client = context.getClient({apiVersion: '2024-01-01'})
-                const pages = await client.fetch(
-                  `*[_type == "page" && defined(slug.current)]{_id, title, "slug": slug.current}`,
-                )
-                // Raw perspective returns both `drafts.<id>` and `<id>` when
-                // a page has an unpublished draft. Collapse to one entry per
-                // logical document (prefer published; fall back to draft if
-                // the page was never published).
-                const byBaseId = new Map()
-                for (const p of pages) {
-                  const baseId = p._id.replace(/^drafts\./, '')
-                  const existing = byBaseId.get(baseId)
-                  const thisIsDraft = p._id.startsWith('drafts.')
-                  if (!existing || (existing._id.startsWith('drafts.') && !thisIsDraft)) {
-                    byBaseId.set(baseId, {...p, _id: baseId})
-                  }
-                }
-                const unique = Array.from(byBaseId.values()).sort((a, b) =>
-                  (a.title || '').localeCompare(b.title || ''),
-                )
-                return S.list()
-                  .title('Pages')
-                  .items([
-                    singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
-                    singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
-                    singleton(S, 'blogPage', 'Blog', 'blogPage'),
-                    singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
-                    S.divider(),
-                    singleton(S, 'termsAndConditionsPage', 'Terms & Conditions', 'termsAndConditionsPage'),
-                    singleton(S, 'privacyPolicyPage', 'Privacy Policy', 'privacyPolicyPage'),
-                    S.divider(),
-                    ...unique.map((p) =>
-                      S.listItem()
-                        .id(p._id)
-                        .title(p.title || 'Untitled')
-                        .child(
-                          S.document()
-                            .documentId(p._id)
-                            .schemaType('page')
-                            .title(p.title || 'Page'),
-                        ),
-                    ),
-                  ])
-              }),
+              .child(() =>
+                context.documentStore
+                  .listenQuery(
+                    `*[_type == "page" && defined(slug.current)]{_id, title, "slug": slug.current}`,
+                    {},
+                    {perspective: 'raw'},
+                  )
+                  .pipe(
+                    map((pages) => {
+                      // Raw perspective returns both `drafts.<id>` and `<id>`
+                      // when a page has an unpublished draft. Collapse to one
+                      // entry per logical document (prefer published; fall back
+                      // to draft if the page was never published).
+                      const byBaseId = new Map()
+                      for (const p of pages || []) {
+                        const baseId = p._id.replace(/^drafts\./, '')
+                        const existing = byBaseId.get(baseId)
+                        const thisIsDraft = p._id.startsWith('drafts.')
+                        if (!existing || (existing._id.startsWith('drafts.') && !thisIsDraft)) {
+                          byBaseId.set(baseId, {...p, _id: baseId})
+                        }
+                      }
+                      const unique = Array.from(byBaseId.values()).sort((a, b) =>
+                        (a.title || '').localeCompare(b.title || ''),
+                      )
+                      return S.list()
+                        .title('Pages')
+                        .items([
+                          singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
+                          singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
+                          singleton(S, 'blogPage', 'Blog', 'blogPage'),
+                          singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
+                          S.divider(),
+                          singleton(S, 'termsAndConditionsPage', 'Terms & Conditions', 'termsAndConditionsPage'),
+                          singleton(S, 'privacyPolicyPage', 'Privacy Policy', 'privacyPolicyPage'),
+                          S.divider(),
+                          ...unique.map((p) =>
+                            S.listItem()
+                              .id(p._id)
+                              .title(p.title || 'Untitled')
+                              .child(
+                                S.document()
+                                  .documentId(p._id)
+                                  .schemaType('page')
+                                  .title(p.title || 'Page'),
+                              ),
+                          ),
+                        ])
+                    }),
+                  ),
+              ),
 
             S.divider(),
 

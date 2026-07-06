@@ -36,8 +36,22 @@ function buildHistoryAdapter() {
       return () => {}
     },
     update: (update) => {
-      if (update.type === 'push' || update.type === 'replace') {
-        window.location.href = update.url
+      // Mirror Sanity's canonical Astro history adapter. Two things our old
+      // unconditional `location.href = update.url` got wrong:
+      //   1. No same-URL guard. Presentation re-emits the current URL to keep
+      //      its address bar in sync — especially while a slow preview SSR
+      //      render is still in flight. Without the guard, each echo fired a
+      //      full page reload, so clicking a NEW page could 'snap back' and
+      //      reload the PREVIOUS one a few seconds later. Compare against the
+      //      current path and no-op when they match.
+      //   2. push vs replace were treated identically (both added a history
+      //      entry), corrupting the back-stack. Use assign() for push and
+      //      replace() for replace so 'pop'/back behaves.
+      const here = `${window.location.pathname}${window.location.search}${window.location.hash}`
+      if (update.type === 'push') {
+        if (here !== update.url) window.location.assign(update.url)
+      } else if (update.type === 'replace') {
+        if (here !== update.url) window.location.replace(update.url)
       } else if (update.type === 'pop') {
         window.history.back()
       }
