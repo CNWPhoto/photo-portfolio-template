@@ -98,7 +98,29 @@ later — nine distinct bugs, every one invisible unless you diff the imported r
 live source. The scraper/importer now fix all nine; this checklist catches regressions and
 platform quirks the tooling doesn't yet know about.
 
+**Automate most of it with `66-verify-blog.js`** — it diffs the live dataset against the staged
+scrape and asserts the mechanical items below (post/image/video counts, alt + excerpt coverage,
+no title-duplicate leading heading, category refs resolve, no old-domain link leaks, no inline
+category-nav remnant). Read-only; exits non-zero on any hard fail. Run it in the swapped client
+env, same dance as the import:
+
+```sh
+cd studio && npx sanity exec scripts/onboard/66-verify-blog.js --with-user-token -- --slug=<slug>
+```
+
+It reports FAILs (block sign-off) and WARNs (eyeball — e.g. a mark-count drift or an intentional
+external link). Then hand-check what it can't (the visual spot-check at the bottom).
+
 Diff the imported dataset against the live source:
+
+- [ ] **Excerpts** — every post has one (`og:description` = the Squarespace excerpt/SEO summary;
+      pulled for ALL posts, not just the beyond-RSS tail that carried it inline).
+- [ ] **No title-duplicate heading** — page-scraped posts can start with the title as an `<h2>`;
+      the template already renders the title, so a leading heading that EXACTLY equals the title
+      is dropped (genuine subheadings survive — exact match only).
+- [ ] **Internal links relativized** — body links the author wrote as full URLs back to the source
+      domain are rewritten to relative paths, so they stay on the new site (same-tab) instead of
+      rendering external (new tab, old Squarespace host). Genuinely external links pass through.
 
 - [ ] **Post count** — sitemap post URLs (minus `/tag/`, `/category/`) == blogPost docs. NOT
       the RSS count: Squarespace RSS caps at 20 items, so post *existence* comes from the

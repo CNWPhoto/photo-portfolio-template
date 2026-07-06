@@ -172,7 +172,7 @@ async function main() {
         // (posts weren't categorized on the first migration). Titles, covers,
         // excerpts and other editor tweaks stay put. Also set the real cover
         // alt (sitemap caption) if the doc has a cover and one was found.
-        const patch = {body, ...(categories.length ? {categories} : {})}
+        const patch = {body, ...(categories.length ? {categories} : {}), ...(p.excerpt ? {excerpt: p.excerpt} : {})}
         if (p.coverAlt && existing.coverImage?.asset) patch['coverImage'] = {...existing.coverImage, alt: p.coverAlt}
         await withRetry(`patch body ${p.slug}`, () =>
           client.patch(docId).set(patch).commit(),
