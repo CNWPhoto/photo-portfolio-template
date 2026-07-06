@@ -5,7 +5,7 @@ import SanityImage from '../../components/SanityImage.astro';
 import BlogPagination from '../../components/BlogPagination.astro';
 import { buildSrc, buildSrcset } from '../../lib/image';
 import { getClient } from '../../lib/sanity.js';
-import { renderBody, isPortableText } from '../../lib/portableText.js';
+import { renderBody, isPortableText, renderLink } from '../../lib/portableText.js';
 
 const { slug } = Astro.params;
 const client = getClient(Astro.locals.isPreview);
@@ -94,7 +94,8 @@ const blogPostingSchema = [{
 }];
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const safeHref = (href: string) => /^(https?:|mailto:|tel:|\/)/i.test(href) ? href : '#';
+// Prose links render via the shared renderLink (internal = same tab); esc
+// above is still used for image alt/caption escaping below.
 
 const bodyHTML = post.body
   ? toHTML(post.body, {
@@ -135,8 +136,7 @@ const bodyHTML = post.body
           normal: ({ children }) => `<p>${children}</p>`,
         },
         marks: {
-          link: ({ children, value }) =>
-            `<a href="${esc(safeHref(value.href || ''))}" target="_blank" rel="noopener noreferrer">${children}</a>`,
+          link: ({ children, value }) => renderLink(value.href || '', children),
         },
       },
     })

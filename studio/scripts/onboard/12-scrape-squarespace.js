@@ -46,6 +46,40 @@ const decKeep = (s) => (s || '')
   .replace(/&amp;?/g, '&')
 const dec = (s) => decKeep(s).trim()
 
+// Slug for a Squarespace tag/category name. MUST match the blogCategory
+// slugs 65-blog-import creates, so migrated 'browse by category' footer
+// links resolve to the new-site category pages.
+const categorySlug = (name) =>
+  decKeep(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+
+const catBase = blogPath || 'blog'
+// Rewrite a Squarespace tag URL (any domain — posts often link the client's
+// OLD domain) to the new-site category page. Non-tag hrefs pass through.
+function rewriteTagHref(href) {
+  const m = href.match(/\/tag\/([^/?#"']+)/i)
+  if (!m) return href
+  let name
+  try { name = decodeURIComponent(m[1]) } catch { name = m[1] }
+  return `/${catBase}/category/${categorySlug(name.replace(/\+/g, ' '))}`
+}
+
+// The post's real Squarespace tags live in <a class="blog-item-tag"> anchors
+// in the page metadata (NOT the body's 'check these categories' nav, which
+// links every category). Used to assign blogPost.categories on import.
+function extractPostTags(pageHtml) {
+  const tags = new Set()
+  for (const m of pageHtml.matchAll(/<a\b[^>]*>/gi)) {
+    if (!/blog-item-tag/.test(m[0])) continue
+    const t = (m[0].match(/\/tag\/([^"'?]+)/) || [])[1]
+    if (t) {
+      let name
+      try { name = decodeURIComponent(t) } catch { name = t }
+      tags.add(decKeep(name.replace(/\+/g, ' ')))
+    }
+  }
+  return [...tags]
+}
+
 async function text(u) {
   const r = await fetch(u, {headers: UA})
   return r.ok ? r.text() : ''
@@ -81,7 +115,11 @@ function inlineRuns(html) {
   let m
   while ((m = re.exec(s))) {
     if (m[4] != null) {
-      const text = dec(m[4]).replace(/\s+/g, ' ')
+      // decKeep (NOT dec) — dec's .trim() would strip the single space that
+      // sits between a word and an adjacent <em>/<strong>/<a>, collapsing
+      // "what <em>x</em> is" into "whatxis". Boundary spaces are trimmed once
+      // at the block edges below, not per-token.
+      const text = decKeep(m[4]).replace(/\s+/g, ' ')
       if (!text) continue
       const marks = []
       if (strong > 0) marks.push('strong')
@@ -94,7 +132,17 @@ function inlineRuns(html) {
     const tag = m[2].toLowerCase()
     if (tag === 'strong' || tag === 'b') strong = Math.max(0, strong + (closing ? -1 : 1))
     else if (tag === 'em' || tag === 'i') em = Math.max(0, em + (closing ? -1 : 1))
-    else if (tag === 'a') link = closing ? null : ((m[3].match(/href=["']([^"']+)["']/i) || [])[1] || null)
+    else if (tag === 'a') {
+      // Decode HTML entities in the href — a source href with a query string
+      // is stored entity-encoded (`&amp;`), and the renderer re-escapes `&`,
+      // producing a broken `&amp;amp;` (e.g. mailto subject/body prefills).
+      // dec() -> single `&`, so the renderer's escape yields correct output.
+      if (closing) link = null
+      else {
+        const raw = (m[3].match(/href=["']([^"']+)["']/i) || [])[1]
+        link = raw ? rewriteTagHref(dec(raw)) : null
+      }
+    }
   }
   // Merge adjacent runs with identical formatting to keep spans tidy.
   const same = (a, b) => (a.link || '') === (b.link || '') &&
@@ -441,8 +489,9 @@ async function main() {
           i--
         }
       }
-      posts.push({title, slug: postSlug, url: p, publishDate, excerpt, cover, body})
-      log('sqsp', `blog ${title.slice(0, 50)} — ${body.length} blk, ${imgN} img, ${vidN} video${publishDate ? ` (${publishDate})` : ' (no date — likely a category page, filtered)'}`)
+      const tags = extractPostTags(pageHtml)
+      posts.push({title, slug: postSlug, url: p, publishDate, excerpt, cover, body, tags})
+      log('sqsp', `blog ${title.slice(0, 50)} — ${body.length} blk, ${imgN} img, ${vidN} video, ${tags.length} tags${publishDate ? ` (${publishDate})` : ' (no date — likely a category page, filtered)'}`)
     }
     // Squarespace lists blog CATEGORY/tag pages under the same path prefix.
     // They carry no RSS <item> (hence no pubDate) — drop them so only real
