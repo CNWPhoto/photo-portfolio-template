@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { portableTextToString, isPortableText } from '../src/lib/portableText.js'
+import { portableTextToString, isPortableText, renderLink } from '../src/lib/portableText.js'
 
 const block = (...texts: string[]) => ({
   _type: 'block',
@@ -54,5 +54,33 @@ describe('portableTextToString', () => {
 
   it('drops empty blocks rather than emitting stray spaces', () => {
     expect(portableTextToString([block('A'), block(''), block('B')])).toBe('A B')
+  })
+})
+
+describe('renderLink', () => {
+  it('opens external http(s) links in a new tab with rel', () => {
+    const html = renderLink('https://example.com', 'x')
+    expect(html).toContain('target="_blank"')
+    expect(html).toContain('rel="noopener noreferrer"')
+    expect(html).toContain('href="https://example.com"')
+  })
+
+  it('keeps INTERNAL links in the same tab (no target)', () => {
+    for (const href of ['/lenaweepetcollective/category/business-spotlights', '/about', '#contact']) {
+      const html = renderLink(href, 'x')
+      expect(html).not.toContain('target="_blank"')
+      expect(html).toContain(`href="${href}"`)
+    }
+  })
+
+  it('tel: and mailto: stay in the same tab (they invoke apps, not tabs)', () => {
+    expect(renderLink('tel:5551234567', 'call')).not.toContain('target="_blank"')
+    expect(renderLink('mailto:a@b.com?subject=Hi&body=Yo', 'mail')).not.toContain('target="_blank"')
+    // ampersand in a mailto query stays a single &amp; (not double-encoded)
+    expect(renderLink('mailto:a@b.com?subject=Hi&body=Yo', 'mail')).toContain('subject=Hi&amp;body=Yo')
+  })
+
+  it('neutralizes javascript: and other unsafe schemes', () => {
+    expect(renderLink('javascript:alert(1)', 'x')).toContain('href="#"')
   })
 })

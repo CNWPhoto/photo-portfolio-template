@@ -9,6 +9,18 @@ const esc = (s) =>
 
 const safeHref = (href) => (/^(https?:|mailto:|tel:|\/|#)/i.test(href) ? href : '#');
 
+// Render a prose link. Internal targets — relative paths (/…), in-page
+// anchors (#…), tel: and mailto: — open in the SAME tab; forcing a new tab
+// on internal navigation (e.g. migrated category links) is a UX bug. Only
+// genuinely external http(s) links get target=_blank + rel. Shared with the
+// blog post renderer so both behave identically.
+export function renderLink(href, children) {
+  const safe = safeHref(href || '');
+  const external = /^https?:\/\//i.test(safe);
+  const attrs = external ? ' target="_blank" rel="noopener noreferrer"' : '';
+  return `<a href="${esc(safe)}"${attrs}>${children}</a>`;
+}
+
 const defaultComponents = {
   block: {
     normal: ({ children }) => `<p>${children}</p>`,
@@ -21,8 +33,7 @@ const defaultComponents = {
     strong: ({ children }) => `<strong>${children}</strong>`,
     em: ({ children }) => `<em>${children}</em>`,
     underline: ({ children }) => `<u>${children}</u>`,
-    link: ({ children, value }) =>
-      `<a href="${esc(safeHref(value?.href || ''))}" target="_blank" rel="noopener noreferrer">${children}</a>`,
+    link: ({ children, value }) => renderLink(value?.href || '', children),
   },
   list: {
     bullet: ({ children }) => `<ul>${children}</ul>`,
