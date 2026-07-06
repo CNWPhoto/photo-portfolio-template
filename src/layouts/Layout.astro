@@ -52,6 +52,7 @@ const layoutData = await client.fetch(`{
   "code": *[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts },
   "nav": *[_type == "navSettings" && _id == "navSettings"][0]{
     navVariant,
+    backgroundTone,
     stickyNav,
     links[] {
       label, url, enabled, openInNewTab, isButton, ctaColor, linkType,
@@ -163,6 +164,7 @@ const textPresetColors = (textColorPreset && LIGHT_THEMES.includes(colorTheme))
 // the whole nav object — links are used for hrefs, labels, and type checks.
 const cleanNav = nav ? stegaClean(nav) : null;
 const navVariant     = cleanNav?.navVariant || 'classic';
+const navBackgroundTone = cleanNav?.backgroundTone || 'default';
 const stickyNav      = !!cleanNav?.stickyNav;
 const navLinks       = cleanNav?.links ?? null;
 const blogEnabled    = blogConfig?.blogEnabled !== false;
@@ -344,7 +346,7 @@ const schemaJSON = schemaGraph.length
 			</div>
 		)}
 		<DemoBanner demo={demoSettings} />
-		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} {logoLarge} navVariant={navVariant} navLinks={navLinks} {blogEnabled} {stickyNav} />
+		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} {logoLarge} navVariant={navVariant} navLinks={navLinks} {blogEnabled} {stickyNav} palette={activePalette} backgroundTone={navBackgroundTone} />
 		<slot />
 		<Footer {siteName} {blogEnabled} palette={activePalette} />
 		<script>

@@ -2,6 +2,7 @@
 import { urlFor } from '../lib/sanity.js';
 import { resolveLink } from '../lib/links.js';
 import { createDataAttribute } from '@sanity/visual-editing/create-data-attribute';
+import { applyBackgroundTone, paletteToStyle } from '../lib/palette.js';
 
 const {
 	siteName = 'Pet Photography',
@@ -12,7 +13,19 @@ const {
 	navLinks = null,
 	blogEnabled = true,
 	stickyNav = false,
+	palette = null,
+	backgroundTone = 'default',
 } = Astro.props;
+
+// Background Tone (Light/Alt/Dark/Vibrant) — same control the sections and
+// footer use. Resolve the chosen shade into the palette and emit it as CSS
+// vars on the nav root; the nav's `background: var(--bg)` + text colors then
+// pick it up (text auto-contrasts for Dark/Vibrant). 'default' returns the
+// base palette unchanged, so existing navs are untouched. On the transparent
+// variants the bar overlays the hero, so this shows once it solidifies.
+const navStyle = palette
+	? paletteToStyle(applyBackgroundTone(palette, backgroundTone))
+	: undefined;
 
 // Sticky is now a pure opt-in toggle for every variant — including
 // transparent. Editors who want the scroll-solidify effect on a
@@ -80,7 +93,7 @@ const leftLinks  = isSplit ? links.slice(0, splitMid) : [];
 const rightLinks = isSplit ? links.slice(splitMid)    : links;
 ---
 
-<header class="nav" data-variant={navVariant} data-sticky={isStickyEffective ? 'true' : undefined} data-sanity={navSanityAttr}>
+<header class="nav" data-variant={navVariant} data-sticky={isStickyEffective ? 'true' : undefined} data-sanity={navSanityAttr} style={navStyle}>
 	<div class="nav__inner">
 		{isSplit && (
 			<nav aria-label="Main navigation left" class="nav__left-nav">

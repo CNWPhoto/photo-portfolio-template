@@ -26,35 +26,66 @@ let refreshTimer = null
 let styleTimer = null
 let inflight = null
 
+// Module eval ≈ this page's load time (the bridge is imported per full page
+// load in MPA). Used by the anti-bounce guard below.
+const PAGE_LOADED_AT = Date.now()
+// Presentation sometimes re-emits a STALE previous URL a second or two after a
+// navigation (amplified by slow preview SSR bypassing the edge cache), which
+// snapped the editor back to the page they just left. We ignore exactly that
+// reversal for a short window after the new page loads.
+const BOUNCE_WINDOW_MS = 4000
+
+const pathOf = (u) => {
+  try {
+    const url = new URL(u, window.location.href)
+    return `${url.pathname}${url.search}${url.hash}`
+  } catch {
+    return u
+  }
+}
+
 function buildHistoryAdapter() {
   return {
     subscribe: (navigate) => {
       navigate({
         type: 'push',
+        title: document.title,
         url: `${window.location.pathname}${window.location.search}${window.location.hash}`,
       })
       return () => {}
     },
     update: (update) => {
-      // Mirror Sanity's canonical Astro history adapter. Two things our old
-      // unconditional `location.href = update.url` got wrong:
-      //   1. No same-URL guard. Presentation re-emits the current URL to keep
-      //      its address bar in sync — especially while a slow preview SSR
-      //      render is still in flight. Without the guard, each echo fired a
-      //      full page reload, so clicking a NEW page could 'snap back' and
-      //      reload the PREVIOUS one a few seconds later. Compare against the
-      //      current path and no-op when they match.
-      //   2. push vs replace were treated identically (both added a history
-      //      entry), corrupting the back-stack. Use assign() for push and
-      //      replace() for replace so 'pop'/back behaves.
-      const here = `${window.location.pathname}${window.location.search}${window.location.hash}`
-      if (update.type === 'push') {
-        if (here !== update.url) window.location.assign(update.url)
-      } else if (update.type === 'replace') {
-        if (here !== update.url) window.location.replace(update.url)
-      } else if (update.type === 'pop') {
+      if (update.type === 'pop') {
         window.history.back()
+        return
       }
+      const here = `${window.location.pathname}${window.location.search}${window.location.hash}`
+      // Normalize update.url to a path. Presentation is configured with a
+      // preview `origin`, so update.url arrives as a FULL URL — comparing it
+      // against our bare path (the old code) never matched, so the same-URL
+      // guard never fired and every sync echo still triggered a navigation.
+      const target = pathOf(update.url)
+      // Already showing this URL → nothing to do (kills the reload churn).
+      if (here === target) return
+      // Anti-bounce: drop an update that tries to send us BACK to the page we
+      // just navigated away from, within BOUNCE_WINDOW_MS of this page loading.
+      // A genuine back-navigation the editor makes later (after the window)
+      // still goes through.
+      try {
+        const nav = JSON.parse(sessionStorage.getItem('__pv_nav') || 'null')
+        if (
+          nav && nav.to === here && nav.from === target &&
+          Date.now() - PAGE_LOADED_AT < BOUNCE_WINDOW_MS
+        ) {
+          return
+        }
+      } catch { /* sessionStorage unavailable — skip the guard */ }
+      // Record this hop so the destination page can recognize a bounce back.
+      try {
+        sessionStorage.setItem('__pv_nav', JSON.stringify({from: here, to: target}))
+      } catch { /* non-fatal */ }
+      if (update.type === 'replace') window.location.replace(update.url)
+      else window.location.assign(update.url)
     },
   }
 }

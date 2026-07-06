@@ -109,6 +109,24 @@ export default {
       initialValue: 'classic',
     },
     {
+      name: 'backgroundTone',
+      title: 'Background Tone',
+      type: 'string',
+      description:
+        'Which background shade from the site palette the menu bar uses. Light is the main page background; Alt is a slightly darker shade; Dark is the full dark section color; Vibrant is the palette’s bold accent band (text auto-contrasts). Mirrors the per-section Background Tone control. (Note: on the Transparent variants the bar overlays the hero, so the tone applies once it turns solid on scroll.)',
+      options: {
+        list: [
+          {title: 'Light', value: 'default'},
+          {title: 'Alt (subtle darker)', value: 'alt'},
+          {title: 'Dark', value: 'dark'},
+          {title: 'Vibrant', value: 'vibrant'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'default',
+    },
+    {
       name: 'stickyNav',
       title: 'Sticky navigation',
       type: 'boolean',
