@@ -360,6 +360,16 @@ async function main() {
   // 1. Every URL from the sitemap, split into pages vs blog posts.
   const xml = await text(`${origin}/sitemap.xml`)
   const locs = [...new Set([...xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)].map((m) => m[1]))]
+  // Alt text lives in the sitemap's <image:caption>, NOT the inline <img alt>
+  // (Squarespace leaves that empty). Map imgKey(image:loc) -> caption so body
+  // + cover images get their real alt on import.
+  const altByImg = new Map()
+  for (const im of xml.matchAll(/<image:image>([\s\S]*?)<\/image:image>/gi)) {
+    const loc = (im[1].match(/<image:loc>\s*([^<]+?)\s*<\/image:loc>/i) || [])[1]
+    const cap = (im[1].match(/<image:caption>([\s\S]*?)<\/image:caption>/i) || [])[1]
+    if (loc && cap) altByImg.set(imgKey(loc), dec(cap))
+  }
+  log('sqsp', `sitemap: ${altByImg.size} image captions (alt text)`)
   const blogPrefix = blogPath ? `${origin}/${blogPath}/` : null
   // /tag/ and /category/ listing pages live under the blog prefix in the
   // sitemap — they're navigation, not posts (the pubDate filter below also
@@ -423,21 +433,38 @@ async function main() {
         title = title || headline || meta(pageHtml, 'og:title')
         excerpt = meta(pageHtml, 'og:description')
         coverUrl = coverUrl || meta(pageHtml, 'og:image')
-        encoded = (pageHtml.match(/<div class="sqs-html-content">([\s\S]*?)<\/div>\s*<\/div>/i) || [])[1] || pageHtml
+        // Fall back to the CONTENT REGION, not the whole page: some posts
+        // lack the sqs-html-content wrapper, and parsing the full page pulled
+        // in the site header (two logo <img> — desktop + mobile) as the first
+        // two body images. contentRegion starts at data-content-field, after
+        // the header.
+        encoded = (pageHtml.match(/<div class="sqs-html-content">([\s\S]*?)<\/div>\s*<\/div>/i) || [])[1] || contentRegion(pageHtml)
         pageDateStr = pageDate(pageHtml)
       }
       const publishDate = dateRaw && !isNaN(new Date(dateRaw))
         ? new Date(dateRaw).toISOString().slice(0, 10)
         : pageDateStr
-      let cover = null
+      let cover = null, coverAlt = ''
       if (coverUrl) {
         const fn = `${postSlug}${path.extname(new URL(coverUrl).pathname) || '.jpg'}`
         if (await dl(coverUrl, path.join(COVERS, fn))) cover = `blog/covers/${fn}`
+        coverAlt = altByImg.get(imgKey(coverUrl)) || ''
       }
       const body = bodyStructured(encoded)
       // Merge native Squarespace videos (stripped from RSS) from the page,
       // positioned after the paragraph they follow.
       mergeNativeVideos(body, pageHtml)
+      // Strip the per-post 'Looking for specific posts? Check these
+      // categories!' nav — it's moved to the central blogPage.postCtaText so
+      // every post shows one consistent block instead of a copy baked into
+      // each body. Removes the heading + the category-link blocks after it.
+      const runsText = (b) => (b.runs || []).map((r) => r.text).join('')
+      const navIdx = body.findIndex((b) => b.runs && /looking for specific posts[\s\S]*categor/i.test(runsText(b)))
+      if (navIdx >= 0) {
+        let end = navIdx + 1
+        while (end < body.length && body[end].runs && body[end].runs.some((r) => /\/category\//.test(r.link || ''))) end++
+        body.splice(navIdx, end - navIdx)
+      }
       // Drop body images that duplicate the featured/cover image. Squarespace
       // uses the featured image only as a listing thumbnail, but our template
       // ALSO renders it at the top of the post — so an author who placed the
@@ -481,6 +508,9 @@ async function main() {
           : u.href
         const ext = path.extname(u.pathname) || '.jpg'
         const fn = `${postSlug}-body-${imgN}${ext}`
+        // Alt from the sitemap caption (keyed by source filename), if the
+        // inline alt was empty.
+        if (!item.alt) item.alt = altByImg.get(imgKey(u.href)) || ''
         if (await dl(full, path.join(BODYIMG, fn))) {
           item.img = `blog/body/${fn}`
         } else {
@@ -490,7 +520,7 @@ async function main() {
         }
       }
       const tags = extractPostTags(pageHtml)
-      posts.push({title, slug: postSlug, url: p, publishDate, excerpt, cover, body, tags})
+      posts.push({title, slug: postSlug, url: p, publishDate, excerpt, cover, coverAlt, body, tags})
       log('sqsp', `blog ${title.slice(0, 50)} — ${body.length} blk, ${imgN} img, ${vidN} video, ${tags.length} tags${publishDate ? ` (${publishDate})` : ' (no date — likely a category page, filtered)'}`)
     }
     // Squarespace lists blog CATEGORY/tag pages under the same path prefix.

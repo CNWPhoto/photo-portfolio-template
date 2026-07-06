@@ -378,7 +378,9 @@ function formatDate(dateStr?: string): string {
   }
 
   .card__body {
-    padding: 1.25rem 0 0;
+    /* Horizontal padding keeps the title/date off the card's hover-shadow
+       edge (image stays full-bleed above). */
+    padding: 1.25rem 0.85rem 0;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
