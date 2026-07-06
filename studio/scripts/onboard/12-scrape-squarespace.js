@@ -73,17 +73,92 @@ function imgItem(tag) {
   return {img: src, alt}
 }
 
+// Pull a canonical YouTube/Vimeo URL out of any string (an iframe src, an
+// entity-encoded data-html attribute, a watch link). Tolerant of URL- and
+// HTML-encoding so it works on both embedly iframes and native blocks.
+function videoUrlFrom(str) {
+  if (!str) return null
+  let s = str
+  try { s = decodeURIComponent(str) } catch { /* leave as-is if malformed */ }
+  s = s.replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&amp;/g, '&')
+  const yt = s.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/) ||
+    s.match(/youtube\.com\/watch\?v=([A-Za-z0-9_-]{6,})/) ||
+    s.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/) ||
+    s.match(/youtube-nocookie\.com\/embed\/([A-Za-z0-9_-]{6,})/)
+  if (yt) return `https://www.youtube.com/watch?v=${yt[1]}`
+  const vimeo = s.match(/vimeo\.com\/(?:video\/)?(\d{6,})/) ||
+    s.match(/player\.vimeo\.com\/video\/(\d{6,})/)
+  if (vimeo) return `https://vimeo.com/${vimeo[1]}`
+  return null
+}
+// Stable id for dedup between an embedly iframe and a native block of the
+// same video (both normalize to the same watch/vimeo URL).
+function videoId(url) {
+  return (url || '').match(/[?&]v=([A-Za-z0-9_-]+)|vimeo\.com\/(\d+)/)?.slice(1).filter(Boolean)[0] || url
+}
+
 function videoItem(tag) {
   const src = (tag.match(/\bsrc=["']([^"']+)["']/i) || [])[1]
-  if (!src) return null
-  const decoded = decodeURIComponent(src)
-  const yt = decoded.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/) ||
-    decoded.match(/youtube\.com\/watch\?v=([A-Za-z0-9_-]{6,})/) ||
-    decoded.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/)
-  if (yt) return {video: `https://www.youtube.com/watch?v=${yt[1]}`}
-  const vimeo = decoded.match(/vimeo\.com\/(?:video\/)?(\d+)/)
-  if (vimeo) return {video: `https://vimeo.com/${vimeo[1]}`}
-  return null
+  const video = videoUrlFrom(src)
+  return video ? {video} : null
+}
+
+// Native Squarespace video blocks (<div class="sqs-video-wrapper" ...>) store
+// their iframe HTML-ENTITY-ENCODED inside a data-html attribute and render as
+// a static poster server-side — so they are NOT real <iframe> tags, and the
+// RSS feed strips them from content:encoded entirely. This was the second PIF
+// video bug: 8 of 10 videos used this newer block and vanished. We pull them
+// from the page instead, each with the clean text of the paragraph it follows
+// so it can be re-inserted at the right spot in an RSS-sourced body.
+function stripNoise(html) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+}
+function contentRegion(html) {
+  const i = html.indexOf('data-content-field="main-content"')
+  if (i < 0) return html
+  let end = html.length
+  for (const marker of ['itemPagination', 'blog-item-pagination', 'BlogItem-pagination', 'comment-btn-wrapper', '<footer']) {
+    const j = html.indexOf(marker, i)
+    if (j > 0) end = Math.min(end, j)
+  }
+  return html.slice(i, end)
+}
+function nativeVideos(pageHtml) {
+  const region = stripNoise(contentRegion(pageHtml))
+  const out = []
+  for (const m of region.matchAll(/<div\b[^>]*sqs-video-wrapper[^>]*>/gi)) {
+    const video = videoUrlFrom(m[0])
+    if (!video) continue
+    const anchor = stripToText(region.slice(0, m.index)).slice(-90)
+    out.push({video, anchor})
+  }
+  return out
+}
+// Merge page-only native videos into a body built from RSS, positioned right
+// after the paragraph they follow (matched by the anchor tail). Dedups against
+// videos already present (embedly iframes from RSS). Mutates + returns body.
+function mergeNativeVideos(body, pageHtml) {
+  const present = new Set(body.filter((b) => b.video).map((b) => videoId(b.video)))
+  for (const nv of nativeVideos(pageHtml)) {
+    if (present.has(videoId(nv.video))) continue
+    let idx = -1
+    const tail = nv.anchor.slice(-45).toLowerCase().replace(/\s+/g, ' ')
+    if (tail) {
+      for (let k = body.length - 1; k >= 0; k--) {
+        const t = ((body[k].runs && body[k].runs[0] && body[k].runs[0].text) || '')
+          .toLowerCase().replace(/\s+/g, ' ')
+        if (t && (t.includes(tail) || tail.includes(t.slice(-45)))) { idx = k; break }
+      }
+    }
+    // Fallback when the anchor paragraph can't be matched: after the intro.
+    if (idx < 0) idx = Math.min(1, body.length - 1)
+    body.splice(idx + 1, 0, {video: nv.video})
+    present.add(videoId(nv.video))
+  }
+  return body
 }
 
 // Convert <content:encoded> / page HTML to structured blocks for import.
@@ -218,22 +293,22 @@ async function main() {
         encoded = grab(it, 'content:encoded')
         coverUrl = (it.match(/<media:content[^>]+url=["']([^"']+)["']/i) || [])[1] || ''
       }
-      // backfill from the post page if RSS didn't carry it — the RSS feed
-      // caps at 20 items, so on blogs with more posts the older tail ONLY
-      // exists here. The page also carries the publish date (pageDate), so
-      // these posts survive the category-page filter below.
+      // Always fetch the post page: it's the fallback body source when RSS
+      // caps out (>20 posts), AND the ONLY source for native Squarespace
+      // video blocks — the RSS feed strips those from content:encoded, so
+      // they must be merged in from here regardless of the body source.
+      const pageHtml = await text(p)
       let pageDateStr = null
       if (!encoded) {
-        const html = await text(p)
         // og:title on Squarespace POST pages is often the site title —
         // the itemprop="headline" meta carries the actual post title.
-        const headline = dec((html.match(/itemprop=["']headline["'][^>]*content=["']([^"']*)["']/i) ||
-          html.match(/content=["']([^"']*)["'][^>]*itemprop=["']headline["']/i) || [])[1] || '')
-        title = title || headline || meta(html, 'og:title')
-        excerpt = meta(html, 'og:description')
-        coverUrl = coverUrl || meta(html, 'og:image')
-        encoded = (html.match(/<div class="sqs-html-content">([\s\S]*?)<\/div>\s*<\/div>/i) || [])[1] || html
-        pageDateStr = pageDate(html)
+        const headline = dec((pageHtml.match(/itemprop=["']headline["'][^>]*content=["']([^"']*)["']/i) ||
+          pageHtml.match(/content=["']([^"']*)["'][^>]*itemprop=["']headline["']/i) || [])[1] || '')
+        title = title || headline || meta(pageHtml, 'og:title')
+        excerpt = meta(pageHtml, 'og:description')
+        coverUrl = coverUrl || meta(pageHtml, 'og:image')
+        encoded = (pageHtml.match(/<div class="sqs-html-content">([\s\S]*?)<\/div>\s*<\/div>/i) || [])[1] || pageHtml
+        pageDateStr = pageDate(pageHtml)
       }
       const publishDate = dateRaw && !isNaN(new Date(dateRaw))
         ? new Date(dateRaw).toISOString().slice(0, 10)
@@ -244,6 +319,9 @@ async function main() {
         if (await dl(coverUrl, path.join(COVERS, fn))) cover = `blog/covers/${fn}`
       }
       const body = bodyStructured(encoded)
+      // Merge native Squarespace videos (stripped from RSS) from the page,
+      // positioned after the paragraph they follow.
+      mergeNativeVideos(body, pageHtml)
       // Download body images to staging so 65-blog-import can upload them
       // as Sanity assets. Squarespace-hosted images take ?format=2500w for
       // the original-resolution rendition. A failed download keeps the item
