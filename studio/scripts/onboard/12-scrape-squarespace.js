@@ -72,6 +72,13 @@ function imgItem(tag) {
   const alt = dec((tag.match(/\balt=["']([^"']*)["']/i) || [])[1] || '')
   return {img: src, alt}
 }
+// Identity key for an image, ignoring size/format query params and host —
+// so the same Squarespace asset requested at different widths (cover vs
+// ?format=2500w body copy) compares equal. Used to drop featured-image dups.
+function imgKey(u) {
+  try { u = decodeURIComponent(u) } catch { /* keep raw */ }
+  return (u.split('?')[0].split('/').pop() || '').toLowerCase()
+}
 
 // Pull a canonical YouTube/Vimeo URL out of any string (an iframe src, an
 // entity-encoded data-html attribute, a watch link). Tolerant of URL- and
@@ -190,6 +197,13 @@ function bodyStructured(html) {
       continue
     }
     const tag = m[1].toLowerCase()
+    const openTag = m[0].slice(0, m[0].indexOf('>'))
+    // Squarespace indents sub-items (business address/phone/online under a
+    // name) with data-indent / margin-left instead of a real <ul>. Flattening
+    // those to normal paragraphs gave each line a full 1.5rem margin → the
+    // "terrible spacing" on directory-style posts. Emit them as bullet list
+    // items (0.4rem margins) so they group tightly under their heading line.
+    const indented = tag === 'p' && /data-indent=["']?[1-9]|margin-left:\s*[1-9]/i.test(openTag)
     // Media nested INSIDE a text block (img/iframe wrapped in <p>) would be
     // stripped with the markup — pull it out and emit it after the text.
     const nested = []
@@ -199,9 +213,13 @@ function bodyStructured(html) {
     }
     const t = stripToText(m[2])
     if (t) {
-      const s = tag === 'h1' || tag === 'h2' ? 'h2' : (tag === 'h3' || tag === 'h4') ? 'h3'
-        : tag === 'blockquote' ? 'blockquote' : 'normal'
-      blocks.push({s, runs: [{text: t, marks: []}]})
+      if (indented) {
+        blocks.push({s: 'normal', li: 'bullet', runs: [{text: t, marks: []}]})
+      } else {
+        const s = tag === 'h1' || tag === 'h2' ? 'h2' : (tag === 'h3' || tag === 'h4') ? 'h3'
+          : tag === 'blockquote' ? 'blockquote' : 'normal'
+        blocks.push({s, runs: [{text: t, marks: []}]})
+      }
     }
     blocks.push(...nested)
   }
@@ -322,6 +340,27 @@ async function main() {
       // Merge native Squarespace videos (stripped from RSS) from the page,
       // positioned after the paragraph they follow.
       mergeNativeVideos(body, pageHtml)
+      // Drop body images that duplicate the featured/cover image. Squarespace
+      // uses the featured image only as a listing thumbnail, but our template
+      // ALSO renders it at the top of the post — so an author who placed the
+      // same photo in the body gets it shown twice. Match on the source
+      // filename (cover and body-copy are often different SIZES of the same
+      // asset, so post-upload Sanity asset-id dedup would miss them). If the
+      // dup image is immediately followed by a short caption paragraph, drop
+      // that too so no orphaned caption is left behind.
+      if (coverUrl) {
+        const ck = imgKey(coverUrl)
+        for (let i = body.length - 1; i >= 0; i--) {
+          if (body[i].img && imgKey(body[i].img) === ck) {
+            const next = body[i + 1]
+            const nextText = next && next.runs && next.runs[0] ? next.runs[0].text : ''
+            if (next && !next.img && !next.video && nextText && nextText.length <= 120) {
+              body.splice(i + 1, 1) // orphaned caption
+            }
+            body.splice(i, 1)
+          }
+        }
+      }
       // Download body images to staging so 65-blog-import can upload them
       // as Sanity assets. Squarespace-hosted images take ?format=2500w for
       // the original-resolution rendition. A failed download keeps the item
