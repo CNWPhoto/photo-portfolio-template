@@ -3,7 +3,7 @@ import { toHTML } from '@portabletext/to-html';
 import { getClient, urlFor } from '../lib/sanity.js';
 import { stegaClean } from '@sanity/client/stega';
 import { createDataAttribute } from '@sanity/visual-editing/create-data-attribute';
-import { applyBackgroundTone, paletteToStyle } from '../lib/palette.js';
+import { applyBackgroundTone, paletteToStyle, prefersLightText } from '../lib/palette.js';
 
 const { siteName = 'Pet Photography', blogEnabled = true, palette = null } = Astro.props;
 
@@ -33,7 +33,7 @@ const [footerDataRaw, socialDataRaw, siteDataRaw, termsDocRaw, privacyDocRaw] = 
     legalLinks
   }`),
   client.fetch(`*[_type == "socialSettings" && _id == "socialSettings"][0]{ instagram, facebook, youtube, tiktok, custom }`),
-  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName, logoType, logoImage, logoLarge }`),
+  client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ photographerName, logoType, logoImage, logoImageInverse, logoLarge }`),
   // Legal-page singletons — used to auto-link the footer when an editor
   // has filled in the on-site Terms / Privacy pages but hasn't manually
   // configured legalLinks (which override these when set, see below).
@@ -52,16 +52,21 @@ const photographerName = siteData?.photographerName || siteName;
 // CSS vars on the <footer> element. With no palette passed in (or the
 // default tone), this is a no-op and the footer inherits the page palette.
 const footerTone  = footerData?.backgroundTone || 'default';
-const footerStyle = palette
-  ? paletteToStyle(applyBackgroundTone(palette, footerTone))
-  : undefined;
+const footerTonedPalette = palette ? applyBackgroundTone(palette, footerTone) : null;
+const footerStyle = footerTonedPalette ? paletteToStyle(footerTonedPalette) : undefined;
+// Same prefersLightText() the tone uses to flip its text, so the logo matches:
+// light (inverse) logo whenever the footer text is rendering light.
+const footerWantsLightLogo = footerTonedPalette ? prefersLightText(footerTonedPalette.bg) : false;
 
 // Match nav-level logo behavior: when the siteSettings logoType is
 // 'image' and a logoImage asset is set, render the image in the
 // footer wordmark slot. Otherwise fall back to the site name text,
 // which flows and wraps within the footer right column.
 const footerLogoType  = siteData?.logoType || 'text';
-const footerLogoImage = siteData?.logoImage ?? null;
+// Auto-pick the best-contrast logo — the inverse (light) version on a
+// dark/vibrant footer, the main logo otherwise.
+const footerLogoInverse = siteData?.logoImageInverse ?? null;
+const footerLogoImage = footerWantsLightLogo && footerLogoInverse?.asset ? footerLogoInverse : (siteData?.logoImage ?? null);
 const footerLogoLarge = siteData?.logoLarge === true;
 const footerLogoUrl   = footerLogoType === 'image' && footerLogoImage?.asset
   ? urlFor(footerLogoImage).height(footerLogoLarge ? 192 : 96).auto('format').url()

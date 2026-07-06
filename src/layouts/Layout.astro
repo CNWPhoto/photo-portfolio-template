@@ -35,7 +35,7 @@ const client = getClient(isPreview);
 // cost to one trip.
 const layoutData = await client.fetch(`{
   "settings": *[_type == "siteSettings" && _id == "siteSettings"][0]{
-    fontTheme, subheadingCase, siteName, photographerName, logoType, logoImage, logoLarge, favicon,
+    fontTheme, subheadingCase, siteName, photographerName, logoType, logoImage, logoImageInverse, logoLarge, favicon,
     accentColorOverride, textColorPreset, defaultPalette, headingWeight, bodyWeight,
     headingFont, bodyFont,
     demo,
@@ -91,6 +91,7 @@ const subheadingCase = cleanSettings?.subheadingCase || 'uppercase';
 const siteName    = cleanSettings?.siteName   || 'Pet Photography';
 const logoType    = cleanSettings?.logoType   || 'text';
 const logoImage   = cleanSettings?.logoImage  ?? null;
+const logoImageInverse = cleanSettings?.logoImageInverse ?? null;
 const logoLarge   = cleanSettings?.logoLarge === true;
 const headScripts = cleanCode?.headScripts    || '';
 const bodyScripts = cleanCode?.bodyScripts    || '';
@@ -346,7 +347,7 @@ const schemaJSON = schemaGraph.length
 			</div>
 		)}
 		<DemoBanner demo={demoSettings} />
-		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} {logoLarge} navVariant={navVariant} navLinks={navLinks} {blogEnabled} {stickyNav} palette={activePalette} backgroundTone={navBackgroundTone} />
+		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} logoImageInverse={logoImageInverse} {logoLarge} navVariant={navVariant} navLinks={navLinks} {blogEnabled} {stickyNav} palette={activePalette} backgroundTone={navBackgroundTone} {heroOverlay} />
 		<slot />
 		<Footer {siteName} {blogEnabled} palette={activePalette} />
 		<script>

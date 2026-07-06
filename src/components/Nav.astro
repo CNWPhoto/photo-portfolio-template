@@ -2,12 +2,13 @@
 import { urlFor } from '../lib/sanity.js';
 import { resolveLink } from '../lib/links.js';
 import { createDataAttribute } from '@sanity/visual-editing/create-data-attribute';
-import { applyBackgroundTone, paletteToStyle } from '../lib/palette.js';
+import { applyBackgroundTone, paletteToStyle, prefersLightText } from '../lib/palette.js';
 
 const {
 	siteName = 'Pet Photography',
 	logoType = 'text',
 	logoImage = null,
+	logoImageInverse = null,
 	logoLarge = false,
 	navVariant = 'classic',
 	navLinks = null,
@@ -15,6 +16,7 @@ const {
 	stickyNav = false,
 	palette = null,
 	backgroundTone = 'default',
+	heroOverlay = false,
 } = Astro.props;
 
 // Background Tone (Light/Alt/Dark/Vibrant) — same control the sections and
@@ -23,9 +25,18 @@ const {
 // pick it up (text auto-contrasts for Dark/Vibrant). 'default' returns the
 // base palette unchanged, so existing navs are untouched. On the transparent
 // variants the bar overlays the hero, so this shows once it solidifies.
-const navStyle = palette
-	? paletteToStyle(applyBackgroundTone(palette, backgroundTone))
-	: undefined;
+const tonedPalette = palette ? applyBackgroundTone(palette, backgroundTone) : null;
+const navStyle = tonedPalette ? paletteToStyle(tonedPalette) : undefined;
+
+// Auto-pick the best-contrast logo. Use the inverse (light) logo whenever the
+// nav's text is rendering LIGHT — i.e. the same prefersLightText() call the
+// tone uses to flip its text — so the logo always matches the text. That's a
+// Dark/Vibrant tone or a dark base palette, plus a transparent bar overlaying
+// the hero (links already flip to white). Falls back to the main logo when no
+// inverse is uploaded.
+const isTransparentVariant = String(navVariant).startsWith('transparent');
+const navWantsLightLogo = (tonedPalette && prefersLightText(tonedPalette.bg)) || (isTransparentVariant && heroOverlay);
+const navLogoImage = navWantsLightLogo && logoImageInverse?.asset ? logoImageInverse : logoImage;
 
 // Sticky is now a pure opt-in toggle for every variant — including
 // transparent. Editors who want the scroll-solidify effect on a
@@ -140,7 +151,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 			</nav>
 		)}
 		{showImageLogo
-			? <a href="/" class="nav__logo nav__logo--image" data-sanity={logoSanityAttr}><img src={urlFor(logoImage).height(logoImgHeight).auto('format').url()} alt={siteName} class:list={['nav__logo-img', logoLarge && 'nav__logo-img--large']} decoding="async" /></a>
+			? <a href="/" class="nav__logo nav__logo--image" data-sanity={logoSanityAttr}><img src={urlFor(navLogoImage).height(logoImgHeight).auto('format').url()} alt={siteName} class:list={['nav__logo-img', logoLarge && 'nav__logo-img--large']} decoding="async" /></a>
 			: <a href="/" class="nav__logo" data-sanity={logoSanityAttr} set:html={brandMarkup}></a>
 		}
 		<nav aria-label="Main navigation">
@@ -211,7 +222,7 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 			<span aria-hidden="true">&times;</span>
 		</button>
 		{showImageLogo
-			? <a href="/" class="nav__overlay-logo nav__overlay-logo--image"><img src={urlFor(logoImage).height(logoImgHeight).auto('format').url()} alt={siteName} class:list={['nav__logo-img', logoLarge && 'nav__logo-img--large']} decoding="async" /></a>
+			? <a href="/" class="nav__overlay-logo nav__overlay-logo--image"><img src={urlFor(navLogoImage).height(logoImgHeight).auto('format').url()} alt={siteName} class:list={['nav__logo-img', logoLarge && 'nav__logo-img--large']} decoding="async" /></a>
 			: <a href="/" class="nav__overlay-logo" set:html={brandMarkup}></a>
 		}
 		<nav aria-label="Mobile navigation">
