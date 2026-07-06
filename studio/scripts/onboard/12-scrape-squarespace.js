@@ -33,7 +33,8 @@ const STAGE = stagingDir(slug)
 const MANI = path.join(STAGE, 'manifest')
 const BLOG = path.join(STAGE, 'blog')
 const COVERS = path.join(BLOG, 'covers')
-for (const d of [MANI, COVERS]) fs.mkdirSync(d, {recursive: true})
+const BODYIMG = path.join(BLOG, 'body')
+for (const d of [MANI, COVERS, BODYIMG]) fs.mkdirSync(d, {recursive: true})
 
 const NAMED = {amp: '&', nbsp: ' ', quot: '"', apos: "'", lt: '<', gt: '>',
   rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”',
@@ -61,13 +62,49 @@ function stripToText(html) {
     .replace(/\s+/g, ' '))
 }
 
+// Media extraction — Squarespace bodies carry real content in <img> tags
+// (posts are photo-heavy) and video embeds as embedly-wrapped YouTube/Vimeo
+// iframes. Dropping these was the PIF migration bug: text imported, 72+
+// body photos and every video silently lost.
+function imgItem(tag) {
+  const src = (tag.match(/\bsrc=["']([^"']+)["']/i) || tag.match(/\bdata-src=["']([^"']+)["']/i) || [])[1]
+  if (!src || src.startsWith('data:')) return null
+  const alt = dec((tag.match(/\balt=["']([^"']*)["']/i) || [])[1] || '')
+  return {img: src, alt}
+}
+
+function videoItem(tag) {
+  const src = (tag.match(/\bsrc=["']([^"']+)["']/i) || [])[1]
+  if (!src) return null
+  const decoded = decodeURIComponent(src)
+  const yt = decoded.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/) ||
+    decoded.match(/youtube\.com\/watch\?v=([A-Za-z0-9_-]{6,})/) ||
+    decoded.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/)
+  if (yt) return {video: `https://www.youtube.com/watch?v=${yt[1]}`}
+  const vimeo = decoded.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+  if (vimeo) return {video: `https://vimeo.com/${vimeo[1]}`}
+  return null
+}
+
 // Convert <content:encoded> / page HTML to structured blocks for import.
+// Emits text blocks ({s, runs}), images ({img, alt}) and videos ({video})
+// interleaved in document order.
 function bodyStructured(html) {
   const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '')
   const blocks = []
-  const blockRe = /<(h1|h2|h3|h4|p|blockquote)\b[^>]*>([\s\S]*?)<\/\1>|<(ul|ol)\b[^>]*>([\s\S]*?)<\/\3>/gi
+  const blockRe = /<(h1|h2|h3|h4|p|blockquote)\b[^>]*>([\s\S]*?)<\/\1>|<(ul|ol)\b[^>]*>([\s\S]*?)<\/\3>|<img\b[^>]*>|<iframe\b[^>]*>/gi
   let m
   while ((m = blockRe.exec(html))) {
+    if (m[0].startsWith('<img')) {
+      const item = imgItem(m[0])
+      if (item) blocks.push(item)
+      continue
+    }
+    if (m[0].startsWith('<iframe')) {
+      const item = videoItem(m[0])
+      if (item) blocks.push(item)
+      continue
+    }
     if (m[3]) {
       const li = m[3].toLowerCase() === 'ol' ? 'number' : 'bullet'
       for (const liM of m[4].matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)) {
@@ -78,15 +115,41 @@ function bodyStructured(html) {
       continue
     }
     const tag = m[1].toLowerCase()
+    // Media nested INSIDE a text block (img/iframe wrapped in <p>) would be
+    // stripped with the markup — pull it out and emit it after the text.
+    const nested = []
+    for (const inner of m[2].matchAll(/<img\b[^>]*>|<iframe\b[^>]*>/gi)) {
+      const item = inner[0].startsWith('<img') ? imgItem(inner[0]) : videoItem(inner[0])
+      if (item) nested.push(item)
+    }
     const t = stripToText(m[2])
-    if (!t) continue
-    const s = tag === 'h1' || tag === 'h2' ? 'h2' : (tag === 'h3' || tag === 'h4') ? 'h3'
-      : tag === 'blockquote' ? 'blockquote' : 'normal'
-    blocks.push({s, runs: [{text: t, marks: []}]})
+    if (t) {
+      const s = tag === 'h1' || tag === 'h2' ? 'h2' : (tag === 'h3' || tag === 'h4') ? 'h3'
+        : tag === 'blockquote' ? 'blockquote' : 'normal'
+      blocks.push({s, runs: [{text: t, marks: []}]})
+    }
+    blocks.push(...nested)
   }
-  // de-dupe consecutive identical blocks (compare first run's text)
+  // de-dupe consecutive identical TEXT blocks; media items pass through
+  // (two adjacent images are normal, not duplicates).
   const txt = (b) => (b.runs && b.runs[0] && b.runs[0].text) || ''
-  return blocks.filter((b, i) => i === 0 || norm(txt(b)) !== norm(txt(blocks[i - 1]))).slice(0, 200)
+  return blocks
+    .filter((b, i, arr) => b.img || b.video || i === 0 || arr[i - 1].img || arr[i - 1].video || norm(txt(b)) !== norm(txt(arr[i - 1])))
+    .slice(0, 300)
+}
+
+// Squarespace post pages carry the publish date outside RSS too — needed
+// because the RSS feed CAPS AT 20 ITEMS, so older posts only exist as
+// sitemap URLs. Without this, dateless page-scraped posts were misfiltered
+// as "category pages" and silently dropped (the PIF missing-posts bug).
+function pageDate(html) {
+  const jsonLd = (html.match(/"datePublished"\s*:\s*"([^"]+)"/) || [])[1]
+  if (jsonLd && !isNaN(new Date(jsonLd))) return new Date(jsonLd).toISOString().slice(0, 10)
+  const timeTag = (html.match(/<time\b[^>]*datetime=["']([^"']+)["']/i) || [])[1]
+  if (timeTag && !isNaN(new Date(timeTag))) return new Date(timeTag).toISOString().slice(0, 10)
+  const metaDate = (html.match(/itemprop=["']datePublished["'][^>]*content=["']([^"']+)["']/i) || [])[1]
+  if (metaDate && !isNaN(new Date(metaDate))) return new Date(metaDate).toISOString().slice(0, 10)
+  return null
 }
 
 async function dl(u, dest) {
@@ -107,7 +170,12 @@ async function main() {
   const xml = await text(`${origin}/sitemap.xml`)
   const locs = [...new Set([...xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)].map((m) => m[1]))]
   const blogPrefix = blogPath ? `${origin}/${blogPath}/` : null
-  const blogUrls = blogPrefix ? locs.filter((l) => l.startsWith(blogPrefix)) : []
+  // /tag/ and /category/ listing pages live under the blog prefix in the
+  // sitemap — they're navigation, not posts (the pubDate filter below also
+  // catches them, but excluding here avoids pointless page fetches).
+  const blogUrls = blogPrefix
+    ? locs.filter((l) => l.startsWith(blogPrefix) && !/\/(tag|category)\//.test(l))
+    : []
   const pageUrls = locs.filter((l) => !blogPrefix || (!l.startsWith(blogPrefix) && l !== blogPrefix.replace(/\/$/, '')))
 
   // 2. Full visible copy for EVERY page, keyed by real slug.
@@ -150,23 +218,64 @@ async function main() {
         encoded = grab(it, 'content:encoded')
         coverUrl = (it.match(/<media:content[^>]+url=["']([^"']+)["']/i) || [])[1] || ''
       }
-      // backfill from the post page if RSS didn't carry it (RSS may cap items)
+      // backfill from the post page if RSS didn't carry it — the RSS feed
+      // caps at 20 items, so on blogs with more posts the older tail ONLY
+      // exists here. The page also carries the publish date (pageDate), so
+      // these posts survive the category-page filter below.
+      let pageDateStr = null
       if (!encoded) {
         const html = await text(p)
-        title = title || meta(html, 'og:title')
+        // og:title on Squarespace POST pages is often the site title —
+        // the itemprop="headline" meta carries the actual post title.
+        const headline = dec((html.match(/itemprop=["']headline["'][^>]*content=["']([^"']*)["']/i) ||
+          html.match(/content=["']([^"']*)["'][^>]*itemprop=["']headline["']/i) || [])[1] || '')
+        title = title || headline || meta(html, 'og:title')
         excerpt = meta(html, 'og:description')
         coverUrl = coverUrl || meta(html, 'og:image')
         encoded = (html.match(/<div class="sqs-html-content">([\s\S]*?)<\/div>\s*<\/div>/i) || [])[1] || html
+        pageDateStr = pageDate(html)
       }
-      const publishDate = dateRaw && !isNaN(new Date(dateRaw)) ? new Date(dateRaw).toISOString().slice(0, 10) : null
+      const publishDate = dateRaw && !isNaN(new Date(dateRaw))
+        ? new Date(dateRaw).toISOString().slice(0, 10)
+        : pageDateStr
       let cover = null
       if (coverUrl) {
         const fn = `${postSlug}${path.extname(new URL(coverUrl).pathname) || '.jpg'}`
         if (await dl(coverUrl, path.join(COVERS, fn))) cover = `blog/covers/${fn}`
       }
       const body = bodyStructured(encoded)
+      // Download body images to staging so 65-blog-import can upload them
+      // as Sanity assets. Squarespace-hosted images take ?format=2500w for
+      // the original-resolution rendition. A failed download keeps the item
+      // out of the body rather than importing a broken reference.
+      let imgN = 0, vidN = 0
+      for (let i = 0; i < body.length; i++) {
+        const item = body[i]
+        if (item.video) { vidN++; continue }
+        if (!item.img) continue
+        // Page-scraped posts (the beyond-RSS tail) carry RELATIVE src
+        // attributes — resolve against the post URL. Unparseable → drop.
+        let u
+        try { u = new URL(item.img, p) } catch {
+          log('sqsp', `  ⚠ unparseable body image URL, dropping: ${String(item.img).slice(0, 80)}`)
+          body.splice(i, 1); i--; continue
+        }
+        imgN++
+        const full = /squarespace-cdn\.com|static1\.squarespace\.com/.test(u.hostname)
+          ? `${u.origin}${u.pathname}?format=2500w`
+          : u.href
+        const ext = path.extname(u.pathname) || '.jpg'
+        const fn = `${postSlug}-body-${imgN}${ext}`
+        if (await dl(full, path.join(BODYIMG, fn))) {
+          item.img = `blog/body/${fn}`
+        } else {
+          log('sqsp', `  ⚠ body image download failed, dropping: ${raw.slice(0, 80)}`)
+          body.splice(i, 1)
+          i--
+        }
+      }
       posts.push({title, slug: postSlug, url: p, publishDate, excerpt, cover, body})
-      log('sqsp', `blog ${title.slice(0, 50)} — ${body.length} blk${publishDate ? ` (${publishDate})` : ' (no date — likely a category page, filtered)'}`)
+      log('sqsp', `blog ${title.slice(0, 50)} — ${body.length} blk, ${imgN} img, ${vidN} video${publishDate ? ` (${publishDate})` : ' (no date — likely a category page, filtered)'}`)
     }
     // Squarespace lists blog CATEGORY/tag pages under the same path prefix.
     // They carry no RSS <item> (hence no pubDate) — drop them so only real
