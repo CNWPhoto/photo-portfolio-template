@@ -1,6 +1,7 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {presentationTool, defineDocuments, defineLocations} from 'sanity/presentation'
+import {map} from 'rxjs'
 import {assist} from '@sanity/assist'
 import {schemaTypes} from './schemaTypes'
 import PresentationNavigator from './components/PresentationNavigator'
@@ -93,20 +94,9 @@ export default defineConfig({
             route: '/404',
             type: 'notFoundPage',
           },
-          // The blog base segment is the blogPage's slug (defaults to 'blog'
-          // when unset), so a client can rename the blog — e.g.
-          // '/lenaweepetcollective' — and Presentation still maps the previewed
-          // URL back to the blogPage / blogPost / blogCategory docs. Without
-          // this, a custom base shows "document is missing" in the Pages panel.
-          // These dynamic routes must sit ABOVE the generic '/:slug' page
-          // resolver: Presentation uses the first route that RESOLVES a
-          // document, so a non-blog segment (e.g. '/about') finds no blogPage
-          // here and falls through to the page resolver below.
-          {
-            route: '/:base',
-            filter: `_type == "blogPage" && (slug.current == $base || (!defined(slug.current) && $base == "blog"))`,
-            params: ({params}) => ({base: params.base}),
-          },
+          // Blog posts / categories live under the content-driven blog base
+          // (blogPage.slug, e.g. '/lenaweepetcollective'). These 2- and
+          // 3-segment routes don't collide with the single-segment route below.
           {
             route: '/:base/category/:slug',
             filter: `_type == "blogCategory" && slug.current == $slug`,
@@ -117,11 +107,16 @@ export default defineConfig({
             filter: `_type == "blogPost" && slug.current == $slug`,
             params: ({params}) => ({slug: params.slug}),
           },
-          // Generic page resolver (about, experience, contact, any other
-          // slugged page doc). Ordered LAST so the specific routes above win.
+          // Single-segment URLs are EITHER the blog index (blogPage — whose slug
+          // is the blog base, defaulting to 'blog' when unset) OR any slugged
+          // page (about, experience, contact, …). This MUST be a single route
+          // whose filter matches either type: Presentation resolves the first
+          // route whose PATTERN matches, so two separate '/:slug' routes would
+          // shadow each other — a dedicated '/:base' blog route ahead of the
+          // page route silently broke "document on this page" for EVERY page.
           {
             route: '/:slug',
-            filter: `_type == "page" && slug.current == $slug`,
+            filter: `(_type == "blogPage" && (slug.current == $slug || (!defined(slug.current) && $slug == "blog"))) || (_type == "page" && slug.current == $slug)`,
             params: ({params}) => ({slug: params.slug}),
           },
         ]),
@@ -203,56 +198,65 @@ export default defineConfig({
             // ── Pages ────────────────────────────────────────────────────
             // Flat list: every `page` doc (About, Experience, Contact, and
             // any custom pages) is inlined under the singletons, not hidden
-            // behind a second "Pages" click. The async fetch returns a
-            // fresh list on each open of the group.
+            // behind a second "Pages" click. Uses a LIVE query
+            // (documentStore.listenQuery) rather than a one-shot client.fetch:
+            // the fetch version was a static snapshot, so a page deleted from
+            // this list stayed visible until a manual Studio refresh. The
+            // listener re-emits the list on every create / delete / rename.
             S.listItem()
               .title('📄 Pages')
               .id('pagesGroup')
-              .child(async () => {
-                const client = context.getClient({apiVersion: '2024-01-01'})
-                const pages = await client.fetch(
-                  `*[_type == "page" && defined(slug.current)]{_id, title, "slug": slug.current}`,
-                )
-                // Raw perspective returns both `drafts.<id>` and `<id>` when
-                // a page has an unpublished draft. Collapse to one entry per
-                // logical document (prefer published; fall back to draft if
-                // the page was never published).
-                const byBaseId = new Map()
-                for (const p of pages) {
-                  const baseId = p._id.replace(/^drafts\./, '')
-                  const existing = byBaseId.get(baseId)
-                  const thisIsDraft = p._id.startsWith('drafts.')
-                  if (!existing || (existing._id.startsWith('drafts.') && !thisIsDraft)) {
-                    byBaseId.set(baseId, {...p, _id: baseId})
-                  }
-                }
-                const unique = Array.from(byBaseId.values()).sort((a, b) =>
-                  (a.title || '').localeCompare(b.title || ''),
-                )
-                return S.list()
-                  .title('Pages')
-                  .items([
-                    singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
-                    singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
-                    singleton(S, 'blogPage', 'Blog', 'blogPage'),
-                    singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
-                    S.divider(),
-                    singleton(S, 'termsAndConditionsPage', 'Terms & Conditions', 'termsAndConditionsPage'),
-                    singleton(S, 'privacyPolicyPage', 'Privacy Policy', 'privacyPolicyPage'),
-                    S.divider(),
-                    ...unique.map((p) =>
-                      S.listItem()
-                        .id(p._id)
-                        .title(p.title || 'Untitled')
-                        .child(
-                          S.document()
-                            .documentId(p._id)
-                            .schemaType('page')
-                            .title(p.title || 'Page'),
-                        ),
-                    ),
-                  ])
-              }),
+              .child(() =>
+                context.documentStore
+                  .listenQuery(
+                    `*[_type == "page" && defined(slug.current)]{_id, title, "slug": slug.current}`,
+                    {},
+                    {perspective: 'raw'},
+                  )
+                  .pipe(
+                    map((pages) => {
+                      // Raw perspective returns both `drafts.<id>` and `<id>`
+                      // when a page has an unpublished draft. Collapse to one
+                      // entry per logical document (prefer published; fall back
+                      // to draft if the page was never published).
+                      const byBaseId = new Map()
+                      for (const p of pages || []) {
+                        const baseId = p._id.replace(/^drafts\./, '')
+                        const existing = byBaseId.get(baseId)
+                        const thisIsDraft = p._id.startsWith('drafts.')
+                        if (!existing || (existing._id.startsWith('drafts.') && !thisIsDraft)) {
+                          byBaseId.set(baseId, {...p, _id: baseId})
+                        }
+                      }
+                      const unique = Array.from(byBaseId.values()).sort((a, b) =>
+                        (a.title || '').localeCompare(b.title || ''),
+                      )
+                      return S.list()
+                        .title('Pages')
+                        .items([
+                          singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
+                          singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
+                          singleton(S, 'blogPage', 'Blog', 'blogPage'),
+                          singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
+                          S.divider(),
+                          singleton(S, 'termsAndConditionsPage', 'Terms & Conditions', 'termsAndConditionsPage'),
+                          singleton(S, 'privacyPolicyPage', 'Privacy Policy', 'privacyPolicyPage'),
+                          S.divider(),
+                          ...unique.map((p) =>
+                            S.listItem()
+                              .id(p._id)
+                              .title(p.title || 'Untitled')
+                              .child(
+                                S.document()
+                                  .documentId(p._id)
+                                  .schemaType('page')
+                                  .title(p.title || 'Page'),
+                              ),
+                          ),
+                        ])
+                    }),
+                  ),
+              ),
 
             S.divider(),
 
