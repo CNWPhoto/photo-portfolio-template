@@ -86,5 +86,14 @@ export default {
       initialValue: 'default',
       hidden: ({parent}) => parent?.layout && parent.layout !== 'centered',
     },
+    {
+      name: 'mobileFlipOrder',
+      title: 'Flip image/text order on mobile',
+      type: 'boolean',
+      description:
+        'When on, the text stacks ABOVE the two images on mobile (≤900px) instead of between them. Use it when the surrounding sections make text-first flow read better. Off by default. Only applies to the Overlapping Images layout.',
+      initialValue: false,
+      hidden: ({parent}) => parent?.layout !== 'overlapping-images',
+    },
   ],
 }

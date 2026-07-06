@@ -80,6 +80,7 @@ const first = testimonials[0] ?? null;
 <section
   class:list={['tslider', `tslider--${layout}`]}
   data-section-type="testimonialsSection"
+  data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
   id={section?.sectionId || 'testimonials'}
   style={style}
 >
@@ -341,6 +342,11 @@ const first = testimonials[0] ?? null;
       gap: 3rem;
       padding: 0 1.5rem;
     }
+
+    /* Editor toggle: quote ABOVE the photo. The stacked inner is already a
+       flex column, so plain `order` does it. */
+    .tslider--image-slider[data-mobile-flip-order='true'] .tslider__content { order: 1; }
+    .tslider--image-slider[data-mobile-flip-order='true'] .tslider__image-col { order: 2; }
   }
 </style>
 
