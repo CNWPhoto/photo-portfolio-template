@@ -62,6 +62,57 @@ function stripToText(html) {
     .replace(/\s+/g, ' '))
 }
 
+// Convert a block's inner HTML into Portable Text runs, PRESERVING inline
+// formatting instead of flattening it to plain text:
+//   <strong>/<b>  -> 'strong' decorator
+//   <em>/<i>      -> 'em' decorator
+//   <a href>      -> carried as run.link (65-blog-import turns it into a link
+//                    markDef so the text stays clickable)
+// Styling <span>/<u> wrappers are unwrapped; <br> becomes a space. The old
+// stripToText flatten silently dropped every bold, italic, and link in the
+// blog — this is what makes migrated posts match the source formatting.
+function inlineRuns(html) {
+  const s = html
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/?(?:span|u|font)\b[^>]*>/gi, '')
+  const runs = []
+  let strong = 0, em = 0, link = null
+  const re = /<(\/?)(strong|b|em|i|a)\b([^>]*)>|([^<]+)|<[^>]+>/gi
+  let m
+  while ((m = re.exec(s))) {
+    if (m[4] != null) {
+      const text = dec(m[4]).replace(/\s+/g, ' ')
+      if (!text) continue
+      const marks = []
+      if (strong > 0) marks.push('strong')
+      if (em > 0) marks.push('em')
+      runs.push(link ? {text, marks, link} : {text, marks})
+      continue
+    }
+    if (!m[2]) continue // some other tag — ignore
+    const closing = m[1] === '/'
+    const tag = m[2].toLowerCase()
+    if (tag === 'strong' || tag === 'b') strong = Math.max(0, strong + (closing ? -1 : 1))
+    else if (tag === 'em' || tag === 'i') em = Math.max(0, em + (closing ? -1 : 1))
+    else if (tag === 'a') link = closing ? null : ((m[3].match(/href=["']([^"']+)["']/i) || [])[1] || null)
+  }
+  // Merge adjacent runs with identical formatting to keep spans tidy.
+  const same = (a, b) => (a.link || '') === (b.link || '') &&
+    a.marks.length === b.marks.length && a.marks.every((x, i) => x === b.marks[i])
+  const merged = []
+  for (const r of runs) {
+    const last = merged[merged.length - 1]
+    if (last && same(last, r)) last.text += r.text
+    else merged.push({text: r.text, marks: [...r.marks], ...(r.link ? {link: r.link} : {})})
+  }
+  // Trim outer whitespace of the block.
+  if (merged.length) {
+    merged[0].text = merged[0].text.replace(/^\s+/, '')
+    merged[merged.length - 1].text = merged[merged.length - 1].text.replace(/\s+$/, '')
+  }
+  return merged.filter((r) => r.text)
+}
+
 // Media extraction — Squarespace bodies carry real content in <img> tags
 // (posts are photo-heavy) and video embeds as embedly-wrapped YouTube/Vimeo
 // iframes. Dropping these was the PIF migration bug: text imported, 72+
@@ -72,18 +123,100 @@ function imgItem(tag) {
   const alt = dec((tag.match(/\balt=["']([^"']*)["']/i) || [])[1] || '')
   return {img: src, alt}
 }
+// Identity key for an image, ignoring size/format query params and host —
+// so the same Squarespace asset requested at different widths (cover vs
+// ?format=2500w body copy) compares equal. Used to drop featured-image dups.
+function imgKey(u) {
+  try { u = decodeURIComponent(u) } catch { /* keep raw */ }
+  return (u.split('?')[0].split('/').pop() || '').toLowerCase()
+}
+
+// Pull a canonical YouTube/Vimeo URL out of any string (an iframe src, an
+// entity-encoded data-html attribute, a watch link). Tolerant of URL- and
+// HTML-encoding so it works on both embedly iframes and native blocks.
+function videoUrlFrom(str) {
+  if (!str) return null
+  let s = str
+  try { s = decodeURIComponent(str) } catch { /* leave as-is if malformed */ }
+  s = s.replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&amp;/g, '&')
+  const yt = s.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/) ||
+    s.match(/youtube\.com\/watch\?v=([A-Za-z0-9_-]{6,})/) ||
+    s.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/) ||
+    s.match(/youtube-nocookie\.com\/embed\/([A-Za-z0-9_-]{6,})/)
+  if (yt) return `https://www.youtube.com/watch?v=${yt[1]}`
+  const vimeo = s.match(/vimeo\.com\/(?:video\/)?(\d{6,})/) ||
+    s.match(/player\.vimeo\.com\/video\/(\d{6,})/)
+  if (vimeo) return `https://vimeo.com/${vimeo[1]}`
+  return null
+}
+// Stable id for dedup between an embedly iframe and a native block of the
+// same video (both normalize to the same watch/vimeo URL).
+function videoId(url) {
+  return (url || '').match(/[?&]v=([A-Za-z0-9_-]+)|vimeo\.com\/(\d+)/)?.slice(1).filter(Boolean)[0] || url
+}
 
 function videoItem(tag) {
   const src = (tag.match(/\bsrc=["']([^"']+)["']/i) || [])[1]
-  if (!src) return null
-  const decoded = decodeURIComponent(src)
-  const yt = decoded.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/) ||
-    decoded.match(/youtube\.com\/watch\?v=([A-Za-z0-9_-]{6,})/) ||
-    decoded.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/)
-  if (yt) return {video: `https://www.youtube.com/watch?v=${yt[1]}`}
-  const vimeo = decoded.match(/vimeo\.com\/(?:video\/)?(\d+)/)
-  if (vimeo) return {video: `https://vimeo.com/${vimeo[1]}`}
-  return null
+  const video = videoUrlFrom(src)
+  return video ? {video} : null
+}
+
+// Native Squarespace video blocks (<div class="sqs-video-wrapper" ...>) store
+// their iframe HTML-ENTITY-ENCODED inside a data-html attribute and render as
+// a static poster server-side — so they are NOT real <iframe> tags, and the
+// RSS feed strips them from content:encoded entirely. This was the second PIF
+// video bug: 8 of 10 videos used this newer block and vanished. We pull them
+// from the page instead, each with the clean text of the paragraph it follows
+// so it can be re-inserted at the right spot in an RSS-sourced body.
+function stripNoise(html) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+}
+function contentRegion(html) {
+  const i = html.indexOf('data-content-field="main-content"')
+  if (i < 0) return html
+  let end = html.length
+  for (const marker of ['itemPagination', 'blog-item-pagination', 'BlogItem-pagination', 'comment-btn-wrapper', '<footer']) {
+    const j = html.indexOf(marker, i)
+    if (j > 0) end = Math.min(end, j)
+  }
+  return html.slice(i, end)
+}
+function nativeVideos(pageHtml) {
+  const region = stripNoise(contentRegion(pageHtml))
+  const out = []
+  for (const m of region.matchAll(/<div\b[^>]*sqs-video-wrapper[^>]*>/gi)) {
+    const video = videoUrlFrom(m[0])
+    if (!video) continue
+    const anchor = stripToText(region.slice(0, m.index)).slice(-90)
+    out.push({video, anchor})
+  }
+  return out
+}
+// Merge page-only native videos into a body built from RSS, positioned right
+// after the paragraph they follow (matched by the anchor tail). Dedups against
+// videos already present (embedly iframes from RSS). Mutates + returns body.
+function mergeNativeVideos(body, pageHtml) {
+  const present = new Set(body.filter((b) => b.video).map((b) => videoId(b.video)))
+  for (const nv of nativeVideos(pageHtml)) {
+    if (present.has(videoId(nv.video))) continue
+    let idx = -1
+    const tail = nv.anchor.slice(-45).toLowerCase().replace(/\s+/g, ' ')
+    if (tail) {
+      for (let k = body.length - 1; k >= 0; k--) {
+        const t = ((body[k].runs || []).map((r) => r.text).join(''))
+          .toLowerCase().replace(/\s+/g, ' ')
+        if (t && (t.includes(tail) || tail.includes(t.slice(-45)))) { idx = k; break }
+      }
+    }
+    // Fallback when the anchor paragraph can't be matched: after the intro.
+    if (idx < 0) idx = Math.min(1, body.length - 1)
+    body.splice(idx + 1, 0, {video: nv.video})
+    present.add(videoId(nv.video))
+  }
+  return body
 }
 
 // Convert <content:encoded> / page HTML to structured blocks for import.
@@ -108,13 +241,19 @@ function bodyStructured(html) {
     if (m[3]) {
       const li = m[3].toLowerCase() === 'ol' ? 'number' : 'bullet'
       for (const liM of m[4].matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)) {
-        const t = stripToText(liM[1])
-        // runs shape so 65-blog-import maps it to Portable Text spans
-        if (t) blocks.push({s: 'normal', li, runs: [{text: t, marks: []}]})
+        const runs = inlineRuns(liM[1])
+        if (runs.length) blocks.push({s: 'normal', li, runs})
       }
       continue
     }
     const tag = m[1].toLowerCase()
+    const openTag = m[0].slice(0, m[0].indexOf('>'))
+    // Squarespace indents sub-items (business address/phone/online under a
+    // name) with data-indent / margin-left instead of a real <ul>. Flattening
+    // those to normal paragraphs gave each line a full 1.5rem margin → the
+    // "terrible spacing" on directory-style posts. Emit them as bullet list
+    // items (0.4rem margins) so they group tightly under their heading line.
+    const indented = tag === 'p' && /data-indent=["']?[1-9]|margin-left:\s*[1-9]/i.test(openTag)
     // Media nested INSIDE a text block (img/iframe wrapped in <p>) would be
     // stripped with the markup — pull it out and emit it after the text.
     const nested = []
@@ -122,17 +261,21 @@ function bodyStructured(html) {
       const item = inner[0].startsWith('<img') ? imgItem(inner[0]) : videoItem(inner[0])
       if (item) nested.push(item)
     }
-    const t = stripToText(m[2])
-    if (t) {
-      const s = tag === 'h1' || tag === 'h2' ? 'h2' : (tag === 'h3' || tag === 'h4') ? 'h3'
-        : tag === 'blockquote' ? 'blockquote' : 'normal'
-      blocks.push({s, runs: [{text: t, marks: []}]})
+    const runs = inlineRuns(m[2])
+    if (runs.length) {
+      if (indented) {
+        blocks.push({s: 'normal', li: 'bullet', runs})
+      } else {
+        const s = tag === 'h1' || tag === 'h2' ? 'h2' : (tag === 'h3' || tag === 'h4') ? 'h3'
+          : tag === 'blockquote' ? 'blockquote' : 'normal'
+        blocks.push({s, runs})
+      }
     }
     blocks.push(...nested)
   }
   // de-dupe consecutive identical TEXT blocks; media items pass through
   // (two adjacent images are normal, not duplicates).
-  const txt = (b) => (b.runs && b.runs[0] && b.runs[0].text) || ''
+  const txt = (b) => (b.runs || []).map((r) => r.text).join('')
   return blocks
     .filter((b, i, arr) => b.img || b.video || i === 0 || arr[i - 1].img || arr[i - 1].video || norm(txt(b)) !== norm(txt(arr[i - 1])))
     .slice(0, 300)
@@ -218,22 +361,22 @@ async function main() {
         encoded = grab(it, 'content:encoded')
         coverUrl = (it.match(/<media:content[^>]+url=["']([^"']+)["']/i) || [])[1] || ''
       }
-      // backfill from the post page if RSS didn't carry it — the RSS feed
-      // caps at 20 items, so on blogs with more posts the older tail ONLY
-      // exists here. The page also carries the publish date (pageDate), so
-      // these posts survive the category-page filter below.
+      // Always fetch the post page: it's the fallback body source when RSS
+      // caps out (>20 posts), AND the ONLY source for native Squarespace
+      // video blocks — the RSS feed strips those from content:encoded, so
+      // they must be merged in from here regardless of the body source.
+      const pageHtml = await text(p)
       let pageDateStr = null
       if (!encoded) {
-        const html = await text(p)
         // og:title on Squarespace POST pages is often the site title —
         // the itemprop="headline" meta carries the actual post title.
-        const headline = dec((html.match(/itemprop=["']headline["'][^>]*content=["']([^"']*)["']/i) ||
-          html.match(/content=["']([^"']*)["'][^>]*itemprop=["']headline["']/i) || [])[1] || '')
-        title = title || headline || meta(html, 'og:title')
-        excerpt = meta(html, 'og:description')
-        coverUrl = coverUrl || meta(html, 'og:image')
-        encoded = (html.match(/<div class="sqs-html-content">([\s\S]*?)<\/div>\s*<\/div>/i) || [])[1] || html
-        pageDateStr = pageDate(html)
+        const headline = dec((pageHtml.match(/itemprop=["']headline["'][^>]*content=["']([^"']*)["']/i) ||
+          pageHtml.match(/content=["']([^"']*)["'][^>]*itemprop=["']headline["']/i) || [])[1] || '')
+        title = title || headline || meta(pageHtml, 'og:title')
+        excerpt = meta(pageHtml, 'og:description')
+        coverUrl = coverUrl || meta(pageHtml, 'og:image')
+        encoded = (pageHtml.match(/<div class="sqs-html-content">([\s\S]*?)<\/div>\s*<\/div>/i) || [])[1] || pageHtml
+        pageDateStr = pageDate(pageHtml)
       }
       const publishDate = dateRaw && !isNaN(new Date(dateRaw))
         ? new Date(dateRaw).toISOString().slice(0, 10)
@@ -244,6 +387,30 @@ async function main() {
         if (await dl(coverUrl, path.join(COVERS, fn))) cover = `blog/covers/${fn}`
       }
       const body = bodyStructured(encoded)
+      // Merge native Squarespace videos (stripped from RSS) from the page,
+      // positioned after the paragraph they follow.
+      mergeNativeVideos(body, pageHtml)
+      // Drop body images that duplicate the featured/cover image. Squarespace
+      // uses the featured image only as a listing thumbnail, but our template
+      // ALSO renders it at the top of the post — so an author who placed the
+      // same photo in the body gets it shown twice. Match on the source
+      // filename (cover and body-copy are often different SIZES of the same
+      // asset, so post-upload Sanity asset-id dedup would miss them). If the
+      // dup image is immediately followed by a short caption paragraph, drop
+      // that too so no orphaned caption is left behind.
+      if (coverUrl) {
+        const ck = imgKey(coverUrl)
+        for (let i = body.length - 1; i >= 0; i--) {
+          if (body[i].img && imgKey(body[i].img) === ck) {
+            const next = body[i + 1]
+            const nextText = next && next.runs ? next.runs.map((r) => r.text).join('') : ''
+            if (next && !next.img && !next.video && nextText && nextText.length <= 120) {
+              body.splice(i + 1, 1) // orphaned caption
+            }
+            body.splice(i, 1)
+          }
+        }
+      }
       // Download body images to staging so 65-blog-import can upload them
       // as Sanity assets. Squarespace-hosted images take ?format=2500w for
       // the original-resolution rendition. A failed download keeps the item

@@ -94,7 +94,7 @@ const blogPostingSchema = [{
 }];
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const safeHref = (href: string) => /^(https?:|mailto:|\/)/i.test(href) ? href : '#';
+const safeHref = (href: string) => /^(https?:|mailto:|tel:|\/)/i.test(href) ? href : '#';
 
 const bodyHTML = post.body
   ? toHTML(post.body, {

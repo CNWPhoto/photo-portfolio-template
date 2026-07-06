@@ -86,15 +86,26 @@ async function buildBody(items, postSlug) {
     }
     const runs = (b.runs || []).filter((r) => r && r.text)
     if (!runs.length) continue
+    // A run may carry decorator marks ('strong'/'em') AND a link href. Links
+    // become Portable Text annotations: one markDef per link, referenced from
+    // the span's marks by _key. Without this the scraper's preserved bold/
+    // italic/links would be dropped on import (the old flatten behavior).
+    const markDefs = []
+    const children = runs.map((r) => {
+      const marks = Array.isArray(r.marks) ? [...r.marks] : []
+      if (r.link) {
+        const _key = key()
+        markDefs.push({_key, _type: 'link', href: r.link})
+        marks.push(_key)
+      }
+      return {_key: key(), _type: 'span', text: r.text, marks}
+    })
     out.push({
       _key: key(), _type: 'block',
       style: b.s || 'normal',
       ...(b.li ? {listItem: b.li, level: 1} : {}),
-      markDefs: [],
-      children: runs.map((r) => ({
-        _key: key(), _type: 'span', text: r.text,
-        marks: Array.isArray(r.marks) ? r.marks : [],
-      })),
+      markDefs,
+      children,
     })
   }
   return out
