@@ -11,26 +11,55 @@ const style = paletteToStyle(palette);
 
 const label = section?.label || '';
 const dividerStyle = section?.style || 'line';
+const isBlank = dividerStyle === 'blank';
+
+// Optional explicit pixel height (1–125). When set it drives the section's
+// vertical size and replaces the data-spacing padding: for "Blank" it's the
+// empty spacer height; for Line/Dots the line (+ optional label) is centered
+// within it, giving symmetric breathing room above and below. When unset,
+// fall back to the section's data-spacing so existing dividers are unchanged.
+const rawH = Number(section?.heightPx);
+const heightPx = Number.isFinite(rawH) ? Math.min(125, Math.max(1, Math.round(rawH))) : null;
+
+const sectionStyle = heightPx ? `${style};--divider-h:${heightPx}px` : style;
 ---
 
 <section
-  class:list={['section', 'divider', `divider--${dividerStyle}`]}
+  class:list={['section', 'divider', `divider--${dividerStyle}`, heightPx ? 'divider--fixed-h' : null]}
   data-section-type="dividerSection"
-  data-spacing={section?.spacing || 'compact'}
+  data-spacing={heightPx ? undefined : (section?.spacing || 'compact')}
   id={section?.sectionId || undefined}
-  style={style}
+  style={sectionStyle}
 >
-  <div class="divider__inner">
-    <span class="divider__line" aria-hidden="true"></span>
-    {label && <span class="divider__label">{label}</span>}
-    <span class="divider__line" aria-hidden="true"></span>
-  </div>
+  {!isBlank && (
+    <div class="divider__inner">
+      {label ? (
+        <Fragment>
+          <span class="divider__line" aria-hidden="true"></span>
+          <span class="divider__label">{label}</span>
+          <span class="divider__line" aria-hidden="true"></span>
+        </Fragment>
+      ) : (
+        <span class="divider__line" aria-hidden="true"></span>
+      )}
+    </div>
+  )}
 </section>
 
 <style>
   .divider {
     background: var(--bg);
     color: var(--text);
+  }
+  /* Explicit pixel height: the section is exactly --divider-h tall (no spacing
+     padding) and its content is vertically centered. For Blank there is no
+     inner content, so this is a pure colored spacer. */
+  .divider--fixed-h {
+    min-height: var(--divider-h);
+    padding-block: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   .divider__inner {
     display: flex;
@@ -39,6 +68,7 @@ const dividerStyle = section?.style || 'line';
     max-width: 760px;
     margin: 0 auto;
     padding: 0 1.5rem;
+    width: 100%;
   }
   .divider__line {
     flex: 1;
