@@ -407,11 +407,14 @@ const image = section?.image ?? null;
     }
     /* image-right (text left, image right on desktop): stack text FIRST,
        then image on mobile — reads top-down like a caption below the
-       description. */
+       description. No border: the desktop contained variants render with
+       border-top:none, so the mobile-only rule above was drawing a stray
+       hairline above every (default) image-right split's text — the "line
+       break on mobile" that isn't there on desktop. */
     .isplit--image-right .isplit__content {
       border-right: none;
       border-bottom: none;
-      border-top: 1px solid var(--border);
+      border-top: none;
       order: 1;
     }
     .isplit--image-right .isplit__image {

@@ -98,14 +98,25 @@ later — nine distinct bugs, every one invisible unless you diff the imported r
 live source. The scraper/importer now fix all nine; this checklist catches regressions and
 platform quirks the tooling doesn't yet know about.
 
+> **Cross-platform:** the full, platform-agnostic audit (Squarespace / WordPress / Wix / SPA)
+> lives in the vault at `wiki/patterns/migration-audit-checklist.md`. The items below are the
+> Squarespace-flavored subset. Run the audit on EVERY migration, any source platform.
+
 **Automate most of it with `66-verify-blog.js`** — it diffs the live dataset against the staged
 scrape and asserts the mechanical items below (post/image/video counts, alt + excerpt coverage,
-no title-duplicate leading heading, category refs resolve, no old-domain link leaks, no inline
-category-nav remnant). Read-only; exits non-zero on any hard fail. Run it in the swapped client
-env, same dance as the import:
+no title-duplicate leading heading, **no consecutive duplicate images**, category refs resolve,
+no old-domain link leaks, no inline category-nav remnant). Read-only; exits non-zero on any hard
+fail. Run it in the swapped client env, same dance as the import:
 
 ```sh
 cd studio && npx sanity exec scripts/onboard/66-verify-blog.js --with-user-token -- --slug=<slug>
+```
+
+**Page SEO** — `67-page-seo.js` backfills each `page` doc's meta description + title tag from the
+scrape (`pages-text.json`), FILL-ONLY so curated SEO survives:
+
+```sh
+cd studio && npx sanity exec scripts/onboard/67-page-seo.js --with-user-token -- --slug=<slug>
 ```
 
 It reports FAILs (block sign-off) and WARNs (eyeball — e.g. a mark-count drift or an intentional

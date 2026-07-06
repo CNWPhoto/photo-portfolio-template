@@ -77,14 +77,21 @@ function stagedMetrics(p) {
 // ── doc (imported) metrics ───────────────────────────────────────────────────
 function docMetrics(doc) {
   const body = doc.body || []
-  let images = 0, imagesNoAlt = 0, videos = 0, strong = 0, em = 0, links = 0
+  let images = 0, imagesNoAlt = 0, videos = 0, strong = 0, em = 0, links = 0, dupAdjImages = 0
   const linkHrefs = []
+  let prevImgRef = null
   for (const b of body) {
     if (b._type === 'image') {
       images++
       if (!b.alt || !String(b.alt).trim()) imagesNoAlt++
+      // Gallery / lazy-load twin: same asset repeated back-to-back (the
+      // Squarespace page-scrape doubling). Counts consecutive repeats only.
+      const ref = b.asset?._ref || null
+      if (ref && ref === prevImgRef) dupAdjImages++
+      prevImgRef = ref
       continue
     }
+    prevImgRef = null
     if (b._type === 'videoEmbed') { videos++; continue }
     if (b._type === 'block') {
       for (const c of b.children || []) {
@@ -102,7 +109,7 @@ function docMetrics(doc) {
   const firstIsTitleDup = !!(first && first._type === 'block' && (first.style === 'h2' || first.style === 'h3') &&
     firstText.trim().toLowerCase() === (doc.title || '').trim().toLowerCase())
   return {
-    blocks: body.length, images, imagesNoAlt, videos, strong, em, links, linkHrefs,
+    blocks: body.length, images, imagesNoAlt, videos, strong, em, links, linkHrefs, dupAdjImages,
     hasExcerpt: !!(doc.excerpt && String(doc.excerpt).trim()),
     excerpt: String(doc.excerpt || '').trim(),
     coverAlt: doc.coverImage?.alt ? String(doc.coverImage.alt).trim() : '',
@@ -128,7 +135,7 @@ async function main() {
       `*[_type == "blogPost" && _id match "blogPost-*" && !(_id in path("drafts.**"))]{
         _id, title, excerpt,
         coverImage{alt, asset},
-        body[]{_type, style, alt, children[]{text, marks}, markDefs[]{_type, href}},
+        body[]{_type, style, alt, asset, children[]{text, marks}, markDefs[]{_type, href}},
         "categories": categories[]{_ref},
         "resolvedCats": categories[]->slug.current
       }`,
@@ -162,6 +169,8 @@ async function main() {
     if (d.firstIsTitleDup) fail(r, 'leading heading duplicates the title')
     // Images + alt coverage.
     if (d.imagesNoAlt > 0) fail(r, `${d.imagesNoAlt}/${d.images} body image(s) missing alt`)
+    // Duplicate featured/gallery image rendered twice back-to-back.
+    if (d.dupAdjImages > 0) fail(r, `${d.dupAdjImages} duplicate image(s) repeated consecutively (gallery/lazy-load twin)`)
     if (d.images !== s.images) warn(r, `image count ${d.images} vs source ${s.images}`)
     // Cover alt.
     if (d.hasCover && !d.coverAlt) fail(r, 'cover image missing alt')

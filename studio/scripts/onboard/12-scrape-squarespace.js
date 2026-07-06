@@ -333,10 +333,19 @@ function bodyStructured(html) {
     }
     blocks.push(...nested)
   }
-  // de-dupe consecutive identical TEXT blocks; media items pass through
-  // (two adjacent images are normal, not duplicates).
+  // Squarespace galleries / lazy-load emit each image TWICE back-to-back —
+  // the real <img> plus a <noscript> (or data-src) twin pointing at the SAME
+  // source. The page-scrape fallback (posts beyond the RSS cap) sees both, so
+  // without this every gallery image shows up doubled in the post (e.g. the
+  // red-mill spotlight rendered all 12 photos twice). Drop an image whose
+  // source key matches the immediately-preceding image. TEXT de-dup (below)
+  // deliberately keeps DIFFERENT adjacent images — only exact-source repeats go.
+  const deimg = blocks.filter((b, i, arr) =>
+    !(b.img && arr[i - 1]?.img && imgKey(b.img) === imgKey(arr[i - 1].img)))
+  // de-dupe consecutive identical TEXT blocks; distinct media items pass
+  // through (two adjacent DIFFERENT images are normal, not duplicates).
   const txt = (b) => (b.runs || []).map((r) => r.text).join('')
-  return blocks
+  return deimg
     .filter((b, i, arr) => b.img || b.video || i === 0 || arr[i - 1].img || arr[i - 1].video || norm(txt(b)) !== norm(txt(arr[i - 1])))
     .slice(0, 300)
 }
@@ -397,9 +406,16 @@ async function main() {
     const html = await text(p)
     if (!html) continue
     const key = p.replace(origin, '').replace(/^\/|\/$/g, '') || 'home'
+    // The <title> tag is the source's real SEO title. On Squarespace it's often
+    // just the site name (per-page SEO titles left unset), but on WordPress /
+    // Wix / etc. it carries the real per-page title — capture it so the SEO
+    // backfill can reuse it cross-platform (67-page-seo strips the site-name
+    // suffix and skips it when it collapses to the site name).
+    const titleTag = dec((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || '')
     pages[key] = {
       url: p,
       title: meta(html, 'og:title'),
+      titleTag,
       description: meta(html, 'og:description'),
       text: stripToText(html).slice(0, 8000),
     }
