@@ -24,6 +24,13 @@ function getArg(name, {required = false, fallback} = {}) {
   return v
 }
 const slug = getArg('slug', {required: true})
+// --only / --skip: comma-separated post slugs to limit a run (repairs).
+// --repair: for posts whose doc ALREADY exists, patch only `body` instead of
+// createOrReplace — preserves categories, cover, excerpt and any other
+// editor changes on the doc. New posts are still created in full.
+const onlySlugs = (getArg('only', {fallback: ''}) || '').split(',').map((s) => s.trim()).filter(Boolean)
+const skipSlugs = (getArg('skip', {fallback: ''}) || '').split(',').map((s) => s.trim()).filter(Boolean)
+const repairMode = process.argv.includes('--repair')
 const BLOG = path.join(REPO_ROOT, '.staging', slug, 'blog')
 const posts = JSON.parse(fs.readFileSync(path.join(BLOG, 'posts.json'), 'utf8'))
 const client = getCliClient()
@@ -41,32 +48,56 @@ async function withRetry(label, fn, tries = 4) {
 }
 const key = () => Math.random().toString(36).slice(2, 14)
 // body items are structured blocks {s:style, li?:'bullet'|'number',
-// runs:[{text,marks}]} from 15-scrape-blog. Back-compat: a plain string
-// (older posts.json) → a normal paragraph.
-function blocks(items) {
-  return (items || [])
-    .map((b) => {
-      if (typeof b === 'string') {
-        if (!b.trim()) return null
-        return {
-          _key: key(), _type: 'block', style: 'normal', markDefs: [],
-          children: [{_key: key(), _type: 'span', text: b, marks: []}],
-        }
+// runs:[{text,marks}]} from 15-scrape-blog / 12-scrape-squarespace, plus
+// media items {img:'blog/body/<file>', alt} and {video:url} from the
+// Squarespace path. Back-compat: a plain string (older posts.json) → a
+// normal paragraph. Async because images upload to Sanity (SHA-deduped,
+// so re-runs are free).
+async function buildBody(items, postSlug) {
+  const out = []
+  for (const b of items || []) {
+    if (typeof b === 'string') {
+      if (!b.trim()) continue
+      out.push({
+        _key: key(), _type: 'block', style: 'normal', markDefs: [],
+        children: [{_key: key(), _type: 'span', text: b, marks: []}],
+      })
+      continue
+    }
+    if (b.video) {
+      out.push({_key: key(), _type: 'videoEmbed', url: b.video})
+      continue
+    }
+    if (b.img) {
+      const abs = path.join(REPO_ROOT, '.staging', slug, b.img)
+      if (!fs.existsSync(abs)) {
+        console.warn(`  ⚠ ${postSlug}: staged body image missing, skipped: ${b.img}`)
+        continue
       }
-      const runs = (b.runs || []).filter((r) => r && r.text)
-      if (!runs.length) return null
-      return {
-        _key: key(), _type: 'block',
-        style: b.s || 'normal',
-        ...(b.li ? {listItem: b.li, level: 1} : {}),
-        markDefs: [],
-        children: runs.map((r) => ({
-          _key: key(), _type: 'span', text: r.text,
-          marks: Array.isArray(r.marks) ? r.marks : [],
-        })),
-      }
+      const asset = await withRetry(`upload body img ${path.basename(abs)}`, () =>
+        client.assets.upload('image', fs.readFileSync(abs), {filename: path.basename(abs)}),
+      )
+      out.push({
+        _key: key(), _type: 'image',
+        asset: {_type: 'reference', _ref: asset._id},
+        ...(b.alt ? {alt: b.alt} : {}),
+      })
+      continue
+    }
+    const runs = (b.runs || []).filter((r) => r && r.text)
+    if (!runs.length) continue
+    out.push({
+      _key: key(), _type: 'block',
+      style: b.s || 'normal',
+      ...(b.li ? {listItem: b.li, level: 1} : {}),
+      markDefs: [],
+      children: runs.map((r) => ({
+        _key: key(), _type: 'span', text: r.text,
+        marks: Array.isArray(r.marks) ? r.marks : [],
+      })),
     })
-    .filter(Boolean)
+  }
+  return out
 }
 
 async function main() {
@@ -89,8 +120,32 @@ async function main() {
     console.log(`[blog-import] removed ${junk.length} donor demo blog post(s)`)
   }
 
+  let targets = posts
+  if (onlySlugs.length) targets = targets.filter((p) => onlySlugs.includes(p.slug))
+  if (skipSlugs.length) targets = targets.filter((p) => !skipSlugs.includes(p.slug))
+  if (targets.length !== posts.length) {
+    console.log(`[blog-import] filtered ${posts.length} → ${targets.length} posts (only=${onlySlugs.join(',') || '-'} skip=${skipSlugs.join(',') || '-'})`)
+  }
+
   let ok = 0
-  for (const p of posts) {
+  for (const p of targets) {
+    const docId = `blogPost-${p.slug}`
+    const body = await buildBody(p.body, p.slug)
+
+    if (repairMode) {
+      const existing = await client.getDocument(docId)
+      if (existing) {
+        // Existing doc: replace ONLY the body — titles, covers, excerpts,
+        // categories and any editor tweaks on other fields stay put.
+        await withRetry(`patch body ${p.slug}`, () =>
+          client.patch(docId).set({body}).commit(),
+        )
+        ok++
+        console.log(`  ~ ${p.title.slice(0, 60)} (body repaired: ${body.length} blocks)`)
+        continue
+      }
+    }
+
     let cover
     if (p.cover) {
       const abs = path.join(REPO_ROOT, '.staging', slug, p.cover)
@@ -106,14 +161,14 @@ async function main() {
       }
     }
     const doc = {
-      _id: `blogPost-${p.slug}`,
+      _id: docId,
       _type: 'blogPost',
       title: p.title,
       slug: {_type: 'slug', current: p.slug},
       publishDate: p.publishDate || new Date().toISOString().slice(0, 10),
       ...(p.excerpt ? {excerpt: p.excerpt} : {}),
       ...(cover ? {coverImage: cover} : {}),
-      body: blocks(p.body),
+      body,
     }
     await withRetry(`create ${p.slug}`, () => client.createOrReplace(doc))
     ok++
@@ -127,9 +182,7 @@ async function main() {
     )
   } catch { /* blogPage may not exist on every donor — non-fatal */ }
 
-  console.log(`[blog-import] done: ${ok}/${posts.length} posts`)
-  console.log(`[blog-import] NOTE: body is plain paragraphs — headings/inline`)
-  console.log(`  images need a Studio pass on any post she wants polished.`)
+  console.log(`[blog-import] done: ${ok}/${targets.length} posts`)
 }
 
 main().catch((e) => { console.error('[blog-import] FAILED:', e); process.exit(1) })

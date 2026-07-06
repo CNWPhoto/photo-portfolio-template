@@ -107,7 +107,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
     if (p === `/${blogBase}` || p.startsWith(`/${blogBase}/`)) {
       ;(context.locals as any).canonicalPath = p
-      rewritePath = p.replace(new RegExp(`^/${blogBase}`), '/blog')
+      // Keep the query string — the blog listing paginates via ?page=N,
+      // and next(pathname-only) silently dropped it, pinning every page
+      // of a custom-base blog listing to page 1.
+      rewritePath =
+        p.replace(new RegExp(`^/${blogBase}`), '/blog') + context.url.search
     }
   }
 
