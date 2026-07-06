@@ -94,7 +94,17 @@ function inlineRuns(html) {
     const tag = m[2].toLowerCase()
     if (tag === 'strong' || tag === 'b') strong = Math.max(0, strong + (closing ? -1 : 1))
     else if (tag === 'em' || tag === 'i') em = Math.max(0, em + (closing ? -1 : 1))
-    else if (tag === 'a') link = closing ? null : ((m[3].match(/href=["']([^"']+)["']/i) || [])[1] || null)
+    else if (tag === 'a') {
+      // Decode HTML entities in the href — a source href with a query string
+      // is stored entity-encoded (`&amp;`), and the renderer re-escapes `&`,
+      // producing a broken `&amp;amp;` (e.g. mailto subject/body prefills).
+      // dec() -> single `&`, so the renderer's escape yields correct output.
+      if (closing) link = null
+      else {
+        const raw = (m[3].match(/href=["']([^"']+)["']/i) || [])[1]
+        link = raw ? dec(raw) : null
+      }
+    }
   }
   // Merge adjacent runs with identical formatting to keep spans tidy.
   const same = (a, b) => (a.link || '') === (b.link || '') &&
