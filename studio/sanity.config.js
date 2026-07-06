@@ -93,20 +93,9 @@ export default defineConfig({
             route: '/404',
             type: 'notFoundPage',
           },
-          // The blog base segment is the blogPage's slug (defaults to 'blog'
-          // when unset), so a client can rename the blog — e.g.
-          // '/lenaweepetcollective' — and Presentation still maps the previewed
-          // URL back to the blogPage / blogPost / blogCategory docs. Without
-          // this, a custom base shows "document is missing" in the Pages panel.
-          // These dynamic routes must sit ABOVE the generic '/:slug' page
-          // resolver: Presentation uses the first route that RESOLVES a
-          // document, so a non-blog segment (e.g. '/about') finds no blogPage
-          // here and falls through to the page resolver below.
-          {
-            route: '/:base',
-            filter: `_type == "blogPage" && (slug.current == $base || (!defined(slug.current) && $base == "blog"))`,
-            params: ({params}) => ({base: params.base}),
-          },
+          // Blog posts / categories live under the content-driven blog base
+          // (blogPage.slug, e.g. '/lenaweepetcollective'). These 2- and
+          // 3-segment routes don't collide with the single-segment route below.
           {
             route: '/:base/category/:slug',
             filter: `_type == "blogCategory" && slug.current == $slug`,
@@ -117,11 +106,16 @@ export default defineConfig({
             filter: `_type == "blogPost" && slug.current == $slug`,
             params: ({params}) => ({slug: params.slug}),
           },
-          // Generic page resolver (about, experience, contact, any other
-          // slugged page doc). Ordered LAST so the specific routes above win.
+          // Single-segment URLs are EITHER the blog index (blogPage — whose slug
+          // is the blog base, defaulting to 'blog' when unset) OR any slugged
+          // page (about, experience, contact, …). This MUST be a single route
+          // whose filter matches either type: Presentation resolves the first
+          // route whose PATTERN matches, so two separate '/:slug' routes would
+          // shadow each other — a dedicated '/:base' blog route ahead of the
+          // page route silently broke "document on this page" for EVERY page.
           {
             route: '/:slug',
-            filter: `_type == "page" && slug.current == $slug`,
+            filter: `(_type == "blogPage" && (slug.current == $slug || (!defined(slug.current) && $slug == "blog"))) || (_type == "page" && slug.current == $slug)`,
             params: ({params}) => ({slug: params.slug}),
           },
         ]),
