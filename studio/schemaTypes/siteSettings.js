@@ -92,6 +92,15 @@ export default {
       hidden: ({document}) => document?.logoType !== 'image',
     },
     {
+      name: 'logoImageInverse',
+      title: 'Logo Image — Inverse (for dark backgrounds)',
+      type: 'image',
+      description:
+        'A light/inverse version of your logo (e.g. white). The header and footer switch to this automatically when their Background Tone makes them dark or vibrant (or on dark palettes), so the logo stays legible against the darker band. Leave empty to always use the main logo.',
+      hidden: ({document}) => document?.logoType !== 'image',
+      validation: imageSizeWarning,
+    },
+    {
       name: 'favicon',
       title: 'Favicon',
       type: 'image',

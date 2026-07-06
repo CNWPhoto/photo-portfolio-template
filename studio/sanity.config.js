@@ -86,6 +86,21 @@ export default defineConfig({
             route: '/',
             type: 'homepagePage',
           },
+          // On first load the Presentation handshake briefly points the iframe
+          // at the draft-mode enable/disable API paths before redirecting to
+          // '/'. Those two-segment paths otherwise fall through to the blogPost
+          // route below (base='api', slug='preview'), match no post, and flash
+          // "missing main document for /api/preview" — alarming to clients even
+          // though it's harmless and transient. Resolve them to the homepage
+          // singleton so a main document is always present during the handshake.
+          {
+            route: '/api/preview',
+            type: 'homepagePage',
+          },
+          {
+            route: '/api/disable-preview',
+            type: 'homepagePage',
+          },
           {
             route: '/portfolio',
             type: 'portfolio',
