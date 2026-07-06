@@ -115,5 +115,15 @@ export default {
         'Subtle parallax: image stays put while the page scrolls past. Note: not supported on iOS Safari (falls back to normal scroll).',
       initialValue: false,
     },
+    {
+      name: 'mobileFlipOrder',
+      title: 'Flip image/text order on mobile',
+      type: 'boolean',
+      description:
+        'When on, the text card stacks ABOVE the image on mobile (≤900px) instead of below it. Use it when the surrounding sections make text-first flow read better. Off by default.',
+      initialValue: false,
+      // Image-only variant has no text card — nothing to flip.
+      hidden: ({parent}) => parent?.textContainer === 'image-only',
+    },
   ],
 }

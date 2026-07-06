@@ -45,6 +45,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     class="section ctaband ctaband--overlapping-images"
     data-section-type="ctaBandSection"
     data-spacing={section?.spacing || 'normal'}
+    data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
     id={section?.sectionId || undefined}
     style={style}
   >
@@ -333,6 +334,25 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
       position: static;
       width: 100%;
       padding-top: 2.5rem;
+    }
+
+    /* Editor toggle: text ABOVE both images instead of sandwiched between
+       them. Default mobile flow is block (back image → content → front
+       image); the flipped variant becomes a flex column so `order` works. */
+    .ctaband--overlapping-images[data-mobile-flip-order='true'] .ctaband__oi-inner {
+      display: flex;
+      flex-direction: column;
+    }
+    .ctaband--overlapping-images[data-mobile-flip-order='true'] .ctaband__oi-content {
+      order: 1;
+      padding-top: 0;
+    }
+    .ctaband--overlapping-images[data-mobile-flip-order='true'] .ctaband__oi-images {
+      order: 2;
+      margin-top: 2.5rem;
+    }
+    .ctaband--overlapping-images[data-mobile-flip-order='true'] .ctaband__oi-front {
+      order: 3;
     }
   }
 </style>

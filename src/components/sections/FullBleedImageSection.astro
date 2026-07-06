@@ -52,6 +52,7 @@ const cardPlacement = section?.cardPlacement === 'right' ? 'right' : 'left';
     data-section-type="fullBleedImageSection"
     data-parallax={parallax ? 'true' : 'false'}
     data-card-placement={cardPlacement}
+    data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
     id={section?.sectionId || undefined}
     style={style}
   >
@@ -215,6 +216,20 @@ const cardPlacement = section?.cardPlacement === 'right' ? 'right' : 'left';
       margin: 0;
       padding: 2.5rem 1.5rem 3rem;
       max-width: none;
+    }
+
+    /* Editor toggle: text card ABOVE the image. Block layout ignores
+       `order`, so the flipped section becomes a flex column. The overlay
+       is absolutely positioned against the section — repin it to the
+       bottom so it keeps darkening the image, which now sits last. */
+    .fbi[data-mobile-flip-order='true'] {
+      display: flex;
+      flex-direction: column;
+    }
+    .fbi[data-mobile-flip-order='true'] .fbi__box { order: 1; }
+    .fbi[data-mobile-flip-order='true'] .fbi__bg { order: 2; }
+    .fbi[data-mobile-flip-order='true'] .fbi__overlay {
+      inset: auto 0 0 0;
     }
   }
 </style>

@@ -52,5 +52,14 @@ export default {
       type: 'number',
       description: 'Optional. Limits how many testimonials to show. Leave blank to show all. (2-column text only uses just the first 2.)',
     },
+    {
+      name: 'mobileFlipOrder',
+      title: 'Flip image/text order on mobile',
+      type: 'boolean',
+      description:
+        'When on, the quote stacks ABOVE the photo on mobile (≤900px) instead of below it. Use it when the surrounding sections make text-first flow read better. Off by default. Only applies to the Image + slider layout.',
+      initialValue: false,
+      hidden: ({parent}) => parent?.layout === 'two-col-text',
+    },
   ],
 }
