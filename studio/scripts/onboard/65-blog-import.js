@@ -131,6 +131,25 @@ async function main() {
     console.log(`[blog-import] removed ${junk.length} donor demo blog post(s)`)
   }
 
+  // Categories: create a blogCategory doc per distinct source tag, then
+  // assign each post to its own tags below. Deterministic ids so re-runs are
+  // idempotent, and the slug matches the scraper's rewritten footer links
+  // (/<base>/category/<slug>) so 'browse by category' resolves on the new site.
+  const catSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  const allTags = [...new Set(posts.flatMap((p) => p.tags || []))]
+  for (const name of allTags) {
+    const s = catSlug(name)
+    await withRetry(`category ${name}`, () =>
+      client.createIfNotExists({
+        _id: `blogCategory-${s}`,
+        _type: 'blogCategory',
+        name,
+        slug: {_type: 'slug', current: s},
+      }),
+    )
+  }
+  if (allTags.length) console.log(`[blog-import] ensured ${allTags.length} categories: ${allTags.join(', ')}`)
+
   let targets = posts
   if (onlySlugs.length) targets = targets.filter((p) => onlySlugs.includes(p.slug))
   if (skipSlugs.length) targets = targets.filter((p) => !skipSlugs.includes(p.slug))
@@ -142,17 +161,21 @@ async function main() {
   for (const p of targets) {
     const docId = `blogPost-${p.slug}`
     const body = await buildBody(p.body, p.slug)
+    const categories = (p.tags || []).map((t) => ({
+      _type: 'reference', _key: key(), _ref: `blogCategory-${catSlug(t)}`,
+    }))
 
     if (repairMode) {
       const existing = await client.getDocument(docId)
       if (existing) {
-        // Existing doc: replace ONLY the body — titles, covers, excerpts,
-        // categories and any editor tweaks on other fields stay put.
+        // Existing doc: replace the body, and set categories from source
+        // (posts weren't categorized on the first migration). Titles, covers,
+        // excerpts and other editor tweaks stay put.
         await withRetry(`patch body ${p.slug}`, () =>
-          client.patch(docId).set({body}).commit(),
+          client.patch(docId).set({body, ...(categories.length ? {categories} : {})}).commit(),
         )
         ok++
-        console.log(`  ~ ${p.title.slice(0, 60)} (body repaired: ${body.length} blocks)`)
+        console.log(`  ~ ${p.title.slice(0, 60)} (body repaired: ${body.length} blocks, ${categories.length} cats)`)
         continue
       }
     }
@@ -179,6 +202,7 @@ async function main() {
       publishDate: p.publishDate || new Date().toISOString().slice(0, 10),
       ...(p.excerpt ? {excerpt: p.excerpt} : {}),
       ...(cover ? {coverImage: cover} : {}),
+      ...(categories.length ? {categories} : {}),
       body,
     }
     await withRetry(`create ${p.slug}`, () => client.createOrReplace(doc))
