@@ -170,9 +170,12 @@ async function main() {
       if (existing) {
         // Existing doc: replace the body, and set categories from source
         // (posts weren't categorized on the first migration). Titles, covers,
-        // excerpts and other editor tweaks stay put.
+        // excerpts and other editor tweaks stay put. Also set the real cover
+        // alt (sitemap caption) if the doc has a cover and one was found.
+        const patch = {body, ...(categories.length ? {categories} : {})}
+        if (p.coverAlt && existing.coverImage?.asset) patch['coverImage'] = {...existing.coverImage, alt: p.coverAlt}
         await withRetry(`patch body ${p.slug}`, () =>
-          client.patch(docId).set({body, ...(categories.length ? {categories} : {})}).commit(),
+          client.patch(docId).set(patch).commit(),
         )
         ok++
         console.log(`  ~ ${p.title.slice(0, 60)} (body repaired: ${body.length} blocks, ${categories.length} cats)`)
@@ -190,7 +193,8 @@ async function main() {
         cover = {
           _type: 'image',
           asset: {_type: 'reference', _ref: asset._id},
-          alt: p.title,
+          // Real alt from the sitemap caption; fall back to the title.
+          alt: p.coverAlt || p.title,
         }
       }
     }

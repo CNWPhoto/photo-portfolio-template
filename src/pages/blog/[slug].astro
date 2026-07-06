@@ -368,7 +368,9 @@ const bodyHTML = post.body
 
   .post__body :global(a) {
     color: var(--accent);
-    text-decoration: none;
+    /* Underline body links so they're obvious in prose (platform default). */
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .post__body :global(a:hover) {

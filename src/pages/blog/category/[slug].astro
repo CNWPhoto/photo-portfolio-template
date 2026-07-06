@@ -134,6 +134,9 @@ const pageTitle = `${category.name} — Blog Category`;
     transition: transform 0.6s var(--ease-image);
   }
   .cat__card:hover .cat__img-wrap :global(.cat__img) { transform: scale(1.04); }
+  /* Horizontal breathing room so the text isn't flush against the card's
+     hover-shadow edge (image stays full-bleed). */
+  .cat__body { padding-inline: 0.85rem; }
   .cat__post-title {
     font-size: 1.35rem;
     line-height: 1.3;
