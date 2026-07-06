@@ -90,21 +90,35 @@ export default defineConfig({
             type: 'portfolio',
           },
           {
-            route: '/blog',
-            type: 'blogPage',
-          },
-          {
             route: '/404',
             type: 'notFoundPage',
           },
+          // The blog base segment is the blogPage's slug (defaults to 'blog'
+          // when unset), so a client can rename the blog — e.g.
+          // '/lenaweepetcollective' — and Presentation still maps the previewed
+          // URL back to the blogPage / blogPost / blogCategory docs. Without
+          // this, a custom base shows "document is missing" in the Pages panel.
+          // These dynamic routes must sit ABOVE the generic '/:slug' page
+          // resolver: Presentation uses the first route that RESOLVES a
+          // document, so a non-blog segment (e.g. '/about') finds no blogPage
+          // here and falls through to the page resolver below.
           {
-            route: '/blog/:slug',
+            route: '/:base',
+            filter: `_type == "blogPage" && (slug.current == $base || (!defined(slug.current) && $base == "blog"))`,
+            params: ({params}) => ({base: params.base}),
+          },
+          {
+            route: '/:base/category/:slug',
+            filter: `_type == "blogCategory" && slug.current == $slug`,
+            params: ({params}) => ({slug: params.slug}),
+          },
+          {
+            route: '/:base/:slug',
             filter: `_type == "blogPost" && slug.current == $slug`,
             params: ({params}) => ({slug: params.slug}),
           },
           // Generic page resolver (about, experience, contact, any other
-          // slugged page doc). This is ordered LAST so the specific singleton
-          // routes above win first.
+          // slugged page doc). Ordered LAST so the specific routes above win.
           {
             route: '/:slug',
             filter: `_type == "page" && slug.current == $slug`,
@@ -129,10 +143,19 @@ export default defineConfig({
             locations: [{title: 'Portfolio', href: '/portfolio'}],
           }),
           blogPage: defineLocations({
-            locations: [{title: 'Blog', href: '/blog'}],
+            select: {slug: 'slug.current'},
+            resolve: (doc) => ({
+              // Use the blog's real slug (defaults to 'blog') so "Open preview"
+              // jumps straight to e.g. /lenaweepetcollective — no redirect hop.
+              locations: [{title: 'Blog', href: `/${doc?.slug || 'blog'}`}],
+            }),
           }),
           blogPost: defineLocations({
             select: {title: 'title', slug: 'slug.current'},
+            // Posts link under the literal /blog base; when the client renamed
+            // the blog, middleware.ts 301-rewrites /blog/* to the custom base,
+            // so the preview lands on the right URL (the post's own doc doesn't
+            // carry the base slug, which lives on the blogPage singleton).
             resolve: (doc) =>
               doc?.slug
                 ? {locations: [{title: doc.title || 'Post', href: `/blog/${doc.slug}`}]}

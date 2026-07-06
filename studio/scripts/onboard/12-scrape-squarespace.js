@@ -53,14 +53,26 @@ const categorySlug = (name) =>
   decKeep(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
 const catBase = blogPath || 'blog'
+const srcHost = new URL(url).host
 // Rewrite a Squarespace tag URL (any domain — posts often link the client's
-// OLD domain) to the new-site category page. Non-tag hrefs pass through.
+// OLD domain) to the new-site category page, AND relativize absolute links
+// that point back at the source domain (internal blog-post / page links the
+// author wrote as full URLs). Left absolute, those render as EXTERNAL — new
+// tab, rel=noopener, and bouncing to the old Squarespace host — when they're
+// really on-site links that should stay same-tab and follow the new domain.
+// Genuinely external links (other domains) pass through untouched.
 function rewriteTagHref(href) {
   const m = href.match(/\/tag\/([^/?#"']+)/i)
-  if (!m) return href
-  let name
-  try { name = decodeURIComponent(m[1]) } catch { name = m[1] }
-  return `/${catBase}/category/${categorySlug(name.replace(/\+/g, ' '))}`
+  if (m) {
+    let name
+    try { name = decodeURIComponent(m[1]) } catch { name = m[1] }
+    return `/${catBase}/category/${categorySlug(name.replace(/\+/g, ' '))}`
+  }
+  try {
+    const u = new URL(href)
+    if (u.host === srcHost) return (u.pathname + u.search + u.hash) || '/'
+  } catch { /* relative/mailto/tel/anchor — leave as-is */ }
+  return href
 }
 
 // The post's real Squarespace tags live in <a class="blog-item-tag"> anchors
@@ -321,10 +333,19 @@ function bodyStructured(html) {
     }
     blocks.push(...nested)
   }
-  // de-dupe consecutive identical TEXT blocks; media items pass through
-  // (two adjacent images are normal, not duplicates).
+  // Squarespace galleries / lazy-load emit each image TWICE back-to-back —
+  // the real <img> plus a <noscript> (or data-src) twin pointing at the SAME
+  // source. The page-scrape fallback (posts beyond the RSS cap) sees both, so
+  // without this every gallery image shows up doubled in the post (e.g. the
+  // red-mill spotlight rendered all 12 photos twice). Drop an image whose
+  // source key matches the immediately-preceding image. TEXT de-dup (below)
+  // deliberately keeps DIFFERENT adjacent images — only exact-source repeats go.
+  const deimg = blocks.filter((b, i, arr) =>
+    !(b.img && arr[i - 1]?.img && imgKey(b.img) === imgKey(arr[i - 1].img)))
+  // de-dupe consecutive identical TEXT blocks; distinct media items pass
+  // through (two adjacent DIFFERENT images are normal, not duplicates).
   const txt = (b) => (b.runs || []).map((r) => r.text).join('')
-  return blocks
+  return deimg
     .filter((b, i, arr) => b.img || b.video || i === 0 || arr[i - 1].img || arr[i - 1].video || norm(txt(b)) !== norm(txt(arr[i - 1])))
     .slice(0, 300)
 }
@@ -385,9 +406,16 @@ async function main() {
     const html = await text(p)
     if (!html) continue
     const key = p.replace(origin, '').replace(/^\/|\/$/g, '') || 'home'
+    // The <title> tag is the source's real SEO title. On Squarespace it's often
+    // just the site name (per-page SEO titles left unset), but on WordPress /
+    // Wix / etc. it carries the real per-page title — capture it so the SEO
+    // backfill can reuse it cross-platform (67-page-seo strips the site-name
+    // suffix and skips it when it collapses to the site name).
+    const titleTag = dec((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || '')
     pages[key] = {
       url: p,
       title: meta(html, 'og:title'),
+      titleTag,
       description: meta(html, 'og:description'),
       text: stripToText(html).slice(0, 8000),
     }
@@ -424,6 +452,11 @@ async function main() {
       // video blocks — the RSS feed strips those from content:encoded, so
       // they must be merged in from here regardless of the body source.
       const pageHtml = await text(p)
+      // Excerpt = the post's meta description (og:description), i.e. the
+      // Squarespace per-post excerpt/SEO summary. Pull it for EVERY post — RSS
+      // <item>s don't carry it, so without this only the beyond-RSS tail got
+      // excerpts and the blog grid looked half-populated vs the old site.
+      excerpt = meta(pageHtml, 'og:description')
       let pageDateStr = null
       if (!encoded) {
         // og:title on Squarespace POST pages is often the site title —
@@ -431,7 +464,6 @@ async function main() {
         const headline = dec((pageHtml.match(/itemprop=["']headline["'][^>]*content=["']([^"']*)["']/i) ||
           pageHtml.match(/content=["']([^"']*)["'][^>]*itemprop=["']headline["']/i) || [])[1] || '')
         title = title || headline || meta(pageHtml, 'og:title')
-        excerpt = meta(pageHtml, 'og:description')
         coverUrl = coverUrl || meta(pageHtml, 'og:image')
         // Fall back to the CONTENT REGION, not the whole page: some posts
         // lack the sqs-html-content wrapper, and parsing the full page pulled
@@ -451,6 +483,15 @@ async function main() {
         coverAlt = altByImg.get(imgKey(coverUrl)) || ''
       }
       const body = bodyStructured(encoded)
+      // Some page-scraped posts (beyond the RSS cap) include the post title as
+      // the first heading in the content region — the template already renders
+      // the title above the body, so it showed up twice. Drop a leading h2/h3
+      // that EXACTLY repeats the title (exact match only, so genuine
+      // subheadings like "Want to build trust with your clients?" survive).
+      if (body.length && (body[0].s === 'h2' || body[0].s === 'h3') && body[0].runs) {
+        const h0 = body[0].runs.map((r) => r.text).join('').trim().toLowerCase()
+        if (h0 && h0 === title.trim().toLowerCase()) body.shift()
+      }
       // Merge native Squarespace videos (stripped from RSS) from the page,
       // positioned after the paragraph they follow.
       mergeNativeVideos(body, pageHtml)
