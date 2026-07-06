@@ -62,6 +62,57 @@ function stripToText(html) {
     .replace(/\s+/g, ' '))
 }
 
+// Convert a block's inner HTML into Portable Text runs, PRESERVING inline
+// formatting instead of flattening it to plain text:
+//   <strong>/<b>  -> 'strong' decorator
+//   <em>/<i>      -> 'em' decorator
+//   <a href>      -> carried as run.link (65-blog-import turns it into a link
+//                    markDef so the text stays clickable)
+// Styling <span>/<u> wrappers are unwrapped; <br> becomes a space. The old
+// stripToText flatten silently dropped every bold, italic, and link in the
+// blog — this is what makes migrated posts match the source formatting.
+function inlineRuns(html) {
+  const s = html
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/?(?:span|u|font)\b[^>]*>/gi, '')
+  const runs = []
+  let strong = 0, em = 0, link = null
+  const re = /<(\/?)(strong|b|em|i|a)\b([^>]*)>|([^<]+)|<[^>]+>/gi
+  let m
+  while ((m = re.exec(s))) {
+    if (m[4] != null) {
+      const text = dec(m[4]).replace(/\s+/g, ' ')
+      if (!text) continue
+      const marks = []
+      if (strong > 0) marks.push('strong')
+      if (em > 0) marks.push('em')
+      runs.push(link ? {text, marks, link} : {text, marks})
+      continue
+    }
+    if (!m[2]) continue // some other tag — ignore
+    const closing = m[1] === '/'
+    const tag = m[2].toLowerCase()
+    if (tag === 'strong' || tag === 'b') strong = Math.max(0, strong + (closing ? -1 : 1))
+    else if (tag === 'em' || tag === 'i') em = Math.max(0, em + (closing ? -1 : 1))
+    else if (tag === 'a') link = closing ? null : ((m[3].match(/href=["']([^"']+)["']/i) || [])[1] || null)
+  }
+  // Merge adjacent runs with identical formatting to keep spans tidy.
+  const same = (a, b) => (a.link || '') === (b.link || '') &&
+    a.marks.length === b.marks.length && a.marks.every((x, i) => x === b.marks[i])
+  const merged = []
+  for (const r of runs) {
+    const last = merged[merged.length - 1]
+    if (last && same(last, r)) last.text += r.text
+    else merged.push({text: r.text, marks: [...r.marks], ...(r.link ? {link: r.link} : {})})
+  }
+  // Trim outer whitespace of the block.
+  if (merged.length) {
+    merged[0].text = merged[0].text.replace(/^\s+/, '')
+    merged[merged.length - 1].text = merged[merged.length - 1].text.replace(/\s+$/, '')
+  }
+  return merged.filter((r) => r.text)
+}
+
 // Media extraction — Squarespace bodies carry real content in <img> tags
 // (posts are photo-heavy) and video embeds as embedly-wrapped YouTube/Vimeo
 // iframes. Dropping these was the PIF migration bug: text imported, 72+
@@ -155,7 +206,7 @@ function mergeNativeVideos(body, pageHtml) {
     const tail = nv.anchor.slice(-45).toLowerCase().replace(/\s+/g, ' ')
     if (tail) {
       for (let k = body.length - 1; k >= 0; k--) {
-        const t = ((body[k].runs && body[k].runs[0] && body[k].runs[0].text) || '')
+        const t = ((body[k].runs || []).map((r) => r.text).join(''))
           .toLowerCase().replace(/\s+/g, ' ')
         if (t && (t.includes(tail) || tail.includes(t.slice(-45)))) { idx = k; break }
       }
@@ -190,9 +241,8 @@ function bodyStructured(html) {
     if (m[3]) {
       const li = m[3].toLowerCase() === 'ol' ? 'number' : 'bullet'
       for (const liM of m[4].matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)) {
-        const t = stripToText(liM[1])
-        // runs shape so 65-blog-import maps it to Portable Text spans
-        if (t) blocks.push({s: 'normal', li, runs: [{text: t, marks: []}]})
+        const runs = inlineRuns(liM[1])
+        if (runs.length) blocks.push({s: 'normal', li, runs})
       }
       continue
     }
@@ -211,21 +261,21 @@ function bodyStructured(html) {
       const item = inner[0].startsWith('<img') ? imgItem(inner[0]) : videoItem(inner[0])
       if (item) nested.push(item)
     }
-    const t = stripToText(m[2])
-    if (t) {
+    const runs = inlineRuns(m[2])
+    if (runs.length) {
       if (indented) {
-        blocks.push({s: 'normal', li: 'bullet', runs: [{text: t, marks: []}]})
+        blocks.push({s: 'normal', li: 'bullet', runs})
       } else {
         const s = tag === 'h1' || tag === 'h2' ? 'h2' : (tag === 'h3' || tag === 'h4') ? 'h3'
           : tag === 'blockquote' ? 'blockquote' : 'normal'
-        blocks.push({s, runs: [{text: t, marks: []}]})
+        blocks.push({s, runs})
       }
     }
     blocks.push(...nested)
   }
   // de-dupe consecutive identical TEXT blocks; media items pass through
   // (two adjacent images are normal, not duplicates).
-  const txt = (b) => (b.runs && b.runs[0] && b.runs[0].text) || ''
+  const txt = (b) => (b.runs || []).map((r) => r.text).join('')
   return blocks
     .filter((b, i, arr) => b.img || b.video || i === 0 || arr[i - 1].img || arr[i - 1].video || norm(txt(b)) !== norm(txt(arr[i - 1])))
     .slice(0, 300)
@@ -353,7 +403,7 @@ async function main() {
         for (let i = body.length - 1; i >= 0; i--) {
           if (body[i].img && imgKey(body[i].img) === ck) {
             const next = body[i + 1]
-            const nextText = next && next.runs && next.runs[0] ? next.runs[0].text : ''
+            const nextText = next && next.runs ? next.runs.map((r) => r.text).join('') : ''
             if (next && !next.img && !next.video && nextText && nextText.length <= 120) {
               body.splice(i + 1, 1) // orphaned caption
             }
