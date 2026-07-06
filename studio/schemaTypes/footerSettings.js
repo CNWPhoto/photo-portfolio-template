@@ -28,12 +28,13 @@ export default {
       title: 'Background Tone',
       type: 'string',
       description:
-        'Which background shade from the site palette the footer uses. Light is the main page background; Alt is a slightly darker shade; Dark is the full dark section color. Mirrors the per-section Background Tone control.',
+        'Which background shade from the site palette the footer uses. Light is the main page background; Alt is a slightly darker shade; Dark is the full dark section color; Vibrant is the palette’s bold accent band (text auto-contrasts). Mirrors the per-section Background Tone control.',
       options: {
         list: [
           {title: 'Light', value: 'default'},
           {title: 'Alt (subtle darker)', value: 'alt'},
           {title: 'Dark', value: 'dark'},
+          {title: 'Vibrant', value: 'vibrant'},
         ],
         layout: 'radio',
         direction: 'horizontal',
