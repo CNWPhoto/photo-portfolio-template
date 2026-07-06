@@ -89,6 +89,44 @@ CF_API_TOKEN=… node studio/scripts/onboard/90-domain-cutover.js \
 # already attached in the dashboard.
 ```
 
+## Blog migration fidelity checklist (Squarespace/WordPress → Sanity)
+
+**Run this AFTER `65-blog-import`, BEFORE telling the client the blog is done.** A migration
+that "imported without errors" is NOT one that matches the source. The PIF Squarespace
+migration (2026-07) ran clean but silently lost content that surfaced as complaints weeks
+later — nine distinct bugs, every one invisible unless you diff the imported result against the
+live source. The scraper/importer now fix all nine; this checklist catches regressions and
+platform quirks the tooling doesn't yet know about.
+
+Diff the imported dataset against the live source:
+
+- [ ] **Post count** — sitemap post URLs (minus `/tag/`, `/category/`) == blogPost docs. NOT
+      the RSS count: Squarespace RSS caps at 20 items, so post *existence* comes from the
+      sitemap; older posts only exist via the page-scrape fallback.
+- [ ] **Dates + titles** correct on beyond-RSS (page-scraped) posts (og:title on a post page
+      is the SITE title — real title is `itemprop="headline"`).
+- [ ] **Body images** — source `<img>` count ≈ image blocks (allowing the featured-image dedup).
+- [ ] **Videos** — grep every source PAGE for `youtube|vimeo|sqs-video-wrapper|embedly`; compare
+      ids to `videoEmbed` blocks. TWO embed styles: embedly `<iframe>` (in RSS) and native
+      `sqs-video-wrapper` (page-only — RSS strips it; renders as a static poster, so a "video is
+      just a photo" report means this one was missed).
+- [ ] **No duplicate featured image** — cover source filename ∉ body image source filenames
+      (cover + body copy are often different SIZES of one asset, so asset-id dedup misses it).
+- [ ] **Inline formatting** — source counts of `<strong>/<b>`, `<em>/<i>`, `<a>` (http+tel+mail)
+      ≈ preserved marks/markDefs. Check a formatted phrase renders WITH its surrounding spaces
+      ("what *x* is", not "what*x*is") and a query-string href isn't double-encoded (`&amp;amp;`).
+- [ ] **Categories** — real per-post tags (`<a class="blog-item-tag">`, NOT the body's
+      all-categories nav, NOT RSS `<category>` which is empty) migrated to `blogCategory` docs +
+      assigned; "browse category" footer links point at the NEW site; category pages resolve and
+      list the right posts; unused donor-seed categories removed.
+- [ ] **Spacing** — directory/listing content (indented `data-indent` sub-items) renders as list
+      items, not a stack of full-margin paragraphs.
+- [ ] **Editor-touched posts** — check `_updatedAt` > migration date before re-importing; `--skip`
+      those and flag the owner. But "she edited it" ≠ "she added content" — diff her text against
+      the source; if it's a subset (pure restructuring), re-import is safely additive.
+- [ ] Visually spot-check 2-3 posts on the live site: formatting renders, links clickable and
+      internal ones open same-tab, videos play, no duplicate image.
+
 ## Recovery / gotchas
 
 - **Every script is re-runnable.** `20-env` won't clobber an existing
