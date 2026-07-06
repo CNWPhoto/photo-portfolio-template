@@ -4,7 +4,7 @@ import Nav from '../components/Nav.astro';
 import DemoBanner from '../components/DemoBanner.astro';
 import '../styles/palette.css';
 import { getClient, urlFor } from '../lib/sanity.js';
-import { fontBySlug, fontDisplayName } from '../lib/fontCatalog.js';
+import { buildFontHead } from '../lib/fontHead.js';
 import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
@@ -86,15 +86,7 @@ const cleanSocial = social ? stegaClean(social) : null;
 
 
 const colorTheme  = cleanSettings?.defaultPalette || 'classic-cream';
-const fontTheme   = cleanSettings?.fontTheme  || 'classic-editorial';
 const subheadingCase = cleanSettings?.subheadingCase || 'uppercase';
-const allowedFontWeights = new Set(['300', '400', '500', '600', '700']);
-const headingWeight = allowedFontWeights.has(cleanSettings?.headingWeight)
-  ? cleanSettings.headingWeight
-  : null;
-const bodyWeight = allowedFontWeights.has(cleanSettings?.bodyWeight)
-  ? cleanSettings.bodyWeight
-  : null;
 const siteName    = cleanSettings?.siteName   || 'Pet Photography';
 const logoType    = cleanSettings?.logoType   || 'text';
 const logoImage   = cleanSettings?.logoImage  ?? null;
@@ -148,104 +140,11 @@ const rootPaletteCss = activePalette
       .filter(Boolean)
       .join('\n')}\n}`
   : '';
-const typographyCss = [
-  headingWeight ? `  --heading-weight: ${headingWeight};` : null,
-  bodyWeight ? `  --body-weight: ${bodyWeight};` : null,
-]
-  .filter(Boolean)
-  .join('\n');
-const typographyOverrideCss = typographyCss ? `:root {\n${typographyCss}\n}` : '';
-
-// Font themes split into heading + body params so customFonts can override
-// either side individually — when an editor uploads a custom heading font,
-// we skip the heading half of the Google Fonts URL (no wasted bytes), and
-// the same for body. If both are overridden, no Google Fonts URL is emitted
-// at all. Code below this only does work when customFonts is actually set.
-const FONT_THEMES: Record<string, {heading: string; body: string}> = {
-  'classic-editorial': {heading: 'Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700', body: 'Jost:wght@300;400;500;600;700'},
-  'romantic-script':   {heading: 'Playfair+Display:ital,wght@0,400;0,700;1,400;1,700', body: 'Lato:wght@300;400;700'},
-  'modern-luxury':     {heading: 'DM+Serif+Display:ital@0;1', body: 'DM+Sans:wght@300;400;500;600;700'},
-  'soft-contemporary': {heading: 'Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700', body: 'Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700'},
-  'bold-editorial':    {heading: 'Libre+Baskerville:ital,wght@0,400;0,700;1,400', body: 'Libre+Franklin:wght@300;400;500;600;700'},
-  'airy-minimal':      {heading: 'Tenor+Sans', body: 'Raleway:wght@300;400;500;600;700'},
-};
-
-// Uploaded brand fonts — deliberately file-only (no family/weight/style
-// declarations for editors to get wrong; the Kris lesson). Family names are
-// fixed internal identifiers; @font-face descriptors are derived, not asked.
-type UploadedFont = {url?: string; extension?: string};
-const headingFontFile: UploadedFont | null = (cleanSettings as any)?.headingFontFile ?? null;
-const bodyFontFile: UploadedFont | null = (cleanSettings as any)?.bodyFontFile ?? null;
-const useCustomHeading = !!headingFontFile?.url;
-const useCustomBody = !!bodyFontFile?.url;
-
-const activeTheme = FONT_THEMES[fontTheme] ?? FONT_THEMES['classic-editorial'];
-
-// Curated Google Font picks (siteSettings.headingFont / bodyFont). Per-side
-// precedence: uploaded custom font > curated pick > font theme. Values are
-// catalog slugs; 'default' or anything unknown resolves to undefined and
-// the theme side applies untouched. The catalog is pre-verified against
-// Google's css2 API (scripts/verify-font-catalog.mjs) — an unknown family
-// or weight in a css2 URL would 400 the ENTIRE request and drop every font.
-const headingPick = !useCustomHeading ? fontBySlug[cleanSettings?.headingFont] : undefined;
-const bodyPick = !useCustomBody ? fontBySlug[cleanSettings?.bodyFont] : undefined;
-const css2Param = (f: {family: string; axes: string | null}) =>
-  `family=${f.family}${f.axes ? `:${f.axes}` : ''}`;
-
-const googleFontParams: string[] = [];
-if (!useCustomHeading) googleFontParams.push(headingPick ? css2Param(headingPick) : `family=${activeTheme.heading}`);
-if (!useCustomBody) googleFontParams.push(bodyPick ? css2Param(bodyPick) : `family=${activeTheme.body}`);
-const fontUrl = googleFontParams.length > 0
-  ? `https://fonts.googleapis.com/css2?${googleFontParams.join('&')}&display=swap`
-  : null;
-
-// Build @font-face + CSS variable override block — only runs when at least
-// one custom side is configured. Output is empty string otherwise, and the
-// <style> tag below is conditionally rendered, so zero overhead when not used.
-const FORMAT_MAP: Record<string, string> = {woff2: 'woff2', woff: 'woff', ttf: 'truetype', otf: 'opentype'};
-const fontSrc = (f: UploadedFont) =>
-  `src:url('${f.url}') format('${FORMAT_MAP[(f.extension || '').toLowerCase()] || 'woff2'}')`;
-const CUSTOM_HEADING_FAMILY = 'Custom Heading Font';
-const CUSTOM_BODY_FAMILY = 'Custom Body Font';
-const customFontCssParts: string[] = [];
-// The var overrides carry !important deliberately: fontTheme is always
-// defaulted (see ~line 95), so <html data-font='…'> always matches a theme
-// rule at specificity 0,1,1 — a plain :root override (0,1,0) loses in every
-// configuration and the custom family never resolves on any element.
-// !important wins the cascade regardless of selector specificity, while the
-// theme rule still supplies whichever side isn't custom.
-if (useCustomHeading && headingFontFile) {
-  // Heading face: declare the single file for BOTH styles across the full
-  // weight range, so the browser uses it exactly as designed everywhere —
-  // no synthetic bold distorting display faces, and no double-slant when
-  // the uploaded face is itself an italic cut (template headings request
-  // italic). Editors upload one file; descriptors are our problem.
-  const src = fontSrc(headingFontFile);
-  customFontCssParts.push(
-    `@font-face{font-family:'${CUSTOM_HEADING_FAMILY}';${src};font-weight:100 900;font-style:normal;font-display:swap;}` +
-    `@font-face{font-family:'${CUSTOM_HEADING_FAMILY}';${src};font-weight:100 900;font-style:italic;font-display:swap;}`,
-  );
-  customFontCssParts.push(`:root{--font-heading:'${CUSTOM_HEADING_FAMILY}',Georgia,serif !important;}`);
-}
-if (useCustomBody && bodyFontFile) {
-  // Body face: default descriptors (400/normal) on purpose — body text
-  // NEEDS synthetic bold for <strong> and synthetic italic for <em> to
-  // keep emphasis working from a single uploaded file.
-  customFontCssParts.push(
-    `@font-face{font-family:'${CUSTOM_BODY_FAMILY}';${fontSrc(bodyFontFile)};font-display:swap;}`,
-  );
-  customFontCssParts.push(`:root{--font-body:'${CUSTOM_BODY_FAMILY}',system-ui,sans-serif !important;}`);
-}
-// Curated picks reuse the identical override mechanism (and therefore the
-// same cascade behavior and bridge head-swap slot). No @font-face needed —
-// the Google css2 stylesheet supplies the faces; we only repoint the vars.
-if (headingPick) {
-  customFontCssParts.push(`:root{--font-heading:'${fontDisplayName(headingPick.family)}',${headingPick.fallback} !important;}`);
-}
-if (bodyPick) {
-  customFontCssParts.push(`:root{--font-body:'${fontDisplayName(bodyPick.family)}',${bodyPick.fallback} !important;}`);
-}
-const customFontCss = customFontCssParts.join('');
+// Font emission (theme/pick/upload precedence, css2 URL, custom @font-face,
+// weight overrides) lives in src/lib/fontHead.js — shared with the
+// /api/preview-style endpoint so the preview bridge's style fast path can
+// never drift from what this layout renders.
+const { fontTheme, fontUrl, customFontCss, typographyOverrideCss } = buildFontHead(cleanSettings);
 
 // Text color preset palette — only applied on light themes
 const LIGHT_THEMES = ['classic-cream', 'warm-studio', 'cool-minimal', 'forest-sage'];
