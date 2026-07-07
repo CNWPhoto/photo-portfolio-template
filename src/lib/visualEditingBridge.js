@@ -13,6 +13,7 @@
 
 import { enableVisualEditing } from '@sanity/visual-editing'
 import { canonPath } from './previewPath.js'
+import { recordVisit, isStaleEcho } from './previewTrail.js'
 
 // Sanity Studio autosaves drafts on idle (~1s of no keystrokes). We add a
 // small additional debounce on top so that a pause mid-sentence doesn't fire
@@ -30,14 +31,14 @@ let inflight = null
 // Module eval ≈ this page's load time (the bridge is imported per full page
 // load in MPA). Used by the anti-bounce guard below.
 const PAGE_LOADED_AT = Date.now()
-// Presentation sometimes re-emits a STALE previous URL a second or two after a
-// navigation (amplified by slow preview SSR bypassing the edge cache), which
-// snapped the editor back to the page they just left. We ignore exactly that
-// reversal for a short window after the new page loads.
-// Precise (from,to) matching (see canonPath) lets this run a bit longer than
-// the old 4s without risking false drops — it only ever suppresses an update
-// that is EXACTLY "back to the page we just left", which covers slow preview
-// reconnects that used to land the echo after the window expired.
+// Presentation re-emits STALE previous URLs a second or two after a navigation
+// (amplified by slow preview SSR bypassing the edge cache), which snapped the
+// editor back to a page they just left. During a run of QUICK navigations
+// (A→B→C) several such echoes are in flight at once, each pointing at a
+// different earlier page — so the guard tracks a full trail (below), not one
+// hop, and ignores any update pointing at a page we visited BEFORE the current
+// one for this window after arriving. After the window we've settled on the
+// page and every navigation goes through, so nothing stays unreachable.
 const BOUNCE_WINDOW_MS = 6000
 
 // The library hands us a stable `navigate` callback (via subscribe) that we may
@@ -57,6 +58,28 @@ function reassertLocation(path) {
     moduleNavigate({ type: 'replace', title: document.title, url: path })
   } catch {
     /* non-fatal — best-effort correction */
+  }
+}
+
+// ── Navigation trail (multi-hop anti-bounce) ─────────────────────────────────
+// The pure trail logic lives in previewTrail.js (unit-tested); here we just wrap
+// it with the sessionStorage I/O so the trail survives each MPA reload.
+const TRAIL_KEY = '__pv_trail'
+
+function readTrail() {
+  try {
+    const t = JSON.parse(sessionStorage.getItem(TRAIL_KEY) || '[]')
+    return Array.isArray(t) ? t : []
+  } catch {
+    return []
+  }
+}
+
+function saveVisit(path, t) {
+  try {
+    sessionStorage.setItem(TRAIL_KEY, JSON.stringify(recordVisit(readTrail(), path, t)))
+  } catch {
+    /* sessionStorage unavailable — the guard just lets navigations through */
   }
 }
 
@@ -89,30 +112,21 @@ function buildHistoryAdapter() {
       // echo of the CURRENT page, so we never round-trip through a 301 back to
       // ourselves (which used to re-arm the bounce race).
       if (here === target) return
-      // Anti-bounce: drop an update that tries to send us BACK to the page we
-      // just navigated away from, within BOUNCE_WINDOW_MS of this page loading,
-      // and re-assert our real location so Studio stops re-emitting the stale
-      // URL. A genuine back-navigation the editor makes later still goes through.
-      try {
-        const nav = JSON.parse(sessionStorage.getItem('__pv_nav') || 'null')
-        if (
-          nav && nav.to === here && nav.from === target &&
-          Date.now() - PAGE_LOADED_AT < BOUNCE_WINDOW_MS
-        ) {
-          reassertLocation(here)
-          return
-        }
-      } catch {
-        /* sessionStorage unavailable — skip the guard */
+      // Anti-bounce (multi-hop): drop an update pointing at a page we visited
+      // BEFORE arriving here, while still within BOUNCE_WINDOW_MS of that
+      // arrival — that's a stale re-emit of a page we just left (including two+
+      // hops back during quick A→B→C clicking, which the old single-hop record
+      // missed). Re-assert our real location so Studio's address bar converges.
+      // Past the window every navigation goes through, so nothing stays stuck.
+      const now = Date.now()
+      if (isStaleEcho(readTrail(), here, target, now, BOUNCE_WINDOW_MS, PAGE_LOADED_AT)) {
+        reassertLocation(here)
+        return
       }
-      // Record this hop so the destination page can recognize a bounce back.
-      try {
-        sessionStorage.setItem('__pv_nav', JSON.stringify({ from: here, to: target }))
-      } catch {
-        /* non-fatal */
-      }
-      // Navigate to the CANONICAL (slashed) URL so the browser doesn't eat an
-      // extra 301 — part of what let the stale echo race the guard.
+      // Genuine navigation — record the intended hop (so a racing echo for it is
+      // recognized on arrival) and go to the CANONICAL (slashed) URL so the
+      // browser doesn't eat an extra 301, part of what let echoes race the guard.
+      saveVisit(target, now)
       if (update.type === 'replace') window.location.replace(target)
       else window.location.assign(target)
     },
@@ -359,6 +373,10 @@ async function seedBaseline() {
 }
 
 export function mount() {
+  // Seed the trail with the page we loaded on, BEFORE enableVisualEditing can
+  // deliver any update() — so the multi-hop anti-bounce guard knows "here".
+  saveVisit(canonPath(window.location.href), PAGE_LOADED_AT)
+
   if ('requestIdleCallback' in window) requestIdleCallback(() => seedBaseline())
   else setTimeout(seedBaseline, 1000)
 
