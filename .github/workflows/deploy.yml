@@ -98,6 +98,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Roster drift gate: the Studio roster (studio/.env.*-backup) and the
+      # site-deploy roster (the clients matrix below) must list the SAME clients
+      # with matching projectId + host, or a client silently drops out of a
+      # fan-out. Read-only — fails the demo job (and, via needs: demo, the whole
+      # fan-out) on drift; never changes a deploy. The GitHub-Environments tier
+      # is best-effort (warns, never fails).
+      - name: Client roster drift check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node studio/scripts/check-client-drift.js
+
       # Unit tests gate the whole pipeline: the client jobs `needs: demo`, so
       # a failing test here blocks the fan-out to every client.
       - name: Test

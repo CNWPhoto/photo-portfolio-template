@@ -11,6 +11,7 @@
     "deploy": "dotenv -e .env -- sanity deploy",
     "deploy-all": "node scripts/deploy-all-studios.js",
     "migrate-all": "node scripts/migrate-all-datasets.js",
+    "check-drift": "node scripts/check-client-drift.js",
     "deploy-graphql": "dotenv -e .env -- sanity graphql deploy",
     "seed": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token",
     "seed:replace": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token -- --replace",
