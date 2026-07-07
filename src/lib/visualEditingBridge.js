@@ -12,6 +12,7 @@
 //      images, scroll resets, and the full Astro SSR cold-path round-trip.
 
 import { enableVisualEditing } from '@sanity/visual-editing'
+import { canonPath } from './previewPath.js'
 
 // Sanity Studio autosaves drafts on idle (~1s of no keystrokes). We add a
 // small additional debounce on top so that a pause mid-sentence doesn't fire
@@ -33,59 +34,87 @@ const PAGE_LOADED_AT = Date.now()
 // navigation (amplified by slow preview SSR bypassing the edge cache), which
 // snapped the editor back to the page they just left. We ignore exactly that
 // reversal for a short window after the new page loads.
-const BOUNCE_WINDOW_MS = 4000
+// Precise (from,to) matching (see canonPath) lets this run a bit longer than
+// the old 4s without risking false drops — it only ever suppresses an update
+// that is EXACTLY "back to the page we just left", which covers slow preview
+// reconnects that used to land the echo after the window expired.
+const BOUNCE_WINDOW_MS = 6000
 
-const pathOf = (u) => {
+// The library hands us a stable `navigate` callback (via subscribe) that we may
+// call at ANY time to report the iframe's true location. We keep a module ref
+// so the anti-bounce path can RE-ASSERT our location — correcting Studio's
+// stale address bar so it stops re-emitting the old URL. The earlier fix only
+// DROPPED the echo, leaving Studio's state stale, so a late/second echo still
+// slipped through and snapped back; re-asserting is what converges the two
+// sides. Bounded to once per page load so a genuinely-disagreeing Studio can't
+// spin us in a postMessage loop.
+let moduleNavigate = null
+let reassertedThisLoad = false
+function reassertLocation(path) {
+  if (reassertedThisLoad || !moduleNavigate) return
+  reassertedThisLoad = true
   try {
-    const url = new URL(u, window.location.href)
-    return `${url.pathname}${url.search}${url.hash}`
+    moduleNavigate({ type: 'replace', title: document.title, url: path })
   } catch {
-    return u
+    /* non-fatal — best-effort correction */
   }
 }
 
 function buildHistoryAdapter() {
   return {
     subscribe: (navigate) => {
+      moduleNavigate = navigate
       navigate({
         type: 'push',
         title: document.title,
-        url: `${window.location.pathname}${window.location.search}${window.location.hash}`,
+        url: canonPath(window.location.href),
       })
-      return () => {}
+      return () => {
+        if (moduleNavigate === navigate) moduleNavigate = null
+      }
     },
     update: (update) => {
       if (update.type === 'pop') {
         window.history.back()
         return
       }
-      const here = `${window.location.pathname}${window.location.search}${window.location.hash}`
-      // Normalize update.url to a path. Presentation is configured with a
-      // preview `origin`, so update.url arrives as a FULL URL — comparing it
-      // against our bare path (the old code) never matched, so the same-URL
-      // guard never fired and every sync echo still triggered a navigation.
-      const target = pathOf(update.url)
-      // Already showing this URL → nothing to do (kills the reload churn).
+      // Canonicalize BOTH sides to the site's trailing-slash form. Presentation
+      // echoes the slash-less resolver path ("/about"); our real location is
+      // "/about/" (trailingSlash:'always'). Without this the guards below never
+      // matched on any non-root page — the root cause of the intermittent
+      // jump-back. See src/lib/previewPath.js.
+      const here = canonPath(window.location.href)
+      const target = canonPath(update.url)
+      // Already showing this URL → nothing to do. Also absorbs the slash-less
+      // echo of the CURRENT page, so we never round-trip through a 301 back to
+      // ourselves (which used to re-arm the bounce race).
       if (here === target) return
       // Anti-bounce: drop an update that tries to send us BACK to the page we
-      // just navigated away from, within BOUNCE_WINDOW_MS of this page loading.
-      // A genuine back-navigation the editor makes later (after the window)
-      // still goes through.
+      // just navigated away from, within BOUNCE_WINDOW_MS of this page loading,
+      // and re-assert our real location so Studio stops re-emitting the stale
+      // URL. A genuine back-navigation the editor makes later still goes through.
       try {
         const nav = JSON.parse(sessionStorage.getItem('__pv_nav') || 'null')
         if (
           nav && nav.to === here && nav.from === target &&
           Date.now() - PAGE_LOADED_AT < BOUNCE_WINDOW_MS
         ) {
+          reassertLocation(here)
           return
         }
-      } catch { /* sessionStorage unavailable — skip the guard */ }
+      } catch {
+        /* sessionStorage unavailable — skip the guard */
+      }
       // Record this hop so the destination page can recognize a bounce back.
       try {
-        sessionStorage.setItem('__pv_nav', JSON.stringify({from: here, to: target}))
-      } catch { /* non-fatal */ }
-      if (update.type === 'replace') window.location.replace(update.url)
-      else window.location.assign(update.url)
+        sessionStorage.setItem('__pv_nav', JSON.stringify({ from: here, to: target }))
+      } catch {
+        /* non-fatal */
+      }
+      // Navigate to the CANONICAL (slashed) URL so the browser doesn't eat an
+      // extra 301 — part of what let the stale echo race the guard.
+      if (update.type === 'replace') window.location.replace(target)
+      else window.location.assign(target)
     },
   }
 }
