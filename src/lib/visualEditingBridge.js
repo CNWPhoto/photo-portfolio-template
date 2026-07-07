@@ -14,7 +14,6 @@
 import { enableVisualEditing } from '@sanity/visual-editing'
 import { canonPath } from './previewPath.js'
 import { isStaleBounce } from './previewNav.js'
-import { pvlog } from './previewDebug.js' // DIAG — remove with the diagnostic
 
 // Sanity Studio autosaves drafts on idle (~1s of no keystrokes). We add a
 // small additional debounce on top so that a pause mid-sentence doesn't fire
@@ -70,14 +69,12 @@ function buildHistoryAdapter() {
           /* non-fatal */
         }
       }
-      pvlog('SUB', `here=${here} mk=${marker?.url || '-'}→${marker?.from || '-'} →report`) // DIAG
       // Report our real location so Studio syncs to where the iframe actually is.
       navigate({ type: 'push', title: document.title, url: here })
       return () => {}
     },
     update: (update) => {
       if (update.type === 'pop') {
-        pvlog('UPD', 'pop → history.back') // DIAG
         window.history.back()
         return
       }
@@ -87,19 +84,16 @@ function buildHistoryAdapter() {
       // guards below missed on every non-root/preview page.
       const here = canonPath(window.location.href)
       const target = canonPath(update.url)
-      if (here === target) {
-        pvlog('UPD', `${update.type} raw="${update.url}" →${target} NOOP`) // DIAG
-        return
-      }
+      // Already showing this URL → nothing to do (also absorbs the slash-less /
+      // perspective-only echo of the current page).
+      if (here === target) return
       // Anti-bounce: a fresh pending nav away from `target` means Studio is
       // re-asserting the page we're leaving before our new page reported. Ignore
-      // it; the new page will report on mount and Studio re-syncs forward.
+      // it; the new page will report on mount and Studio re-syncs forward. (Only
+      // the pre-report race is caught window-free; a bounce after the new page
+      // reports is indistinguishable from a genuine back-click.)
       const marker = readMarker()
-      if (isStaleBounce(marker, target, Date.now(), STUDIO_NAV_TTL)) {
-        pvlog('UPD', `${update.type} raw="${update.url}" →${target} IGNORE-BOUNCE (pending ${marker.url})`) // DIAG
-        return
-      }
-      pvlog('UPD', `${update.type} raw="${update.url}" →${target} here=${here} NAV`) // DIAG
+      if (isStaleBounce(marker, target, Date.now(), STUDIO_NAV_TTL)) return
       // Record the pending hop (url we're going to, page we're leaving) so a
       // racing bounce back to `here` is recognized and ignored.
       try {
