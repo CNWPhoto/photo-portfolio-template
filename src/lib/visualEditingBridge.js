@@ -14,6 +14,7 @@
 import { enableVisualEditing } from '@sanity/visual-editing'
 import { canonPath } from './previewPath.js'
 import { navDecision } from './previewNav.js'
+import { pvlog } from './previewDebug.js' // DIAG — remove with the diagnostic
 
 // Sanity Studio autosaves drafts on idle (~1s of no keystrokes). We add a
 // small additional debounce on top so that a pause mid-sentence doesn't fire
@@ -57,6 +58,7 @@ function buildHistoryAdapter() {
       try {
         const marker = JSON.parse(sessionStorage.getItem(STUDIO_NAV_KEY) || 'null')
         const decision = navDecision(marker, here, Date.now(), STUDIO_NAV_TTL)
+        pvlog('SUB', `here=${here} mk=${marker?.url || '-'} ${decision.catchUp ? '→CATCHUP ' + decision.catchUp : '→report'}`) // DIAG
         if (decision.catchUp) {
           // Superseded: a newer Studio navigation moved on while this (slow)
           // page was still loading. Catch up to the real target rather than
@@ -77,6 +79,7 @@ function buildHistoryAdapter() {
     },
     update: (update) => {
       if (update.type === 'pop') {
+        pvlog('UPD', 'pop → history.back') // DIAG
         window.history.back()
         return
       }
@@ -86,6 +89,7 @@ function buildHistoryAdapter() {
       // non-root page — see src/lib/previewPath.js.
       const here = canonPath(window.location.href)
       const target = canonPath(update.url)
+      pvlog('UPD', `${update.type} target=${target} here=${here} ${here === target ? '→noop' : '→NAV'}`) // DIAG
       // Already showing this URL → nothing to do. Also absorbs the slash-less
       // echo of the CURRENT page, so we never round-trip through a 301 back to
       // ourselves.
