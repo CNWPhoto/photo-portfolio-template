@@ -1,20 +1,24 @@
-// Decide what a freshly-mounted Presentation preview page should do, given the
-// Studio-navigation marker `update` left in sessionStorage.
+// Decide whether an incoming Studio navigation is a STALE BOUNCE that should be
+// ignored, using the marker `update` writes before each navigation.
 //
-// Studio's own handler sets its URL to whatever location the iframe reports, so:
-//   - the intended page (or an organic load) must REPORT, so Studio syncs to
-//     where the iframe actually is;
-//   - a STALE page that mounted late — after a newer Studio nav superseded it —
-//     must instead CATCH UP to that newer target, because reporting its stale
-//     URL is exactly what drags Studio back (the "jump back" bounce).
+// The marker records the page we're currently navigating TO (`url`) and the page
+// we came FROM (`from`). While that navigation is still pending (the new page is
+// slow to load and hasn't reported yet), Studio can re-assert the URL we just
+// left — its `params.preview` reverted because our new location hadn't synced.
+// Obeying that snaps the editor back (the "jump back"). So: if an update targets
+// the page we're navigating away from, while the forward nav is still pending
+// and fresh, it's that bounce — ignore it. When the new page finally loads it
+// reports and Studio re-syncs forward.
 //
-// Pure so it can be unit-tested; the bridge performs the side effects (navigate,
-// location.replace, marker removal) based on the returned decision.
-//
-// `marker` is {url, t} or null. Returns {catchUp: <url>} or {report: true}.
-export function navDecision(marker, here, now, ttl) {
-  const fresh =
-    marker && typeof marker.url === 'string' && typeof marker.t === 'number' && now - marker.t < ttl
-  if (fresh && marker.url !== here) return { catchUp: marker.url }
-  return { report: true }
+// Pure so it can be unit-tested. `marker` is {url, from, t} or null.
+export function isStaleBounce(marker, target, now, ttl) {
+  return !!(
+    marker &&
+    typeof marker.url === 'string' &&
+    typeof marker.from === 'string' &&
+    typeof marker.t === 'number' &&
+    now - marker.t < ttl &&
+    marker.from === target && // Studio wants us back at the page we're leaving
+    marker.url !== target // and it isn't just confirming where we're headed
+  )
 }

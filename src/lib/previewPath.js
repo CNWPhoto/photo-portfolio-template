@@ -18,7 +18,15 @@ export function canonPath(u, base) {
   try {
     const url = new URL(u, base || fallbackBase)
     pathname = url.pathname
-    rest = `${url.search}${url.hash}`
+    // Drop Sanity preview control params (e.g. sanity-preview-perspective).
+    // Presentation adds/removes these and our site keys preview off a cookie, so
+    // "/portfolio/" and "/portfolio/?sanity-preview-perspective=drafts" are the
+    // SAME page — treating them as different URLs drove reconnect/reload churn.
+    for (const k of [...url.searchParams.keys()]) {
+      if (k.startsWith('sanity-')) url.searchParams.delete(k)
+    }
+    const qs = url.searchParams.toString()
+    rest = `${qs ? `?${qs}` : ''}${url.hash}`
   } catch {
     // u wasn't parseable as a URL (and no usable base) — treat it as a path.
     const m = /^([^?#]*)([?#].*)?$/.exec(u || '/')

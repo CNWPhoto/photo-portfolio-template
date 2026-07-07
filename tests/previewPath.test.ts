@@ -46,4 +46,19 @@ describe('canonPath — trailing-slash canonicalization', () => {
     const once = canonPath('/about', BASE)
     expect(canonPath(once, BASE)).toBe(once)
   })
+
+  it('strips Sanity preview control params (perspective churn)', () => {
+    expect(canonPath('/portfolio/?sanity-preview-perspective=drafts', BASE)).toBe('/portfolio/')
+    expect(canonPath('/portfolio?sanity-preview-perspective=drafts', BASE)).toBe('/portfolio/')
+    // a bare page and its perspective-qualified twin canonicalize equal
+    expect(canonPath('/portfolio/?sanity-preview-perspective=drafts', BASE)).toBe(
+      canonPath('/portfolio/', BASE),
+    )
+  })
+
+  it('keeps NON-sanity query params while dropping sanity ones', () => {
+    expect(canonPath('/blog/post?page=2&sanity-preview-perspective=drafts', BASE)).toBe(
+      '/blog/post/?page=2',
+    )
+  })
 })

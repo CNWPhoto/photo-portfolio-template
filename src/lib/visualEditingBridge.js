@@ -13,7 +13,7 @@
 
 import { enableVisualEditing } from '@sanity/visual-editing'
 import { canonPath } from './previewPath.js'
-import { navDecision } from './previewNav.js'
+import { isStaleBounce } from './previewNav.js'
 import { pvlog } from './previewDebug.js' // DIAG — remove with the diagnostic
 
 // Sanity Studio autosaves drafts on idle (~1s of no keystrokes). We add a
@@ -29,50 +29,48 @@ let refreshTimer = null
 let styleTimer = null
 let inflight = null
 
-// ── Echo suppression at the source ───────────────────────────────────────────
-// The "jump back" and its mirror ("settings change but the page doesn't") are
-// two faces of ONE race. Studio's handler is `navigate(data.url)` — it SETS ITS
-// OWN url to whatever location the iframe reports, ignoring push/replace. So on
-// an MPA reload:
-//   - reporting the CURRENT page is REQUIRED — it's how Studio learns where the
-//     iframe landed and corrects a mismatch (never reporting left Studio showing
-//     the new page's settings while the iframe stayed on the old one);
-//   - but a STALE page that mounts late — after the editor already clicked
-//     onward — must NOT report, or that late report drags Studio back to it
-//     (the bounce).
-// We tell them apart with a marker `update` drops before navigating: the URL of
-// the LATEST Studio-initiated target. When a page mounts, if the marker points
-// somewhere ELSE (and is still fresh), this page was superseded — so we CATCH UP
-// to the real target instead of reporting a stale URL. The true destination
-// consumes the marker and reports normally. Net: no stale echo (no bounce), and
-// Studio always learns the real landing spot (no settings-vs-page desync).
+// ── Pending-navigation anti-bounce ───────────────────────────────────────────
+// Studio's handler is `navigate(data.url)` — it SETS its own url to whatever the
+// iframe reports, and it re-asserts `params.preview` to the iframe whenever the
+// comlink reconnects. The bounce (confirmed by the live trace): while a new page
+// is still loading (slow preview SSR) and hasn't reported yet, Studio re-asserts
+// the URL we just LEFT, and we obey it — snapping back.
+//
+// Fix: `update` drops a marker before navigating — {url: where we're going,
+// from: where we're leaving}. If a later update targets `from` while that
+// forward nav is still pending (marker fresh, not yet consumed), it's the
+// bounce → ignore it. When the new page finally loads it reports, and Studio
+// re-syncs forward. subscribe still REPORTS on every mount (so Studio always
+// learns the real landing spot — never reporting caused the mirror "settings
+// change but the page doesn't" desync) and consumes the marker on arrival.
 const STUDIO_NAV_KEY = '__pv_studio_nav'
-// A Studio-initiated nav should mount within this; past it a leftover marker is
-// ignored so it can't hijack a much-later, unrelated load.
-const STUDIO_NAV_TTL = 20000
+// A pending nav should mount within this; past it the marker is ignored so a
+// leftover can't block a genuine later navigation.
+const STUDIO_NAV_TTL = 15000
+
+function readMarker() {
+  try {
+    return JSON.parse(sessionStorage.getItem(STUDIO_NAV_KEY) || 'null')
+  } catch {
+    return null
+  }
+}
 
 function buildHistoryAdapter() {
   return {
     subscribe: (navigate) => {
       const here = canonPath(window.location.href)
-      try {
-        const marker = JSON.parse(sessionStorage.getItem(STUDIO_NAV_KEY) || 'null')
-        const decision = navDecision(marker, here, Date.now(), STUDIO_NAV_TTL)
-        pvlog('SUB', `here=${here} mk=${marker?.url || '-'} ${decision.catchUp ? '→CATCHUP ' + decision.catchUp : '→report'}`) // DIAG
-        if (decision.catchUp) {
-          // Superseded: a newer Studio navigation moved on while this (slow)
-          // page was still loading. Catch up to the real target rather than
-          // reporting our stale URL — reporting it is what snapped Studio back.
-          // Leave the marker; the real destination consumes it when it mounts.
-          window.location.replace(decision.catchUp)
-          return () => {}
+      // Arrived at the page we were navigating to → clear the pending marker so
+      // a genuine later back-navigation isn't mistaken for a bounce.
+      const marker = readMarker()
+      if (marker && marker.url === here) {
+        try {
+          sessionStorage.removeItem(STUDIO_NAV_KEY)
+        } catch {
+          /* non-fatal */
         }
-        // We're the intended page (marker matches) or an organic load (no fresh
-        // marker) — consume the marker and report below.
-        sessionStorage.removeItem(STUDIO_NAV_KEY)
-      } catch {
-        /* sessionStorage unavailable — just report */
       }
+      pvlog('SUB', `here=${here} mk=${marker?.url || '-'}→${marker?.from || '-'} →report`) // DIAG
       // Report our real location so Studio syncs to where the iframe actually is.
       navigate({ type: 'push', title: document.title, url: here })
       return () => {}
@@ -83,24 +81,31 @@ function buildHistoryAdapter() {
         window.history.back()
         return
       }
-      // Canonicalize BOTH sides to the site's trailing-slash form. Presentation
-      // sends the slash-less resolver path ("/about"); our real location is
-      // "/about/" (trailingSlash:'always'). Comparing raw missed on every
-      // non-root page — see src/lib/previewPath.js.
+      // Canonicalize BOTH sides: trailing-slash form + Sanity control params
+      // stripped (see previewPath.js). Presentation sends the slash-less resolver
+      // path, and pages carry ?sanity-preview-perspective; without this the
+      // guards below missed on every non-root/preview page.
       const here = canonPath(window.location.href)
       const target = canonPath(update.url)
-      pvlog('UPD', `${update.type} raw="${update.url}" →${target} here=${here} ${here === target ? 'NOOP' : 'NAV'}`) // DIAG
-      // Already showing this URL → nothing to do. Also absorbs the slash-less
-      // echo of the CURRENT page, so we never round-trip through a 301 back to
-      // ourselves.
-      if (here === target) return
-      // Record this as the LATEST Studio-initiated target. A slower page that
-      // mounts after this will see the marker points elsewhere and catch up to
-      // `target` instead of reporting its stale URL (see subscribe).
+      if (here === target) {
+        pvlog('UPD', `${update.type} raw="${update.url}" →${target} NOOP`) // DIAG
+        return
+      }
+      // Anti-bounce: a fresh pending nav away from `target` means Studio is
+      // re-asserting the page we're leaving before our new page reported. Ignore
+      // it; the new page will report on mount and Studio re-syncs forward.
+      const marker = readMarker()
+      if (isStaleBounce(marker, target, Date.now(), STUDIO_NAV_TTL)) {
+        pvlog('UPD', `${update.type} raw="${update.url}" →${target} IGNORE-BOUNCE (pending ${marker.url})`) // DIAG
+        return
+      }
+      pvlog('UPD', `${update.type} raw="${update.url}" →${target} here=${here} NAV`) // DIAG
+      // Record the pending hop (url we're going to, page we're leaving) so a
+      // racing bounce back to `here` is recognized and ignored.
       try {
-        sessionStorage.setItem(STUDIO_NAV_KEY, JSON.stringify({ url: target, t: Date.now() }))
+        sessionStorage.setItem(STUDIO_NAV_KEY, JSON.stringify({ url: target, from: here, t: Date.now() }))
       } catch {
-        /* non-fatal — worst case the destination reports and Studio is fine */
+        /* non-fatal */
       }
       // Navigate to the CANONICAL (slashed) URL so the browser doesn't eat an
       // extra 301.
