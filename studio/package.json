@@ -24,11 +24,11 @@
     "sanity"
   ],
   "dependencies": {
-    "@sanity/assist": "^6.0.6",
-    "@sanity/vision": "5.25.1",
+    "@sanity/assist": "^6.1.10",
+    "@sanity/vision": "^6.3.0",
     "react": "^19.1",
     "react-dom": "^19.1",
-    "sanity": "5.25.1",
+    "sanity": "^6.3.0",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
