@@ -13,6 +13,7 @@
 
 import { enableVisualEditing } from '@sanity/visual-editing'
 import { canonPath } from './previewPath.js'
+import { navDecision } from './previewNav.js'
 
 // Sanity Studio autosaves drafts on idle (~1s of no keystrokes). We add a
 // small additional debounce on top so that a pause mid-sentence doesn't fire
@@ -28,52 +29,50 @@ let styleTimer = null
 let inflight = null
 
 // ── Echo suppression at the source ───────────────────────────────────────────
-// The intermittent "jump back to the previous page" was self-inflicted: on an
-// MPA reload the newly-loaded page reports its location to Studio via
-// navigate(push). For a navigation STUDIO itself initiated, Studio already
-// knows that URL — and when the report lands late (slow preview SSR / comlink
-// reconnect) AFTER the editor has clicked onward, Studio "follows" the stale
-// report and snaps the iframe back to it. So we simply DON'T report Studio-
-// initiated loads: `update` drops a marker before navigating, and the
-// destination's subscribe() skips its report when it sees a fresh marker for
-// its own URL. In-iframe link clicks and the very first load still report
-// (Studio needs to learn those). With no stale reports, every `update` Studio
-// sends is a genuine intent we can honor immediately — no guard, no window, so
-// deliberate back-navigation works on the first click.
+// The "jump back" and its mirror ("settings change but the page doesn't") are
+// two faces of ONE race. Studio's handler is `navigate(data.url)` — it SETS ITS
+// OWN url to whatever location the iframe reports, ignoring push/replace. So on
+// an MPA reload:
+//   - reporting the CURRENT page is REQUIRED — it's how Studio learns where the
+//     iframe landed and corrects a mismatch (never reporting left Studio showing
+//     the new page's settings while the iframe stayed on the old one);
+//   - but a STALE page that mounts late — after the editor already clicked
+//     onward — must NOT report, or that late report drags Studio back to it
+//     (the bounce).
+// We tell them apart with a marker `update` drops before navigating: the URL of
+// the LATEST Studio-initiated target. When a page mounts, if the marker points
+// somewhere ELSE (and is still fresh), this page was superseded — so we CATCH UP
+// to the real target instead of reporting a stale URL. The true destination
+// consumes the marker and reports normally. Net: no stale echo (no bounce), and
+// Studio always learns the real landing spot (no settings-vs-page desync).
 const STUDIO_NAV_KEY = '__pv_studio_nav'
-// A Studio-initiated load should mount within this; beyond it we treat the load
-// as organic and report normally, so a nav that never completed can't suppress
-// a much-later, unrelated load of the same URL.
+// A Studio-initiated nav should mount within this; past it a leftover marker is
+// ignored so it can't hijack a much-later, unrelated load.
 const STUDIO_NAV_TTL = 20000
 
 function buildHistoryAdapter() {
   return {
     subscribe: (navigate) => {
-      // Report our location to Studio UNLESS this load is the result of a
-      // Studio-initiated navigation (marker set + fresh + matches where we
-      // landed) — that report is the echo that caused the bounce.
-      let studioInitiated = false
+      const here = canonPath(window.location.href)
       try {
-        const nav = JSON.parse(sessionStorage.getItem(STUDIO_NAV_KEY) || 'null')
-        if (
-          nav &&
-          nav.url === canonPath(window.location.href) &&
-          Date.now() - nav.t < STUDIO_NAV_TTL
-        ) {
-          studioInitiated = true
+        const marker = JSON.parse(sessionStorage.getItem(STUDIO_NAV_KEY) || 'null')
+        const decision = navDecision(marker, here, Date.now(), STUDIO_NAV_TTL)
+        if (decision.catchUp) {
+          // Superseded: a newer Studio navigation moved on while this (slow)
+          // page was still loading. Catch up to the real target rather than
+          // reporting our stale URL — reporting it is what snapped Studio back.
+          // Leave the marker; the real destination consumes it when it mounts.
+          window.location.replace(decision.catchUp)
+          return () => {}
         }
-        // Consume the marker either way — it applies to exactly one load.
+        // We're the intended page (marker matches) or an organic load (no fresh
+        // marker) — consume the marker and report below.
         sessionStorage.removeItem(STUDIO_NAV_KEY)
       } catch {
-        /* sessionStorage unavailable — fall through and report normally */
+        /* sessionStorage unavailable — just report */
       }
-      if (!studioInitiated) {
-        navigate({
-          type: 'push',
-          title: document.title,
-          url: canonPath(window.location.href),
-        })
-      }
+      // Report our real location so Studio syncs to where the iframe actually is.
+      navigate({ type: 'push', title: document.title, url: here })
       return () => {}
     },
     update: (update) => {
@@ -91,9 +90,9 @@ function buildHistoryAdapter() {
       // echo of the CURRENT page, so we never round-trip through a 301 back to
       // ourselves.
       if (here === target) return
-      // Mark this as a Studio-initiated navigation so the destination page skips
-      // reporting its location back (the echo). Studio already knows where it
-      // sent us.
+      // Record this as the LATEST Studio-initiated target. A slower page that
+      // mounts after this will see the marker points elsewhere and catch up to
+      // `target` instead of reporting its stale URL (see subscribe).
       try {
         sessionStorage.setItem(STUDIO_NAV_KEY, JSON.stringify({ url: target, t: Date.now() }))
       } catch {
