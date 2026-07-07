@@ -1,9 +1,13 @@
-// deploy-all-studios.js — parallel hosted-Studio fan-out.
+// deploy-all-studios.js — hosted-Studio fan-out.
 //
-//   npm run deploy-all                          # all clients, concurrency 5
-//   npm run deploy-all -- --concurrency=10      # bump parallelism
+//   npm run deploy-all                          # all clients, SEQUENTIAL (concurrency=1, in-place)
+//   npm run deploy-all -- --concurrency=8       # PARALLEL — each deploy in an isolated scratch copy
 //   npm run deploy-all -- --include-demo        # also deploy cnw-photo-demo
 //   npm run deploy-all -- --only=blackbird-photography,coola-creative
+//
+// Safety: refuses to deploy a client whose env-backup is missing PROJECT_ID or
+// HOST (which would silently fall back to the demo), and after each deploy
+// verifies it landed on that client's own <host>.sanity.studio.
 //
 // Why this exists: `npm run deploy` reads from studio/.env, so deploying
 // N clients sequentially means N × (cp backup → deploy → restore). The .env
@@ -18,17 +22,22 @@
 
 import {spawn} from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
-import {getArg, readEnvBackup, STUDIO_DIR, log} from './onboard/lib.js'
+import {getArg, readEnvBackup, STUDIO_DIR, REPO_ROOT, log} from './onboard/lib.js'
 
 const __filename = fileURLToPath(import.meta.url)
 
-// SEQUENTIAL by default. `sanity deploy` builds into a shared dir under
-// studio/, so running deploys concurrently lets the builds clobber each other
-// and a host can get uploaded with another client's bundle (wrong projectId
-// baked in). Only raise concurrency once each deploy builds in isolation.
+// Default concurrency=1 (SEQUENTIAL) — byte-identical to the historical
+// behavior: each deploy runs in-place in studio/. `sanity deploy` writes
+// cwd-relative build state (.sanity/runtime + dist), so concurrent in-place
+// runs would clobber each other and a host could get uploaded with another
+// client's bundle (wrong projectId baked in). When --concurrency>1 is passed,
+// each deploy is run in an ISOLATED scratch copy of studio/ instead (see
+// deployOne), so parallel runs can't collide. Raising concurrency is opt-in.
 const concurrency = Number(getArg('concurrency', {fallback: 1}))
+const isolate = concurrency > 1
 const onlyArg = getArg('only')
 const includeDemo = process.argv.includes('--include-demo')
 
@@ -63,30 +72,95 @@ if (!fs.existsSync(SANITY_BIN)) {
   throw new Error(`Missing ${SANITY_BIN}. Run \`cd studio && npm install\` first.`)
 }
 
+// Files/dirs `sanity deploy` reads from studio/'s cwd. Everything else comes
+// through SYMLINKS (never copies). Kept minimal on purpose.
+const SCRATCH_FILES = ['sanity.config.js', 'sanity.cli.js', 'package.json', 'eslint.config.mjs']
+const SCRATCH_DIRS = ['schemaTypes', 'components', 'static']
+
+// Make an isolated scratch MINI-REPO so a concurrent `sanity deploy` writes its
+// .sanity/runtime + dist there instead of the shared studio/ (what lets parallel
+// deploys not clobber each other). The layout mirrors the real repo because the
+// Studio schema imports one file from outside studio/ (schemaTypes/siteSettings.js
+// → ../../src/lib/fontCatalog.js): a flat copy of studio/ alone would break that
+// relative path.
+//
+//   <root>/           (mktemp)
+//     src         -> symlink → <repo>/src            (../../src/... resolves)
+//     node_modules -> symlink → <repo>/node_modules  (any src npm deps resolve)
+//     studio/       (copied config + schema + components + static)
+//       node_modules -> symlink → <repo>/studio/node_modules
+//
+// Returns { root, cwd } — cwd is <root>/studio, where `sanity deploy` runs.
+function makeScratch(slug) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), `studio-deploy-${slug}-`))
+  fs.symlinkSync(path.join(REPO_ROOT, 'src'), path.join(root, 'src'), 'dir')
+  fs.symlinkSync(path.join(REPO_ROOT, 'node_modules'), path.join(root, 'node_modules'), 'dir')
+  const cwd = path.join(root, 'studio')
+  fs.mkdirSync(cwd)
+  for (const f of SCRATCH_FILES) {
+    const src = path.join(STUDIO_DIR, f)
+    if (fs.existsSync(src)) fs.copyFileSync(src, path.join(cwd, f))
+  }
+  for (const d of SCRATCH_DIRS) {
+    const src = path.join(STUDIO_DIR, d)
+    if (fs.existsSync(src)) fs.cpSync(src, path.join(cwd, d), {recursive: true})
+  }
+  fs.symlinkSync(path.join(STUDIO_DIR, 'node_modules'), path.join(cwd, 'node_modules'), 'dir')
+  return {root, cwd}
+}
+// Cleanup: unlink the three symlinks (removes the LINKS, never their targets)
+// then remove the copied tree. rmSync also treats any stray symlink as a link,
+// so the real src / node_modules can never be deleted here.
+function rmScratch(root) {
+  try {
+    for (const link of ['studio/node_modules', 'src', 'node_modules']) {
+      const p = path.join(root, link)
+      try { if (fs.lstatSync(p).isSymbolicLink()) fs.unlinkSync(p) } catch { /* absent */ }
+    }
+    fs.rmSync(root, {recursive: true, force: true})
+  } catch { /* best-effort cleanup */ }
+}
+
 // Run `sanity deploy` for one slug with its backup env preloaded.
 // stdio captured so concurrent deploys' output doesn't interleave; we
 // print a compact per-slug summary instead.
 function deployOne(slug) {
   return new Promise((resolve) => {
     const env = {...process.env, ...readEnvBackup(slug)}
-    const child = spawn(SANITY_BIN, ['deploy'], {
-      cwd: STUDIO_DIR,
-      env,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
+    // GUARD: sanity.cli.js falls back to the DEMO's project/host when these are
+    // unset (projectId → 'hx5xgigp', studioHost → 'cnw-photo-demo'). A backup
+    // missing either would silently deploy this client's build to the demo's
+    // host, or point their Studio at the demo project. Refuse rather than risk
+    // it — this is a safety stop, not a deploy.
+    const projectId = env.SANITY_STUDIO_PROJECT_ID
+    const host = env.SANITY_STUDIO_HOST
+    if (!projectId || !host) {
+      resolve({slug, code: -2, url: null, stdout: '',
+        stderr: `refusing to deploy: env-backup missing ${!projectId ? 'SANITY_STUDIO_PROJECT_ID' : ''}${!projectId && !host ? ' + ' : ''}${!host ? 'SANITY_STUDIO_HOST' : ''} (would fall back to the demo)`,
+      })
+      return
+    }
+    const scratch = isolate ? makeScratch(slug) : null
+    const cwd = scratch ? scratch.cwd : STUDIO_DIR
+    const child = spawn(SANITY_BIN, ['deploy'], {cwd, env, stdio: ['ignore', 'pipe', 'pipe']})
     let stdout = ''
     let stderr = ''
-    child.stdout.on('data', (d) => {
-      stdout += d
-    })
-    child.stderr.on('data', (d) => {
-      stderr += d
-    })
+    child.stdout.on('data', (d) => (stdout += d))
+    child.stderr.on('data', (d) => (stderr += d))
     child.on('close', (code) => {
+      if (scratch) rmScratch(scratch.root)
       const url = (stdout.match(/Studio deployed to\s+(\S+)/) || [])[1]
-      resolve({slug, code, url, stdout, stderr})
+      // VERIFY: the deploy landed on THIS client's host, not the demo fallback.
+      // A mismatch means the wrong bundle went somewhere — surface it loudly.
+      let code2 = code
+      if (code === 0 && url && !url.includes(`${host}.sanity.studio`)) {
+        code2 = -3
+        stderr += `\nHOST MISMATCH: expected ${host}.sanity.studio, deployed to ${url}`
+      }
+      resolve({slug, code: code2, url, stdout, stderr})
     })
     child.on('error', (err) => {
+      if (scratch) rmScratch(scratch.root)
       resolve({slug, code: -1, url: null, stdout, stderr: String(err)})
     })
   })
