@@ -13,7 +13,6 @@
 
 import { enableVisualEditing } from '@sanity/visual-editing'
 import { canonPath } from './previewPath.js'
-import { recordVisit, isStaleEcho } from './previewTrail.js'
 
 // Sanity Studio autosaves drafts on idle (~1s of no keystrokes). We add a
 // small additional debounce on top so that a pause mid-sentence doesn't fire
@@ -28,73 +27,54 @@ let refreshTimer = null
 let styleTimer = null
 let inflight = null
 
-// Module eval ≈ this page's load time (the bridge is imported per full page
-// load in MPA). Used by the anti-bounce guard below.
-const PAGE_LOADED_AT = Date.now()
-// Presentation re-emits STALE previous URLs a second or two after a navigation
-// (amplified by slow preview SSR bypassing the edge cache), which snapped the
-// editor back to a page they just left. During a run of QUICK navigations
-// (A→B→C) several such echoes are in flight at once, each pointing at a
-// different earlier page — so the guard tracks a full trail (below), not one
-// hop, and ignores any update pointing at a page we visited BEFORE the current
-// one for this window after arriving. After the window we've settled on the
-// page and every navigation goes through, so nothing stays unreachable.
-const BOUNCE_WINDOW_MS = 6000
-
-// The library hands us a stable `navigate` callback (via subscribe) that we may
-// call at ANY time to report the iframe's true location. We keep a module ref
-// so the anti-bounce path can RE-ASSERT our location — correcting Studio's
-// stale address bar so it stops re-emitting the old URL. The earlier fix only
-// DROPPED the echo, leaving Studio's state stale, so a late/second echo still
-// slipped through and snapped back; re-asserting is what converges the two
-// sides. Bounded to once per page load so a genuinely-disagreeing Studio can't
-// spin us in a postMessage loop.
-let moduleNavigate = null
-let reassertedThisLoad = false
-function reassertLocation(path) {
-  if (reassertedThisLoad || !moduleNavigate) return
-  reassertedThisLoad = true
-  try {
-    moduleNavigate({ type: 'replace', title: document.title, url: path })
-  } catch {
-    /* non-fatal — best-effort correction */
-  }
-}
-
-// ── Navigation trail (multi-hop anti-bounce) ─────────────────────────────────
-// The pure trail logic lives in previewTrail.js (unit-tested); here we just wrap
-// it with the sessionStorage I/O so the trail survives each MPA reload.
-const TRAIL_KEY = '__pv_trail'
-
-function readTrail() {
-  try {
-    const t = JSON.parse(sessionStorage.getItem(TRAIL_KEY) || '[]')
-    return Array.isArray(t) ? t : []
-  } catch {
-    return []
-  }
-}
-
-function saveVisit(path, t) {
-  try {
-    sessionStorage.setItem(TRAIL_KEY, JSON.stringify(recordVisit(readTrail(), path, t)))
-  } catch {
-    /* sessionStorage unavailable — the guard just lets navigations through */
-  }
-}
+// ── Echo suppression at the source ───────────────────────────────────────────
+// The intermittent "jump back to the previous page" was self-inflicted: on an
+// MPA reload the newly-loaded page reports its location to Studio via
+// navigate(push). For a navigation STUDIO itself initiated, Studio already
+// knows that URL — and when the report lands late (slow preview SSR / comlink
+// reconnect) AFTER the editor has clicked onward, Studio "follows" the stale
+// report and snaps the iframe back to it. So we simply DON'T report Studio-
+// initiated loads: `update` drops a marker before navigating, and the
+// destination's subscribe() skips its report when it sees a fresh marker for
+// its own URL. In-iframe link clicks and the very first load still report
+// (Studio needs to learn those). With no stale reports, every `update` Studio
+// sends is a genuine intent we can honor immediately — no guard, no window, so
+// deliberate back-navigation works on the first click.
+const STUDIO_NAV_KEY = '__pv_studio_nav'
+// A Studio-initiated load should mount within this; beyond it we treat the load
+// as organic and report normally, so a nav that never completed can't suppress
+// a much-later, unrelated load of the same URL.
+const STUDIO_NAV_TTL = 20000
 
 function buildHistoryAdapter() {
   return {
     subscribe: (navigate) => {
-      moduleNavigate = navigate
-      navigate({
-        type: 'push',
-        title: document.title,
-        url: canonPath(window.location.href),
-      })
-      return () => {
-        if (moduleNavigate === navigate) moduleNavigate = null
+      // Report our location to Studio UNLESS this load is the result of a
+      // Studio-initiated navigation (marker set + fresh + matches where we
+      // landed) — that report is the echo that caused the bounce.
+      let studioInitiated = false
+      try {
+        const nav = JSON.parse(sessionStorage.getItem(STUDIO_NAV_KEY) || 'null')
+        if (
+          nav &&
+          nav.url === canonPath(window.location.href) &&
+          Date.now() - nav.t < STUDIO_NAV_TTL
+        ) {
+          studioInitiated = true
+        }
+        // Consume the marker either way — it applies to exactly one load.
+        sessionStorage.removeItem(STUDIO_NAV_KEY)
+      } catch {
+        /* sessionStorage unavailable — fall through and report normally */
       }
+      if (!studioInitiated) {
+        navigate({
+          type: 'push',
+          title: document.title,
+          url: canonPath(window.location.href),
+        })
+      }
+      return () => {}
     },
     update: (update) => {
       if (update.type === 'pop') {
@@ -102,31 +82,25 @@ function buildHistoryAdapter() {
         return
       }
       // Canonicalize BOTH sides to the site's trailing-slash form. Presentation
-      // echoes the slash-less resolver path ("/about"); our real location is
-      // "/about/" (trailingSlash:'always'). Without this the guards below never
-      // matched on any non-root page — the root cause of the intermittent
-      // jump-back. See src/lib/previewPath.js.
+      // sends the slash-less resolver path ("/about"); our real location is
+      // "/about/" (trailingSlash:'always'). Comparing raw missed on every
+      // non-root page — see src/lib/previewPath.js.
       const here = canonPath(window.location.href)
       const target = canonPath(update.url)
       // Already showing this URL → nothing to do. Also absorbs the slash-less
       // echo of the CURRENT page, so we never round-trip through a 301 back to
-      // ourselves (which used to re-arm the bounce race).
+      // ourselves.
       if (here === target) return
-      // Anti-bounce (multi-hop): drop an update pointing at a page we visited
-      // BEFORE arriving here, while still within BOUNCE_WINDOW_MS of that
-      // arrival — that's a stale re-emit of a page we just left (including two+
-      // hops back during quick A→B→C clicking, which the old single-hop record
-      // missed). Re-assert our real location so Studio's address bar converges.
-      // Past the window every navigation goes through, so nothing stays stuck.
-      const now = Date.now()
-      if (isStaleEcho(readTrail(), here, target, now, BOUNCE_WINDOW_MS, PAGE_LOADED_AT)) {
-        reassertLocation(here)
-        return
+      // Mark this as a Studio-initiated navigation so the destination page skips
+      // reporting its location back (the echo). Studio already knows where it
+      // sent us.
+      try {
+        sessionStorage.setItem(STUDIO_NAV_KEY, JSON.stringify({ url: target, t: Date.now() }))
+      } catch {
+        /* non-fatal — worst case the destination reports and Studio is fine */
       }
-      // Genuine navigation — record the intended hop (so a racing echo for it is
-      // recognized on arrival) and go to the CANONICAL (slashed) URL so the
-      // browser doesn't eat an extra 301, part of what let echoes race the guard.
-      saveVisit(target, now)
+      // Navigate to the CANONICAL (slashed) URL so the browser doesn't eat an
+      // extra 301.
       if (update.type === 'replace') window.location.replace(target)
       else window.location.assign(target)
     },
@@ -373,10 +347,6 @@ async function seedBaseline() {
 }
 
 export function mount() {
-  // Seed the trail with the page we loaded on, BEFORE enableVisualEditing can
-  // deliver any update() — so the multi-hop anti-bounce guard knows "here".
-  saveVisit(canonPath(window.location.href), PAGE_LOADED_AT)
-
   if ('requestIdleCallback' in window) requestIdleCallback(() => seedBaseline())
   else setTimeout(seedBaseline, 1000)
 
