@@ -89,7 +89,7 @@ function buildHistoryAdapter() {
       // non-root page — see src/lib/previewPath.js.
       const here = canonPath(window.location.href)
       const target = canonPath(update.url)
-      pvlog('UPD', `${update.type} target=${target} here=${here} ${here === target ? '→noop' : '→NAV'}`) // DIAG
+      pvlog('UPD', `${update.type} raw="${update.url}" →${target} here=${here} ${here === target ? 'NOOP' : 'NAV'}`) // DIAG
       // Already showing this URL → nothing to do. Also absorbs the slash-less
       // echo of the CURRENT page, so we never round-trip through a 301 back to
       // ourselves.

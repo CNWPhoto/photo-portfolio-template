@@ -54,8 +54,10 @@ function render(a) {
     document.body.appendChild(el)
   }
   const t0 = a.length ? a[0].t : Date.now()
-  const lines = a.map((e) => `+${String(e.t - t0).padStart(6)}ms  ${e.k}  ${e.d}`)
-  el.textContent = 'pv-nav trace (oldest→newest)\n' + lines.join('\n')
+  // NEWEST first so the snap-back line is always visible at the top (the panel
+  // is click-through and can't be scrolled).
+  const lines = a.map((e) => `+${String(e.t - t0).padStart(6)}ms  ${e.k}  ${e.d}`).reverse()
+  el.textContent = 'pv-nav trace (NEWEST first)\n' + lines.join('\n')
 }
 
 // Paint whatever we already have as soon as this page loads.
