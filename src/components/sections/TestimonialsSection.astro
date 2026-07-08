@@ -257,7 +257,10 @@ const first = testimonials[0] ?? null;
     font-family: var(--font-sans, var(--font-body));
     font-size: 0.75rem;
     letter-spacing: 0.06em;
-    color: var(--muted-light, var(--muted));
+    /* Was --muted-light (an extra-faded tone) which dropped below readable
+       contrast on some palettes (e.g. PIF). Use the standard readable --muted,
+       matching the client attribution above; size still gives the hierarchy. */
+    color: var(--muted);
   }
 
   .tslider__source-link {
