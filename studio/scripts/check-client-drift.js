@@ -25,6 +25,14 @@ const STUDIO_DIR = path.resolve(SCRIPTS_DIR, '..')
 const REPO_ROOT = path.resolve(STUDIO_DIR, '..')
 const DEMO_SLUG = 'cnw-photo-demo' // the demo is its own CI job, not in the clients matrix
 
+// Slugs intentionally held OUT of the deploy.yml site matrix during a launch
+// freeze. They keep their Studio env-backup (so the Studio fan-out still covers
+// them) and are only paused from the live-site fan-out. Listed here so this gate
+// treats the deliberate "has a backup but no matrix entry" asymmetry as expected,
+// not drift. UN-FREEZE: uncomment the client's deploy.yml matrix entry AND remove
+// it from this set (the two must move together).
+const FROZEN_SLUGS = new Set(['pets-in-focus'])
+
 // ── A. env-backups (Studio roster) ───────────────────────────────────────────
 const backups = new Map() // slug -> {projectId, host}
 for (const f of fs.readdirSync(STUDIO_DIR)) {
@@ -51,6 +59,10 @@ const allSlugs = new Set([...backups.keys(), ...matrix.keys()])
 for (const slug of [...allSlugs].sort()) {
   const a = backups.get(slug)
   const b = matrix.get(slug)
+  if (!b && FROZEN_SLUGS.has(slug)) {
+    console.log(`[drift] ⏸ ${slug}: frozen — kept in the Studio roster, intentionally out of the deploy.yml site matrix`)
+    continue
+  }
   if (!a) { problems.push(`${slug}: in deploy.yml matrix but NO studio/.env.${slug}-backup (Studio fan-out would skip it)`); continue }
   if (!b) { problems.push(`${slug}: has an env-backup but NOT in deploy.yml matrix (site fan-out would skip it)`); continue }
   if (a.projectId !== b.projectId) problems.push(`${slug}: projectId mismatch — backup=${a.projectId} vs matrix=${b.projectId}`)
