@@ -91,6 +91,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isPreview = context.cookies.get('__sanity_preview')?.value === 'true'
   context.locals.isPreview = isPreview
 
+  // ── Legal-page aliases ────────────────────────────────────────────────
+  // The Terms / Privacy pages physically live at /terms-and-conditions/ and
+  // /privacy-policy/. A recurring footer-link mistake (and old-platform habit)
+  // is /terms or /privacy, which 404s — seen on multiple client sites. 301 the
+  // common short aliases to the real pages so every site's legal links work
+  // regardless of what the editor pasted.
+  {
+    const p = context.url.pathname.replace(/\/+$/, '')
+    if (p === '/terms' || p === '/terms-of-service' || p === '/tos') {
+      return context.redirect('/terms-and-conditions/' + context.url.search, 301)
+    }
+    if (p === '/privacy') {
+      return context.redirect('/privacy-policy/' + context.url.search, 301)
+    }
+  }
+
   // ── Configurable blog base path ───────────────────────────────────────
   // When blogPage.slug !== 'blog' (e.g. 'lenaweepetcollective'):
   //   • /<base>/…  renders the physical /blog/… routes (internal rewrite)

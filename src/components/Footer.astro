@@ -302,6 +302,13 @@ const year = new Date().getFullYear();
 
 	.footer__col {
 		padding: 2rem 2rem 2rem 0;
+		/* Center the label + links vertically within the full-height column so
+		   they line up with the centered wordmark/social instead of sitting
+		   high. The column still stretches (align-items on .footer__cols stays
+		   'stretch'), so the divider rules keep their full height. */
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
 	}
 
 	.footer__col + .footer__col {
@@ -359,7 +366,10 @@ const year = new Date().getFullYear();
 		text-decoration: underline;
 	}
 
-	/* Right panel — wordmark + social, centered vertically */
+	/* Right panel — wordmark + social, vertically centered to match the
+	   now-centered content in the link columns (all three columns read even).
+	   align-items: center keeps it horizontally centered; the full-height
+	   border-left divides it from the links. */
 	.footer__right {
 		border-left: 1px solid var(--border);
 		display: flex;

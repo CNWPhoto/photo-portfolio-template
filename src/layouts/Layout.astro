@@ -814,4 +814,18 @@ const schemaJSON = schemaGraph.length
 	body[data-nav-variant^='transparent'] main > .hero:first-child {
 		margin-top: calc(-1 * var(--nav-height, 80px));
 	}
+
+	/* ══════════════════════════════════════════════════
+	   SOLID NAV — FULLSCREEN HERO FIT
+	   A solid (non-transparent) nav sits in flow ABOVE the hero, so a
+	   full 100dvh first-child hero overshoots the fold by the nav's
+	   height — pushing bottom-positioned content (e.g. a CTA) under the
+	   fold on a fresh load. Trim the nav height so the hero fills exactly
+	   the visible area below the nav. Transparent navs pull the hero up
+	   (above) instead, so they keep full height. --nav-height is set in px
+	   by Nav.astro's JS on load/resize; 80px is the pre-JS fallback.
+	══════════════════════════════════════════════════ */
+	body:not([data-nav-variant^='transparent']) main > .hero--height-fullscreen:first-child {
+		--hero-fullscreen-min: max(calc(100dvh - var(--nav-height, 80px)), 560px);
+	}
 </style>

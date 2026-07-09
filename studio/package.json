@@ -10,6 +10,8 @@
     "build": "dotenv -e .env -- sanity build",
     "deploy": "dotenv -e .env -- sanity deploy",
     "deploy-all": "node scripts/deploy-all-studios.js",
+    "migrate-all": "node scripts/migrate-all-datasets.js",
+    "check-drift": "node scripts/check-client-drift.js",
     "deploy-graphql": "dotenv -e .env -- sanity graphql deploy",
     "seed": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token",
     "seed:replace": "dotenv -e .env -- sanity exec scripts/seed.js --with-user-token -- --replace",
@@ -22,11 +24,11 @@
     "sanity"
   ],
   "dependencies": {
-    "@sanity/assist": "^6.0.6",
-    "@sanity/vision": "5.25.1",
+    "@sanity/assist": "^6.1.10",
+    "@sanity/vision": "^6.3.0",
     "react": "^19.1",
     "react-dom": "^19.1",
-    "sanity": "5.25.1",
+    "sanity": "^6.3.0",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {

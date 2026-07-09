@@ -118,7 +118,7 @@ const first = testimonials[0] ?? null;
             <img
               src={first.photoSrc}
               srcset={first.photoSrcset}
-              sizes="(max-width: 900px) 30vw, 200px"
+              sizes="(max-width: 900px) 80vw, 300px"
               alt={first.photoAlt}
               class="tslider__img"
               loading="lazy"
@@ -190,25 +190,29 @@ const first = testimonials[0] ?? null;
     margin: 0 auto;
     padding: 0 3rem;
     display: flex;
-    align-items: center;
+    /* Top-align: the image and the quote stack start together. With images now
+       at natural height, centering left short landscape photos floating in the
+       middle of the taller text column. (Mobile keeps center — it's a column.) */
+    align-items: flex-start;
     justify-content: center;
     gap: 150px;
   }
 
   .tslider__image-col { flex-shrink: 0; }
 
+  /* Fixed WIDTH, natural height — the whole image shows (a landscape group
+     shot is no longer cropped into a portrait box). max-height caps unusually
+     tall portraits; object-fit:contain only matters in that rare capped case. */
   .tslider__image-wrap {
     width: 300px;
-    height: 450px;
-    overflow: hidden;
     flex-shrink: 0;
   }
 
   .tslider__image-wrap :global(.tslider__img) {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center top;
+    height: auto;
+    max-height: 460px;
+    object-fit: contain;
     display: block;
     transition: opacity 0.4s ease;
   }
@@ -257,7 +261,10 @@ const first = testimonials[0] ?? null;
     font-family: var(--font-sans, var(--font-body));
     font-size: 0.75rem;
     letter-spacing: 0.06em;
-    color: var(--muted-light, var(--muted));
+    /* Was --muted-light (an extra-faded tone) which dropped below readable
+       contrast on some palettes (e.g. PIF). Use the standard readable --muted,
+       matching the client attribution above; size still gives the hierarchy. */
+    color: var(--muted);
   }
 
   .tslider__source-link {
@@ -334,7 +341,7 @@ const first = testimonials[0] ?? null;
       padding: 0 1.5rem;
     }
     .tslider__image-col { width: 100%; display: flex; justify-content: center; }
-    .tslider__image-wrap { width: 80%; height: 90vw; max-height: 500px; }
+    .tslider__image-wrap { width: min(80%, 380px); }
     .tslider__content { max-width: none; width: 80%; }
 
     .tslider__inner--two-col {
@@ -429,7 +436,7 @@ const first = testimonials[0] ?? null;
             }
             imgEl.src = t.photoSrc;
             imgEl.srcset = t.photoSrcset || '';
-            imgEl.sizes = '(max-width: 900px) 30vw, 200px';
+            imgEl.sizes = '(max-width: 900px) 80vw, 300px';
             imgEl.alt = t.photoAlt || '';
           } else {
             const imgEl = imgWrap.querySelector('img');

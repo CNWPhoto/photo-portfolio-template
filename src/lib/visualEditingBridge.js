@@ -12,6 +12,8 @@
 //      images, scroll resets, and the full Astro SSR cold-path round-trip.
 
 import { enableVisualEditing } from '@sanity/visual-editing'
+import { canonPath } from './previewPath.js'
+import { isStaleBounce } from './previewNav.js'
 
 // Sanity Studio autosaves drafts on idle (~1s of no keystrokes). We add a
 // small additional debounce on top so that a pause mid-sentence doesn't fire
@@ -26,32 +28,49 @@ let refreshTimer = null
 let styleTimer = null
 let inflight = null
 
-// Module eval ≈ this page's load time (the bridge is imported per full page
-// load in MPA). Used by the anti-bounce guard below.
-const PAGE_LOADED_AT = Date.now()
-// Presentation sometimes re-emits a STALE previous URL a second or two after a
-// navigation (amplified by slow preview SSR bypassing the edge cache), which
-// snapped the editor back to the page they just left. We ignore exactly that
-// reversal for a short window after the new page loads.
-const BOUNCE_WINDOW_MS = 4000
+// ── Pending-navigation anti-bounce ───────────────────────────────────────────
+// Studio's handler is `navigate(data.url)` — it SETS its own url to whatever the
+// iframe reports, and it re-asserts `params.preview` to the iframe whenever the
+// comlink reconnects. The bounce (confirmed by the live trace): while a new page
+// is still loading (slow preview SSR) and hasn't reported yet, Studio re-asserts
+// the URL we just LEFT, and we obey it — snapping back.
+//
+// Fix: `update` drops a marker before navigating — {url: where we're going,
+// from: where we're leaving}. If a later update targets `from` while that
+// forward nav is still pending (marker fresh, not yet consumed), it's the
+// bounce → ignore it. When the new page finally loads it reports, and Studio
+// re-syncs forward. subscribe still REPORTS on every mount (so Studio always
+// learns the real landing spot — never reporting caused the mirror "settings
+// change but the page doesn't" desync) and consumes the marker on arrival.
+const STUDIO_NAV_KEY = '__pv_studio_nav'
+// A pending nav should mount within this; past it the marker is ignored so a
+// leftover can't block a genuine later navigation.
+const STUDIO_NAV_TTL = 15000
 
-const pathOf = (u) => {
+function readMarker() {
   try {
-    const url = new URL(u, window.location.href)
-    return `${url.pathname}${url.search}${url.hash}`
+    return JSON.parse(sessionStorage.getItem(STUDIO_NAV_KEY) || 'null')
   } catch {
-    return u
+    return null
   }
 }
 
 function buildHistoryAdapter() {
   return {
     subscribe: (navigate) => {
-      navigate({
-        type: 'push',
-        title: document.title,
-        url: `${window.location.pathname}${window.location.search}${window.location.hash}`,
-      })
+      const here = canonPath(window.location.href)
+      // Arrived at the page we were navigating to → clear the pending marker so
+      // a genuine later back-navigation isn't mistaken for a bounce.
+      const marker = readMarker()
+      if (marker && marker.url === here) {
+        try {
+          sessionStorage.removeItem(STUDIO_NAV_KEY)
+        } catch {
+          /* non-fatal */
+        }
+      }
+      // Report our real location so Studio syncs to where the iframe actually is.
+      navigate({ type: 'push', title: document.title, url: here })
       return () => {}
     },
     update: (update) => {
@@ -59,33 +78,33 @@ function buildHistoryAdapter() {
         window.history.back()
         return
       }
-      const here = `${window.location.pathname}${window.location.search}${window.location.hash}`
-      // Normalize update.url to a path. Presentation is configured with a
-      // preview `origin`, so update.url arrives as a FULL URL — comparing it
-      // against our bare path (the old code) never matched, so the same-URL
-      // guard never fired and every sync echo still triggered a navigation.
-      const target = pathOf(update.url)
-      // Already showing this URL → nothing to do (kills the reload churn).
+      // Canonicalize BOTH sides: trailing-slash form + Sanity control params
+      // stripped (see previewPath.js). Presentation sends the slash-less resolver
+      // path, and pages carry ?sanity-preview-perspective; without this the
+      // guards below missed on every non-root/preview page.
+      const here = canonPath(window.location.href)
+      const target = canonPath(update.url)
+      // Already showing this URL → nothing to do (also absorbs the slash-less /
+      // perspective-only echo of the current page).
       if (here === target) return
-      // Anti-bounce: drop an update that tries to send us BACK to the page we
-      // just navigated away from, within BOUNCE_WINDOW_MS of this page loading.
-      // A genuine back-navigation the editor makes later (after the window)
-      // still goes through.
+      // Anti-bounce: a fresh pending nav away from `target` means Studio is
+      // re-asserting the page we're leaving before our new page reported. Ignore
+      // it; the new page will report on mount and Studio re-syncs forward. (Only
+      // the pre-report race is caught window-free; a bounce after the new page
+      // reports is indistinguishable from a genuine back-click.)
+      const marker = readMarker()
+      if (isStaleBounce(marker, target, Date.now(), STUDIO_NAV_TTL)) return
+      // Record the pending hop (url we're going to, page we're leaving) so a
+      // racing bounce back to `here` is recognized and ignored.
       try {
-        const nav = JSON.parse(sessionStorage.getItem('__pv_nav') || 'null')
-        if (
-          nav && nav.to === here && nav.from === target &&
-          Date.now() - PAGE_LOADED_AT < BOUNCE_WINDOW_MS
-        ) {
-          return
-        }
-      } catch { /* sessionStorage unavailable — skip the guard */ }
-      // Record this hop so the destination page can recognize a bounce back.
-      try {
-        sessionStorage.setItem('__pv_nav', JSON.stringify({from: here, to: target}))
-      } catch { /* non-fatal */ }
-      if (update.type === 'replace') window.location.replace(update.url)
-      else window.location.assign(update.url)
+        sessionStorage.setItem(STUDIO_NAV_KEY, JSON.stringify({ url: target, from: here, t: Date.now() }))
+      } catch {
+        /* non-fatal */
+      }
+      // Navigate to the CANONICAL (slashed) URL so the browser doesn't eat an
+      // extra 301.
+      if (update.type === 'replace') window.location.replace(target)
+      else window.location.assign(target)
     },
   }
 }
