@@ -162,7 +162,13 @@ export default {
           fields: [
             {name: 'enabled', title: 'Show link', type: 'boolean', initialValue: false},
             {name: 'label', title: 'Label', type: 'string', initialValue: 'Privacy Policy'},
-            {name: 'url', title: 'URL', type: 'string', placeholder: '/privacy-policy'},
+            {
+              name: 'url',
+              title: 'URL',
+              type: 'string',
+              placeholder: '/privacy-policy/',
+              description: 'Your Privacy Policy page lives at /privacy-policy/ — use that (leave blank to auto-link when the page has content).',
+            },
           ],
         },
         {
@@ -173,7 +179,13 @@ export default {
           fields: [
             {name: 'enabled', title: 'Show link', type: 'boolean', initialValue: false},
             {name: 'label', title: 'Label', type: 'string', initialValue: 'Terms'},
-            {name: 'url', title: 'URL', type: 'string', placeholder: '/terms'},
+            {
+              name: 'url',
+              title: 'URL',
+              type: 'string',
+              placeholder: '/terms-and-conditions/',
+              description: 'Your Terms page lives at /terms-and-conditions/ — use that, NOT /terms (leave blank to auto-link when the page has content).',
+            },
           ],
         },
       ],

@@ -359,14 +359,17 @@ const year = new Date().getFullYear();
 		text-decoration: underline;
 	}
 
-	/* Right panel — wordmark + social, centered vertically */
+	/* Right panel — wordmark + social. Top-aligned (justify-content: flex-start)
+	   and matching the left column's top padding so all three columns start at
+	   the same line instead of the wordmark floating vertically centered while
+	   the links/middle sit high. align-items: center keeps it horizontally centered. */
 	.footer__right {
 		border-left: 1px solid var(--border);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		padding: 2.5rem 1.5rem;
+		justify-content: flex-start;
+		padding: 2rem 1.5rem;
 		text-align: center;
 	}
 
