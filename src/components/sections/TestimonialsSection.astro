@@ -190,7 +190,10 @@ const first = testimonials[0] ?? null;
     margin: 0 auto;
     padding: 0 3rem;
     display: flex;
-    align-items: center;
+    /* Top-align: the image and the quote stack start together. With images now
+       at natural height, centering left short landscape photos floating in the
+       middle of the taller text column. (Mobile keeps center — it's a column.) */
+    align-items: flex-start;
     justify-content: center;
     gap: 150px;
   }
