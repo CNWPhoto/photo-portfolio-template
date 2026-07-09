@@ -162,7 +162,8 @@ const firstImage = sanityImages[0] ?? null;
     min-height: 480px;
   }
   .hero--slider.hero--height-fullscreen .hero__viewport {
-    height: 100vh;
+    height: 100vh;      /* fallback for browsers without dvh */
+    height: 100dvh;     /* visible viewport — avoids the mobile address-bar trap */
     min-height: 560px;
   }
 
@@ -267,10 +268,24 @@ const firstImage = sanityImages[0] ?? null;
     position: relative;
     width: 100%;
     overflow: hidden;
+    /* Flex lays out the overlay content IN FLOW (not absolute) so a tall
+       stack — eyebrow + heading + sub + CTA — can push the hero taller than
+       the viewport instead of being clipped. This fixes the CTA getting cut
+       off on short desktop windows; the dvh units below fix the same clip on
+       mobile, where the address bar makes 100vh taller than what's visible. */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
-  .hero--image-full.hero--height-auto .hero__bg { height: 60vh; min-height: 400px; }
-  .hero--image-full.hero--height-tall .hero__bg { height: 75vh; min-height: 480px; }
-  .hero--image-full.hero--height-fullscreen .hero__bg { height: 100vh; min-height: 560px; }
+  /* min-height (not fixed height): the hero fills the viewport but grows if
+     the content needs more room, so nothing is ever cut off. */
+  .hero--image-full.hero--height-auto .hero__bg { min-height: max(60vh, 400px); }
+  .hero--image-full.hero--height-tall .hero__bg { min-height: max(75vh, 480px); }
+  .hero--image-full.hero--height-fullscreen .hero__bg {
+    min-height: 100vh;              /* fallback for browsers without dvh */
+    min-height: max(100dvh, 560px);
+  }
 
   .hero__bg :global(.hero__bg-img) {
     position: absolute;
@@ -286,11 +301,11 @@ const firstImage = sanityImages[0] ?? null;
     background: rgba(0, 0, 0, var(--hero-overlay-opacity, 0.3));
   }
   .hero__overlay-content {
-    position: absolute;
-    inset: 0;
+    position: relative;   /* in flow (was absolute inset:0) so it can grow .hero__bg */
+    z-index: 1;           /* above .hero__bg-overlay, which paints below it */
+    width: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
     text-align: center;
     color: var(--white, #fff);
@@ -314,9 +329,14 @@ const firstImage = sanityImages[0] ?? null;
     overflow-wrap: anywhere;
   }
 
-  /* ── Text position grid (image-full variant) ── */
-  .hero--image-full[data-text-position^='top'] .hero__overlay-content { justify-content: flex-start; }
-  .hero--image-full[data-text-position^='bottom'] .hero__overlay-content { justify-content: flex-end; }
+  /* ── Text position grid (image-full variant) ──
+     Vertical placement + horizontal placement of the content BOX are set on
+     the flex parent (.hero__bg); text-align + alignment of the box's own
+     children stay on .hero__overlay-content. */
+  .hero--image-full[data-text-position^='top'] .hero__bg { justify-content: flex-start; }
+  .hero--image-full[data-text-position^='bottom'] .hero__bg { justify-content: flex-end; }
+  .hero--image-full[data-text-position$='-left'] .hero__bg { align-items: flex-start; }
+  .hero--image-full[data-text-position$='-right'] .hero__bg { align-items: flex-end; }
   .hero--image-full[data-text-position$='-left'] .hero__overlay-content { align-items: flex-start; text-align: left; }
   .hero--image-full[data-text-position$='-right'] .hero__overlay-content { align-items: flex-end; text-align: right; }
 
