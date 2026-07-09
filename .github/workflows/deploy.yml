@@ -173,7 +173,13 @@ jobs:
   # ════════════════════════════════════════════════════════════════════
   clients:
     name: Client — ${{ matrix.client.slug }}
-    if: github.ref == 'refs/heads/production'
+    # Freeze guard: skip any client whose slug appears in the repo variable
+    # FROZEN_CLIENT_SLUGS. Lets us hold a client out of the fan-out during a
+    # launch window (e.g. pets-in-focus pre-launch) WITHOUT editing this file —
+    # set the variable to freeze, clear it to un-freeze. Empty/unset var =
+    # normal behavior (every client deploys). One slug per freeze is safest;
+    # avoid listing a slug that is a substring of another (contains() match).
+    if: github.ref == 'refs/heads/production' && !contains(vars.FROZEN_CLIENT_SLUGS, matrix.client.slug)
     needs: demo
     runs-on: ubuntu-latest
     environment: client-${{ matrix.client.slug }}
