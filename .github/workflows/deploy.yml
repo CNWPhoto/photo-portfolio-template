@@ -173,13 +173,7 @@ jobs:
   # ════════════════════════════════════════════════════════════════════
   clients:
     name: Client — ${{ matrix.client.slug }}
-    # Freeze guard: skip any client whose slug appears in the repo variable
-    # FROZEN_CLIENT_SLUGS. Lets us hold a client out of the fan-out during a
-    # launch window (e.g. pets-in-focus pre-launch) WITHOUT editing this file —
-    # set the variable to freeze, clear it to un-freeze. Empty/unset var =
-    # normal behavior (every client deploys). One slug per freeze is safest;
-    # avoid listing a slug that is a substring of another (contains() match).
-    if: github.ref == 'refs/heads/production' && !contains(vars.FROZEN_CLIENT_SLUGS, matrix.client.slug)
+    if: github.ref == 'refs/heads/production'
     needs: demo
     runs-on: ubuntu-latest
     environment: client-${{ matrix.client.slug }}
@@ -196,9 +190,15 @@ jobs:
           - slug: wedding-demo
             sanity_project_id: boa9509d
             studio_url: https://wedding-demo.sanity.studio
-          - slug: pets-in-focus
-            sanity_project_id: tryjma1z
-            studio_url: https://pets-in-focus.sanity.studio
+          # ⏸ FROZEN — pets-in-focus held OUT of the fan-out during her launch
+          # window (matrix entries can't be filtered by a variable, and the
+          # `matrix` context isn't available in a job-level `if`, so the freeze
+          # is a commented-out entry). Her Studio + site are otherwise current.
+          # UN-FREEZE after launch: uncomment this entry, then promote (or run
+          # workflow_dispatch only_client=pets-in-focus for a one-off catch-up).
+          # - slug: pets-in-focus
+          #   sanity_project_id: tryjma1z
+          #   studio_url: https://pets-in-focus.sanity.studio
           - slug: karen-conrad-photography
             sanity_project_id: hydwn002
             studio_url: https://karen-conrad-photography.sanity.studio
