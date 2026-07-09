@@ -38,7 +38,9 @@ export const GET: APIRoute = async () => {
       "portfolio": *[_type == "portfolio"     && _id == "portfolio"][0]   { slug, _updatedAt, "additionalGallerySlugs": additionalGalleries[defined(slug.current)].slug.current },
     }`),
     sanityClient.fetch(
-      `*[_type == "page" && defined(slug.current)] | order(slug.current asc){
+      // `seo.hideFromSearch != true` drops pages the editor has flagged
+      // "hide from search" — they emit noindex, so they must not be in the sitemap.
+      `*[_type == "page" && defined(slug.current) && seo.hideFromSearch != true] | order(slug.current asc){
         "slug": slug.current,
         _updatedAt
       }`,

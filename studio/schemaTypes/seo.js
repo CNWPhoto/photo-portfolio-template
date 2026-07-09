@@ -23,5 +23,21 @@ export default {
       description: 'Image shown when this page is shared on social media. Ideal size: 1200 × 630px.',
       options: {hotspot: true},
     },
+    {
+      name: 'hideFromSearch',
+      title: 'Hide this page from search engines',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        '⚠️ WARNING: turning this ON removes the page from Google and every other search engine — it adds a "noindex" tag and drops the page from your sitemap. The page still works and stays reachable by its direct link; it just won\'t appear in search results. Only use this for pages you deliberately want unlisted (a private product guide, a thank-you page, etc.). Leave OFF for anything you want people to find in search.',
+      // Fires an unmissable ⚠ in the Studio every time it's on — an explicit
+      // reconfirmation before each publish, without blocking.
+      validation: (Rule) =>
+        Rule.custom((val) =>
+          val === true
+            ? 'This page is set to HIDDEN from search engines — it will NOT appear on Google. Confirm this is intended before publishing.'
+            : true,
+        ).warning(),
+    },
   ],
 }

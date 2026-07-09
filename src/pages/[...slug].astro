@@ -15,7 +15,7 @@ const [page, siteData] = await Promise.all([
 		`*[_type == "page" && slug.current == $slug][0]{
 			title,
 			"slug": slug.current,
-			seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
+			seo { seoTitle, seoDescription, hideFromSearch, socialImage { asset->{ url } } },
 			navThemeOverHero,
 			"sections": sections[]{ ${SECTION_PROJECTION} }
 		}`,
@@ -36,6 +36,8 @@ const sections = page.sections ?? [];
 const seoTitle       = page.seo?.seoTitle       || page.title || null;
 const seoDescription = page.seo?.seoDescription || null;
 const ogImage        = page.seo?.socialImage?.asset?.url || null;
+// "Hide from search" toggle → emit noindex (and the sitemap excludes it too).
+const robots = page.seo?.hideFromSearch ? 'noindex, follow' : undefined;
 
 // Transparent nav variant should only overlay when the first rendered
 // section is a hero in the `image-full` variant. Any other first section
@@ -50,7 +52,7 @@ const heroOverlay =
 const faqSchemaData = buildFaqSchema(sections);
 ---
 
-<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData} breadcrumb={page.title} {heroOverlay}>
+<Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} schemaData={faqSchemaData} breadcrumb={page.title} {robots} {heroOverlay}>
 	<main>
 		{sections.map((section: any, i: number) => (
 			<SectionRenderer
