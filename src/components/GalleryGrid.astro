@@ -14,9 +14,11 @@ interface GalleryImage {
 interface Props {
   images: GalleryImage[];
   galleryColumns?: number;
+  galleryLayout?: 'masonry' | 'justified';
 }
 
-const { images, galleryColumns = 3 } = Astro.props;
+const { images, galleryColumns = 3, galleryLayout = 'masonry' } = Astro.props;
+const isJustified = galleryLayout === 'justified';
 const lbImages = images.map(({ fullSrc, alt }) => ({ src: fullSrc, alt }));
 
 // Per-column flex containers + GREEDY shortest-column distribution.
@@ -42,29 +44,48 @@ images.forEach((img) => {
 });
 ---
 
-<div class="portfolio__grid" style={`--gallery-columns: ${effectiveCols}`}>
-  {columnBuckets.map((bucket) => (
-    <div class="portfolio__col">
-      {bucket.map((img) => {
-        const i = images.indexOf(img);
-        return (
-          <div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
-            <img
-              src={img.src}
-              alt={img.alt}
-              width={img.w}
-              height={img.h}
-              loading="lazy"
-              decoding="async"
-              class="portfolio__img"
-              data-index={i}
-            />
-          </div>
-        );
-      })}
-    </div>
-  ))}
-</div>
+{isJustified ? (
+  <div class="portfolio__grid portfolio__grid--justified">
+    {images.map((img, i) => (
+      <div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
+        <img
+          src={img.src}
+          alt={img.alt}
+          width={img.w}
+          height={img.h}
+          loading="lazy"
+          decoding="async"
+          class="portfolio__img"
+          data-index={i}
+        />
+      </div>
+    ))}
+  </div>
+) : (
+  <div class="portfolio__grid" style={`--gallery-columns: ${effectiveCols}`}>
+    {columnBuckets.map((bucket) => (
+      <div class="portfolio__col">
+        {bucket.map((img) => {
+          const i = images.indexOf(img);
+          return (
+            <div class={`portfolio__item reveal-fade reveal-delay-${Math.min((i % 5) + 1, 5)}`}>
+              <img
+                src={img.src}
+                alt={img.alt}
+                width={img.w}
+                height={img.h}
+                loading="lazy"
+                decoding="async"
+                class="portfolio__img"
+                data-index={i}
+              />
+            </div>
+          );
+        })}
+      </div>
+    ))}
+  </div>
+)}
 
 <!-- Lightbox -->
 <div class="lb" id="lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Image viewer">
@@ -142,7 +163,7 @@ images.forEach((img) => {
   // count (round-robin). At narrower viewports the row of columns would
   // either get too thin or show items out of reading order, so re-bucket
   // the items on resize using the breakpoint-appropriate column count.
-  const grid = document.querySelector('.portfolio__grid');
+  const grid = document.querySelector('.portfolio__grid:not(.portfolio__grid--justified)');
   if (grid) {
     const desktopCols = Math.max(1, parseInt(getComputedStyle(grid).getPropertyValue('--gallery-columns')) || 3);
     // DOM order is column-major (server renders per-column buckets), so
@@ -201,6 +222,68 @@ images.forEach((img) => {
       resizeTimer = setTimeout(maybeRedistribute, 100);
     });
   }
+
+  // ── Justified rows layout ──────────────────────────────────────────────
+  // Scale each row so every image in it shares the same height (portrait or
+  // landscape) and the row fills the container width — no cropping. Aspect
+  // ratios come from the width/height attributes, so it runs correctly before
+  // the images load; recomputed on resize. Lightbox above is layout-agnostic.
+  const jgrid = document.querySelector('.portfolio__grid--justified');
+  if (jgrid) {
+    const GAP = 15;
+    const jItems = Array.from(jgrid.querySelectorAll('.portfolio__item'));
+    const aspectOf = (el) => {
+      const img = el.querySelector('img');
+      const w = Number(img?.getAttribute('width')) || 1;
+      const h = Number(img?.getAttribute('height')) || 1;
+      return w / h;
+    };
+    const targetRowH = () => {
+      const w = window.innerWidth;
+      if (w <= 600) return 180;
+      if (w <= 900) return 240;
+      return 340;
+    };
+    function layoutJustified() {
+      // clientWidth INCLUDES the grid's horizontal padding, but the flex items
+      // live in the content box — sizing rows to clientWidth pushed the last
+      // item of each row 30px over and wrapped it. Use the content width.
+      const cs = getComputedStyle(jgrid);
+      const containerW = jgrid.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      if (!(containerW > 0)) return;
+      const targetH = targetRowH();
+      let row = [];
+      let aspectSum = 0;
+      const flush = (isLast) => {
+        if (!row.length) return;
+        const avail = containerW - GAP * (row.length - 1);
+        let h = avail / aspectSum;               // height that fills the row exactly
+        if (isLast && h > targetH) h = targetH;  // don't blow up a lone trailing row
+        row.forEach(({ el, a }) => {
+          el.style.width = Math.floor(a * h) + 'px';
+          el.style.height = Math.floor(h) + 'px';
+        });
+        row = [];
+        aspectSum = 0;
+      };
+      jItems.forEach((el) => {
+        const a = aspectOf(el);
+        row.push({ el, a });
+        aspectSum += a;
+        // Once the row's natural width at the target height reaches the
+        // container, close it and scale it to fill exactly.
+        if (aspectSum * targetH + GAP * (row.length - 1) >= containerW) flush(false);
+      });
+      flush(true); // trailing partial row (left-aligned at target height)
+    }
+    layoutJustified();
+    window.addEventListener('load', layoutJustified);
+    let jTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(jTimer);
+      jTimer = setTimeout(layoutJustified, 100);
+    });
+  }
 </script>
 
 <style>
@@ -244,6 +327,39 @@ images.forEach((img) => {
 
   .portfolio__item:hover img {
     transform: scale(1.03);
+  }
+
+  /* ── Justified rows variant ──────────────────────────────
+     Rows of uniform height that fill the full width; the layout script sets
+     exact per-image width+height inline. The rules here are the pre-JS / no-JS
+     fallback: each image renders at the row height at its natural width and
+     wraps. `width:auto; height:100%` keeps aspect intact in BOTH states — no
+     crop — because the script sizes each item box to the image's own aspect. */
+  .portfolio__grid--justified {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 15px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 1.5rem 15px 0;
+  }
+  .portfolio__grid--justified .portfolio__item {
+    height: 340px;
+    overflow: hidden;
+  }
+  .portfolio__grid--justified .portfolio__img {
+    height: 100%;
+    width: auto;
+    display: block;
+  }
+  @media (max-width: 900px) {
+    .portfolio__grid--justified .portfolio__item { height: 240px; }
+  }
+  @media (max-width: 600px) {
+    .portfolio__grid--justified .portfolio__item { height: 180px; }
   }
 
   /* ── Lightbox ─────────────────────────────────────────── */

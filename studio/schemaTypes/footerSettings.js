@@ -42,6 +42,22 @@ export default {
       initialValue: 'default',
     },
     {
+      name: 'columnAlignment',
+      title: 'Column Alignment',
+      type: 'string',
+      description:
+        'How the footer columns line up vertically. Centered (default) centers each column’s content on a shared line so the links, middle column, and logo/social read even. Top-aligned pins every column to the top instead. Only affects desktop — columns always stack on mobile.',
+      options: {
+        list: [
+          {title: 'Centered (default)', value: 'center'},
+          {title: 'Top-aligned', value: 'top'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'center',
+    },
+    {
       name: 'links',
       title: 'Footer Links',
       type: 'array',

@@ -12,11 +12,13 @@ const portfolioDoc = await getClient(Astro.locals.isPreview).fetch(
     seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
     title,
     byline,
+    galleryLayout,
     galleryColumns,
     additionalGalleries[]{
       name,
       "slug": slug.current,
       byline,
+      galleryLayout,
       galleryColumns,
       seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
       images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } }
@@ -37,6 +39,7 @@ if (!gallery) {
 const portfolioTitle = portfolioDoc?.title || 'Portfolio';
 const pageByline     = gallery.byline || portfolioDoc?.byline || '';
 const columns        = gallery.galleryColumns || portfolioDoc?.galleryColumns || 3;
+const layout         = gallery.galleryLayout || portfolioDoc?.galleryLayout || 'masonry';
 
 const seoTitle       = gallery.seo?.seoTitle       || portfolioDoc?.seo?.seoTitle       || `${gallery.name} — ${portfolioTitle}`;
 const seoDescription = gallery.seo?.seoDescription || portfolioDoc?.seo?.seoDescription || null;
@@ -89,7 +92,7 @@ const tabs = [
     {images.length === 0 ? (
       <p class="portfolio__empty">No images in this gallery yet.</p>
     ) : (
-      <GalleryGrid images={images} galleryColumns={columns} />
+      <GalleryGrid images={images} galleryColumns={columns} galleryLayout={layout} />
     )}
   </main>
 </Layout>
