@@ -65,13 +65,17 @@ export default {
       title: 'Hero Heading',
       type: 'text',
       rows: 2,
-      description: 'Use a line break (Enter) to split onto two lines.',
+      description:
+        'Use a line break (Enter) to split onto two lines. Clear it to hide the heading entirely — it won’t reappear.',
+      initialValue: 'The Journal',
     },
     {
       name: 'heroSubtext',
       title: 'Hero Subtext',
       type: 'text',
       rows: 2,
+      description: 'Clear it to hide the subtext — it won’t reappear.',
+      initialValue: 'Notes from behind the lens',
     },
     {
       name: 'heroTextAlignment',

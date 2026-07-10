@@ -70,15 +70,25 @@ export function applyBackgroundTone(palette, tone) {
     }
   }
   if (tone === 'dark') {
+    const bg = palette.sectionDark || palette.text
+    const fg = palette.sectionDarkText || palette.bg
+    // Keep the accent only if it's legible on the dark band. A palette whose
+    // accent equals its sectionDark (e.g. navy-on-navy) would otherwise render
+    // accent-colored elements — section titles, eyebrows, links — invisible, so
+    // fall back to the light foreground. Bright accents (gold, coral) stay put.
+    const accent = contrastRatio(palette.accent, bg) >= 3 ? palette.accent : fg
+    const accentDark = contrastRatio(palette.accentDark, bg) >= 3 ? palette.accentDark : fg
     return {
       ...palette,
-      bg: palette.sectionDark || palette.text,
-      bgAlt: palette.sectionDark || palette.text,
-      surface: palette.sectionDark || palette.text,
-      text: palette.sectionDarkText || palette.bg,
-      textMuted: palette.sectionDarkText || palette.bg,
-      textMutedLight: palette.sectionDarkText || palette.bg,
-      border: palette.sectionDarkText || palette.border,
+      bg,
+      bgAlt: bg,
+      surface: bg,
+      text: fg,
+      textMuted: fg,
+      textMutedLight: fg,
+      border: fg,
+      accent,
+      accentDark,
     }
   }
   if (tone === 'vibrant') {
@@ -117,6 +127,14 @@ function relLuminance(hex) {
   const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255)
   const lin = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+}
+
+// WCAG contrast ratio between two hex colors (1 = identical … 21 = black/white).
+function contrastRatio(a, b) {
+  const la = relLuminance(a)
+  const lb = relLuminance(b)
+  const [hi, lo] = la >= lb ? [la, lb] : [lb, la]
+  return (hi + 0.05) / (lo + 0.05)
 }
 
 // True when a color wants LIGHT text on top — decided by WCAG contrast ratio
