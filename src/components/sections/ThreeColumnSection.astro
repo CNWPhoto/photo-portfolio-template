@@ -19,6 +19,10 @@ const eyebrow = section?.eyebrow || '';
 const heading = renderHeading(section?.heading || '');
 const variant = section?.variant || 'image-cards';
 const alignment = section?.alignment || 'left';
+// Vertical alignment (Centered / Top-aligned). Only emitted as a data-attr
+// when the editor set it explicitly — existing sections with no value keep
+// the legacy behavior below (mixed-media auto-centers, uniform grids top).
+const verticalAlignment = section?.verticalAlignment || '';
 const columnWidths = section?.columnWidths || 'equal';
 const sideLabel = section?.verticalSideLabel || '';
 // Render however many cards the editor added. Three-up grid wraps to new
@@ -42,6 +46,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
   data-section-type="threeColumnSection"
   data-spacing={section?.spacing || 'normal'}
   data-alignment={alignment}
+  data-valign={verticalAlignment || undefined}
   data-column-widths={columnWidths}
   data-card-count={cardCount}
   id={section?.sectionId || undefined}
@@ -201,6 +206,15 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
      alignment, preserving existing client layouts. */
   .threecol--mixed-media .threecol__grid {
     align-items: center;
+  }
+  /* Explicit Vertical Alignment field overrides the legacy heuristic above.
+     Higher specificity ([data-valign] adds an attribute selector) so an
+     explicit Top-aligned choice wins even on a mixed-media section. */
+  .threecol[data-valign='center'] .threecol__grid {
+    align-items: center;
+  }
+  .threecol[data-valign='top'] .threecol__grid {
+    align-items: start;
   }
 
   /* Editorial proportions. Default 'equal' keeps the existing 1fr 1fr 1fr.

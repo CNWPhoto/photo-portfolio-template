@@ -151,5 +151,21 @@ export default {
       },
       initialValue: 'left',
     },
+    {
+      name: 'verticalAlignment',
+      title: 'Vertical Alignment',
+      type: 'string',
+      description:
+        'How cards line up vertically when they have different heights (e.g. one card has more text than the others). Centered floats shorter cards to the middle of the row; Top-aligned pins every card to the top so their titles line up.',
+      options: {
+        list: [
+          {title: 'Centered', value: 'center'},
+          {title: 'Top-aligned', value: 'top'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'center',
+    },
   ],
 }

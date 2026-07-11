@@ -110,6 +110,12 @@ const tabs = [
     --bg-alt: #f5f5f5;
     --surface: #ffffff;
     --border: #ececec;
+    /* This white island also pins its inks dark. On a dark palette the
+       site-wide --text/--muted are light (authored for a dark background)
+       and would render near-invisible on the forced-white bg here — e.g.
+       the gallery-name title (color: var(--text)) turning near-white. */
+    --text: #1a1a1a;
+    --muted: #5a5a5a;
     background: #ffffff;
     min-height: 100vh;
     width: 100%;
