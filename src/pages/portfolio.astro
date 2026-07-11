@@ -4,6 +4,7 @@ import GalleryTabs from '../components/GalleryTabs.astro';
 import GalleryGrid from '../components/GalleryGrid.astro';
 import ImagePlaceholder from '../components/ImagePlaceholder.astro';
 import { getClient, urlFor } from '../lib/sanity.js';
+import { createDataAttribute } from '@sanity/visual-editing/create-data-attribute';
 
 const portfolioDoc = await getClient(Astro.locals.isPreview).fetch(
   `*[_type == "portfolio"][0]{
@@ -34,6 +35,14 @@ const byline         = portfolioDoc?.byline         || 'A collection of recent d
 const galleryColumns = portfolioDoc?.galleryColumns || 3;
 const galleryLayout  = portfolioDoc?.galleryLayout  || 'masonry';
 const portfolio      = portfolioDoc?.images;
+
+// Register the portfolio doc with Presentation so editing ANY portfolio field
+// (Gallery Layout, columns, byline…) triggers the preview refresh. Without a
+// data-sanity attribute — and since control fields carry no stega-encoded text
+// to auto-register the doc — the preview never updated on these edits.
+const portfolioSanityAttr = Astro.locals.isPreview
+  ? createDataAttribute({ id: 'portfolio', type: 'portfolio', path: 'galleryLayout' }).toString()
+  : null;
 
 // Filter out images without a resolved asset — editors can leave empty
 // upload slots in Studio, which would otherwise crash urlFor() and
@@ -71,7 +80,7 @@ const tabs = [
 ---
 
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Portfolio">
-	<main class="portfolio-main">
+	<main class="portfolio-main" data-sanity={portfolioSanityAttr}>
 		<div class="portfolio__header">
 			<p class="portfolio__byline">{byline}</p>
 			<h1 class="portfolio__title">{pageTitle}</h1>
@@ -96,6 +105,12 @@ const tabs = [
 		--bg-alt: #f5f5f5;
 		--surface: #ffffff;
 		--border: #ececec;
+		/* This white island also pins its inks dark. On a dark palette the
+		   site-wide --text/--muted are light (authored for a dark background)
+		   and would render near-invisible on the forced-white bg here — e.g.
+		   the gallery-name title (color: var(--text)) turning near-white. */
+		--text: #1a1a1a;
+		--muted: #5a5a5a;
 		background: #ffffff;
 		min-height: 100vh;
 		width: 100%;

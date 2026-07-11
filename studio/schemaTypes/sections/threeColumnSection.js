@@ -82,6 +82,14 @@ export default {
             },
             richTextBody(),
             {
+              name: 'bullets',
+              title: 'Bullet Points',
+              type: 'array',
+              of: [{type: 'string'}],
+              description:
+                'Optional checklist shown in the card — one item per bullet (e.g. what a package includes). Leave empty to hide.',
+            },
+            {
               name: 'ctaText',
               title: 'Button Text',
               type: 'string',
@@ -142,6 +150,22 @@ export default {
         direction: 'horizontal',
       },
       initialValue: 'left',
+    },
+    {
+      name: 'verticalAlignment',
+      title: 'Vertical Alignment',
+      type: 'string',
+      description:
+        'How cards line up vertically when they have different heights (e.g. one card has more text than the others). Centered floats shorter cards to the middle of the row; Top-aligned pins every card to the top so their titles line up.',
+      options: {
+        list: [
+          {title: 'Centered', value: 'center'},
+          {title: 'Top-aligned', value: 'top'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'center',
     },
   ],
 }
