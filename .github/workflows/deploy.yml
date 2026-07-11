@@ -190,15 +190,9 @@ jobs:
           - slug: wedding-demo
             sanity_project_id: boa9509d
             studio_url: https://wedding-demo.sanity.studio
-          # ⏸ FROZEN — pets-in-focus held OUT of the fan-out during her launch
-          # window (matrix entries can't be filtered by a variable, and the
-          # `matrix` context isn't available in a job-level `if`, so the freeze
-          # is a commented-out entry). Her Studio + site are otherwise current.
-          # UN-FREEZE after launch: uncomment this entry, then promote (or run
-          # workflow_dispatch only_client=pets-in-focus for a one-off catch-up).
-          # - slug: pets-in-focus
-          #   sanity_project_id: tryjma1z
-          #   studio_url: https://pets-in-focus.sanity.studio
+          - slug: pets-in-focus
+            sanity_project_id: tryjma1z
+            studio_url: https://pets-in-focus.sanity.studio
           - slug: karen-conrad-photography
             sanity_project_id: hydwn002
             studio_url: https://karen-conrad-photography.sanity.studio

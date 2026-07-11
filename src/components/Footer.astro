@@ -25,6 +25,7 @@ const client = getClient(isPreview);
 const [footerDataRaw, socialDataRaw, siteDataRaw, termsDocRaw, privacyDocRaw] = await Promise.all([
   client.fetch(`*[_type == "footerSettings" && _id == "footerSettings"][0]{
     backgroundTone,
+    columnAlignment,
     links[] { label, url, enabled, openInNewTab },
     middleColumn {
       enabled, label, note,
@@ -52,6 +53,7 @@ const photographerName = siteData?.photographerName || siteName;
 // CSS vars on the <footer> element. With no palette passed in (or the
 // default tone), this is a no-op and the footer inherits the page palette.
 const footerTone  = footerData?.backgroundTone || 'default';
+const footerColAlign = footerData?.columnAlignment || 'center';
 const footerTonedPalette = palette ? applyBackgroundTone(palette, footerTone) : null;
 const footerStyle = footerTonedPalette ? paletteToStyle(footerTonedPalette) : undefined;
 // Same prefersLightText() the tone uses to flip its text, so the logo matches:
@@ -152,7 +154,7 @@ const termsUrl   = manualTermsOn   ? legalLinks.terms.url         : '/terms-and-
 const year = new Date().getFullYear();
 ---
 
-<footer class="footer" id="contact" data-sanity={footerSanityAttr} style={footerStyle}>
+<footer class="footer" id="contact" data-col-align={footerColAlign} data-sanity={footerSanityAttr} style={footerStyle}>
 	<hr />
 
 	<!-- Columns: left nav + right wordmark/social -->
@@ -378,6 +380,19 @@ const year = new Date().getFullYear();
 		justify-content: center;
 		padding: 2.5rem 1.5rem;
 		text-align: center;
+	}
+
+	/* ── Column alignment toggle (footerSettings.columnAlignment) ──
+	   Default is Centered (the rules above). Top-aligned pins every column's
+	   content to the top and matches their top padding so all three start on
+	   the same line. Columns stay full-height in both modes (.footer__cols keeps
+	   align-items:stretch), so the vertical dividers are unaffected either way. */
+	.footer[data-col-align='top'] .footer__col,
+	.footer[data-col-align='top'] .footer__right {
+		justify-content: flex-start;
+	}
+	.footer[data-col-align='top'] .footer__right {
+		padding-top: 2rem;
 	}
 
 	/* Legal row */

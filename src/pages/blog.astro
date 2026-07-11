@@ -39,8 +39,13 @@ const ogImage        = pageDoc?.seo?.socialImage?.asset?.url || null;
 // Niche-neutral fallbacks — only render when the editor hasn't filled
 // these in yet. Forking the template doesn't require editing this file
 // per client; editors customize via blogPage.heroHeading / heroSubtext.
-const heroHeading = pageDoc?.heroHeading || 'The Journal';
-const heroSubtext = pageDoc?.heroSubtext || 'Notes from behind the lens';
+// Defaults live in the schema as initialValue (blogPage.heroHeading /
+// heroSubtext), so a fresh site starts with copy the editor can edit OR clear.
+// No render-time fallback here — an editor who clears these gets an empty hero
+// (HeroSection renders the heading/sub only when non-empty), not a forced
+// "The Journal" default that reappears every publish.
+const heroHeading = pageDoc?.heroHeading || '';
+const heroSubtext = pageDoc?.heroSubtext || '';
 
 // Synthesize a heroSection-shaped object so we can render the unified
 // HeroSection component instead of a hand-rolled blog hero. This buys

@@ -31,7 +31,7 @@ const DEMO_SLUG = 'cnw-photo-demo' // the demo is its own CI job, not in the cli
 // treats the deliberate "has a backup but no matrix entry" asymmetry as expected,
 // not drift. UN-FREEZE: uncomment the client's deploy.yml matrix entry AND remove
 // it from this set (the two must move together).
-const FROZEN_SLUGS = new Set(['pets-in-focus'])
+const FROZEN_SLUGS = new Set([])
 
 // ── A. env-backups (Studio roster) ───────────────────────────────────────────
 const backups = new Map() // slug -> {projectId, host}

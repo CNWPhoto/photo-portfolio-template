@@ -11,12 +11,14 @@ const portfolioDoc = await getClient(Astro.locals.isPreview).fetch(
     seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
     title,
     byline,
+    galleryLayout,
     galleryColumns,
     images[]{ ..., asset->{ _id, metadata { dimensions { width, height } } } },
     additionalGalleries[]{
       name,
       "slug": slug.current,
       byline,
+      galleryLayout,
       galleryColumns,
     }
   }`,
@@ -30,6 +32,7 @@ const ogImage        = portfolioDoc?.seo?.socialImage?.asset?.url || null;
 const pageTitle      = portfolioDoc?.title          || 'Portfolio';
 const byline         = portfolioDoc?.byline         || 'A collection of recent dog photography sessions';
 const galleryColumns = portfolioDoc?.galleryColumns || 3;
+const galleryLayout  = portfolioDoc?.galleryLayout  || 'masonry';
 const portfolio      = portfolioDoc?.images;
 
 // Filter out images without a resolved asset — editors can leave empty
@@ -75,7 +78,7 @@ const tabs = [
 		</div>
 		<GalleryTabs tabs={tabs} activeSlug="" />
 		{images.length
-			? <GalleryGrid images={images} galleryColumns={galleryColumns} />
+			? <GalleryGrid images={images} galleryColumns={galleryColumns} galleryLayout={galleryLayout} />
 			: <div class="portfolio__empty">
 					{PLACEHOLDER_RATIOS.map((ratio) => (
 						<ImagePlaceholder aspectRatio={ratio} size="w" />

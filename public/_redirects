@@ -1,17 +1,28 @@
-# Redirects for Cloudflare Pages
+# Redirects served by Cloudflare Workers static assets (this file, public/_redirects).
 # Format: /old-url  /new-url  301
 #
-# Use 301 for permanent redirects (e.g. renamed pages or posts — passes SEO equity)
-# Use 302 for temporary redirects
+# IMPORTANT — the site uses trailingSlash: 'always'. ALWAYS point the target at
+# the trailing-slash form (/new-url/, NOT /new-url). Otherwise every hit takes
+# two hops — your 301, then an automatic 308 that adds the slash — which wastes
+# a little SEO equity and adds latency. Point straight at /new-url/.
+#
+# Use 301 for permanent redirects (renamed pages/posts — passes SEO equity).
+# Use 302 for temporary redirects.
+#
+# NOTE — this file ships in the TEMPLATE, so it is shared by EVERY client site.
+# Only put redirects here that are correct for all clients, and whose target
+# page exists on all of them (a redirect to a 404 is worse than no redirect).
+# Client-specific old->new mappings (e.g. a Squarespace migration) belong on
+# that client's own domain via Cloudflare Bulk Redirects, NOT here.
 #
 # Examples:
-#   /about-us          /about          301
-#   /blog/old-title    /blog/new-title 301
+#   /about-us          /about/          301
+#   /blog/old-title    /blog/new-title/ 301
 #
 # Add your redirects below this line:
 
-# Common alias paths users may type or prior site versions may have used.
+# Common alias paths users may type. Targets are trailing-slash (single hop)
+# and point at pages that exist on every client.
 /home       /            301
-/inquire    /contact     301
-/services   /experience  301
-/work       /portfolio   301
+/inquire    /contact/    301
+/work       /portfolio/  301

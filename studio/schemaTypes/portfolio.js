@@ -54,12 +54,30 @@ export default {
       initialValue: 'A collection of recent dog photography sessions',
     },
     {
+      name: 'galleryLayout',
+      title: 'Gallery Layout',
+      type: 'string',
+      description:
+        'Masonry keeps every image at its natural shape and stacks them in columns of varying height. Justified rows scales each row so all images in it share the same height — portrait or landscape — and the row fills the full width (like Flickr or Lightroom). Nothing is cropped in either mode.',
+      initialValue: 'masonry',
+      options: {
+        list: [
+          {title: 'Masonry (columns)', value: 'masonry'},
+          {title: 'Justified rows (equal height)', value: 'justified'},
+        ],
+        layout: 'radio',
+      },
+    },
+    {
       name: 'galleryColumns',
       title: 'Gallery Columns',
       type: 'number',
       description:
-        'Columns in the masonry grid on desktop — phones always show 1 and tablets 2, so this only changes large screens. Pick 2 to show off big detailed images, 4 for large collections where overview matters more than size.',
+        'Columns in the masonry grid on desktop — phones always show 1 and tablets 2, so this only changes large screens. Pick 2 to show off big detailed images, 4 for large collections where overview matters more than size. (Only applies to the Masonry layout.)',
       initialValue: 3,
+      // Column count is meaningless for Justified rows (which packs by row,
+      // not column), so hide it there to avoid a dead control.
+      hidden: ({parent}) => parent?.galleryLayout === 'justified',
       options: {
         list: [
           {title: '2 columns', value: 2},
@@ -165,11 +183,26 @@ export default {
               description: 'Optional. Overrides the portfolio byline for this gallery only.',
             },
             {
+              name: 'galleryLayout',
+              title: 'Gallery Layout Override',
+              type: 'string',
+              description:
+                'Optional. Overrides the portfolio layout for this gallery only. Leave blank to inherit.',
+              options: {
+                list: [
+                  {title: 'Masonry (columns)', value: 'masonry'},
+                  {title: 'Justified rows (equal height)', value: 'justified'},
+                ],
+                layout: 'radio',
+              },
+            },
+            {
               name: 'galleryColumns',
               title: 'Gallery Columns Override',
               type: 'number',
               description:
-                'Optional. Overrides the portfolio column count for this gallery only.',
+                'Optional. Overrides the portfolio column count for this gallery only. (Masonry layout only.)',
+              hidden: ({parent}) => parent?.galleryLayout === 'justified',
               options: {
                 list: [
                   {title: '2 columns', value: 2},
