@@ -82,6 +82,14 @@ export default {
             },
             richTextBody(),
             {
+              name: 'bullets',
+              title: 'Bullet Points',
+              type: 'array',
+              of: [{type: 'string'}],
+              description:
+                'Optional checklist shown in the card — one item per bullet (e.g. what a package includes). Leave empty to hide.',
+            },
+            {
               name: 'ctaText',
               title: 'Button Text',
               type: 'string',
