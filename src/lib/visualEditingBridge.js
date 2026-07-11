@@ -367,6 +367,15 @@ export function mount() {
           setTimeout(resolve, STYLE_QUIET_MS + 50)
         })
       }
+      // Portfolio edits toggle a SERVER-rendered layout (masonry ↔ justified
+      // rows) that a page-load <script> finishes computing. The in-place <main>
+      // swap doesn't re-run that script, so the gallery would render stale — do
+      // a full reload for portfolio changes instead.
+      if (payload.document?._type === 'portfolio') {
+        if (refreshTimer) clearTimeout(refreshTimer)
+        refreshTimer = setTimeout(() => window.location.reload(), QUIET_MS)
+        return new Promise((resolve) => setTimeout(resolve, QUIET_MS + 50))
+      }
       if (refreshTimer) clearTimeout(refreshTimer)
       refreshTimer = setTimeout(swapInPlace, QUIET_MS)
       // Returning a promise tells visual-editing we're handling refresh
