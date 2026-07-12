@@ -12,6 +12,7 @@ export const GET: APIRoute = async ({ site, request }) => {
   const content = `User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /studio
 
 Sitemap: ${base}/sitemap.xml
 `;
