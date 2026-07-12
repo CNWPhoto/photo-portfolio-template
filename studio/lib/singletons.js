@@ -27,6 +27,9 @@ export const SINGLETON_TYPES = [
 const HIDDEN_FROM_CREATE = new Set([
   ...SINGLETON_TYPES,
   'assist.instruction.context', // AI Assist internal — managed by the plugin
+  // Collections intentionally kept out of the global "+" (still visible/editable
+  // in the structure's Categories group; just not created ad-hoc from the top):
+  'portfolioCategory',
 ])
 
 // Drop-in for `document.newDocumentOptions`: removes the hidden types from the
