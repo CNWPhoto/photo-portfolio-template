@@ -1,6 +1,7 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {presentationTool} from 'sanity/presentation'
+import {assist} from '@sanity/assist'
 // Single-sourced schema: the SAME definitions the standalone hosted Studio
 // (studio/) deploys. One schema, no drift. See the embedded-studio pilot.
 import {schemaTypes} from './studio/schemaTypes'
@@ -30,6 +31,12 @@ import PresentationNavigator from './studio/components/PresentationNavigator'
 //   only runs in dev, not in `astro build`).
 const projectId = import.meta.env.PUBLIC_SANITY_PROJECT_ID || 'hx5xgigp'
 const dataset = import.meta.env.PUBLIC_SANITY_DATASET || 'production'
+// AI Assist — gated per client, default OFF, mirroring the hosted Studio's
+// SANITY_STUDIO_AI_ASSIST gate (kept parallel so the two Studios don't drift).
+// Set PUBLIC_SANITY_AI_ASSIST=true in the client's build env to enable; the
+// demo build sets it true. siteSettings.aiAssistEnabled stays the signal
+// channel clients flip to request it. (AI Assist is a Growth-plan feature.)
+const aiAssistEnabled = import.meta.env.PUBLIC_SANITY_AI_ASSIST === 'true'
 
 export default defineConfig({
   name: 'default',
@@ -58,6 +65,18 @@ export default defineConfig({
       },
     }),
     structureTool(),
+    // AI Assist — per-field sparkle buttons; gated (see aiAssistEnabled above).
+    ...(aiAssistEnabled ? [assist()] : []),
   ],
   schema: {types: schemaTypes},
+
+  // Trim default Studio features that are paid upsells this niche doesn't use.
+  //   - Releases (Enterprise): `releases.enabled:false` disables the feature,
+  //     but in this Studio version it LEAVES the "Releases" nav tab, so we also
+  //     strip it from `tools` (it's registered as a tool at /studio/releases).
+  //   - Tasks (Growth): the tasks inbox next to the avatar.
+  // NOTE: no supported config flag hides the navbar "Upgrade" CTA itself.
+  releases: {enabled: false},
+  tasks: {enabled: false},
+  tools: (prev) => prev.filter((tool) => tool.name !== 'releases'),
 })

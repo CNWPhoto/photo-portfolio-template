@@ -205,4 +205,12 @@ export default defineConfig({
   schema: {
     types: schemaTypes,
   },
+
+  // Trim default Studio upsell features (kept in sync with the embedded Studio,
+  // root sanity.config.ts): Releases (Enterprise) and Tasks (Growth). The
+  // Releases nav tab persists under `releases.enabled:false` in this version,
+  // so also filter it out of `tools`.
+  releases: {enabled: false},
+  tasks: {enabled: false},
+  tools: (prev) => prev.filter((tool) => tool.name !== 'releases'),
 })
