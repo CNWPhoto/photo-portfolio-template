@@ -7,8 +7,7 @@
 import {Badge, Box, Button, Card, Flex} from '@sanity/ui'
 
 // Shared support space — the SAME Heartbeat channel for every client's Studio.
-// TODO(Connor): replace with the real Heartbeat channel URL.
-const HELP_URL = 'https://app.heartbeat.chat/REPLACE_ME'
+const HELP_URL = 'https://member.connorwalberg.com/login?redirectTo=%2F-'
 
 export default function StudioTopBar(props) {
   return (
