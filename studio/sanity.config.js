@@ -5,6 +5,7 @@ import {map} from 'rxjs'
 import {assist} from '@sanity/assist'
 import {schemaTypes} from './schemaTypes'
 import PresentationNavigator from './components/PresentationNavigator'
+import StudioTopBar from './components/StudioTopBar'
 // Shared with the embedded Studio (root sanity.config.ts) — single source for
 // the Presentation URL⇄document mapping.
 import {mainDocuments, locations} from './presentation/resolve'
@@ -213,4 +214,12 @@ export default defineConfig({
   releases: {enabled: false},
   tasks: {enabled: false},
   tools: (prev) => prev.filter((tool) => tool.name !== 'releases'),
+
+  // Agency top bar (Singletrack Sites tag + Heartbeat "Get help" link) —
+  // shared with the embedded Studio (root sanity.config.ts).
+  studio: {
+    components: {
+      navbar: StudioTopBar,
+    },
+  },
 })

@@ -8,6 +8,7 @@ import {schemaTypes} from './studio/schemaTypes'
 // Presentation URL⇄document map + page-picker, shared with the hosted Studio.
 import {mainDocuments, locations} from './studio/presentation/resolve'
 import PresentationNavigator from './studio/components/PresentationNavigator'
+import StudioTopBar from './studio/components/StudioTopBar'
 
 // Config for the embedded Studio served by @sanity/astro at /studio.
 //
@@ -79,4 +80,11 @@ export default defineConfig({
   releases: {enabled: false},
   tasks: {enabled: false},
   tools: (prev) => prev.filter((tool) => tool.name !== 'releases'),
+
+  // Agency top bar (Singletrack Sites tag + Heartbeat "Get help" link).
+  studio: {
+    components: {
+      navbar: StudioTopBar,
+    },
+  },
 })
