@@ -1,10 +1,13 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
-import {presentationTool, defineDocuments, defineLocations} from 'sanity/presentation'
+import {presentationTool} from 'sanity/presentation'
 import {map} from 'rxjs'
 import {assist} from '@sanity/assist'
 import {schemaTypes} from './schemaTypes'
 import PresentationNavigator from './components/PresentationNavigator'
+// Shared with the embedded Studio (root sanity.config.ts) — single source for
+// the Presentation URL⇄document mapping.
+import {mainDocuments, locations} from './presentation/resolve'
 
 // AI Assist toggle — controlled by SANITY_STUDIO_AI_ASSIST in studio/.env
 // per client. We tried fetching siteSettings.aiAssistEnabled at config
@@ -76,115 +79,10 @@ export default defineConfig({
           disable: '/api/disable-preview/',
         },
       },
-      // Maps the URL in the Presentation iframe to the Sanity documents
-      // responsible for rendering it, so the "Documents on this page" panel
-      // shows editable links without needing stega markers in the DOM.
-      // Update these as new routes/doctypes are added.
-      resolve: {
-        mainDocuments: defineDocuments([
-          {
-            route: '/',
-            type: 'homepagePage',
-          },
-          // On first load the Presentation handshake briefly points the iframe
-          // at the draft-mode enable/disable API paths before redirecting to
-          // '/'. Those two-segment paths otherwise fall through to the blogPost
-          // route below (base='api', slug='preview'), match no post, and flash
-          // "missing main document for /api/preview" — alarming to clients even
-          // though it's harmless and transient. Resolve them to the homepage
-          // singleton so a main document is always present during the handshake.
-          {
-            route: '/api/preview',
-            type: 'homepagePage',
-          },
-          {
-            route: '/api/disable-preview',
-            type: 'homepagePage',
-          },
-          {
-            route: '/portfolio',
-            type: 'portfolio',
-          },
-          {
-            route: '/404',
-            type: 'notFoundPage',
-          },
-          // Blog posts / categories live under the content-driven blog base
-          // (blogPage.slug, e.g. '/lenaweepetcollective'). These 2- and
-          // 3-segment routes don't collide with the single-segment route below.
-          {
-            route: '/:base/category/:slug',
-            filter: `_type == "blogCategory" && slug.current == $slug`,
-            params: ({params}) => ({slug: params.slug}),
-          },
-          {
-            route: '/:base/:slug',
-            filter: `_type == "blogPost" && slug.current == $slug`,
-            params: ({params}) => ({slug: params.slug}),
-          },
-          // Single-segment URLs are EITHER the blog index (blogPage — whose slug
-          // is the blog base, defaulting to 'blog' when unset) OR any slugged
-          // page (about, experience, contact, …). This MUST be a single route
-          // whose filter matches either type: Presentation resolves the first
-          // route whose PATTERN matches, so two separate '/:slug' routes would
-          // shadow each other — a dedicated '/:base' blog route ahead of the
-          // page route silently broke "document on this page" for EVERY page.
-          {
-            route: '/:slug',
-            filter: `(_type == "blogPage" && (slug.current == $slug || (!defined(slug.current) && $slug == "blog"))) || (_type == "page" && slug.current == $slug)`,
-            params: ({params}) => ({slug: params.slug}),
-          },
-        ]),
-        // Reverse mapping: from a Sanity document, compute the URL where
-        // it can be previewed. Clicking "Open preview" on a doc in the
-        // Studio jumps the iframe to the right route.
-        locations: {
-          homepagePage: defineLocations({
-            locations: [{title: 'Homepage', href: '/'}],
-          }),
-          page: defineLocations({
-            select: {title: 'title', slug: 'slug.current'},
-            resolve: (doc) =>
-              doc?.slug
-                ? {locations: [{title: doc.title || 'Page', href: `/${doc.slug}`}]}
-                : {locations: []},
-          }),
-          portfolio: defineLocations({
-            locations: [{title: 'Portfolio', href: '/portfolio'}],
-          }),
-          blogPage: defineLocations({
-            select: {slug: 'slug.current'},
-            resolve: (doc) => ({
-              // Use the blog's real slug (defaults to 'blog') so "Open preview"
-              // jumps straight to e.g. /lenaweepetcollective — no redirect hop.
-              locations: [{title: 'Blog', href: `/${doc?.slug || 'blog'}`}],
-            }),
-          }),
-          blogPost: defineLocations({
-            select: {title: 'title', slug: 'slug.current'},
-            // Posts link under the literal /blog base; when the client renamed
-            // the blog, middleware.ts 301-rewrites /blog/* to the custom base,
-            // so the preview lands on the right URL (the post's own doc doesn't
-            // carry the base slug, which lives on the blogPage singleton).
-            resolve: (doc) =>
-              doc?.slug
-                ? {locations: [{title: doc.title || 'Post', href: `/blog/${doc.slug}`}]}
-                : {locations: []},
-          }),
-          notFoundPage: defineLocations({
-            locations: [{title: '404 page', href: '/404'}],
-          }),
-          siteSettings: defineLocations({
-            locations: [{title: 'Site-wide', href: '/'}],
-          }),
-          navSettings: defineLocations({
-            locations: [{title: 'Navigation (site-wide)', href: '/'}],
-          }),
-          footerSettings: defineLocations({
-            locations: [{title: 'Footer (site-wide)', href: '/'}],
-          }),
-        },
-      },
+      // URL⇄document mapping (mainDocuments + locations) is single-sourced in
+      // ./presentation/resolve and shared with the embedded Studio. Update
+      // routes/doctypes there.
+      resolve: {mainDocuments, locations},
     }),
     structureTool({
       structure: (S, context) =>
