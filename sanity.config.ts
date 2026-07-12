@@ -9,6 +9,9 @@ import {schemaTypes} from './studio/schemaTypes'
 import {mainDocuments, locations} from './studio/presentation/resolve'
 import PresentationNavigator from './studio/components/PresentationNavigator'
 import StudioTopBar from './studio/components/StudioTopBar'
+// Curated structure + singleton "+" filter, shared with the hosted Studio.
+import {deskStructure} from './studio/structure/deskStructure'
+import {filterNewDocumentOptions} from './studio/lib/singletons'
 
 // Config for the embedded Studio served by @sanity/astro at /studio.
 //
@@ -65,11 +68,18 @@ export default defineConfig({
         },
       },
     }),
-    structureTool(),
+    // Curated structure — same organized tree as the hosted Studio (not the
+    // raw default type list).
+    structureTool({structure: deskStructure}),
     // AI Assist — per-field sparkle buttons; gated (see aiAssistEnabled above).
     ...(aiAssistEnabled ? [assist()] : []),
   ],
   schema: {types: schemaTypes},
+
+  // Hide singletons (+ AI Assist's internal doc) from the global "+" menu.
+  document: {
+    newDocumentOptions: (prev) => filterNewDocumentOptions(prev),
+  },
 
   // Trim default Studio features that are paid upsells this niche doesn't use.
   //   - Releases (Enterprise): `releases.enabled:false` disables the feature,

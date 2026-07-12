@@ -46,6 +46,10 @@ export default defineConfig({
         'styled-components',
         'sanity',
         '@sanity/ui',
+        // The shared curated structure pipes a documentStore observable through
+        // rxjs `map`; a single rxjs instance avoids cross-instance operator
+        // issues between the schema-side import and sanity's own rxjs.
+        'rxjs',
       ],
     },
   },
