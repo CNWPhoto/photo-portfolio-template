@@ -9,6 +9,7 @@ import {schemaTypes} from './studio/schemaTypes'
 import {mainDocuments, locations} from './studio/presentation/resolve'
 import PresentationNavigator from './studio/components/PresentationNavigator'
 import StudioTopBar from './studio/components/StudioTopBar'
+import StudioLayout from './studio/components/StudioLayout'
 // Curated structure + singleton "+" filter, shared with the hosted Studio.
 import {deskStructure} from './studio/structure/deskStructure'
 import {filterNewDocumentOptions} from './studio/lib/singletons'
@@ -91,10 +92,13 @@ export default defineConfig({
   tasks: {enabled: false},
   tools: (prev) => prev.filter((tool) => tool.name !== 'releases'),
 
-  // Agency top bar (Singletrack Sites tag + Heartbeat "Get help" link).
+  // Agency top bar (Singletrack Sites tag + Heartbeat "Get help" link) +
+  // Dashboard bridge (StudioLayout) so sanity.io's Dashboard opens THIS
+  // embedded Studio rather than a stale hosted one.
   studio: {
     components: {
       navbar: StudioTopBar,
+      layout: StudioLayout,
     },
   },
 })
