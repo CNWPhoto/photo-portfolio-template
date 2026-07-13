@@ -10,3 +10,6 @@ dist/
 
 # Per-client onboarding scratch (content.json, originals, manifests)
 .staging/
+
+# Generated Sanity Dashboard manifest (rebuilt by prebuild)
+public/studio/static/
