@@ -33,9 +33,13 @@ jobs:
           set -u
           FAILURES=""
 
-          # curl with one retry — a single transient blip shouldn't page anyone.
+          # Retry on ANY error, including connection resets / TLS blips (e.g.
+          # curl 35 "Recv failure: Connection reset by peer", which shows up as
+          # code 000). Plain --retry only covers timeouts + 5xx, so those
+          # transient transport hiccups on Sanity-hosted studios slipped through
+          # and paged us — --retry-all-errors is what actually catches them.
           fetch() { # $1=url → body on stdout, rc!=0 on hard failure
-            curl -sS --max-time 20 --retry 1 --retry-delay 10 "$1"
+            curl -sS --max-time 20 --retry 2 --retry-delay 5 --retry-all-errors "$1"
           }
 
           check_site() { # $1=slug $2=url
@@ -59,7 +63,7 @@ jobs:
           check_studio() { # $1=slug
             local url="https://$1.sanity.studio/"
             local code
-            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 --retry 1 --retry-delay 10 "$url" || echo 000)
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 5 --retry-all-errors "$url" || echo 000)
             # Unauthenticated requests 302 to the Sanity login — that IS a
             # healthy Studio (verified against the live fleet). Only 4xx/5xx
             # or no response counts as down.
