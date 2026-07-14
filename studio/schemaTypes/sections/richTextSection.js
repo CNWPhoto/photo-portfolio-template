@@ -112,12 +112,13 @@ export default {
       title: 'Vertical Padding',
       type: 'string',
       description:
-        'Top & bottom padding for this section. Short ≈ 20–25px; Default matches the other sections.',
+        'Top & bottom padding for this section. Short ≈ 20–25px; Default matches the other sections; Tall adds extra breathing room.',
       options: {
         list: [
           {title: 'Short', value: 'narrow'},
           {title: 'Medium', value: 'compact'},
           {title: 'Default', value: 'normal'},
+          {title: 'Tall', value: 'spacious'},
         ],
         layout: 'radio',
         direction: 'horizontal',
