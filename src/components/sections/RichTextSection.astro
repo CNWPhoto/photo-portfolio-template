@@ -133,4 +133,16 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     padding: 1rem 2.25rem;
     white-space: nowrap;
   }
+
+  /* Keep the section's vertical padding visually symmetric. Portable-text
+     blocks carry a bottom margin (p = 1.25rem), so without this the last
+     block's margin stacks under the section's padding-bottom and the gap below
+     looks larger than above — very noticeable at the new "Short" spacing.
+     MUST come after the .richtext__p / heading rules: they share this rule's
+     specificity, so source order is what makes the reset win. (:global because
+     the body HTML is injected via set:html.) */
+  .richtext__wrap > :first-child { margin-top: 0; }
+  .richtext__wrap > :last-child { margin-bottom: 0; }
+  .richtext__body > :global(:first-child) { margin-top: 0; }
+  .richtext__body > :global(:last-child) { margin-bottom: 0; }
 </style>
