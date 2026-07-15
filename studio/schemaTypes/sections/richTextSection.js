@@ -102,5 +102,28 @@ export default {
       },
       initialValue: 'default',
     },
+    {
+      // Reuses the site-wide [data-spacing] scale (src/styles/palette.css) that
+      // RichTextSection.astro already applies — only the editor control was
+      // missing here. Kept scoped to this section on purpose: the shared
+      // `spacing` base field was removed because it was a no-op on most
+      // components; rich text honors it end-to-end, so it's safe here.
+      name: 'spacing',
+      title: 'Vertical Padding',
+      type: 'string',
+      description:
+        'Top & bottom padding for this section. Short ≈ 20–25px; Default matches the other sections; Tall adds extra breathing room.',
+      options: {
+        list: [
+          {title: 'Short', value: 'narrow'},
+          {title: 'Medium', value: 'compact'},
+          {title: 'Default', value: 'normal'},
+          {title: 'Tall', value: 'spacious'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'normal',
+    },
   ],
 }

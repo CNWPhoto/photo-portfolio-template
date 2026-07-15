@@ -1,10 +1,16 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
-import {presentationTool, defineDocuments, defineLocations} from 'sanity/presentation'
-import {map} from 'rxjs'
+import {presentationTool} from 'sanity/presentation'
 import {assist} from '@sanity/assist'
 import {schemaTypes} from './schemaTypes'
 import PresentationNavigator from './components/PresentationNavigator'
+import StudioTopBar from './components/StudioTopBar'
+// Shared with the embedded Studio (root sanity.config.ts): single source for
+// the Presentation URL⇄document mapping, the curated structure, and the
+// singleton "+" filter.
+import {mainDocuments, locations} from './presentation/resolve'
+import {deskStructure} from './structure/deskStructure'
+import {filterNewDocumentOptions} from './lib/singletons'
 
 // AI Assist toggle — controlled by SANITY_STUDIO_AI_ASSIST in studio/.env
 // per client. We tried fetching siteSettings.aiAssistEnabled at config
@@ -20,13 +26,6 @@ import PresentationNavigator from './components/PresentationNavigator'
 // The siteSettings.aiAssistEnabled boolean still lives in the schema
 // as the signal channel — clients flip it to communicate intent.
 const aiAssistEnabled = process.env.SANITY_STUDIO_AI_ASSIST === 'true'
-
-// Singleton helper — links directly to a specific document by ID
-const singleton = (S, id, title, schemaType) =>
-  S.listItem()
-    .title(title)
-    .id(id)
-    .child(S.document().documentId(id).schemaType(schemaType).title(title))
 
 const PREVIEW_ORIGIN = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:4321'
 
@@ -76,229 +75,12 @@ export default defineConfig({
           disable: '/api/disable-preview/',
         },
       },
-      // Maps the URL in the Presentation iframe to the Sanity documents
-      // responsible for rendering it, so the "Documents on this page" panel
-      // shows editable links without needing stega markers in the DOM.
-      // Update these as new routes/doctypes are added.
-      resolve: {
-        mainDocuments: defineDocuments([
-          {
-            route: '/',
-            type: 'homepagePage',
-          },
-          // On first load the Presentation handshake briefly points the iframe
-          // at the draft-mode enable/disable API paths before redirecting to
-          // '/'. Those two-segment paths otherwise fall through to the blogPost
-          // route below (base='api', slug='preview'), match no post, and flash
-          // "missing main document for /api/preview" — alarming to clients even
-          // though it's harmless and transient. Resolve them to the homepage
-          // singleton so a main document is always present during the handshake.
-          {
-            route: '/api/preview',
-            type: 'homepagePage',
-          },
-          {
-            route: '/api/disable-preview',
-            type: 'homepagePage',
-          },
-          {
-            route: '/portfolio',
-            type: 'portfolio',
-          },
-          {
-            route: '/404',
-            type: 'notFoundPage',
-          },
-          // Blog posts / categories live under the content-driven blog base
-          // (blogPage.slug, e.g. '/lenaweepetcollective'). These 2- and
-          // 3-segment routes don't collide with the single-segment route below.
-          {
-            route: '/:base/category/:slug',
-            filter: `_type == "blogCategory" && slug.current == $slug`,
-            params: ({params}) => ({slug: params.slug}),
-          },
-          {
-            route: '/:base/:slug',
-            filter: `_type == "blogPost" && slug.current == $slug`,
-            params: ({params}) => ({slug: params.slug}),
-          },
-          // Single-segment URLs are EITHER the blog index (blogPage — whose slug
-          // is the blog base, defaulting to 'blog' when unset) OR any slugged
-          // page (about, experience, contact, …). This MUST be a single route
-          // whose filter matches either type: Presentation resolves the first
-          // route whose PATTERN matches, so two separate '/:slug' routes would
-          // shadow each other — a dedicated '/:base' blog route ahead of the
-          // page route silently broke "document on this page" for EVERY page.
-          {
-            route: '/:slug',
-            filter: `(_type == "blogPage" && (slug.current == $slug || (!defined(slug.current) && $slug == "blog"))) || (_type == "page" && slug.current == $slug)`,
-            params: ({params}) => ({slug: params.slug}),
-          },
-        ]),
-        // Reverse mapping: from a Sanity document, compute the URL where
-        // it can be previewed. Clicking "Open preview" on a doc in the
-        // Studio jumps the iframe to the right route.
-        locations: {
-          homepagePage: defineLocations({
-            locations: [{title: 'Homepage', href: '/'}],
-          }),
-          page: defineLocations({
-            select: {title: 'title', slug: 'slug.current'},
-            resolve: (doc) =>
-              doc?.slug
-                ? {locations: [{title: doc.title || 'Page', href: `/${doc.slug}`}]}
-                : {locations: []},
-          }),
-          portfolio: defineLocations({
-            locations: [{title: 'Portfolio', href: '/portfolio'}],
-          }),
-          blogPage: defineLocations({
-            select: {slug: 'slug.current'},
-            resolve: (doc) => ({
-              // Use the blog's real slug (defaults to 'blog') so "Open preview"
-              // jumps straight to e.g. /lenaweepetcollective — no redirect hop.
-              locations: [{title: 'Blog', href: `/${doc?.slug || 'blog'}`}],
-            }),
-          }),
-          blogPost: defineLocations({
-            select: {title: 'title', slug: 'slug.current'},
-            // Posts link under the literal /blog base; when the client renamed
-            // the blog, middleware.ts 301-rewrites /blog/* to the custom base,
-            // so the preview lands on the right URL (the post's own doc doesn't
-            // carry the base slug, which lives on the blogPage singleton).
-            resolve: (doc) =>
-              doc?.slug
-                ? {locations: [{title: doc.title || 'Post', href: `/blog/${doc.slug}`}]}
-                : {locations: []},
-          }),
-          notFoundPage: defineLocations({
-            locations: [{title: '404 page', href: '/404'}],
-          }),
-          siteSettings: defineLocations({
-            locations: [{title: 'Site-wide', href: '/'}],
-          }),
-          navSettings: defineLocations({
-            locations: [{title: 'Navigation (site-wide)', href: '/'}],
-          }),
-          footerSettings: defineLocations({
-            locations: [{title: 'Footer (site-wide)', href: '/'}],
-          }),
-        },
-      },
+      // URL⇄document mapping (mainDocuments + locations) is single-sourced in
+      // ./presentation/resolve and shared with the embedded Studio. Update
+      // routes/doctypes there.
+      resolve: {mainDocuments, locations},
     }),
-    structureTool({
-      structure: (S, context) =>
-        S.list()
-          .title('Studio')
-          .items([
-            // ── Site Settings ─────────────────────────────────────────────
-            S.listItem()
-              .title('⚙️ Site Settings')
-              .id('siteSettingsGroup')
-              .child(
-                S.list()
-                  .title('Site Settings')
-                  .items([
-                    singleton(S, 'siteSettings', 'Site & Theme', 'siteSettings'),
-                    singleton(S, 'navSettings', 'Navigation', 'navSettings'),
-                    singleton(S, 'footerSettings', 'Footer', 'footerSettings'),
-                    singleton(S, 'socialSettings', 'Social', 'socialSettings'),
-                    singleton(S, 'codeSettings', 'Code', 'codeSettings'),
-                    singleton(S, 'seoSettings', 'SEO', 'seoSettings'),
-                  ]),
-              ),
-
-            S.divider(),
-
-            // ── Pages ────────────────────────────────────────────────────
-            // Flat list: every `page` doc (About, Experience, Contact, and
-            // any custom pages) is inlined under the singletons, not hidden
-            // behind a second "Pages" click. Uses a LIVE query
-            // (documentStore.listenQuery) rather than a one-shot client.fetch:
-            // the fetch version was a static snapshot, so a page deleted from
-            // this list stayed visible until a manual Studio refresh. The
-            // listener re-emits the list on every create / delete / rename.
-            S.listItem()
-              .title('📄 Pages')
-              .id('pagesGroup')
-              .child(() =>
-                context.documentStore
-                  .listenQuery(
-                    `*[_type == "page" && defined(slug.current)]{_id, title, "slug": slug.current}`,
-                    {},
-                    {perspective: 'raw'},
-                  )
-                  .pipe(
-                    map((pages) => {
-                      // Raw perspective returns both `drafts.<id>` and `<id>`
-                      // when a page has an unpublished draft. Collapse to one
-                      // entry per logical document (prefer published; fall back
-                      // to draft if the page was never published).
-                      const byBaseId = new Map()
-                      for (const p of pages || []) {
-                        const baseId = p._id.replace(/^drafts\./, '')
-                        const existing = byBaseId.get(baseId)
-                        const thisIsDraft = p._id.startsWith('drafts.')
-                        if (!existing || (existing._id.startsWith('drafts.') && !thisIsDraft)) {
-                          byBaseId.set(baseId, {...p, _id: baseId})
-                        }
-                      }
-                      const unique = Array.from(byBaseId.values()).sort((a, b) =>
-                        (a.title || '').localeCompare(b.title || ''),
-                      )
-                      return S.list()
-                        .title('Pages')
-                        .items([
-                          singleton(S, 'homepagePage', 'Homepage', 'homepagePage'),
-                          singleton(S, 'portfolio', 'Portfolio', 'portfolio'),
-                          singleton(S, 'blogPage', 'Blog', 'blogPage'),
-                          singleton(S, 'notFoundPage', '404 Page', 'notFoundPage'),
-                          S.divider(),
-                          singleton(S, 'termsAndConditionsPage', 'Terms & Conditions', 'termsAndConditionsPage'),
-                          singleton(S, 'privacyPolicyPage', 'Privacy Policy', 'privacyPolicyPage'),
-                          S.divider(),
-                          ...unique.map((p) =>
-                            S.listItem()
-                              .id(p._id)
-                              .title(p.title || 'Untitled')
-                              .child(
-                                S.document()
-                                  .documentId(p._id)
-                                  .schemaType('page')
-                                  .title(p.title || 'Page'),
-                              ),
-                          ),
-                        ])
-                    }),
-                  ),
-              ),
-
-            S.divider(),
-
-            // ── Testimonials ──────────────────────────────────────────────
-            S.documentTypeListItem('testimonial').title('⭐ Testimonials'),
-
-            // ── Blog ─────────────────────────────────────────────────────
-            S.documentTypeListItem('blogPost').title('📝 Blog Posts'),
-
-            // ── Categories ────────────────────────────────────────────────
-            S.listItem()
-              .title('🏷 Categories')
-              .id('categoriesGroup')
-              .child(
-                S.list()
-                  .title('Categories')
-                  .items([
-                    S.documentTypeListItem('blogCategory').title('Blog Categories'),
-                    S.documentTypeListItem('portfolioCategory').title('Portfolio Categories'),
-                  ]),
-              ),
-
-            // ── HTML Embeds ───────────────────────────────────────────────
-            S.documentTypeListItem('htmlEmbedSection').title('🧩 HTML Embeds'),
-
-          ]),
-    }),
+    structureTool({structure: deskStructure}),
     // AI Assist — gated on siteSettings.aiAssistEnabled. When off (default
     // for new clients), the plugin doesn't load and no sparkle icons render.
     ...(aiAssistEnabled ? [assist()] : []),
@@ -306,5 +88,27 @@ export default defineConfig({
 
   schema: {
     types: schemaTypes,
+  },
+
+  // Hide singletons (and AI Assist's internal doc) from the global "+" create
+  // menu — they exist once and are edited via the structure, not re-created.
+  document: {
+    newDocumentOptions: (prev) => filterNewDocumentOptions(prev),
+  },
+
+  // Trim default Studio upsell features (kept in sync with the embedded Studio,
+  // root sanity.config.ts): Releases (Enterprise) and Tasks (Growth). The
+  // Releases nav tab persists under `releases.enabled:false` in this version,
+  // so also filter it out of `tools`.
+  releases: {enabled: false},
+  tasks: {enabled: false},
+  tools: (prev) => prev.filter((tool) => tool.name !== 'releases'),
+
+  // Agency top bar (Singletrack Sites tag + Heartbeat "Get help" link) —
+  // shared with the embedded Studio (root sanity.config.ts).
+  studio: {
+    components: {
+      navbar: StudioTopBar,
+    },
   },
 })

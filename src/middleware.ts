@@ -91,6 +91,24 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isPreview = context.cookies.get('__sanity_preview')?.value === 'true'
   context.locals.isPreview = isPreview
 
+  // ── Embedded Sanity Studio (/studio) ──────────────────────────────────
+  // The Studio SPA shell is served by @sanity/astro's injected
+  // /studio/[...params] route. Render it straight through, but keep it out of
+  // the search index (real X-Robots-Tag, since the injected route's <head>
+  // carries no robots meta) and out of the edge cache (auth-bearing SPA, not
+  // public content). Bypasses the blog-base rewrite + caching below entirely;
+  // still gets the standard security headers.
+  {
+    const p = context.url.pathname
+    if (p === '/studio' || p.startsWith('/studio/')) {
+      const res = await next()
+      res.headers.set('X-Robots-Tag', 'noindex, nofollow')
+      res.headers.set('Cache-Control', 'no-store, must-revalidate')
+      applySecurityHeaders(res.headers)
+      return res
+    }
+  }
+
   // ── Legal-page aliases ────────────────────────────────────────────────
   // The Terms / Privacy pages physically live at /terms-and-conditions/ and
   // /privacy-policy/. A recurring footer-link mistake (and old-platform habit)
