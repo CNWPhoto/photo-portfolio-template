@@ -36,6 +36,10 @@ import {filterNewDocumentOptions} from './studio/lib/singletons'
 //   only runs in dev, not in `astro build`).
 const projectId = import.meta.env.PUBLIC_SANITY_PROJECT_ID || 'hx5xgigp'
 const dataset = import.meta.env.PUBLIC_SANITY_DATASET || 'production'
+// Per-client Studio title. The deploy passes PUBLIC_SANITY_STUDIO_TITLE from
+// each client's studio/.env.<slug>-backup (SANITY_STUDIO_TITLE) so the embedded
+// Studio shows THEIR brand, not the demo's. Neutral fallback for local dev.
+const studioTitle = import.meta.env.PUBLIC_SANITY_STUDIO_TITLE || 'Studio'
 // AI Assist — gated per client, default OFF, mirroring the hosted Studio's
 // SANITY_STUDIO_AI_ASSIST gate (kept parallel so the two Studios don't drift).
 // Set PUBLIC_SANITY_AI_ASSIST=true in the client's build env to enable; the
@@ -45,7 +49,7 @@ const aiAssistEnabled = import.meta.env.PUBLIC_SANITY_AI_ASSIST === 'true'
 
 export default defineConfig({
   name: 'default',
-  title: 'Pet Photographer Demo',
+  title: studioTitle,
   projectId,
   dataset,
   plugins: [

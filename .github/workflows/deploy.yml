@@ -119,6 +119,7 @@ jobs:
         env:
           PUBLIC_SANITY_PROJECT_ID: hx5xgigp
           PUBLIC_SANITY_DATASET: production
+          PUBLIC_SANITY_STUDIO_TITLE: Pet Photographer Demo
           SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
           SANITY_STUDIO_URL: https://cnw-photo-demo.sanity.studio
@@ -230,13 +231,18 @@ jobs:
         run: npm ci
 
       - name: Build for ${{ matrix.client.slug }}
-        run: npm run build
         env:
+          SLUG: ${{ matrix.client.slug }}
           PUBLIC_SANITY_PROJECT_ID: ${{ matrix.client.sanity_project_id }}
           PUBLIC_SANITY_DATASET: production
           SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
           SANITY_STUDIO_URL: ${{ matrix.client.studio_url }}
+        # Per-client embedded-Studio title from the committed env-backup (single
+        # source). SLUG via env (not ${{ }} interpolation) to avoid shell injection.
+        run: |
+          export PUBLIC_SANITY_STUDIO_TITLE="$(grep -E '^SANITY_STUDIO_TITLE=' "studio/.env.${SLUG}-backup" | cut -d= -f2- || true)"
+          npm run build
 
       # Workers deploy — same proven pattern as the demo job, templated
       # per client by slug. Requires the client-<slug> environment's
@@ -325,13 +331,18 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
         env:
+          SLUG: ${{ inputs.only_client }}
           PUBLIC_SANITY_PROJECT_ID: ${{ steps.cfg.outputs.pid }}
           PUBLIC_SANITY_DATASET: production
           SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
           SANITY_STUDIO_URL: ${{ steps.cfg.outputs.stu }}
+        # Per-client embedded-Studio title from the committed env-backup (single
+        # source). SLUG via env (not ${{ }} interpolation) to avoid shell injection.
+        run: |
+          export PUBLIC_SANITY_STUDIO_TITLE="$(grep -E '^SANITY_STUDIO_TITLE=' "studio/.env.${SLUG}-backup" | cut -d= -f2- || true)"
+          npm run build
 
       - name: Upload Worker secrets
         env:
