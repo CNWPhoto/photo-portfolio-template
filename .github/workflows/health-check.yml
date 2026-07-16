@@ -56,8 +56,28 @@ jobs:
               *)
                 FAILURES="$FAILURES\n$1: $2 returned HTML without section content"
                 echo "::error::$1 site serving empty/error HTML: $2"
+                return
                 ;;
             esac
+
+            # ── siteUrl / canonical guard ──────────────────────────────────
+            # seoSettings.siteUrl drives the canonical tag, the sitemap <loc>s
+            # and robots' Sitemap line. Donor-clone onboarding copies the
+            # donor's dataset, so the donor's siteUrl rides along: in 2026-07
+            # blackbird was telling Google that family-demo was its canonical,
+            # and kelly-mac pointed at the demo — silent, live SEO damage that
+            # nothing caught. The body is already fetched, so assert (free)
+            # that the canonical's origin is THIS client's own URL.
+            canon=$(printf '%s' "$body" | grep -oiE '<link[^>]*rel="canonical"[^>]*>' | grep -oE 'href="[^"]*"' | sed 's/href="//; s/"$//' | head -1)
+            if [ -z "$canon" ]; then
+              FAILURES="$FAILURES\n$1: no canonical tag — seoSettings.siteUrl unset"
+              echo "::error::$1 no canonical tag (seoSettings.siteUrl unset): $2"
+            elif [ "${canon%/}" != "${2%/}" ]; then
+              FAILURES="$FAILURES\n$1: canonical ${canon} != site ${2} — seoSettings.siteUrl drift"
+              echo "::error::$1 siteUrl drift: canonical says ${canon}, expected ${2}"
+            else
+              echo "OK   canon  $1"
+            fi
           }
 
           check_studio() { # $1=slug
