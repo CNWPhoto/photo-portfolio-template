@@ -13,3 +13,4 @@ dist/
 
 # Generated Sanity Dashboard manifest (rebuilt by prebuild)
 public/studio/static/
+studio/scripts/tmp-*.js

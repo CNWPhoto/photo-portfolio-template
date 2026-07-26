@@ -15,6 +15,13 @@ import { resolveLink } from '../src/lib/links.js'
 //
 // Exempt, deliberately: file paths with an extension (/resume.pdf), bare
 // anchors and queries, protocol-relative and absolute URLs, and the site root.
+//
+// Scope, honestly: this matches href= shapes only. A path assigned to a
+// variable first — `const privacyUrl = '/privacy-policy'` — slips past it, as
+// the footer's legal links did. Widening the pattern to any string literal
+// beginning with "/" produced too many false positives to be useful. The
+// runtime assertion in health-check.yml is the backstop for that gap, and for
+// paths that only exist in editor-entered content.
 
 const SRC = join(__dirname, '..', 'src')
 
