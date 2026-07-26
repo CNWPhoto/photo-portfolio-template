@@ -29,7 +29,15 @@ export default {
       name: 'slug',
       title: 'Slug',
       type: 'slug',
-      description: 'The URL for this page (e.g. /about). ⚠️ Avoid changing this once the page is live — it will break existing links and hurt your search rankings. If you must change it, set up a 301 redirect from the old URL to the new one in your hosting settings.',
+      // The portfolio route is fixed at /portfolio (src/pages/portfolio.astro,
+      // and Presentation hardcodes it) — there is no middleware rewrite for a
+      // custom base the way the blog has. This field does NOT move the page;
+      // it used to feed the sitemap, where a non-default value advertised URLs
+      // the site never served (a client with "Portfolio" had 5 of 9 sitemap
+      // entries 404). Kept read-only so the mismatch can't be recreated.
+      readOnly: true,
+      description:
+        'Your portfolio always lives at /portfolio — this cannot be changed, so this field is locked.',
       options: {source: 'pageTitle'},
       group: 'seo',
     },

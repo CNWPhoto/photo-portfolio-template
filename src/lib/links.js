@@ -12,17 +12,43 @@
 // `seoSettings.siteUrl` can add its hostname too for coverage when the
 // request host differs from the canonical host.
 
+// Add the trailing slash astro.config `trailingSlash: 'always'` expects, so a
+// hand-typed path doesn't eat a 301 on every click. Editors routinely paste a
+// bare path ("/portfolio") into the External URL field, and an absolute
+// self-link reduced by stripSelfOrigin arrives here unslashed too — neither
+// goes through pathForInternal, which is the only place that slashed paths
+// were being produced.
+//
+// Left alone: anything with a file extension (/resume.pdf), bare queries and
+// anchors, protocol-relative URLs (//host/path), and the site root.
+function ensureTrailingSlash(path) {
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) return path
+
+  const m = /^([^?#]*)(.*)$/.exec(path)
+  const pathname = m[1]
+  const suffix = m[2] || ''
+
+  if (!pathname || pathname === '/' || pathname.endsWith('/')) return path
+  if (/\.[a-z0-9]{2,8}$/i.test(pathname)) return path // file, not a page
+
+  return `${pathname}/${suffix}`
+}
+
 function stripSelfOrigin(url, selfHostnames) {
-  if (!url || !selfHostnames?.length) return url
-  try {
-    const u = new URL(url)
-    if (selfHostnames.includes(u.hostname)) {
-      return u.pathname + u.search + u.hash
+  if (!url) return url
+  if (selfHostnames?.length) {
+    try {
+      const u = new URL(url)
+      if (selfHostnames.includes(u.hostname)) {
+        return ensureTrailingSlash(u.pathname + u.search + u.hash)
+      }
+      return url // genuinely external — never rewrite
+    } catch {
+      /* not an absolute URL — fall through to the relative-path case */
     }
-  } catch {
-    /* not an absolute URL — leave as-is */
   }
-  return url
+  // Relative path typed straight into the URL field.
+  return ensureTrailingSlash(url)
 }
 
 // Map a dereferenced internal doc to its public URL. The slugless

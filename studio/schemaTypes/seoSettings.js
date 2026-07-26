@@ -75,5 +75,35 @@ export default {
       type: 'string',
       description: 'Your Twitter/X handle without the @ symbol, e.g. yourstudio — used for Twitter Card attribution.',
     },
+    {
+      name: 'defaultOgImage',
+      title: 'Default Social Share Image',
+      type: 'image',
+      description:
+        'Shown when a page is shared on Facebook, iMessage, LinkedIn and similar, unless that page has its own Social Share Image. Without one, shares of those pages appear as a blank card. Use a horizontal photo — ideal size 1200 × 630px.',
+      options: {hotspot: true},
+    },
+    {
+      name: 'googleSiteVerification',
+      title: 'Google Search Console Verification Code',
+      type: 'string',
+      description:
+        'Proves to Google that you own this site, so you can see how people find you in search. In Search Console choose the "HTML tag" verification method, then copy ONLY the long code from inside content="..." and paste it here. Publish, then click Verify in Search Console.',
+      placeholder: 'AbC123dEf456...',
+      validation: (Rule) =>
+        Rule.custom((value) => {
+          if (typeof value !== 'string') return true
+          const code = value.trim()
+          if (!code) return true
+
+          if (/<\s*meta|content\s*=/i.test(code)) {
+            return 'Paste only the code from inside content="..." — not the whole <meta> tag.'
+          }
+          if (!/^[A-Za-z0-9_-]+$/.test(code)) {
+            return 'That doesn\'t look like a verification code — it should be letters, numbers, dashes and underscores only.'
+          }
+          return true
+        }),
+    },
   ],
 }
