@@ -30,7 +30,12 @@ const run = async () => {
 
   // Both published and draft copies of the portfolio doc can hold the field.
   const portfolios = await client.fetch(
-    `*[_type=="portfolio"]{_id, "tagged": count(images[count(categories) > 0])}`,
+    `*[_type=="portfolio"]{
+      _id,
+      "tagged": count(images[count(categories) > 0]),
+      images,
+      additionalGalleries
+    }`,
   )
   for (const p of portfolios) {
     if (!p.tagged) {
@@ -39,9 +44,20 @@ const run = async () => {
     }
     console.log(`  • ${p._id}: clearing categories on ${p.tagged} image(s)`)
     if (APPLY) {
-      // unset() on an array-item path needs the field cleared per item; the
-      // whole-array path form handles every element in one mutation.
-      await client.patch(p._id).unset(['images[].categories']).commit({visibility: 'sync'})
+      // unset(['images[].categories']) silently no-ops — Sanity's empty-filter
+      // array syntax doesn't reach into each element for unset, so the
+      // references survived and the delete below then failed on them. Rewrite
+      // the array without the field instead.
+      const strip = (arr) =>
+        (arr ?? []).map(({categories, ...img}) => img)
+      const patch = {images: strip(p.images)}
+      if (p.additionalGalleries) {
+        patch.additionalGalleries = p.additionalGalleries.map((g) => ({
+          ...g,
+          images: strip(g.images),
+        }))
+      }
+      await client.patch(p._id).set(patch).commit({visibility: 'sync'})
     }
   }
 

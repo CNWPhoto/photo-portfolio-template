@@ -8,7 +8,7 @@ import { buildFaqSchema } from '../lib/faqSchema.js';
 const client = getClient(Astro.locals.isPreview);
 
 const [homepageDoc, siteData] = await Promise.all([
-	client.fetch(`*[_type == "homepagePage"][0]{
+	client.fetch(`*[_type == "homepagePage" && _id == "homepagePage"][0]{
 		pageTitle,
 		seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
 		"sections": sections[]{ ${SECTION_PROJECTION} }
