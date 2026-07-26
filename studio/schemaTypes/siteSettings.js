@@ -222,7 +222,7 @@ export default {
       title: 'Web3Forms Access Key',
       type: 'string',
       description:
-        'Free contact-form backend. Sign up at https://web3forms.com (no account required) and paste the access key here. Used by every Contact Form section unless one overrides it. Leave blank to disable submissions.',
+        'Free contact-form backend. Sign up at https://web3forms.com (no account required) and paste the access key here. Used by every Contact Form section unless one overrides it. The key decides which inbox submissions land in — to change the recipient, change it at web3forms.com. Leave blank to disable submissions.',
     },
     {
       name: 'aiAssistEnabled',
