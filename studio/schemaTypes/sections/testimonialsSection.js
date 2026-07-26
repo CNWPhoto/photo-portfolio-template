@@ -47,10 +47,46 @@ export default {
       initialValue: 'What Clients Are Saying',
     },
     {
+      name: 'source',
+      title: 'Which testimonials?',
+      type: 'string',
+      description:
+        'Show everything you\'ve published, or hand-pick testimonials for this section — useful when a page is about one type of session.',
+      options: {
+        list: [
+          {title: 'All testimonials (newest order first)', value: 'all'},
+          {title: 'Pick specific ones', value: 'pickSpecific'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'all',
+    },
+    {
+      name: 'testimonials',
+      title: 'Chosen testimonials',
+      type: 'array',
+      of: [{type: 'reference', to: [{type: 'testimonial'}]}],
+      description:
+        'Drag to reorder — this is the order they appear in. Only the ones listed here will show in this section.',
+      hidden: ({parent}) => parent?.source !== 'pickSpecific',
+      // A section set to "Pick specific ones" with an empty list would silently
+      // fall back to showing everything, which reads as the setting being
+      // broken. Block publish instead of surprising the editor.
+      validation: (Rule) =>
+        Rule.custom((value, context) => {
+          if (context.parent?.source !== 'pickSpecific') return true
+          return value?.length
+            ? true
+            : 'Pick at least one testimonial, or switch back to "All testimonials".'
+        }),
+    },
+    {
       name: 'maxCount',
       title: 'Max Count',
       type: 'number',
       description: 'Optional. Limits how many testimonials to show. Leave blank to show all. (2-column text only uses just the first 2.)',
+      // Irrelevant when the list is hand-picked — the chosen items are the limit.
+      hidden: ({parent}) => parent?.source === 'pickSpecific',
     },
     {
       name: 'mobileFlipOrder',

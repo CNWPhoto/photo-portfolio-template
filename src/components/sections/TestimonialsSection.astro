@@ -15,12 +15,17 @@ const style = paletteToStyle(palette);
 
 // stegaClean on layout so equality checks survive preview-mode markers
 const layout = stegaClean(section?.layout) || 'image-slider';
-const source = section?.source || 'all';
+// Same treatment for source — an uncleaned value carries invisible stega
+// markers in Presentation, so `=== 'pickSpecific'` silently fails and a
+// hand-picked section falls back to showing everything, but only in preview.
+const source = stegaClean(section?.source) || 'all';
 const maxCount = section?.maxCount || 12;
 
 let raw: any[] = [];
-if (source === 'pickSpecific' && section?.testimonials?.length) {
-  raw = section.testimonials;
+if (source === 'pickSpecific') {
+  // Drop nulls: a reference to a testimonial that was later deleted
+  // dereferences to null and would render an empty card.
+  raw = (section?.testimonials ?? []).filter(Boolean);
 } else {
   const client = getClient(Astro.locals.isPreview);
   raw = await client.fetch(
