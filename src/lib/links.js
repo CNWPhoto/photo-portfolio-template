@@ -21,7 +21,7 @@
 //
 // Left alone: anything with a file extension (/resume.pdf), bare queries and
 // anchors, protocol-relative URLs (//host/path), and the site root.
-function ensureTrailingSlash(path) {
+export function ensureTrailingSlash(path) {
   if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) return path
 
   const m = /^([^?#]*)(.*)$/.exec(path)
@@ -93,6 +93,12 @@ export function resolveLink(link, selfHostnames = null) {
     if (link.internal) type = 'internal'
     else if (link.external) type = 'external'
     else if (link.anchor) type = 'anchor'
+    // Legacy nav/footer links predate the linkType radio: they carry a bare
+    // `url` and nothing else. Returning null for those made callers fall back
+    // to the raw `url` (`resolveLink(l) || l.url`), which skipped slash
+    // normalisation — every site with pre-radio nav data rendered unslashed
+    // links and ate a 301 on every click. Resolve them here instead.
+    else if (link.url) return stripSelfOrigin(link.url, selfHostnames)
     else return null
   }
   if (type === 'external') return stripSelfOrigin(link.external || null, selfHostnames)

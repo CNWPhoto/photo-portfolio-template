@@ -159,7 +159,7 @@ const bodyHTML = post.body
           <ul class="post__categories">
             {post.categories.map((c: any) => (
               <li>
-                <a class="post__category" href={`/${blogBase}/category/${c.slug}`}>{c.name}</a>
+                <a class="post__category" href={`/${blogBase}/category/${c.slug}/`}>{c.name}</a>
               </li>
             ))}
           </ul>

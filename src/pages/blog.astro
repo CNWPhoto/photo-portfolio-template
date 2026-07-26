@@ -159,7 +159,7 @@ function formatDate(dateStr?: string): string {
           <div class="cards__grid">
             {displayPosts.map((post, i) => (
               <article class={`card reveal-fade reveal-delay-${Math.min((i % 3) + 1, 3)}`}>
-                <a href={`/${blogBase}/${post.slug.current}`} class="card__img-link" tabindex="-1" aria-hidden="true">
+                <a href={`/${blogBase}/${post.slug.current}/`} class="card__img-link" tabindex="-1" aria-hidden="true">
                   {post.coverImage?.asset ? (
                     <img
                       class="card__img"
@@ -176,10 +176,10 @@ function formatDate(dateStr?: string): string {
                 </a>
                 <div class="card__body">
                   {post.categories?.[0] && (
-                    <a class="card__category" href={`/${blogBase}/category/${post.categories[0].slug}`}>{post.categories[0].name}</a>
+                    <a class="card__category" href={`/${blogBase}/category/${post.categories[0].slug}/`}>{post.categories[0].name}</a>
                   )}
                   <h2 class="card__title">
-                    <a href={`/${blogBase}/${post.slug.current}`}>{post.title}</a>
+                    <a href={`/${blogBase}/${post.slug.current}/`}>{post.title}</a>
                   </h2>
                   {post.excerpt && <p class="card__excerpt">{post.excerpt}</p>}
                   {post.publishDate && <p class="card__date">{formatDate(post.publishDate)}</p>}
@@ -192,7 +192,7 @@ function formatDate(dateStr?: string): string {
           <div class="posts__list">
             {displayPosts.map((post, i) => (
               <article class={`posts__item ${i % 2 === 1 ? 'posts__item--reversed' : ''}`}>
-                <a href={`/${blogBase}/${post.slug.current}`} class="posts__item-inner">
+                <a href={`/${blogBase}/${post.slug.current}/`} class="posts__item-inner">
                   <div class="posts__img-col">
                     {post.coverImage?.asset ? (
                       <SanityImage

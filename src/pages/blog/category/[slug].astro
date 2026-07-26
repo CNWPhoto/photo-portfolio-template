@@ -46,7 +46,7 @@ const pageTitle = `${category.name} — Blog Category`;
 >
   <main class="cat">
     <header class="cat__header">
-      <p class="cat__crumb"><a href={`/${blogBase}`}>Blog</a> &rsaquo; Category</p>
+      <p class="cat__crumb"><a href={`/${blogBase}/`}>Blog</a> &rsaquo; Category</p>
       <h1 class="cat__title">{category.name}</h1>
       {category.description && <p class="cat__desc">{category.description}</p>}
     </header>
@@ -57,7 +57,7 @@ const pageTitle = `${category.name} — Blog Category`;
       <ul class="cat__grid">
         {posts.map((post: any) => (
           <li class="cat__card">
-            <a class="cat__anchor" href={`/${blogBase}/${post.slug}`}>
+            <a class="cat__anchor" href={`/${blogBase}/${post.slug}/`}>
               {post?.coverImage?.asset && (
                 <div class="cat__img-wrap">
                   <SanityImage
