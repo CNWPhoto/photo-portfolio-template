@@ -255,7 +255,18 @@ async function main() {
       favicon: downloaded.logo && downloaded.logo[1] ? downloaded.logo[1] : null,
     },
     social: {facebook: 'TODO', instagram: 'TODO'},
-    contact: {email: 'TODO', hours: 'TODO'},
+    // phone/city/state/areaServed feed seoSettings, which is the entire
+    // LocalBusiness block in the structured data — the thing that gets a local
+    // photographer into map/"near me" results. Prompted here because leaving
+    // them to a later manual pass meant they were simply never filled in.
+    contact: {
+      email: 'TODO',
+      hours: 'TODO',
+      phone: 'TODO',
+      city: 'TODO',
+      state: 'TODO',
+      areaServed: 'TODO_COMMA_SEPARATED_CITIES',
+    },
     homepage: {
       hero: {
         heading: 'TODO',
@@ -274,9 +285,14 @@ async function main() {
     },
     seo: {
       siteUrl: 'TODO_AFTER_DOMAIN',
+      // Applied to homepagePage.seo — there are no site-wide default
+      // title/description fields, so these are the homepage's own.
       defaultTitle: 'TODO',
       defaultDescription: 'TODO',
+      // Becomes seoSettings.defaultOgImage — the site-wide fallback so pages
+      // without their own share image don't post as blank cards.
       socialImage: downloaded.gallery && downloaded.gallery[0] ? downloaded.gallery[0] : null,
+      priceRange: 'TODO_$_TO_$$$$',
     },
   }
   const contentPath = path.join(STAGE, 'content.json')
