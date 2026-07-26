@@ -182,13 +182,46 @@ async function main() {
   if (Object.keys(soPatch).length) { await set('socialSettings', soPatch); console.log('[overlay] socialSettings') }
 
   // ── seo ──
+  // NB: this used to write `defaultTitle`, `defaultDescription` and
+  // `defaultSocialImage`, none of which exist on the seoSettings schema — the
+  // values (including an uploaded image asset) landed as orphan fields nothing
+  // ever read. defaultTitle/Description are already applied where they do work,
+  // on homepagePage.seo below; the social image now goes to the real
+  // `defaultOgImage` field, which backfills og:image site-wide.
+  //
+  // The business fields matter more than they look: they're the entire
+  // ProfessionalService/LocalBusiness block, so leaving them empty ships a
+  // named-but-hollow local listing. A fleet audit found 8 of 11 sites with all
+  // four blank, which is why they're seeded here rather than left to a later
+  // manual pass.
   const seo = CONTENT.seo || {}
+  const contact = CONTENT.contact || {}
   const seoPatch = {}
-  if (ready(seo.defaultTitle)) seoPatch.defaultTitle = seo.defaultTitle
-  if (ready(seo.defaultDescription)) seoPatch.defaultDescription = seo.defaultDescription
   const og = await img(seo.socialImage)
-  if (og) seoPatch.defaultSocialImage = og
-  if (Object.keys(seoPatch).length) { await set('seoSettings', seoPatch); console.log('[overlay] seoSettings') }
+  if (og) seoPatch.defaultOgImage = og
+  for (const [key, value] of [
+    ['businessPhone', contact.phone ?? seo.businessPhone],
+    ['businessEmail', contact.email ?? seo.businessEmail],
+    ['businessCity', contact.city ?? seo.businessCity],
+    ['businessState', contact.state ?? seo.businessState],
+    ['areaServed', contact.areaServed ?? seo.areaServed],
+    ['priceRange', seo.priceRange],
+  ]) {
+    if (ready(value)) seoPatch[key] = value
+  }
+  if (Object.keys(seoPatch).length) {
+    await set('seoSettings', seoPatch)
+    console.log(`[overlay] seoSettings (${Object.keys(seoPatch).join(', ')})`)
+  }
+  const missingLocal = ['businessPhone', 'businessCity', 'businessState', 'areaServed'].filter(
+    (k) => !seoPatch[k],
+  )
+  if (missingLocal.length) {
+    console.log(
+      `[overlay] ⚠ local SEO incomplete — ${missingLocal.join(', ')} not set. ` +
+        `Fill these in Studio → Site Settings → SEO or the business schema stays hollow.`,
+    )
+  }
 
   // ── homepage hero + intro ──
   const hp = CONTENT.homepage || {}
