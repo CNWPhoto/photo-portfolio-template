@@ -73,6 +73,28 @@ if (skipCf) {
     environment: 'production',
   })
   log('cutover', `custom domain attached (DNS + cert are auto-managed by CF)`)
+
+  // Without this, http:// serves the site 200 instead of redirecting — the
+  // page is delivered unencrypted, and http:// stays a reachable duplicate of
+  // every URL. Found live on all three custom-domain clients during the
+  // 2026-07 SEO audit, i.e. it had been missed on every cutover to date.
+  //
+  // Best-effort: the deploy token uses the "Edit Cloudflare Workers" template,
+  // which grants Zone Settings *read* but not *write*. If it 403s, fall through
+  // to an instruction rather than failing the cutover — everything above this
+  // point has already succeeded and is not worth rolling back over a toggle.
+  try {
+    const ssl = await cf(cfToken, 'GET', `/zones/${zone.id}/settings/always_use_https`)
+    if (ssl?.value === 'on') {
+      log('cutover', 'Always Use HTTPS already on')
+    } else {
+      await cf(cfToken, 'PATCH', `/zones/${zone.id}/settings/always_use_https`, {value: 'on'})
+      log('cutover', 'Always Use HTTPS enabled')
+    }
+  } catch (err) {
+    log('cutover', `⚠ could not set Always Use HTTPS (${err.message.slice(0, 90)})`)
+    log('cutover', `  → turn it on by hand: CF dashboard → ${apex} → SSL/TLS → Edge Certificates`)
+  }
 }
 
 // ── 2. env backup: point the Studio preview at the new origin ───────────────
@@ -144,6 +166,9 @@ console.log(`
 [cutover] Done. Manual follow-ups (dashboard/browser):
   □ Redirect rule for the other host: ${alt} → ${origin}
     (CF dashboard → zone ${apex} → Rules → Redirect Rules → wildcard Single Redirect, 301)
+  □ Confirm "Always Use HTTPS" is ON (SSL/TLS → Edge Certificates). The step
+    above tries to set it, but the Workers-scoped deploy token usually can't
+    write zone settings — check the log for a ⚠ and do it by hand if so.
   □ Google Search Console: add ${origin} property, submit ${origin}/sitemap.xml
   □ If the domain previously lived on a CF Pages project, remove it there
   □ Announce to the client + update any bio/social links
