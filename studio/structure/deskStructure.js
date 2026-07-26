@@ -106,17 +106,14 @@ export const deskStructure = (S, context) =>
       S.documentTypeListItem('blogPost').title('📝 Blog Posts'),
 
       // ── Categories ────────────────────────────────────────────────
-      S.listItem()
-        .title('🏷 Categories')
-        .id('categoriesGroup')
-        .child(
-          S.list()
-            .title('Categories')
-            .items([
-              S.documentTypeListItem('blogCategory').title('Blog Categories'),
-              S.documentTypeListItem('portfolioCategory').title('Portfolio Categories'),
-            ]),
-        ),
+      // Portfolio categories were removed (2026-07): they generated
+      // /portfolio/category/<slug>/ pages that nothing linked to, that carried
+      // noindex, and that rendered "No images in this category yet" on 5 of 11
+      // sites. Separate collections are handled by the Portfolio page's
+      // Additional Galleries, which surface as tabs. That left only blog
+      // categories here, so the wrapper group is gone too — a group with one
+      // child is just an extra click.
+      S.documentTypeListItem('blogCategory').title('🏷 Blog Categories'),
 
       // ── HTML Embeds ───────────────────────────────────────────────
       S.documentTypeListItem('htmlEmbedSection').title('🧩 HTML Embeds'),

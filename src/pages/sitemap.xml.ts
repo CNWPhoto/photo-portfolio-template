@@ -40,7 +40,7 @@ const slashed = (loc: string) => {
 };
 
 export const GET: APIRoute = async () => {
-  const [seo, singletons, pages, blogPosts, blogCats, portfolioCats] = await Promise.all([
+  const [seo, singletons, pages, blogPosts, blogCats] = await Promise.all([
     sanityClient.fetch(`*[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl }`),
     sanityClient.fetch(`{
       "homepage":  *[_type == "homepagePage"  && _id == "homepagePage"][0]{ _updatedAt },
@@ -62,12 +62,6 @@ export const GET: APIRoute = async () => {
     ),
     sanityClient.fetch(
       `*[_type == "blogCategory" && defined(slug.current)] | order(slug.current asc){
-        "slug": slug.current,
-        _updatedAt
-      }`,
-    ),
-    sanityClient.fetch(
-      `*[_type == "portfolioCategory" && defined(slug.current)] | order(slug.current asc){
         "slug": slug.current,
         _updatedAt
       }`,
@@ -162,17 +156,6 @@ export const GET: APIRoute = async () => {
         priority: '0.4',
       });
     }
-  }
-
-  // ── Portfolio category pages ────────────────────────────────────────
-  for (const cat of portfolioCats ?? []) {
-    if (!cat?.slug) continue;
-    urls.push({
-      loc: `${base}/${portfolioSlug}/category/${cat.slug}`,
-      lastmod: fmt(cat._updatedAt),
-      changefreq: 'monthly',
-      priority: '0.4',
-    });
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

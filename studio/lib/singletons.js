@@ -22,14 +22,13 @@ export const SINGLETON_TYPES = [
 // Types that must never be creatable from the global "+" (New document) menu:
 // the singletons above (only one allowed — you edit the existing one via the
 // structure) plus plugin-managed internal docs. Collections stay creatable
-// (page, testimonial, blogPost, blogCategory, portfolioCategory, and
+// (page, testimonial, blogPost, blogCategory, and
 // htmlEmbedSection — reusable embeds are intentionally multi-instance).
 const HIDDEN_FROM_CREATE = new Set([
   ...SINGLETON_TYPES,
   'assist.instruction.context', // AI Assist internal — managed by the plugin
   // Collections intentionally kept out of the global "+" (still visible/editable
   // in the structure's Categories group; just not created ad-hoc from the top):
-  'portfolioCategory',
 ])
 
 // Drop-in for `document.newDocumentOptions`: removes the hidden types from the

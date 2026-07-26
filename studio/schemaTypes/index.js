@@ -17,7 +17,6 @@ import palette from './_shared/palette'
 import ctaLink from './_shared/ctaLink'
 import page from './page'
 import blogCategory from './blogCategory'
-import portfolioCategory from './portfolioCategory'
 import htmlEmbedSection from './htmlEmbedSection'
 import htmlEmbedRef from './_shared/htmlEmbedRef'
 
@@ -85,6 +84,5 @@ export const schemaTypes = [
   portfolio,
   blogPost,
   blogCategory,
-  portfolioCategory,
   htmlEmbedSection,
 ]

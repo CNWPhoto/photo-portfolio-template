@@ -518,20 +518,12 @@ export function buildDocs() {
     })
   }
 
-  const portfolioCategories = [
-    {slug: 'portrait',  name: 'Portrait'},
-    {slug: 'lifestyle', name: 'Lifestyle'},
-    {slug: 'detail',    name: 'Detail'},
-    {slug: 'family',    name: 'Family'},
-  ]
-  for (const c of portfolioCategories) {
-    docs.push({
-      _id: `portfolioCategory-${c.slug}`,
-      _type: 'portfolioCategory',
-      name: c.name,
-      slug: {_type: 'slug', current: c.slug},
-    })
-  }
+  // Portfolio categories used to be seeded here (portrait / lifestyle /
+  // detail / family). Nothing ever tagged an image with them, so every seeded
+  // site shipped four category pages reading "No images in this category yet"
+  // — advertised in the sitemap and reachable from nowhere else. The whole
+  // portfolioCategory type was removed in 2026-07; separate collections are
+  // Additional Galleries on the Portfolio page, which render as tabs.
 
   return docs
 }
