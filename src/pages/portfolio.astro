@@ -70,10 +70,10 @@ const extraGalleries = (portfolioDoc?.additionalGalleries ?? []).filter(
   (g: any) => g?.slug && g?.name,
 );
 const tabs = [
-  { label: pageTitle, href: '/portfolio', slug: '' },
+  { label: pageTitle, href: '/portfolio/', slug: '' },
   ...extraGalleries.map((g: any) => ({
     label: g.name,
-    href: `/portfolio/${g.slug}`,
+    href: `/portfolio/${g.slug}/`,
     slug: g.slug,
   })),
 ];
