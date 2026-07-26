@@ -76,6 +76,14 @@ export default {
       description: 'Your Twitter/X handle without the @ symbol, e.g. yourstudio — used for Twitter Card attribution.',
     },
     {
+      name: 'defaultOgImage',
+      title: 'Default Social Share Image',
+      type: 'image',
+      description:
+        'Shown when a page is shared on Facebook, iMessage, LinkedIn and similar, unless that page has its own Social Share Image. Without one, shares of those pages appear as a blank card. Use a horizontal photo — ideal size 1200 × 630px.',
+      options: {hotspot: true},
+    },
+    {
       name: 'googleSiteVerification',
       title: 'Google Search Console Verification Code',
       type: 'string',

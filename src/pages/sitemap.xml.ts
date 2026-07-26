@@ -27,7 +27,17 @@ const xmlEscape = (s: string) =>
 // Canonical URLs are slashed (astro.config trailingSlash: 'always'), so the
 // sitemap must list slashed locs too — otherwise every entry 308-redirects
 // and advertises a non-canonical URL. Root stays bare.
-const slashed = (loc: string) => (loc.endsWith('/') ? loc : `${loc}/`);
+//
+// Also collapses duplicate slashes in the path. Every loc below is built by
+// interpolating editor-supplied slugs, and a slug saved with a stray leading
+// slash ("/blog") yielded "https://site.com//blog/" — which resolves 200, so
+// Google can index the whole blog a second time at a path the pages
+// themselves canonicalise away from. Normalising centrally means no future
+// loc can reintroduce it. The "://" in the origin is preserved.
+const slashed = (loc: string) => {
+	const normalized = loc.replace(/([^:])\/{2,}/g, '$1/');
+	return normalized.endsWith('/') ? normalized : `${normalized}/`;
+};
 
 export const GET: APIRoute = async () => {
   const [seo, singletons, pages, blogPosts, blogCats, portfolioCats] = await Promise.all([
@@ -83,7 +93,13 @@ export const GET: APIRoute = async () => {
   });
 
   // ── Portfolio singleton ─────────────────────────────────────────────
-  const portfolioSlug = singletons?.portfolio?.slug?.current || 'portfolio';
+  // The portfolio route is FIXED at /portfolio (src/pages/portfolio.astro;
+  // Presentation hardcodes it too) — unlike the blog, there is no middleware
+  // rewrite honouring a custom base. Deriving the sitemap path from
+  // portfolio.slug therefore advertised URLs the site does not serve: a client
+  // whose slug was "Portfolio" had every portfolio URL in their sitemap 404
+  // (5 of 9 entries). Use the real route; keep the slug out of it.
+  const portfolioSlug = 'portfolio';
   urls.push({
     loc: `${base}/${portfolioSlug}`,
     lastmod: fmt(singletons?.portfolio?._updatedAt),
@@ -115,7 +131,11 @@ export const GET: APIRoute = async () => {
 
   // ── Blog index + posts ──────────────────────────────────────────────
   if (singletons?.blog?.blogEnabled !== false) {
-    const blogSlug = singletons?.blog?.slug?.current || 'blog';
+    // Strip stray leading/trailing slashes exactly as the middleware does
+    // (src/middleware.ts) — a slug saved as "/blog" produced "//blog/" locs,
+    // a crawlable duplicate of every blog URL that the pages themselves
+    // canonicalise away from.
+    const blogSlug = (singletons?.blog?.slug?.current || 'blog').replace(/^\/+|\/+$/g, '') || 'blog';
     urls.push({
       loc: `${base}/${blogSlug}`,
       lastmod: fmt(singletons?.blog?._updatedAt),
