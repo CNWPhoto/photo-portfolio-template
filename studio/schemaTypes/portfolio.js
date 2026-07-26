@@ -142,15 +142,6 @@ export default {
               description:
                 'Optional. Only visible in the Studio — used to identify this image (e.g. "Luna at Red Rocks").',
             },
-            {
-              name: 'categories',
-              title: 'Categories',
-              type: 'array',
-              description:
-                'Keep categories minimal. 1–2 per image is best. Used to filter images on the Portfolio page and to drive category landing pages.',
-              of: [{type: 'reference', to: [{type: 'portfolioCategory'}]}],
-              validation: (Rule) => Rule.max(3),
-            },
           ],
         },
       ],

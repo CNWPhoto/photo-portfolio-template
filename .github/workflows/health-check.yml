@@ -60,6 +60,21 @@ jobs:
                 ;;
             esac
 
+            # trailingSlash is 'always', so an internal link without one costs a
+            # 301 on every click and points at a non-canonical URL. The unit
+            # tests catch this in source; this catches what source can't see —
+            # a bare path an editor typed into a nav/footer/CTA URL field.
+            # Excludes files (/x.pdf) and /api/ endpoints.
+            local unslashed
+            unslashed=$(printf '%s' "$body" \
+              | grep -oE 'href="/[^"#?]*[^/"#?]"' \
+              | grep -vE '\.[a-z0-9]{2,8}"$|href="/api/' \
+              | sort -u | head -5 | tr '\n' ' ')
+            if [ -n "$unslashed" ]; then
+              FAILURES="$FAILURES\n$1: internal links missing trailing slash: $unslashed"
+              echo "::error::$1 has unslashed internal links (301 per click): $unslashed"
+            fi
+
             # ── siteUrl / canonical guard ──────────────────────────────────
             # seoSettings.siteUrl drives the canonical tag, the sitemap <loc>s
             # and robots' Sitemap line. Donor-clone onboarding copies the

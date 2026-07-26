@@ -1,6 +1,7 @@
 ---
 import { toHTML } from '@portabletext/to-html';
 import { getClient, urlFor } from '../lib/sanity.js';
+import { ensureTrailingSlash } from '../lib/links.js';
 import { stegaClean } from '@sanity/client/stega';
 import { createDataAttribute } from '@sanity/visual-editing/create-data-attribute';
 import { applyBackgroundTone, paletteToStyle, prefersLightText } from '../lib/palette.js';
@@ -108,19 +109,23 @@ const defaultIcon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"
 // install renders sensibly out of the box.
 const defaultFooterLinks = [
   { label: 'Home',       href: '/' },
-  { label: 'About',      href: '/about' },
-  { label: 'Experience', href: '/experience' },
-  { label: 'Portfolio',  href: '/portfolio' },
-  { label: 'Blog',       href: '/blog' },
-  { label: 'Contact',    href: '/contact' },
+  { label: 'About',      href: '/about/' },
+  { label: 'Experience', href: '/experience/' },
+  { label: 'Portfolio',  href: '/portfolio/' },
+  { label: 'Blog',       href: '/blog/' },
+  { label: 'Contact',    href: '/contact/' },
 ];
 
 const configuredLinks = (footerData?.links ?? [])
   .filter((l: any) => l.enabled !== false)
-  .map((l: any) => ({ label: l.label, href: l.url, openInNewTab: !!l.openInNewTab }));
+  .map((l: any) => ({
+    label: l.label,
+    href: ensureTrailingSlash(l.url),
+    openInNewTab: !!l.openInNewTab,
+  }));
 
 const menuLinks = (configuredLinks.length > 0 ? configuredLinks : defaultFooterLinks)
-  .filter((l: any) => blogEnabled || l.href !== '/blog');
+  .filter((l: any) => blogEnabled || !/^\/blog\/?$/.test(l.href ?? ''));
 
 // Legal links — manual override wins, on-site singleton is the
 // fallback. Three states per slot:
