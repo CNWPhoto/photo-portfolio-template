@@ -49,7 +49,7 @@ const layoutData = await client.fetch(`{
     "bodyFontFile": bodyFontFile.asset->{url, extension}
   },
   "seo": *[_type == "seoSettings" && _id == "seoSettings"][0]{ siteUrl, businessPhone, businessEmail, businessCity, businessState, priceRange, areaServed, twitterHandle },
-  "code": *[_type == "codeSettings" && _id == "codeSettings"][0]{ headScripts, bodyScripts },
+  "code": *[_type == "codeSettings" && _id == "codeSettings"][0]{ ga4MeasurementId, gtmContainerId, headScripts, bodyScripts },
   "nav": *[_type == "navSettings" && _id == "navSettings"][0]{
     navVariant,
     backgroundTone,
@@ -95,6 +95,17 @@ const logoImageInverse = cleanSettings?.logoImageInverse ?? null;
 const logoLarge   = cleanSettings?.logoLarge === true;
 const headScripts = cleanCode?.headScripts    || '';
 const bodyScripts = cleanCode?.bodyScripts    || '';
+
+// Analytics IDs are pasted by clients and interpolated into inline <script>,
+// so they're re-validated here rather than trusted: Studio validation can be
+// bypassed via the API or a dataset import. Anything not matching the exact
+// vendor format is dropped instead of rendered.
+const asTagId = (value, pattern) => {
+	const id = typeof value === 'string' ? value.trim() : '';
+	return pattern.test(id) ? id : '';
+};
+const ga4Id = asTagId(cleanCode?.ga4MeasurementId, /^G-[A-Z0-9]+$/i);
+const gtmId = asTagId(cleanCode?.gtmContainerId, /^GTM-[A-Z0-9]+$/i);
 // Use urlFor() so the URL builds against whatever project the site is
 // pointed at (PUBLIC_SANITY_PROJECT_ID env var). Hardcoding the demo's
 // project ID here meant favicons uploaded to any other client's dataset
@@ -318,6 +329,18 @@ const schemaJSON = schemaGraph.length
 			`} />
 		)}
 		{schemaJSON && <script type="application/ld+json" set:html={schemaJSON} />}
+		{/* Analytics tags render before custom headScripts so any pasted code
+		    can rely on gtag()/dataLayer already existing. Both are skipped in
+		    Presentation preview so Studio traffic never pollutes real stats. */}
+		{!isPreview && ga4Id && (
+			<Fragment>
+				<script async src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}></script>
+				<script set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga4Id}');`} />
+			</Fragment>
+		)}
+		{!isPreview && gtmId && (
+			<script set:html={`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtmId}');`} />
+		)}
 		{headScripts && <Fragment set:html={headScripts} />}
 	</head>
 	<body data-nav-variant={navVariant} data-hero-overlay={heroOverlay ? 'true' : undefined}>
@@ -375,6 +398,9 @@ const schemaJSON = schemaGraph.length
 			// freshly inserted nodes need a fresh observer pass.
 			document.addEventListener('visual-editing:swapped', bindReveals);
 		</script>
+		{!isPreview && gtmId && (
+			<noscript set:html={`<iframe src="https://www.googletagmanager.com/ns.html?id=${gtmId}" height="0" width="0" style="display:none;visibility:hidden"></iframe>`} />
+		)}
 		{bodyScripts && <Fragment set:html={bodyScripts} />}
 		{/* Visual editing bridge — iframe-gated so the @sanity/visual-editing
 		    bundle is never loaded for public visitors. Detection by parent
