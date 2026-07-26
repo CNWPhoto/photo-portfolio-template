@@ -129,20 +129,16 @@ export default {
       initialValue: 'Something went wrong. Please try again or email us directly.',
       hidden: ({parent}) => parent?.mode !== 'built-in',
     },
-    {
-      name: 'destinationEmail',
-      title: 'Destination Email',
-      type: 'string',
-      description:
-        'Optional. Where form submissions are routed. Falls back to the site-wide default.',
-      hidden: ({parent}) => parent?.mode !== 'built-in',
-    },
+    // No "destination email" field here on purpose: Web3Forms fixes the
+    // recipient in the access key's own settings, and its API has no
+    // per-submission recipient override. Changing where messages land means
+    // changing it at web3forms.com (or pasting a different key below).
     {
       name: 'web3formsKeyOverride',
       title: 'Web3Forms Key Override',
       type: 'string',
       description:
-        'Optional. Use a different Web3Forms access key for this form than the site-wide one.',
+        'Optional. Use a different Web3Forms access key for this form than the site-wide one. Where submissions land is set by the key itself — in your Web3Forms account, not here.',
       hidden: ({parent}) => parent?.mode !== 'built-in',
     },
 

@@ -116,13 +116,17 @@ The field exists but the component doesn't emit `<script type="application/ld+js
 
 ## 8. Contact Form — Destination Email Override
 
-**Status:** schema-only
+**Status:** removed (was never readable — a field that silently did nothing)
 **Section:** `contactFormSection`
 **Schema field:** `destinationEmail` (string)
 **Schema file:** `studio/schemaTypes/sections/contactFormSection.js`
 **Component:** `src/components/sections/ContactFormSection.astro`
 
-Web3Forms routing is configured via the access key, not a destination email field. This field could be wired to a hidden `to` form field if Web3Forms supports it, or used in the email subject line.
+The field was labelled "Destination Email" and described as "Where form submissions are routed", but nothing read it — routing was, and still is, decided entirely by the Web3Forms access key (`siteSettings.web3formsKey`, or the per-section `web3formsKeyOverride`). A client who filled it in would believe they had redirected their leads and would be wrong.
+
+Wiring it up isn't possible: Web3Forms fixes the recipient in the access key's own settings and provides no per-submission recipient field. (Its only related hidden fields are `ccemail` — a Pro-plan CC, not a redirect — and `replyto`.) So the field was removed and a comment left in its place; the recipient is changed at web3forms.com, or by pasting a different key.
+
+Verified before removal: all 11 client datasets had `destinationEmail` unset, so nobody was relying on it.
 
 ---
 
