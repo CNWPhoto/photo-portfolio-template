@@ -11,7 +11,7 @@ const currentPage = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '
 
 const [pageDoc, totalCount] = await Promise.all([
   client.fetch(
-    `*[_type == "blogPage"][0]{
+    `*[_type == "blogPage" && _id == "blogPage"][0]{
       pageTitle,
       seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
       heroImage { ..., asset->{ _id, metadata { dimensions { width, height } } } },

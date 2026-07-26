@@ -8,7 +8,7 @@ import { createDataAttribute } from '@sanity/visual-editing/create-data-attribut
 const { slug } = Astro.params;
 
 const portfolioDoc = await getClient(Astro.locals.isPreview).fetch(
-  `*[_type == "portfolio"][0]{
+  `*[_type == "portfolio" && _id == "portfolio"][0]{
     pageTitle,
     seo { seoTitle, seoDescription, socialImage { asset->{ url } } },
     title,
