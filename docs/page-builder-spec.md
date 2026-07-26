@@ -327,7 +327,7 @@ Fields:
 - `submitText`: string (default "Send")
 - `successMessage`: string (default "Thanks — we'll be in touch soon.")
 - `errorMessage`: string (default "Something went wrong. Please try again or email us directly.")
-- `destinationEmail`: string (optional; falls back to site-wide default in `siteSettings.contactDestinationEmail`)
+- `web3formsKeyOverride`: string (optional; use a different Web3Forms access key for this form than `siteSettings.web3formsKey`). There is deliberately no destination-email field — Web3Forms fixes the recipient in the key's own settings and offers no per-submission recipient override.
 
 **Embed mode fields** (shown when `mode === 'embed'`):
 - `embedUrl`: url, validated — the iframe source (e.g. a Jotform share URL)
