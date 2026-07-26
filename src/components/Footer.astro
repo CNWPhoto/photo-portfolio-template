@@ -153,8 +153,10 @@ const termsLabel = manualTermsOn
   ? (legalLinks.terms.label || 'Terms')
   : (termsDoc?.title || 'Terms');
 
-const privacyUrl = manualPrivacyOn ? legalLinks.privacyPolicy.url : '/privacy-policy';
-const termsUrl   = manualTermsOn   ? legalLinks.terms.url         : '/terms-and-conditions';
+// Slashed via the shared normaliser: the fallback paths are internal pages,
+// and the manual URLs are editor-typed, so both need it.
+const privacyUrl = ensureTrailingSlash(manualPrivacyOn ? legalLinks.privacyPolicy.url : '/privacy-policy');
+const termsUrl   = ensureTrailingSlash(manualTermsOn   ? legalLinks.terms.url         : '/terms-and-conditions');
 
 const year = new Date().getFullYear();
 ---
