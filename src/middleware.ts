@@ -28,11 +28,18 @@ async function getBlogBase(): Promise<string> {
 // HTML edge-caching at the Cloudflare Worker.
 //
 // SSR pages stream from the Worker on every request unless we cache them.
-// On a custom domain, `caches.default` is a real CF edge cache: a `put`
-// stores the rendered HTML, and the next request from the same colo skips
-// the Worker entirely. On `*.workers.dev` Cache API is a documented no-op
-// (match always misses, put silently drops) — the middleware still runs,
-// it just degrades to "no caching."
+// `caches.default` is a real CF edge cache: a `put` stores the rendered HTML
+// and the next request from the same colo skips the Worker entirely.
+//
+// Verified working 2026-07-29 on custom domains AND on `*.workers.dev` —
+// MISS then HIT on coolacreative.com, www.petsinfocus.com, and the demo. An
+// earlier version of this comment claimed the Cache API was a no-op on
+// workers.dev; it is not. Per CF docs that no-op applies to the dashboard
+// editor and Playground previews, not to deployed workers.dev routes.
+//
+// Verifying this requires GET. `curl -I` sends HEAD, which is deliberately
+// excluded from caching below, so it reports MISS forever and reads as a
+// broken cache.
 //
 // Why not `Astro.locals.runtime.caches` / `runtime.ctx`? Both removed in
 // Astro v6 — those getters now throw on access. The global `caches` is
@@ -240,19 +247,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
       statusText: clone.statusText,
       headers: cacheHeaders,
     })
-    // The put used to swallow every error, which is why this went unnoticed:
-    // X-Cache-Status reported MISS forever and nothing said why. Verified
-    // 2026-07-29 — six consecutive requests to coolacreative.com and three to
-    // www.petsinfocus.com all MISS, so the cache has never served a hit in
-    // production, on custom domains included. Log the reason; observability is
-    // enabled on these Workers, so it surfaces in the dashboard.
+    // Log put failures rather than swallowing them. The cache IS working
+    // (verified 2026-07-29: MISS then HIT on coolacreative.com,
+    // www.petsinfocus.com and the demo), but a silent .catch(() => {}) meant a
+    // future regression would look identical to "nothing cached yet".
+    // Observability is enabled on these Workers, so this surfaces in the
+    // dashboard.
+    //
+    // Measurement note for anyone verifying this: use GET. `curl -I` sends
+    // HEAD, which is deliberately excluded from caching below, so it reports
+    // MISS forever and reads as a broken cache.
     const put = edgeCache!.put(context.request, toCache).catch((err) => {
-      console.error(
-        '[cache] put failed:',
-        err instanceof Error ? err.message : String(err),
-        '| url:', context.request.url,
-      )
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error('[cache] put failed:', msg, '| url:', context.request.url)
+      return msg
     })
+
     if (waitUntil) waitUntil(put)
     else console.error('[cache] no waitUntil — put may be abandoned before it completes')
   }
