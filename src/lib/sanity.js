@@ -63,6 +63,43 @@ function readEnv(key) {
 // must be built per-request rather than at module load.
 const PREVIEW_FETCH_TIMEOUT_MS = 6000
 
+// Stega encodes every string it can, and its overhead is per-string rather
+// than per-character — so many short values inflate worst. Measured on the
+// demo's Layout query (which runs on EVERY page): 3.4 KB of data became
+// 156 KB encoded, a 46x inflation costing ~2ms, dominated by the palette's
+// fifteen hex values per palette.
+//
+// None of it was ever used. Every consumer of these documents calls
+// stegaClean() on them first — Layout for settings/seo/code/social/nav, Footer
+// for its own — because invisible markers inside a hex value break CSS
+// parsing. So the encoding was work we paid for and immediately threw away.
+//
+// Skipping them takes that query to ~18 KB and ~0.3ms. On the Workers Free
+// plan's 10ms CPU-per-request budget that headroom is the difference between
+// a preview render landing and a 1102.
+//
+// Safe by construction: these are form-edited in the Studio, never
+// click-to-edit on the rendered page, so no overlay is lost. Page CONTENT —
+// sections, headings, body, blog, testimonials — is untouched and still fully
+// encoded, which is where visual editing actually matters.
+const STEGA_SKIP_TYPES = new Set([
+  'siteSettings',
+  'seoSettings',
+  'codeSettings',
+  'socialSettings',
+  'navSettings',
+  'footerSettings',
+])
+const HEX_COLOR = /^#[0-9a-f]{3,8}$/i
+
+function stegaFilter(props) {
+  if (STEGA_SKIP_TYPES.has(props.sourceDocument?._type)) return false
+  // Safety net for colour fields on any other document type: a stega marker
+  // inside a hex value is not just wasteful, it breaks CSS.
+  if (typeof props.value === 'string' && HEX_COLOR.test(props.value)) return false
+  return props.filterDefault(props)
+}
+
 function createPreviewClient() {
   const token = readEnv('SANITY_API_READ_TOKEN')
   const studioUrl = readEnv('SANITY_STUDIO_URL') || 'http://localhost:3333'
@@ -80,6 +117,7 @@ function createPreviewClient() {
     stega: {
       enabled: true,
       studioUrl,
+      filter: stegaFilter,
     },
   })
 
