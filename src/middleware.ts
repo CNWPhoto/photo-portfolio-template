@@ -10,6 +10,8 @@ let _blogBase: string | undefined
 // memoizing the error pinned a client's custom blog base to '/blog' for the
 // whole isolate lifetime (an editor's slug change silently stopped routing).
 let _blogBaseErrAt = 0
+// One-shot so a missing Cache API logs once per isolate, not once per request.
+let _warnedNoCacheApi = false
 async function getBlogBase(): Promise<string> {
   if (_blogBase !== undefined) return _blogBase
   if (Date.now() - _blogBaseErrAt < 60_000) return 'blog'
@@ -156,6 +158,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const edgeCache: Cache | undefined =
     typeof caches !== 'undefined' ? caches.default : undefined
 
+  // If the global is missing entirely, cacheEligible goes false and the whole
+  // block is skipped silently — indistinguishable from "cached nothing yet".
+  // Say so once per isolate rather than never.
+  if (!edgeCache && !_warnedNoCacheApi) {
+    _warnedNoCacheApi = true
+    console.error('[cache] caches.default unavailable — edge caching disabled')
+  }
+
   const cacheEligible =
     context.request.method === 'GET' && !isPreview && !!edgeCache
 
@@ -230,8 +240,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
       statusText: clone.statusText,
       headers: cacheHeaders,
     })
-    const put = edgeCache!.put(context.request, toCache).catch(() => {})
+    // The put used to swallow every error, which is why this went unnoticed:
+    // X-Cache-Status reported MISS forever and nothing said why. Verified
+    // 2026-07-29 — six consecutive requests to coolacreative.com and three to
+    // www.petsinfocus.com all MISS, so the cache has never served a hit in
+    // production, on custom domains included. Log the reason; observability is
+    // enabled on these Workers, so it surfaces in the dashboard.
+    const put = edgeCache!.put(context.request, toCache).catch((err) => {
+      console.error(
+        '[cache] put failed:',
+        err instanceof Error ? err.message : String(err),
+        '| url:', context.request.url,
+      )
+    })
     if (waitUntil) waitUntil(put)
+    else console.error('[cache] no waitUntil — put may be abandoned before it completes')
   }
 
   return response
