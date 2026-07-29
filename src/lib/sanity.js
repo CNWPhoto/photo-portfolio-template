@@ -74,9 +74,17 @@ const PREVIEW_FETCH_TIMEOUT_MS = 6000
 // for its own — because invisible markers inside a hex value break CSS
 // parsing. So the encoding was work we paid for and immediately threw away.
 //
-// Skipping them takes that query to ~18 KB and ~0.3ms. On the Workers Free
-// plan's 10ms CPU-per-request budget that headroom is the difference between
-// a preview render landing and a 1102.
+// Skipping them saves the encode AND the stegaClean that undoes it — both walk
+// the same inflated payload. Measured on siteSettings:
+//
+//     encode      2.49ms → 0.22ms
+//     stegaClean  0.84ms → 0.01ms
+//     ─────────────────────────────
+//     total       3.33ms → 0.23ms     (~31% of the 10ms Free budget)
+//
+// Note this does NOT shrink the rendered HTML: these values were already being
+// stripped before render, so they never reached the output. The win is purely
+// the CPU spent encoding and un-encoding them.
 //
 // Safe by construction: these are form-edited in the Studio, never
 // click-to-edit on the rendered page, so no overlay is lost. Page CONTENT —
