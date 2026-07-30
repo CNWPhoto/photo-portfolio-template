@@ -24,6 +24,10 @@ const QUIET_MS = 1500
 // usually resolves them with a tiny JSON fetch instead of a full SSR render,
 // so font/theme picks can afford to feel immediate.
 const STYLE_QUIET_MS = 250
+// Pause before retrying a failed in-place refresh. Long enough for a cold
+// Worker isolate to be warm (the second request to an isolate is cheap), short
+// enough that an editor reads it as a beat, not a stall.
+const REFRESH_RETRY_MS = 750
 let refreshTimer = null
 let styleTimer = null
 let inflight = null
@@ -170,9 +174,20 @@ let lastServerHtml = {}
 let lastServerUrl = null
 
 // Fetch the current URL and swap a known set of body-level elements in
-// place. Falls back to a full page reload on any failure so editors never
-// get stuck on stale content.
-async function swapInPlace() {
+// place. Retries once on failure, then falls back to a full page reload so
+// editors never get stuck on stale content.
+//
+// The retry matters because the common failure here is transient: preview
+// renders bypass the edge cache by design, so they are the most expensive
+// request the Worker serves, and every deploy evicts all isolates at once. A
+// render that fails on a cold isolate usually succeeds on the next attempt.
+//
+// Reloading immediately — the previous behaviour — was the worst possible
+// response: it re-requested the same expensive page instantly, at exactly the
+// moment the Worker was least able to serve it, and if that failed too the
+// editor got Cloudflare's error page inside the preview iframe. One short pause
+// and one retry turns that into an invisible blip.
+async function swapInPlace(isRetry = false) {
   if (inflight) inflight.abort()
   const controller = new AbortController()
   inflight = controller
@@ -225,7 +240,12 @@ async function swapInPlace() {
     document.dispatchEvent(new CustomEvent('visual-editing:swapped'))
   } catch (err) {
     if (err?.name === 'AbortError') return
-    console.warn('[visual-editing] in-place refresh failed, falling back to reload:', err)
+    if (!isRetry) {
+      console.warn('[visual-editing] in-place refresh failed, retrying once:', err)
+      await new Promise((r) => setTimeout(r, REFRESH_RETRY_MS))
+      return swapInPlace(true)
+    }
+    console.warn('[visual-editing] refresh failed twice, falling back to reload:', err)
     window.location.reload()
   } finally {
     if (inflight === controller) inflight = null
