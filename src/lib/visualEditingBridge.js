@@ -24,10 +24,13 @@ const QUIET_MS = 1500
 // usually resolves them with a tiny JSON fetch instead of a full SSR render,
 // so font/theme picks can afford to feel immediate.
 const STYLE_QUIET_MS = 250
-// Pause before retrying a failed in-place refresh. Long enough for a cold
-// Worker isolate to be warm (the second request to an isolate is cheap), short
-// enough that an editor reads it as a beat, not a stall.
-const REFRESH_RETRY_MS = 750
+// Backoff for retrying a failed in-place refresh. The first pause is long
+// enough for a cold Worker isolate to be warm (the second request to an isolate
+// is cheap) and short enough to read as a beat rather than a stall; the later
+// ones stop us hammering a Worker that is already struggling. After the last
+// entry we stop retrying on a timer — the editor's next change starts a fresh
+// attempt, so nobody is stuck.
+const REFRESH_BACKOFF_MS = [750, 2000, 5000]
 let refreshTimer = null
 let styleTimer = null
 let inflight = null
@@ -173,9 +176,47 @@ function syncHeadMarkers(newDoc) {
 let lastServerHtml = {}
 let lastServerUrl = null
 
+// Small status pill shown while a refresh is retrying, so a stale preview reads
+// as "working on it" rather than "broken" — an editor who thinks it's broken
+// starts refreshing by hand, and every manual refresh is another uncached
+// preview render on a Worker that is already over budget.
+//
+// Appended straight to <body>: SWAP_SELECTORS only replaces main / header.nav /
+// footer.footer / .preview-banner, so a successful swap never removes it.
+// Preview-only by construction — this whole module is iframe-gated in Layout.
+let refreshStatusEl = null
+
+function showRefreshStatus(text) {
+  if (!document.body) return
+  if (!refreshStatusEl) {
+    refreshStatusEl = document.createElement('div')
+    refreshStatusEl.setAttribute('data-preview-refresh-status', '')
+    refreshStatusEl.style.cssText = [
+      'position:fixed',
+      'left:12px',
+      'bottom:12px',
+      'z-index:2147483647',
+      'font:500 12px/1.4 system-ui,-apple-system,sans-serif',
+      'padding:6px 11px',
+      'border-radius:999px',
+      'background:rgba(20,20,20,0.88)',
+      'color:#fff',
+      'pointer-events:none',
+      'box-shadow:0 2px 8px rgba(0,0,0,0.25)',
+    ].join(';')
+    document.body.appendChild(refreshStatusEl)
+  }
+  refreshStatusEl.textContent = text
+}
+
+function clearRefreshStatus() {
+  refreshStatusEl?.remove()
+  refreshStatusEl = null
+}
+
 // Fetch the current URL and swap a known set of body-level elements in
-// place. Retries once on failure, then falls back to a full page reload so
-// editors never get stuck on stale content.
+// place. On failure, retries with backoff rather than reloading — see the
+// catch block for why reloading was the wrong recovery.
 //
 // The retry matters because the common failure here is transient: preview
 // renders bypass the edge cache by design, so they are the most expensive
@@ -187,10 +228,11 @@ let lastServerUrl = null
 // moment the Worker was least able to serve it, and if that failed too the
 // editor got Cloudflare's error page inside the preview iframe. One short pause
 // and one retry turns that into an invisible blip.
-async function swapInPlace(isRetry = false) {
+async function swapInPlace(attempt = 0) {
   if (inflight) inflight.abort()
   const controller = new AbortController()
   inflight = controller
+  let mutated = false
   try {
     const res = await fetch(window.location.href, {
       credentials: 'same-origin',
@@ -207,6 +249,11 @@ async function swapInPlace(isRetry = false) {
       lastServerHtml = {}
       lastServerUrl = window.location.href
     }
+
+    // Everything above this line is read-only: fetch, parse, module-local
+    // bookkeeping. From here on we touch the live DOM, so a failure past this
+    // point may leave the page half-updated and only a reload can recover it.
+    mutated = true
 
     let mainPresent = false
     for (const selector of SWAP_SELECTORS) {
@@ -238,15 +285,36 @@ async function swapInPlace(isRetry = false) {
 
     // Let Layout's reveal observer rebind to the freshly-swapped nodes.
     document.dispatchEvent(new CustomEvent('visual-editing:swapped'))
+
+    // Recovered — drop any "Reconnecting…" pill from an earlier attempt.
+    clearRefreshStatus()
   } catch (err) {
     if (err?.name === 'AbortError') return
-    if (!isRetry) {
-      console.warn('[visual-editing] in-place refresh failed, retrying once:', err)
-      await new Promise((r) => setTimeout(r, REFRESH_RETRY_MS))
-      return swapInPlace(true)
+
+    // Past the mutation point the DOM may be half-swapped — reload is the only
+    // safe recovery, and staying would leave genuinely broken content.
+    if (mutated) {
+      console.warn('[visual-editing] refresh failed mid-swap, reloading:', err)
+      window.location.reload()
+      return
     }
-    console.warn('[visual-editing] refresh failed twice, falling back to reload:', err)
-    window.location.reload()
+
+    // Nothing was touched, so the page is merely STALE, not broken. Reloading
+    // here used to be the failure mode that hurt: it navigated away from a
+    // working page and gambled on a second render, and when that also failed
+    // the editor got Cloudflare's error page in the iframe — which is what
+    // prompts someone to start refreshing by hand, piling more uncached
+    // preview renders onto an already-struggling Worker. Stay put, say so, and
+    // back off instead.
+    const delay = REFRESH_BACKOFF_MS[attempt]
+    if (delay === undefined) {
+      console.warn('[visual-editing] refresh failed, will retry on next edit:', err)
+      showRefreshStatus('Preview out of date — retries on your next change')
+      return
+    }
+    showRefreshStatus('Reconnecting…')
+    await new Promise((r) => setTimeout(r, delay))
+    return swapInPlace(attempt + 1)
   } finally {
     if (inflight === controller) inflight = null
   }
@@ -330,7 +398,7 @@ async function styleFastPath() {
   // prose typing in siteSettings fields (siteName etc.) still coalesces to
   // one render per pause instead of one per autosave.
   if (refreshTimer) clearTimeout(refreshTimer)
-  refreshTimer = setTimeout(swapInPlace, QUIET_MS)
+  refreshTimer = setTimeout(() => swapInPlace(), QUIET_MS)
 }
 
 // Pre-fetch the current page once at mount (after idle) so the very first
@@ -397,7 +465,7 @@ export function mount() {
         return new Promise((resolve) => setTimeout(resolve, QUIET_MS + 50))
       }
       if (refreshTimer) clearTimeout(refreshTimer)
-      refreshTimer = setTimeout(swapInPlace, QUIET_MS)
+      refreshTimer = setTimeout(() => swapInPlace(), QUIET_MS)
       // Returning a promise tells visual-editing we're handling refresh
       // ourselves (don't fall back to its default reload behavior).
       return new Promise((resolve) => {
