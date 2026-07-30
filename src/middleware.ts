@@ -12,6 +12,38 @@ let _blogBase: string | undefined
 let _blogBaseErrAt = 0
 // One-shot so a missing Cache API logs once per isolate, not once per request.
 let _warnedNoCacheApi = false
+
+// ── Render-perf breadcrumbs (diagnosing rare CPU spikes / error 1102) ──────
+//
+// A Worker cannot read its own CPU time — there is no API for it, and
+// Date.now() measures wall time, which includes the Sanity fetch. So this does
+// NOT measure CPU. What it does is emit a breadcrumb per interesting request so
+// the CPU-time spikes in the Cloudflare dashboard can be JOINED BY TIMESTAMP to
+// a concrete path, rather than staying an anonymous shape on a graph.
+//
+// The load-bearing field is `n`, the request's ordinal on this isolate. A fresh
+// isolate pays module init plus every memoized fetch (getBlogBase) on its first
+// request, and a deploy evicts all isolates at once — so if spikes correlate
+// with n=1, the cause is cold isolates rather than any particular page. That is
+// the standing hypothesis and this is the cheapest way to confirm or kill it.
+//
+// Deliberately quiet: only the first two requests per isolate plus genuine
+// outliers, so this costs ~nothing and does not flood the logs.
+let _isolateRequests = 0
+const SLOW_RENDER_MS = 1500
+
+function logRenderPerf(path: string, preview: boolean, ms: number, n: number): void {
+  if (n > 2 && ms < SLOW_RENDER_MS) return
+  console.warn(
+    `[perf] ${JSON.stringify({
+      p: path,
+      preview,
+      wallMs: ms,
+      n,
+      why: n <= 2 ? 'cold-isolate' : 'slow',
+    })}`,
+  )
+}
 async function getBlogBase(): Promise<string> {
   if (_blogBase !== undefined) return _blogBase
   if (Date.now() - _blogBaseErrAt < 60_000) return 'blog'
@@ -202,7 +234,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // fallback instead — production only, so dev keeps Astro's error overlay.
   let response: Response
   try {
+    const _t0 = Date.now()
+    const _ordinal = ++_isolateRequests
     response = rewritePath ? await next(rewritePath) : await next()
+    logRenderPerf(context.url.pathname, isPreview, Date.now() - _t0, _ordinal)
   } catch (err) {
     if (!import.meta.env.PROD) throw err
     console.error(
