@@ -96,11 +96,32 @@ const CACHE_TTL_SECONDS = 60
 // preview (regression, 2026-06-28). The SSR pages send no X-Frame-Options
 // either, so framing stays unrestricted exactly as it was before security
 // headers were added. (Clickjacking on draft-preview pages is low-value.)
+//
+// HSTS is safe for Presentation: it governs SCHEME UPGRADE only and has no
+// bearing on framing (that's frame-ancestors / X-Frame-Options above, which
+// stay off). Every SANITY_STUDIO_PREVIEW_URL in the fleet is already https.
 const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
   'X-XSS-Protection': '1; mode=block',
+  // The http->https 301 below fixes what the visitor SEES, but the insecure
+  // request still leaves the browser — long enough for a strict proxy or an
+  // email-security scanner to block it. HSTS makes the browser rewrite the URL
+  // locally, so no plaintext request happens at all. It only takes effect after
+  // one successful https visit, so it protects returning visitors; the 301
+  // remains the fix for a first click out of an email.
+  //
+  // No `includeSubDomains`: on a *.workers.dev host that would assert a policy
+  // over domains that are not ours. No `preload`: effectively irreversible and
+  // requires includeSubDomains. Plain max-age is per-host and expires on its
+  // own, so a client leaving the platform is never stranded.
+  //
+  // PROD-only: dev is http://localhost, where browsers ignore HSTS anyway, but
+  // gating keeps a stray header out of local responses entirely.
+  ...(import.meta.env.PROD
+    ? {'Strict-Transport-Security': 'max-age=31536000'}
+    : {}),
 }
 function applySecurityHeaders(headers: Headers): void {
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v)
