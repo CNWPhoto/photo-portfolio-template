@@ -182,6 +182,9 @@ jobs:
       fail-fast: false
       matrix:
         client:
+          - slug: heidi-adler-photography
+            sanity_project_id: jb7hznkw
+            studio_url: https://heidi-adler-photography.sanity.studio
           - slug: everlight-education
             sanity_project_id: jj2etxl1
             studio_url: https://everlight-education.sanity.studio
@@ -313,6 +316,7 @@ jobs:
             wedding-demo) PID=boa9509d; STU=https://wedding-demo.sanity.studio;;
             heatherjl-photography) PID=7n71940p; STU=https://heatherjl-photography.sanity.studio;;
             everlight-education) PID=jj2etxl1; STU=https://everlight-education.sanity.studio;;
+            heidi-adler-photography) PID=jb7hznkw; STU=https://heidi-adler-photography.sanity.studio;;
             *) echo "::error::unknown client '${{ inputs.only_client }}'"; exit 1;;
           esac
           echo "pid=$PID" >> "$GITHUB_OUTPUT"
