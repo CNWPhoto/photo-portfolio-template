@@ -155,8 +155,15 @@ jobs:
           URL="${{ steps.deploy.outputs.deployment-url }}"
           echo "Demo Worker URL: ${URL}"
           if [ -z "$URL" ]; then echo "::error::no deployment-url output from wrangler"; exit 1; fi
-          sleep 10
-          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" "${URL}/")
+          # Poll: a brand-new workers.dev hostname can take >10s to resolve on
+          # an account's first-ever deploy. GET, not HEAD — only GET is cached.
+          STATUS=000
+          for attempt in $(seq 1 12); do
+            sleep 10
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/")
+            [ "$STATUS" = "200" ] && break
+            echo "  attempt ${attempt}/12: HTTP ${STATUS} — retrying"
+          done
           BODY=$(curl -sL "${URL}/")
           BODY_LEN=${#BODY}
           echo "Status: ${STATUS}  Body length: ${BODY_LEN} bytes"
@@ -182,6 +189,9 @@ jobs:
       fail-fast: false
       matrix:
         client:
+          - slug: heidi-adler-photography
+            sanity_project_id: jb7hznkw
+            studio_url: https://heidi-adler-photography.sanity.studio
           - slug: everlight-education
             sanity_project_id: jj2etxl1
             studio_url: https://everlight-education.sanity.studio
@@ -276,8 +286,15 @@ jobs:
           URL="${{ steps.deploy.outputs.deployment-url }}"
           echo "Smoke testing ${{ matrix.client.slug }}: ${URL}"
           if [ -z "$URL" ]; then echo "::error::${{ matrix.client.slug }} — no deployment-url"; exit 1; fi
-          sleep 10
-          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" "${URL}/")
+          # Poll: a brand-new workers.dev hostname can take >10s to resolve on
+          # an account's first-ever deploy. GET, not HEAD — only GET is cached.
+          STATUS=000
+          for attempt in $(seq 1 12); do
+            sleep 10
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/")
+            [ "$STATUS" = "200" ] && break
+            echo "  attempt ${attempt}/12: HTTP ${STATUS} — retrying"
+          done
           BODY=$(curl -sL "${URL}/")
           BODY_LEN=${#BODY}
           echo "Status: $STATUS  Body length: $BODY_LEN bytes"
@@ -313,6 +330,7 @@ jobs:
             wedding-demo) PID=boa9509d; STU=https://wedding-demo.sanity.studio;;
             heatherjl-photography) PID=7n71940p; STU=https://heatherjl-photography.sanity.studio;;
             everlight-education) PID=jj2etxl1; STU=https://everlight-education.sanity.studio;;
+            heidi-adler-photography) PID=jb7hznkw; STU=https://heidi-adler-photography.sanity.studio;;
             *) echo "::error::unknown client '${{ inputs.only_client }}'"; exit 1;;
           esac
           echo "pid=$PID" >> "$GITHUB_OUTPUT"
@@ -372,8 +390,15 @@ jobs:
           URL="${{ steps.deploy.outputs.deployment-url }}"
           echo "Cutover ${{ inputs.only_client }}: ${URL}"
           if [ -z "$URL" ]; then echo "::error::no deployment-url"; exit 1; fi
-          sleep 10
-          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" "${URL}/")
+          # Poll: a brand-new workers.dev hostname can take >10s to resolve on
+          # an account's first-ever deploy. GET, not HEAD — only GET is cached.
+          STATUS=000
+          for attempt in $(seq 1 12); do
+            sleep 10
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/")
+            [ "$STATUS" = "200" ] && break
+            echo "  attempt ${attempt}/12: HTTP ${STATUS} — retrying"
+          done
           BODY=$(curl -sL "${URL}/"); BODY_LEN=${#BODY}
           echo "Status: $STATUS  Body length: $BODY_LEN bytes"
           if [ "$STATUS" != "200" ]; then echo "::error::${{ inputs.only_client }} — HTTP $STATUS"; exit 1; fi

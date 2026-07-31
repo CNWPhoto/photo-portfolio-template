@@ -35,14 +35,26 @@ node studio/scripts/onboard/30-studio-deploy.js --slug=<slug>
 node studio/scripts/onboard/40-cors.js --slug=<slug>
 node studio/scripts/onboard/50-donor-seed.js --slug=<slug> --donor=cnw-photo-demo
 
-# overlay runs via sanity exec, so it reads studio/.env directly — swap
-# to the client env around it (30/40/50 self-manage this; 60 can't
-# because sanity exec needs the project id from dotenv at launch):
-cp studio/.env studio/.env.dev-snapshot
-cp studio/.env.<slug>-backup studio/.env
-npm --prefix studio run onboard:overlay -- \
+# REQUIRED after the seed — strips the donor's drafts, demo badge, and
+# seoSettings.siteUrl. Skipping it leaves the client's siteUrl pointing at the
+# DEMO, which is how blackbird + kelly-mac shipped claiming the demo's domain
+# (found + repaired fleet-wide 2026-07-26). This step used to be missing from
+# this runbook; that omission was the bug.
+cd studio && npx dotenv -e .env.<slug>-backup -- \
+  npx sanity exec scripts/onboard/55-post-seed-clean.js --with-user-token -- \
+  --slug=<slug> --apply
+cd ..
+
+# Overlay reads its project from the env dotenv supplies at launch — pass the
+# client's backup directly. Do NOT copy it over studio/.env: that mutates
+# global state for every later command, and studio/sanity.config.js falls back
+# to the DEMO project when SANITY_STUDIO_PROJECT_ID is unset, so a failed or
+# interrupted restore silently points subsequent writes at cnw-photo-demo.
+# (60/65/67 also call assertProject() and refuse to run on a mismatch.)
+cd studio && npx dotenv -e .env.<slug>-backup -- \
+  npx sanity exec scripts/onboard/60-overlay.js --with-user-token -- \
   --slug=<slug> --palette=<forest-sage|classic-cream|warm-studio|dark-editorial|cool-minimal>
-cp studio/.env.dev-snapshot studio/.env && rm studio/.env.dev-snapshot
+cd ..
 
 # ══ HUMAN CHECKPOINT 2 ════════════════════════════════════════════════
 #   Eyeball https://<slug>.sanity.studio/. Fix anything in Studio.
