@@ -60,6 +60,9 @@ export default {
       name: 'ctaLink',
       title: 'Button Link',
       type: 'ctaLink',
+      // Every component renders the button as {ctaText && ...}, so a link
+      // with no label is inert. Ask for the label first.
+      hidden: ({parent}) => !parent?.ctaText,
     },
     imageField({}),
     {

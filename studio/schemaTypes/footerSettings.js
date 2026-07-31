@@ -3,6 +3,8 @@
 // navSettings.links shape, no dropdowns), an htmlEmbedSection reference for
 // the middle column, and the existing legalLinks block preserved.
 
+import {imageField} from './_shared/imageField'
+
 export default {
   name: 'footerSettings',
   title: 'Footer',
@@ -102,6 +104,45 @@ export default {
           ],
         },
       ],
+    },
+    {
+      // Trust badges — PPA membership, accreditation marks, association logos,
+      // award seals. Photographers routinely carry these in the footer on the
+      // site they're migrating from, and until now there was nowhere to put
+      // them: Heidi Adler's PPA + accreditation marks had to go on her About
+      // page instead, which is not where hers lived.
+      name: 'badges',
+      title: 'Trust Badges',
+      type: 'array',
+      description:
+        'Optional. Membership, accreditation, or award logos shown as a row at the bottom of the footer. Small, transparent PNGs work best. Leave empty to hide the row.',
+      of: [
+        {
+          type: 'object',
+          name: 'footerBadge',
+          fields: [
+            imageField({required: true}),
+            {
+              name: 'label',
+              title: 'Label',
+              type: 'string',
+              description:
+                'For screen readers and the image alt text, e.g. "Professional Photographers of America member".',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'url',
+              title: 'Link (optional)',
+              type: 'url',
+              description: 'Link the badge to the issuing organisation, if you want it clickable.',
+            },
+          ],
+          preview: {
+            select: {title: 'label', media: 'image'},
+          },
+        },
+      ],
+      validation: (Rule) => Rule.max(6),
     },
     {
       name: 'middleColumn',

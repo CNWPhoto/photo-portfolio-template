@@ -56,6 +56,19 @@ cd studio && npx dotenv -e .env.<slug>-backup -- \
   --slug=<slug> --palette=<forest-sage|classic-cream|warm-studio|dark-editorial|cool-minimal>
 cd ..
 
+# PAGE FIDELITY GATE — run before telling anyone the migration is done.
+# Diffs the LIVE rendered pages against the ORIGINAL site (not the staged
+# scrape, which is itself suspect — it discovers from sitemap.xml, and
+# Squarespace routinely under-lists). Hard-fails on: missing/duplicate <h1>,
+# donor copy, text coverage below --min-text, images far below the source's
+# count, empty hrefs. Exit 1 blocks sign-off. See "Page migration fidelity"
+# below for what each check catches and why it exists.
+cd studio && npx dotenv -e .env.<slug>-backup -- \
+  npx sanity exec scripts/onboard/68-verify-pages.js --with-user-token -- \
+  --slug=<slug> --live=<new site url> --source=<old site url> \
+  --map=/investment/:/productsandpricing        # only where paths differ
+cd ..
+
 # ══ HUMAN CHECKPOINT 2 ════════════════════════════════════════════════
 #   Eyeball https://<slug>.sanity.studio/. Fix anything in Studio.
 #   Gather: CF API token, CF account id, Sanity Viewer read token,
@@ -100,6 +113,46 @@ CF_API_TOKEN=… node studio/scripts/onboard/90-domain-cutover.js \
 # www-canonical-host pattern. Re-runnable; --skip-cf if the domain was
 # already attached in the dashboard.
 ```
+
+## Page migration fidelity — `68-verify-pages.js`
+
+**Run before sign-off on every migration.** The blog side got `66-verify-blog.js`
+after the PIF import "ran clean" while silently losing content. Pages had no
+equivalent, and the same class of failure duly recurred on the Heidi Adler
+migration (2026-07-31): donor copy still rendering, two pages missing ~75% of
+their text, per-section images never placed, **six of nine pages shipped with no
+`<h1>` at all**, and a meta description written to a field the schema doesn't
+define. Every one of those is mechanically detectable — none were caught by
+eyeballing, because eyeballing is what produced them.
+
+It compares against the **original site**, not the staged scrape, because the
+scrape is a suspect: it discovers pages and images from `sitemap.xml`, and
+Squarespace routinely omits real pages from it (Heidi's `/portfolio` and
+`/productsandpricing` were both absent, taking 138 of 184 images with them).
+
+Hard fails (exit 1 — resolve before sign-off):
+
+- [ ] **Exactly one `<h1>`** per page. Full-bleed banners and split sections
+      render `<h2>`; a page that opens with one has no `h1` at all.
+- [ ] **No donor copy.** Matches a marker list — extend `DONOR_MARKERS` whenever
+      a new one slips through. A false positive costs a glance; a false negative
+      ships to a client.
+- [ ] **Text coverage ≥ `--min-text`** (default 0.9), measured as word-level
+      coverage of the source's body copy. Word-level, not sentence-level: a
+      faithful migration re-splits sections constantly, which breaks sentence
+      boundaries while losing nothing.
+- [ ] **Image count** not far below the source's. Catches the specific failure
+      where pages get the right words and one token image each.
+- [ ] **No empty `href`.** Catches nav/footer links stored in the wrong shape —
+      Heidi's three footer links were `navLink`-shaped in a `footerLink` field,
+      so they rendered as nothing at all.
+
+Warnings (eyeball, don't block): missing meta description, internal links
+without a trailing slash, empty quotation marks (an unpopulated testimonial),
+`href="#"` counts, and uploaded images referenced by nothing.
+
+`--json` emits a machine-readable report. Chrome is stripped from both sides
+before diffing, so a deliberately restructured nav never fails the run.
 
 ## Blog migration fidelity checklist (Squarespace/WordPress → Sanity)
 
