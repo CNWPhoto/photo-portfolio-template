@@ -31,7 +31,13 @@ const seoTitle       = portfolioDoc?.seo?.seoTitle       || portfolioDoc?.pageTi
 const seoDescription = portfolioDoc?.seo?.seoDescription || null;
 const ogImage        = portfolioDoc?.seo?.socialImage?.asset?.url || null;
 const pageTitle      = portfolioDoc?.title          || 'Portfolio';
-const byline         = portfolioDoc?.byline         || 'A collection of recent dog photography sessions';
+// No donor fallback: an empty byline must render nothing. The old default
+// ('A collection of recent dog photography sessions') meant clearing the
+// field in Studio silently restored pet-photography copy — wrong for every
+// client, and actively misleading for a non-pet niche. Found on Heidi Adler's
+// portfolio page 2026-07-31, where her data was clean but the page still
+// showed it.
+const byline         = portfolioDoc?.byline         || '';
 const galleryColumns = portfolioDoc?.galleryColumns || 3;
 const galleryLayout  = portfolioDoc?.galleryLayout  || 'masonry';
 const portfolio      = portfolioDoc?.images;
@@ -82,7 +88,7 @@ const tabs = [
 <Layout pageTitle={seoTitle} seoDescription={seoDescription} ogImage={ogImage} breadcrumb="Portfolio">
 	<main class="portfolio-main" data-sanity={portfolioSanityAttr}>
 		<div class="portfolio__header">
-			<p class="portfolio__byline">{byline}</p>
+			{byline && <p class="portfolio__byline">{byline}</p>}
 			<h1 class="portfolio__title">{pageTitle}</h1>
 		</div>
 		<GalleryTabs tabs={tabs} activeSlug="" />
