@@ -34,6 +34,9 @@ const heightClass =
 const bgImage = section?.backgroundImage ?? null;
 const bgUrl = bgImage?.asset ? buildSrc(bgImage, 2000) : null;
 const fgImage = section?.foregroundImage ?? null;
+// Parallax only means anything with a CSS background image. The Overlapping
+// Images layout renders real <img> elements instead, so it can't parallax.
+const parallax = !!section?.parallax && !!bgUrl;
 
 const isOverlapping = layout === 'overlapping-images';
 
@@ -76,6 +79,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     class:list={['section', 'ctaband', `ctaband--${layout}`, bgUrl ? 'ctaband--has-bg' : '', heightClass]}
     data-section-type="ctaBandSection"
     data-spacing={section?.spacing || 'normal'}
+    data-parallax={parallax ? 'true' : 'false'}
     id={section?.sectionId || undefined}
     style={style}
   >
@@ -118,6 +122,18 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     inset: 0;
     background-size: cover;
     background-position: center;
+  }
+  /* Parallax: image holds still while the band scrolls past. Matches
+     FullBleedImageSection. iOS Safari ignores background-attachment: fixed,
+     and on narrow screens the effect mostly reads as a rendering glitch, so
+     it falls back to a normal scroll below 900px. */
+  .ctaband[data-parallax='true'] .ctaband__bg {
+    background-attachment: fixed;
+  }
+  @media (max-width: 900px) {
+    .ctaband[data-parallax='true'] .ctaband__bg {
+      background-attachment: scroll;
+    }
   }
   .ctaband__overlay {
     position: absolute;

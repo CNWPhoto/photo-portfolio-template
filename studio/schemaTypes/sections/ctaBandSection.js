@@ -95,5 +95,14 @@ export default {
       initialValue: false,
       hidden: ({parent}) => parent?.layout !== 'overlapping-images',
     },
+    {
+      name: 'parallax',
+      title: 'Parallax (background-attachment: fixed)',
+      type: 'boolean',
+      description:
+        'Subtle parallax: the background image stays put while the page scrolls past. Only applies when a Background Image is set. Note: not supported on iOS Safari (falls back to normal scroll).',
+      initialValue: false,
+      hidden: ({parent}) => !parent?.backgroundImage,
+    },
   ],
 }
