@@ -223,10 +223,15 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     font-size: 0.9rem;
     line-height: 1.55;
   }
+  /* Vertical rhythm comes from section[data-spacing], like every other
+     section. This used to hard-code `padding-bottom: 7rem !important` while
+     the inner grid added 5.5rem on top and nothing on the bottom, so content
+     sat ~184px below the section top and ~112px above the bottom — visibly
+     lopsided, and immune to the spacing control because of the !important.
+     Horizontal padding stays here; vertical belongs to the scale. */
   .contact {
     background: var(--bg);
     color: var(--text);
-    padding-bottom: 7rem !important;
   }
   .contact__inner {
     display: grid;
@@ -235,7 +240,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     align-items: start;
     max-width: 1100px;
     margin: 0 auto;
-    padding: 5.5rem 3rem 0;
+    padding: 0 3rem;
   }
 
   .contact__info {

@@ -247,11 +247,19 @@ jobs:
           PUBLIC_SANITY_DATASET: production
           SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
-          SANITY_STUDIO_URL: ${{ matrix.client.studio_url }}
-        # Per-client embedded-Studio title from the committed env-backup (single
-        # source). SLUG via env (not ${{ }} interpolation) to avoid shell injection.
+        # Studio lives at <site>/studio (embedded), not on sanity.studio.
+        # SANITY_STUDIO_URL is the click-to-edit target for visual-editing
+        # overlays, so it must point where editors actually work. Derived from
+        # the client's canonical site URL in their committed env-backup, which
+        # 90-domain-cutover.js keeps current through a domain move.
+        #
+        # Per-client embedded-Studio title from the same file (single source).
+        # SLUG via env (not ${{ }} interpolation) to avoid shell injection.
         run: |
-          export PUBLIC_SANITY_STUDIO_TITLE="$(grep -E '^SANITY_STUDIO_TITLE=' "studio/.env.${SLUG}-backup" | cut -d= -f2- || true)"
+          BACKUP="studio/.env.${SLUG}-backup"
+          export PUBLIC_SANITY_STUDIO_TITLE="$(grep -E '^SANITY_STUDIO_TITLE=' "$BACKUP" | cut -d= -f2- || true)"
+          export SANITY_STUDIO_URL="$(grep -E '^SANITY_STUDIO_PREVIEW_URL=' "$BACKUP" | cut -d= -f2- | sed 's:/*$::')/studio"
+          echo "Studio URL: ${SANITY_STUDIO_URL}"
           npm run build
 
       # Workers deploy — same proven pattern as the demo job, templated
@@ -264,8 +272,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
-          STUDIO_URL: ${{ matrix.client.studio_url }}
+          SLUG: ${{ matrix.client.slug }}
         run: |
+          export STUDIO_URL="$(grep -E '^SANITY_STUDIO_PREVIEW_URL=' "studio/.env.${SLUG}-backup" | cut -d= -f2- | sed 's:/*$::')/studio"
           node -e "const fs=require('fs');fs.writeFileSync('/tmp/secrets.json',JSON.stringify({SANITY_API_READ_TOKEN:process.env.SANITY_API_READ_TOKEN,SANITY_PREVIEW_SECRET:process.env.SANITY_PREVIEW_SECRET,SANITY_STUDIO_URL:process.env.STUDIO_URL}))"
           npx wrangler secret bulk /tmp/secrets.json --name ${{ matrix.client.slug }}
           rm -f /tmp/secrets.json
