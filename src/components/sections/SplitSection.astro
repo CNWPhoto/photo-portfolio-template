@@ -205,6 +205,13 @@ const image = section?.image ?? null;
     text-align: left;
     padding-right: 0;
     padding-left: 0;
+    /* The full-bleed variants were inheriting the base 440px measure, so on a
+       wide window the text column (45% of the viewport) sat mostly empty with
+       a narrow ribbon of copy in it. Grow with the viewport, capped at ~75
+       characters — past that, line length starts hurting readability. The
+       contained variants get 515px just below; these are wider because their
+       column is. Applies to both directions, so the mirrored layout matches. */
+    max-width: clamp(440px, 40vw, 600px);
   }
 
   /* ── Welcome-style full-bleed (text-align right) ──
