@@ -83,6 +83,32 @@ export function readEnvBackup(slug) {
   return out
 }
 
+// Refuse to write to the wrong dataset.
+//
+// Which project a script writes to is decided by ambient state — whatever
+// studio/.env happens to hold when `sanity exec` launches. studio/sanity.config.js
+// falls back to the DEMO project when SANITY_STUDIO_PROJECT_ID is unset, so a
+// script run with a half-restored or missing .env silently writes to
+// cnw-photo-demo instead of the client. Nothing about that failure is loud.
+//
+// This derives the expected project from --slug (via .env.<slug>-backup) and
+// compares it to the client actually in hand, so it scales to every future
+// client without hardcoding ids. Call it at the top of any script that WRITES.
+export function assertProject(client, slug) {
+  const expected = readEnvBackup(slug).SANITY_STUDIO_PROJECT_ID
+  const actual = client.config().projectId
+  if (!expected) {
+    throw new Error(`No SANITY_STUDIO_PROJECT_ID in ${envBackupPath(slug)} — cannot verify target.`)
+  }
+  if (expected !== actual) {
+    throw new Error(
+      `Refusing to write: --slug=${slug} expects project ${expected}, ` +
+        `but the active client is ${actual}. Check studio/.env.`,
+    )
+  }
+  return actual
+}
+
 // ── shell ──────────────────────────────────────────────────────────────────
 export function sh(cmd, opts = {}) {
   return execSync(cmd, {

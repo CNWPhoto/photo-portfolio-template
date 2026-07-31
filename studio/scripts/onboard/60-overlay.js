@@ -55,7 +55,32 @@ const ALT = (() => {
   catch { return {} }
 })()
 
+// Refuse to write to the wrong dataset. Which project this writes to is decided
+// by ambient state — whatever studio/.env held when `sanity exec` launched —
+// and studio/sanity.config.js falls back to the DEMO project when
+// SANITY_STUDIO_PROJECT_ID is unset. So a half-restored .env silently
+// overwrites cnw-photo-demo. Derive the expected id from --slug instead.
+//
+// Inlined rather than imported: this runs under `sanity exec` (esbuild-register
+// / CJS) which cannot import the ESM lib.js — same reason getArg/assertSlug are
+// inlined above. Keep in sync with assertProject() in lib.js.
+function assertProject(c, s) {
+  const p = path.join(REPO_ROOT, 'studio', `.env.${s}-backup`)
+  if (!fs.existsSync(p)) throw new Error(`No ${p} — run 20-env.js first.`)
+  const expected = (fs.readFileSync(p, 'utf8').match(/^SANITY_STUDIO_PROJECT_ID=(.+)$/m) || [])[1]?.trim()
+  const actual = c.config().projectId
+  if (!expected) throw new Error(`No SANITY_STUDIO_PROJECT_ID in ${p}`)
+  if (expected !== actual) {
+    throw new Error(`Refusing to write: --slug=${s} expects project ${expected}, active client is ${actual}. Check studio/.env.`)
+  }
+  return actual
+}
+
 const client = getCliClient()
+// Refuse to write if the ambient studio/.env doesn't match --slug. Without this
+// a missing SANITY_STUDIO_PROJECT_ID silently falls back to the demo project
+// (see studio/sanity.config.js) and this script would overwrite the demo.
+assertProject(client, slug)
 
 // Sanity occasionally returns a transient upstream 5xx under rapid bulk
 // asset uploads. Retry with backoff so a 25-image overlay doesn't die
