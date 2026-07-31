@@ -34,6 +34,8 @@ export default {
       title: 'Email Override',
       type: 'string',
       description: 'Optional. Falls back to socialSettings if blank.',
+      // Pointless unless the value is actually being shown.
+      hidden: ({parent}) => !parent?.showEmail,
     },
     {
       name: 'showPhone',
@@ -45,6 +47,8 @@ export default {
       name: 'phoneOverride',
       title: 'Phone Override',
       type: 'string',
+      // Pointless unless the value is actually being shown.
+      hidden: ({parent}) => !parent?.showPhone,
     },
     {
       name: 'showSocial',

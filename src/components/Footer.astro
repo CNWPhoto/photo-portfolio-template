@@ -28,6 +28,7 @@ const [footerDataRaw, socialDataRaw, siteDataRaw, termsDocRaw, privacyDocRaw] = 
     backgroundTone,
     columnAlignment,
     links[] { label, url, enabled, openInNewTab },
+    badges[] { label, url, image },
     middleColumn {
       enabled, label, note,
       "embed": embed->{ name, rawHtml, containerWidth, containerHeight }
@@ -76,6 +77,16 @@ const footerLogoUrl   = footerLogoType === 'image' && footerLogoImage?.asset
   : null;
 
 // Middle column — embed reference takes priority over the text note
+// Trust badges (PPA, accreditation, awards). Only ones with a real image
+// survive — an empty row would otherwise render a gap.
+const badges = (footerData?.badges ?? [])
+  .filter((b: any) => b?.image?.asset)
+  .map((b: any) => ({
+    src: urlFor(b.image).width(320).fit('max').auto('format').url(),
+    label: stegaClean(b.label) || '',
+    url: stegaClean(b.url) || null,
+  }));
+
 const middleCol      = footerData?.middleColumn ?? null;
 const middleEnabled  = middleCol?.enabled !== false;
 const middleLabel    = middleCol?.label || null;
@@ -214,6 +225,18 @@ const year = new Date().getFullYear();
 		</div>
 	</div>
 
+	{badges.length > 0 && (
+		<div class="footer__badges">
+			{badges.map(b => (
+				b.url
+					? <a href={b.url} target="_blank" rel="noopener noreferrer" class="footer__badge">
+							<img src={b.src} alt={b.label} loading="lazy" decoding="async" />
+						</a>
+					: <img src={b.src} alt={b.label} class="footer__badge" loading="lazy" decoding="async" />
+			))}
+		</div>
+	)}
+
 	<hr />
 
 	<!-- Copyright -->
@@ -231,6 +254,31 @@ const year = new Date().getFullYear();
 </footer>
 
 <style>
+	.footer__badges {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: clamp(1.25rem, 3vw, 2.5rem);
+		margin: 2rem 0 0;
+	}
+	.footer__badge {
+		display: block;
+		max-height: 64px;
+		width: auto;
+		/* Badges arrive in assorted colours; muting them keeps the footer calm
+		   without stripping brand colour entirely. */
+		opacity: 0.75;
+		transition: opacity 0.2s ease;
+	}
+	a.footer__badge:hover .footer__badge,
+	a.footer__badge:hover,
+	.footer__badge:hover { opacity: 1; }
+	.footer__badge img { max-height: 64px; width: auto; display: block; }
+	@media (max-width: 600px) {
+		.footer__badge, .footer__badge img { max-height: 48px; }
+	}
+
 	.footer {
 		background: var(--bg);
 		color: var(--text);

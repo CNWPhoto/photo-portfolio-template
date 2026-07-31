@@ -86,6 +86,9 @@ export default {
       name: 'ctaLink',
       title: 'Button Link',
       type: 'ctaLink',
+      // Every component renders the button as {ctaText && ...}, so a link
+      // with no label is inert. Ask for the label first.
+      hidden: ({parent}) => !parent?.ctaText,
     },
     {
       name: 'textAlignment',
@@ -116,6 +119,9 @@ export default {
         ],
       },
       initialValue: 'center-left',
+      // Every [data-text-position] CSS rule is scoped to .hero--image-full,
+      // which is what the description above already tells the editor.
+      hidden: ({parent}) => parent?.variant !== 'image-full',
     },
     {
       name: 'mobileTextBelow',
@@ -139,6 +145,9 @@ export default {
         layout: 'radio',
       },
       initialValue: 'auto',
+      // Height rules exist for .hero--slider and .hero--image-full only;
+      // image-right is a two-column layout that sizes to its content.
+      hidden: ({parent}) => parent?.variant === 'image-right',
     },
     {
       name: 'overlayOpacity',
@@ -147,6 +156,9 @@ export default {
       description: 'Darken the image behind the text. 0 = no overlay, 100 = solid black.',
       initialValue: 30,
       validation: (Rule) => Rule.min(0).max(100),
+      // Only the image-full variant renders .hero__bg-overlay — the slider and
+      // image-right variants have no overlay element for this to affect.
+      hidden: ({parent}) => parent?.variant !== 'image-full',
     },
     {
       name: 'stickyBackground',
