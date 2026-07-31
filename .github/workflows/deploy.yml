@@ -122,7 +122,8 @@ jobs:
           PUBLIC_SANITY_STUDIO_TITLE: Pet Photographer Demo
           SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
-          SANITY_STUDIO_URL: https://cnw-photo-demo.sanity.studio
+          # Embedded Studio, matching every client job below.
+          SANITY_STUDIO_URL: https://cnw-photo-demo.connor-213.workers.dev/studio
 
       # Workers deploy (Astro 6 / @astrojs/cloudflare v13). Pattern proven
       # 2026-05-19. Secrets pushed in their own step with explicit --name;
@@ -135,7 +136,7 @@ jobs:
           SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
         run: |
-          node -e "const fs=require('fs');fs.writeFileSync('/tmp/secrets.json',JSON.stringify({SANITY_API_READ_TOKEN:process.env.SANITY_API_READ_TOKEN,SANITY_PREVIEW_SECRET:process.env.SANITY_PREVIEW_SECRET,SANITY_STUDIO_URL:'https://cnw-photo-demo.sanity.studio'}))"
+          node -e "const fs=require('fs');fs.writeFileSync('/tmp/secrets.json',JSON.stringify({SANITY_API_READ_TOKEN:process.env.SANITY_API_READ_TOKEN,SANITY_PREVIEW_SECRET:process.env.SANITY_PREVIEW_SECRET,SANITY_STUDIO_URL:'https://cnw-photo-demo.connor-213.workers.dev/studio'}))"
           npx wrangler secret bulk /tmp/secrets.json --name cnw-photo-demo
           rm -f /tmp/secrets.json
 
@@ -364,11 +365,15 @@ jobs:
           PUBLIC_SANITY_DATASET: production
           SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
-          SANITY_STUDIO_URL: ${{ steps.cfg.outputs.stu }}
         # Per-client embedded-Studio title from the committed env-backup (single
         # source). SLUG via env (not ${{ }} interpolation) to avoid shell injection.
+        # SANITY_STUDIO_URL derives the same way as the fan-out job above, so a
+        # single-client dispatch can't drift from it.
         run: |
-          export PUBLIC_SANITY_STUDIO_TITLE="$(grep -E '^SANITY_STUDIO_TITLE=' "studio/.env.${SLUG}-backup" | cut -d= -f2- || true)"
+          BACKUP="studio/.env.${SLUG}-backup"
+          export PUBLIC_SANITY_STUDIO_TITLE="$(grep -E '^SANITY_STUDIO_TITLE=' "$BACKUP" | cut -d= -f2- || true)"
+          export SANITY_STUDIO_URL="$(grep -E '^SANITY_STUDIO_PREVIEW_URL=' "$BACKUP" | cut -d= -f2- | sed 's:/*$::')/studio"
+          echo "Studio URL: ${SANITY_STUDIO_URL}"
           npm run build
 
       - name: Upload Worker secrets
@@ -377,8 +382,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
-          STUDIO_URL: ${{ steps.cfg.outputs.stu }}
+          SLUG: ${{ inputs.only_client }}
         run: |
+          export STUDIO_URL="$(grep -E '^SANITY_STUDIO_PREVIEW_URL=' "studio/.env.${SLUG}-backup" | cut -d= -f2- | sed 's:/*$::')/studio"
           node -e "const fs=require('fs');fs.writeFileSync('/tmp/secrets.json',JSON.stringify({SANITY_API_READ_TOKEN:process.env.SANITY_API_READ_TOKEN,SANITY_PREVIEW_SECRET:process.env.SANITY_PREVIEW_SECRET,SANITY_STUDIO_URL:process.env.STUDIO_URL}))"
           npx wrangler secret bulk /tmp/secrets.json --name ${{ inputs.only_client }}
           rm -f /tmp/secrets.json
