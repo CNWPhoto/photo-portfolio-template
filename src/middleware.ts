@@ -123,6 +123,20 @@ const RENDER_FALLBACK_HTML = `<!doctype html>
 </div></body></html>`
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  // ── Force HTTPS ────────────────────────────────────────────────────────
+  // Cloudflare forwards a request over whatever scheme it arrived on. Without
+  // the zone's "Always Use HTTPS" flipped, an http:// visitor gets served
+  // insecurely instead of redirected — confirmed 2026-07-31 on a custom
+  // domain (petsinfocus.com) AND on a *.workers.dev subdomain, both 200 over
+  // plain http. workers.dev sites have no zone to flip that setting on, so
+  // this app-level redirect is the only fix that covers them. Belt-and-
+  // suspenders with the zone setting on domains that have one.
+  if (import.meta.env.PROD && context.url.protocol === 'http:') {
+    const httpsUrl = new URL(context.url)
+    httpsUrl.protocol = 'https:'
+    return context.redirect(httpsUrl.toString(), 301)
+  }
+
   // Preview mode: set by /api/preview after a valid Sanity preview-secret
   // handshake. Presentation runs the site in a third-party iframe, so the
   // cookie must survive that context — a value-only check keeps the
