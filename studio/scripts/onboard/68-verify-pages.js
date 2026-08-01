@@ -255,6 +255,18 @@ async function main() {
       r.warns.push('no meta description')
     }
 
+    // ── 9. canonical tag present and pointing at this site ───────────────
+    // 55-post-seed-clean blanks seoSettings.siteUrl (so a client can't inherit
+    // the demo's domain) and only 90-domain-cutover sets it again — so every
+    // client deployed before their cutover shipped with NO canonical on any
+    // page. 75-siteurl.js closes that gap; this makes forgetting it loud.
+    const canon = (liveHtml.match(/<link[^>]+rel="canonical"[^>]+href="([^"]*)"/i) || [])[1]
+    if (!canon) {
+      r.fails.push('no canonical tag — seoSettings.siteUrl is probably unset (run 75-siteurl.js)')
+    } else if (!canon.startsWith(LIVE)) {
+      r.fails.push(`canonical points elsewhere: ${canon}`)
+    }
+
     results.push(r)
   }
 
