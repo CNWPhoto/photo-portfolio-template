@@ -95,6 +95,18 @@ gh workflow run deploy.yml --ref main -f only_client=<slug>
 # Verify the smoke step lands green; the workflow creates the Worker on
 # first deploy and uploads secrets. No production push needed yet.
 
+# REQUIRED after the first deploy. 55-post-seed-clean BLANKED seoSettings
+# .siteUrl so the client couldn't inherit the demo's domain — but nothing set
+# their own until 90-domain-cutover, which doesn't run until the domain moves.
+# Result: every pre-cutover client shipped with NO CANONICAL TAG on any page.
+# Found on heidi-adler-photography 2026-08-01; the fleet health check had been
+# failing every run since her launch. Derives the origin from the env-backup,
+# so it needs nothing new. 90-domain-cutover overwrites it at cutover.
+cd studio && npx dotenv -e .env.<slug>-backup -- \
+  npx sanity exec scripts/onboard/75-siteurl.js --with-user-token -- \
+  --slug=<slug> --apply
+cd ..
+
 # When ready to include them in the normal fleet fan-out:
 git checkout production && git merge main --no-ff && git push origin production
 git checkout main                          # back to dev
@@ -146,6 +158,10 @@ Hard fails (exit 1 — resolve before sign-off):
 - [ ] **No empty `href`.** Catches nav/footer links stored in the wrong shape —
       Heidi's three footer links were `navLink`-shaped in a `footerLink` field,
       so they rendered as nothing at all.
+- [ ] **Canonical tag present, pointing at this site.** Absent means
+      `seoSettings.siteUrl` is unset — run `75-siteurl.js`. This is the check
+      that would have caught the pre-cutover canonical gap immediately instead
+      of via a nightly health-check email.
 
 Warnings (eyeball, don't block): missing meta description, internal links
 without a trailing slash, empty quotation marks (an unpopulated testimonial),
