@@ -223,18 +223,18 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     font-size: 0.9rem;
     line-height: 1.55;
   }
-  /* The <hr> is this section's first child, so it reads as the boundary
-     between the previous section and the form. The space therefore belongs
-     BELOW the line (the inner grid's 5.5rem), not above it: the preceding
-     section already contributes its own padding-bottom, and adding the
-     section's padding-top on top of that stranded the rule ~190px into empty
-     space with its content flush underneath.
-     The inner grid's top padding is load-bearing — removing it puts the form
-     hard against the line. */
+  /* The <hr> is this section's FIRST child, so section padding-top lands
+     ABOVE the rule and the inner grid's padding-top lands BELOW it. Those two
+     need to stay in step or the rule looks stranded.
+     History worth keeping: it shipped as 96px above / 88px below, which read
+     as a big empty gap above the line; zeroing the section padding then put
+     the rule flush against the hero image above it. 3rem on each side keeps
+     the rule sitting in even space, and the inner padding is load-bearing —
+     remove it and the form sits hard against the line. */
   .contact {
     background: var(--bg);
     color: var(--text);
-    padding-top: 0 !important;
+    padding-top: 3rem !important;
     padding-bottom: 7rem !important;
   }
   .contact__inner {
@@ -244,7 +244,7 @@ const HeadingTag = isFirst ? 'h1' : 'h2';
     align-items: start;
     max-width: 1100px;
     margin: 0 auto;
-    padding: 5.5rem 3rem 0;
+    padding: 3rem 3rem 0;
   }
 
   .contact__info {
