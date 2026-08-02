@@ -73,6 +73,12 @@ export const SECTION_PROJECTION = /* groq */ `
     ...,
     internal->{ _type, "slug": slug.current }
   },
+  // Same dereference as ctaLink — without it the internal reference stays raw,
+  // resolveLink() can't build an href, and the second button silently vanishes.
+  secondaryCtaLink {
+    ...,
+    internal->{ _type, "slug": slug.current }
+  },
   testimonials[]->{
     _id, testimonial, client, starRating, source, sourceUrl, reviewDate,
     image {
