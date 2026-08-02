@@ -20,6 +20,9 @@ const heading = renderHeading(section?.heading || '');
 const body = section?.body || '';
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
+// Optional second button beside the first (e.g. "Session info" + "Book").
+const secondaryText = section?.secondaryCtaText || '';
+const secondaryHref = resolveLink(section?.secondaryCtaLink, [Astro.url.hostname]);
 const layout = section?.layout || 'centered';
 const caption = section?.caption || '';
 // Section height is editor-controlled but only meaningful for the
@@ -66,6 +69,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
         {heading && <HeadingTag class="ctaband__oi-heading reveal reveal-delay-1" set:html={heading} />}
         {body && <p class="ctaband__oi-body reveal reveal-delay-2">{body}</p>}
         {ctaText && ctaHref && <a class="ctaband__oi-btn reveal reveal-delay-3" href={ctaHref}>{ctaText}</a>}
+        {secondaryText && secondaryHref && <a class="ctaband__oi-btn ctaband__oi-btn--secondary reveal reveal-delay-3" href={secondaryHref}>{secondaryText}</a>}
         {caption && <p class="ctaband__oi-caption">{caption}</p>}
       </div>
       <div class="ctaband__oi-front">
@@ -98,6 +102,9 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
       {ctaText && ctaHref && (
         <div class="ctaband__footer reveal reveal-delay-1">
           <a class="ctaband__cta" href={ctaHref}>{ctaText}</a>
+          {secondaryText && secondaryHref && (
+            <a class="ctaband__cta ctaband__cta--secondary" href={secondaryHref}>{secondaryText}</a>
+          )}
         </div>
       )}
     </div>
@@ -199,6 +206,20 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   }
   .ctaband--split-text-left-cta-right .ctaband__body { max-width: none; }
 
+  /* Two buttons sit side by side and wrap together on narrow screens. The
+     second is outlined so the primary action still reads as primary. */
+  .ctaband__footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .ctaband__cta--secondary,
+  .ctaband__oi-btn--secondary {
+    background: transparent;
+    color: currentColor;
+    border: 1px solid currentColor;
+  }
   .ctaband__cta {
     display: inline-block;
     font-family: var(--font-sans, var(--font-body));

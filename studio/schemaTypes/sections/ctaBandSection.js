@@ -44,6 +44,20 @@ export default {
       // with no label is inert. Ask for the label first.
       hidden: ({parent}) => !parent?.ctaText,
     },
+    {
+      name: 'secondaryCtaText',
+      title: 'Second Button Text',
+      type: 'string',
+      description:
+        'Optional. Adds a second button beside the first — e.g. "Session info" next to "Book your session". Leave blank for a single button.',
+      hidden: ({parent}) => !parent?.ctaText,
+    },
+    {
+      name: 'secondaryCtaLink',
+      title: 'Second Button Link',
+      type: 'ctaLink',
+      hidden: ({parent}) => !parent?.secondaryCtaText,
+    },
     imageField({name: 'backgroundImage', title: 'Background Image'}),
     imageField({
       name: 'foregroundImage',
