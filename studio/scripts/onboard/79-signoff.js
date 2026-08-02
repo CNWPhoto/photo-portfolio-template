@@ -74,6 +74,43 @@ const DONOR_MARKERS = [
   'The Johnson Family',
 ]
 
+// Allowed values for any field with an options.list. A schema options list
+// does NOT validate on write — only the Studio dropdown constrains it — so a
+// scripted write can store anything. Three live bugs came from exactly this:
+// splitSection.imageLayout 'left' (should be 'image-left'), nav children typed
+// 'navLink' (should be 'navChildLink'), and galleryGridSection.layout 'grid'
+// (should be 'grid-2'). All three rendered as a class that matched no CSS, so
+// the section silently lost its layout with nothing logged anywhere.
+function collectEnums(fields, out) {
+  for (const f of fields || []) {
+    const list = f?.options?.list
+    if (Array.isArray(list) && list.length) {
+      out[f.name] = list.map((o) => (typeof o === 'string' ? o : o?.value)).filter(Boolean)
+    }
+    if (Array.isArray(f?.fields)) collectEnums(f.fields, out)
+  }
+}
+function countBadEnums(node, enums, bad = []) {
+  if (Array.isArray(node)) {
+    node.forEach((v) => countBadEnums(v, enums, bad))
+    return bad
+  }
+  if (!node || typeof node !== 'object') return bad
+  const e = node._type ? enums[node._type] : null
+  if (e) {
+    for (const [field, allowed] of Object.entries(e)) {
+      const v = node[field]
+      if (typeof v === 'string' && v && !allowed.includes(v)) {
+        bad.push(`${node._type}.${field}="${v}"`)
+      }
+    }
+  }
+  for (const [k, v] of Object.entries(node)) {
+    if (!k.startsWith('_')) countBadEnums(v, enums, bad)
+  }
+  return bad
+}
+
 function collectDefaults(fields, out, prefix = '') {
   for (const f of fields || []) {
     if (f?.initialValue !== undefined && typeof f.initialValue !== 'function') {
@@ -211,11 +248,15 @@ function main() {
     // ── 78-apply-schema-defaults ──────────────────────────────────────────
     const types = (mod.default && mod.default.schemaTypes) || mod.schemaTypes || []
     const defaults = {}
+    const enums = {}
     for (const t of types) {
       if (!t?.name || !Array.isArray(t.fields)) continue
       const d = {}
       collectDefaults(t.fields, d)
       if (Object.keys(d).length) defaults[t.name] = d
+      const e = {}
+      collectEnums(t.fields, e)
+      if (Object.keys(e).length) enums[t.name] = e
     }
     const missingDefaults = countMissingDefaults(docs, defaults)
     add(
@@ -223,6 +264,15 @@ function main() {
       'no section is missing a field that has a schema default',
       missingDefaults === 0,
       missingDefaults ? `${missingDefaults} blank control(s) in Studio` : 'all filled',
+    )
+
+    // ── enum integrity ────────────────────────────────────────────────────
+    const badEnums = countBadEnums(docs, enums)
+    add(
+      'schema',
+      'no field holds a value outside its schema options',
+      badEnums.length === 0,
+      badEnums.length ? [...new Set(badEnums)].slice(0, 6).join(', ') : 'all valid',
     )
 
     // ── content readiness ─────────────────────────────────────────────────
