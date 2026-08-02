@@ -30,6 +30,7 @@ if (!page) {
 
 const palettes = siteData?.palettes ?? [];
 const sitePaletteSlug = siteData?.defaultPalette ?? null;
+const accentOverride  = siteData?.accentColorOverride ?? null;
 
 const sections = page.sections ?? [];
 
@@ -59,6 +60,7 @@ const faqSchemaData = buildFaqSchema(sections);
 				section={section}
 				isFirst={i === 0}
 				sitePaletteSlug={sitePaletteSlug}
+				accentOverride={accentOverride}
 				palettes={palettes}
 			/>
 		))}

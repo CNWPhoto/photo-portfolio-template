@@ -104,6 +104,7 @@ export const SITE_PALETTES_QUERY = /* groq */ `
       accent, accentDark, border, sectionAlt, sectionDark,
       sectionDarkText, vibrant, btnBg, btnText
     },
-    defaultPalette
+    defaultPalette,
+    accentColorOverride
   }
 `
