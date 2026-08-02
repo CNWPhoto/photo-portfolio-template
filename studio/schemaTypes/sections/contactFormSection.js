@@ -84,9 +84,17 @@ export default {
                   {title: 'Phone', value: 'tel'},
                   {title: 'Textarea', value: 'textarea'},
                   {title: 'Select', value: 'select'},
+                  {title: 'Checkbox', value: 'checkbox'},
                 ],
               },
               initialValue: 'text',
+            },
+            {
+              name: 'description',
+              title: 'Helper Text',
+              type: 'string',
+              description:
+                'Optional hint under the label, e.g. "Word of mouth, Instagram, Google search…". Guides the answer without cluttering the label.',
             },
             {
               name: 'required',
