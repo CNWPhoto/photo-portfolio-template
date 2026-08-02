@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import SectionRenderer from '../components/SectionRenderer.astro';
+import { firstHeadingIndex } from '../lib/headings.js';
 import { getClient } from '../lib/sanity.js';
 import { SECTION_PROJECTION, SITE_PALETTES_QUERY } from '../lib/sectionsQuery.js';
 
@@ -20,6 +21,9 @@ const palettes = siteData?.palettes ?? [];
 const sitePaletteSlug = siteData?.defaultPalette ?? null;
 const accentOverride  = siteData?.accentColorOverride ?? null;
 const sections = doc?.sections ?? [];
+// The h1 belongs to the first section that actually renders a heading —
+// not simply section 0, which may be an image-only hero.
+const h1Index = firstHeadingIndex(sections);
 
 const seoTitle       = doc?.seo?.seoTitle       || '404 — Page Not Found';
 const seoDescription = doc?.seo?.seoDescription || null;
@@ -31,6 +35,7 @@ const seoDescription = doc?.seo?.seoDescription || null;
 			<SectionRenderer
 				section={section}
 				isFirst={i === 0}
+				ownsH1={i === h1Index}
 				sitePaletteSlug={sitePaletteSlug}
 				accentOverride={accentOverride}
 				palettes={palettes}

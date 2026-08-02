@@ -7,10 +7,11 @@ import { renderBody, isPortableText } from '../../lib/portableText.js';
 interface Props {
   section: any;
   isFirst?: boolean;
+  ownsH1?: boolean;
   palette?: any;
 }
 
-const { section, palette } = Astro.props;
+const { section, ownsH1 = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 const eyebrow = section?.eyebrow || '';
@@ -27,6 +28,8 @@ const stepsRendered = steps.map((step: any, i: number) => ({
   bodyHTML: isPortableText(step?.body) ? renderBody(step.body, { className: 'hcols__step-body' }) : '',
   image: step?.image?.asset?._id ? step.image : null,
 }));
+
+const HeadingTag = ownsH1 ? 'h1' : 'h2';
 ---
 
 <section
@@ -39,7 +42,7 @@ const stepsRendered = steps.map((step: any, i: number) => ({
   <div class="hcols__inner">
     <div class="hcols__header">
       {eyebrow && <p class="hcols__eyebrow">{eyebrow}</p>}
-      {heading && <h2 class="hcols__heading">{heading}</h2>}
+      {heading && <HeadingTag class="hcols__heading">{heading}</HeadingTag>}
     </div>
 
     <div class="hcols__steps" data-columns={columns}>

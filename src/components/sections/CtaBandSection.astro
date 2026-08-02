@@ -9,10 +9,11 @@ import { buildSrc } from '../../lib/image';
 interface Props {
   section: any;
   isFirst?: boolean;
+  ownsH1?: boolean;
   palette?: any;
 }
 
-const { section, isFirst = false, palette } = Astro.props;
+const { section, isFirst = false, ownsH1 = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 const heading = renderHeading(section?.heading || '');
@@ -40,7 +41,7 @@ const parallax = !!section?.parallax && !!bgUrl;
 
 const isOverlapping = layout === 'overlapping-images';
 
-const HeadingTag = isFirst ? 'h1' : 'h2';
+const HeadingTag = ownsH1 ? 'h1' : 'h2';
 ---
 
 {isOverlapping ? (

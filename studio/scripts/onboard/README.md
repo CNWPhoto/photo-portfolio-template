@@ -56,7 +56,11 @@ cd studio && npx dotenv -e .env.<slug>-backup -- \
   --slug=<slug> --palette=<forest-sage|classic-cream|warm-studio|dark-editorial|cool-minimal>
 cd ..
 
-# REQUIRED after anything that creates sections by script. `initialValue` is a
+# REQUIRED after anything that creates sections by script — and BEFORE the
+# client is given Studio access. It rewrites documents, so run it while the
+# dataset is still yours. Do NOT retro-run it on an established client: their
+# sections predate it and rewriting live documents to fix cosmetic blanks is
+# not worth the risk to content someone is actively editing. `initialValue` is a
 # Studio-client concept — it is NOT applied server-side, so every section a
 # script writes stores those fields as undefined. The site renders (components
 # carry their own fallbacks) but in Studio the controls come up BLANK: no

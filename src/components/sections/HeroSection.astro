@@ -9,10 +9,11 @@ import { renderHeading } from '../../lib/heading.js';
 interface Props {
   section: any;
   isFirst?: boolean;
+  ownsH1?: boolean;
   palette?: any;
 }
 
-const { section, isFirst = false, palette } = Astro.props;
+const { section, isFirst = false, ownsH1 = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 // Control fields used in class names, CSS attribute selectors, and JS
@@ -43,6 +44,10 @@ const PLACEHOLDER_SLIDES = ['3/2', '4/5', '3/2', '4/5'];
 const sanityImages = section?.images ?? [];
 const useFallback = sanityImages.length === 0;
 const firstImage = sanityImages[0] ?? null;
+
+// A hero only claims the h1 when it owns it — a second hero further down
+// the page must not emit a competing h1.
+const HeadingTag = ownsH1 ? 'h1' : 'h2';
 ---
 
 <section
@@ -85,7 +90,7 @@ const firstImage = sanityImages[0] ?? null;
       {(eyebrow || headingHTML || subheadingHTML) && (
         <div class="hero__caption">
           {eyebrow && <p class="hero__eyebrow">{eyebrow}</p>}
-          {headingHTML && <h1 class="hero__heading" set:html={headingHTML} />}
+          {headingHTML && <HeadingTag class="hero__heading" set:html={headingHTML} />}
           {subheadingHTML && <p class="hero__sub" set:html={subheadingHTML} />}
           {ctaText && ctaHref && (
             <a class="hero__cta" href={ctaHref}>{ctaText}</a>
@@ -104,7 +109,7 @@ const firstImage = sanityImages[0] ?? null;
       {(eyebrow || headingHTML || subheadingHTML || ctaText) && (
         <div class="hero__overlay-content">
           {eyebrow && <p class="hero__eyebrow">{eyebrow}</p>}
-          {headingHTML && <h1 class="hero__heading hero__heading--overlay" set:html={headingHTML} />}
+          {headingHTML && <HeadingTag class="hero__heading hero__heading--overlay" set:html={headingHTML} />}
           {subheadingHTML && <p class="hero__sub hero__sub--overlay" set:html={subheadingHTML} />}
           {ctaText && ctaHref && <a class="hero__cta" href={ctaHref}>{ctaText}</a>}
         </div>
@@ -118,7 +123,7 @@ const firstImage = sanityImages[0] ?? null;
         {(eyebrow || headingHTML || subheadingHTML || ctaText) && (
           <div class="hero__split-text">
             {eyebrow && <p class="hero__eyebrow">{eyebrow}</p>}
-            {headingHTML && <h1 class="hero__heading" set:html={headingHTML} />}
+            {headingHTML && <HeadingTag class="hero__heading" set:html={headingHTML} />}
             {subheadingHTML && <p class="hero__sub" set:html={subheadingHTML} />}
             {ctaText && ctaHref && <a class="hero__cta" href={ctaHref}>{ctaText}</a>}
           </div>

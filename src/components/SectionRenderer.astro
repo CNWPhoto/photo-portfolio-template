@@ -25,6 +25,7 @@ interface Props {
   isFirst?: boolean;
   sitePaletteSlug?: string | null;
   palettes?: any[];
+  ownsH1?: boolean;
   accentOverride?: string | null;
 }
 
@@ -42,7 +43,7 @@ interface Props {
 // on section text content stop working — editors use the Studio document
 // panel instead. That's an acceptable cost compared to pages silently
 // disappearing in preview mode (hard to debug, looks like a total failure).
-const { isFirst = false, sitePaletteSlug = null, palettes = [], accentOverride = null } = Astro.props;
+const { isFirst = false, ownsH1 = false, sitePaletteSlug = null, palettes = [], accentOverride = null } = Astro.props;
 const rawSection = Astro.props.section;
 const section = rawSection ? stegaClean(rawSection) : rawSection;
 
@@ -76,5 +77,5 @@ const palette = applyBackgroundTone(basePalette, section?.backgroundTone);
 ---
 
 {Component && enabled && (
-  <Component section={section} isFirst={isFirst} palette={palette} />
+  <Component section={section} isFirst={isFirst} ownsH1={ownsH1} palette={palette} />
 )}
