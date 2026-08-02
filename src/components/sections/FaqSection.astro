@@ -6,10 +6,11 @@ import { renderHeading } from '../../lib/heading.js';
 interface Props {
   section: any;
   isFirst?: boolean;
+  ownsH1?: boolean;
   palette?: any;
 }
 
-const { section, isFirst = false, palette } = Astro.props;
+const { section, isFirst = false, ownsH1 = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 const sideLabel = section?.verticalSideLabel || '';
@@ -26,7 +27,7 @@ const faqs = (section?.faqs || []).map((f: any) => ({
   aHTML: isPortableText(f?.answer) ? renderBody(f.answer) : '',
 }));
 
-const HeadingTag = isFirst ? 'h1' : 'h2';
+const HeadingTag = ownsH1 ? 'h1' : 'h2';
 ---
 
 <section

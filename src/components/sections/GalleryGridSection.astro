@@ -7,10 +7,11 @@ import { stegaClean } from '@sanity/client/stega';
 interface Props {
   section: any;
   isFirst?: boolean;
+  ownsH1?: boolean;
   palette?: any;
 }
 
-const { section, isFirst = false, palette } = Astro.props;
+const { section, isFirst = false, ownsH1 = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 // Empty gallery → six palette placeholders (never stock photos — P1 #8).
@@ -54,7 +55,7 @@ if (isMasonry) {
 const CAROUSEL_GAP_PX: Record<string, number> = { tight: 8, normal: 16, loose: 28 };
 const carouselGapPx = CAROUSEL_GAP_PX[gap] ?? CAROUSEL_GAP_PX.normal;
 
-const HeadingTag = isFirst ? 'h1' : 'h2';
+const HeadingTag = ownsH1 ? 'h1' : 'h2';
 ---
 
 <section

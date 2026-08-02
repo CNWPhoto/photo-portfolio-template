@@ -9,10 +9,11 @@ import { renderHeading } from '../../lib/heading.js';
 interface Props {
   section: any;
   isFirst?: boolean;
+  ownsH1?: boolean;
   palette?: any;
 }
 
-const { section, isFirst = false, palette } = Astro.props;
+const { section, isFirst = false, ownsH1 = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 const imageLayout = section?.imageLayout || 'image-right';
@@ -27,6 +28,8 @@ const bodyHTML = isPortableText(section?.body)
   : '';
 
 const image = section?.image ?? null;
+
+const HeadingTag = ownsH1 ? 'h1' : 'h2';
 ---
 
 <section
@@ -40,7 +43,7 @@ const image = section?.image ?? null;
   <div class="isplit__content">
     <div class="isplit__text-wrap">
       {eyebrow && <p class="isplit__eyebrow reveal reveal-delay-1">{eyebrow}</p>}
-      {headingHTML && <h2 class="isplit__heading" set:html={headingHTML} />}
+      {headingHTML && <HeadingTag class="isplit__heading" set:html={headingHTML} />}
       {bodyHTML && <div class="isplit__body-wrap reveal reveal-delay-2" set:html={bodyHTML} />}
       {ctaText && ctaHref && (
         <a class="isplit__link reveal reveal-delay-4" href={ctaHref}>

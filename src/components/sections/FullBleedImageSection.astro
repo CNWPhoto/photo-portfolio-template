@@ -8,10 +8,11 @@ import { buildSrc } from '../../lib/image';
 interface Props {
   section: any;
   isFirst?: boolean;
+  ownsH1?: boolean;
   palette?: any;
 }
 
-const { section, palette } = Astro.props;
+const { section, ownsH1 = false, palette } = Astro.props;
 const style = paletteToStyle(palette);
 
 // Empty slot → the bg div itself becomes a palette placeholder (img-ph
@@ -34,6 +35,8 @@ const parallax = !!section?.parallax;
 
 const isImageOnly = textContainer === 'image-only';
 const cardPlacement = section?.cardPlacement === 'right' ? 'right' : 'left';
+
+const HeadingTag = ownsH1 ? 'h1' : 'h2';
 ---
 
 {isImageOnly ? (
@@ -60,7 +63,7 @@ const cardPlacement = section?.cardPlacement === 'right' ? 'right' : 'left';
     <div class="fbi__overlay" style={`background:rgba(0,0,0,${overlayOpacity})`} aria-hidden="true"></div>
     <div class="fbi__box">
       {eyebrow && <p class="fbi__label reveal reveal-delay-1">{eyebrow}</p>}
-      {headingHTML && <h2 class="fbi__heading reveal reveal-delay-2" set:html={headingHTML} />}
+      {headingHTML && <HeadingTag class="fbi__heading reveal reveal-delay-2" set:html={headingHTML} />}
       {bodyHTML && <div class="fbi__body-wrap reveal reveal-delay-3" set:html={bodyHTML} />}
       {ctaText && ctaHref && <a href={ctaHref} class="fbi__btn reveal reveal-delay-4">{ctaText}</a>}
       {caption && <p class="fbi__caption reveal reveal-delay-5">{caption}</p>}
