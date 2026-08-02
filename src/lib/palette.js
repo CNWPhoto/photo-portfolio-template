@@ -38,6 +38,36 @@ export function paletteToStyle(palette) {
   return decls.length ? decls.join(';') : undefined
 }
 
+// Fold siteSettings.accentColorOverride into a palette BEFORE any background
+// tone is applied.
+//
+// Why this exists: Layout emits `:root, [data-theme] { --accent: <override>
+// !important }`, but every section also carries paletteToStyle() output as an
+// INLINE style, which sets --accent to the palette's own accent on that
+// element. Custom properties inherit from the nearest ancestor that defines
+// them, so the section's value wins for its whole subtree — the !important at
+// :root can't reach into a different element's inline style. The result was an
+// override that appeared correct in the CSS variables yet never showed up on a
+// single button, link or eyebrow (found on heidi-adler-photography 2026-08-01:
+// --accent read #7a82b3 while every control rendered the palette's #4a7c9e).
+//
+// Applying it here means the override IS the palette's accent from that point
+// on, so it flows into the inline styles too — and the dark-tone contrast
+// check in applyBackgroundTone() then evaluates the client's real accent
+// rather than the one it's replacing.
+export function applyAccentOverride(palette, override) {
+  if (!palette) return palette
+  const accent = stegaClean(override || '')
+  if (!/^#[0-9a-f]{3,8}$/i.test(accent)) return palette
+  return {
+    ...palette,
+    accent,
+    // btnBg follows the accent unless the palette deliberately differs from
+    // its own accent (a palette may use a distinct button colour by design).
+    btnBg: palette.btnBg === palette.accent ? accent : palette.btnBg,
+  }
+}
+
 // Returns the site-wide palette. Palettes are site-wide only — no page or
 // section overrides. Set via siteSettings.defaultPalette in Studio. The
 // returned palette is stega-cleaned so downstream consumers (CSS vars,

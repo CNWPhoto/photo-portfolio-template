@@ -18,6 +18,7 @@ const [homepageDoc, siteData] = await Promise.all([
 
 const palettes = siteData?.palettes ?? [];
 const sitePaletteSlug = siteData?.defaultPalette ?? null;
+const accentOverride  = siteData?.accentColorOverride ?? null;
 
 const sections = homepageDoc?.sections ?? [];
 
@@ -44,6 +45,7 @@ const faqSchemaData = buildFaqSchema(sections);
 				section={section}
 				isFirst={i === 0}
 				sitePaletteSlug={sitePaletteSlug}
+				accentOverride={accentOverride}
 				palettes={palettes}
 			/>
 		))}

@@ -17,7 +17,7 @@ import FeaturedPortfolioSection from './sections/FeaturedPortfolioSection.astro'
 import BlogTeaserSection from './sections/BlogTeaserSection.astro';
 import HtmlEmbedSection from './sections/HtmlEmbedSection.astro';
 
-import { resolvePalette, applyBackgroundTone } from '../lib/palette.js';
+import { resolvePalette, applyBackgroundTone, applyAccentOverride } from '../lib/palette.js';
 import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
@@ -25,6 +25,7 @@ interface Props {
   isFirst?: boolean;
   sitePaletteSlug?: string | null;
   palettes?: any[];
+  accentOverride?: string | null;
 }
 
 // Clean the entire section object of stega markers before passing it down
@@ -41,7 +42,7 @@ interface Props {
 // on section text content stop working — editors use the Studio document
 // panel instead. That's an acceptable cost compared to pages silently
 // disappearing in preview mode (hard to debug, looks like a total failure).
-const { isFirst = false, sitePaletteSlug = null, palettes = [] } = Astro.props;
+const { isFirst = false, sitePaletteSlug = null, palettes = [], accentOverride = null } = Astro.props;
 const rawSection = Astro.props.section;
 const section = rawSection ? stegaClean(rawSection) : rawSection;
 
@@ -67,7 +68,10 @@ const componentMap: Record<string, any> = {
 
 const Component = section?._type ? componentMap[section._type] : null;
 const enabled = section?.enabled !== false;
-const basePalette = resolvePalette(null, null, sitePaletteSlug, palettes);
+const basePalette = applyAccentOverride(
+  resolvePalette(null, null, sitePaletteSlug, palettes),
+  accentOverride,
+);
 const palette = applyBackgroundTone(basePalette, section?.backgroundTone);
 ---
 
