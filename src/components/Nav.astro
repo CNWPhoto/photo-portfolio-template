@@ -374,6 +374,17 @@ const rightLinks = isSplit ? links.slice(splitMid)    : links;
 	.nav__links .nav__link:not(.nav__inquire):hover::after,
 	.nav__links a:not(.nav__inquire):hover::after { width: 100%; }
 
+	/* Dropdown rows are full-width hit targets. The rule above sets
+	   `display: inline-flex` so a TOP-LEVEL link's underline hugs its label —
+	   but it matches panel links too, leaving each row shrink-wrapped to its
+	   own text. The panel is sized by its widest item, so every shorter row's
+	   hover background and underline stopped short of the panel edge.
+	   `flex` makes each row fill the panel, and the existing width:0 -> 100%
+	   underline animation then spans the full row for free. */
+	.nav__links .nav__dropdown a:not(.nav__inquire) {
+		display: flex;
+	}
+
 	.nav__caret {
 		font-size: 0.65em;
 		line-height: 1;
