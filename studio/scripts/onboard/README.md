@@ -56,6 +56,27 @@ cd studio && npx dotenv -e .env.<slug>-backup -- \
   --slug=<slug> --palette=<forest-sage|classic-cream|warm-studio|dark-editorial|cool-minimal>
 cd ..
 
+# REQUIRED after anything that creates sections by script. `initialValue` is a
+# Studio-client concept — it is NOT applied server-side, so every section a
+# script writes stores those fields as undefined. The site renders (components
+# carry their own fallbacks) but in Studio the controls come up BLANK: no
+# Background Tone selected, no Image Layout, and the editor can't tell what a
+# section does without changing it to find out. Harvests initialValue from the
+# real schema, so it can never drift. Verified non-destructive: 220 fields on
+# heidi-adler-photography, 7/9 rendered pages byte-identical afterwards.
+cd studio && npx dotenv -e .env.<slug>-backup -- \
+  npx sanity exec scripts/onboard/78-apply-schema-defaults.js --with-user-token -- \
+  --slug=<slug> --apply
+cd ..
+
+# SIGN-OFF GATE — the last thing you run. Asserts the OUTCOME of every step
+# above by reading the dataset, this repo and GitHub, so a step that was
+# skipped, half-run, or later undone by an editor all fail the same way.
+# Exit 1 = not ready. See "Why a gate, not a checklist" below.
+cd studio && npx dotenv -e .env.<slug>-backup -- \
+  npx sanity exec scripts/onboard/79-signoff.js --with-user-token -- --slug=<slug>
+cd ..
+
 # PAGE FIDELITY GATE — run before telling anyone the migration is done.
 # Diffs the LIVE rendered pages against the ORIGINAL site (not the staged
 # scrape, which is itself suspect — it discovers from sitemap.xml, and
@@ -125,6 +146,37 @@ CF_API_TOKEN=… node studio/scripts/onboard/90-domain-cutover.js \
 # www-canonical-host pattern. Re-runnable; --skip-cf if the domain was
 # already attached in the dashboard.
 ```
+
+## Why a gate, not a checklist — `79-signoff.js`
+
+**A runbook is a document, and documents get skipped.** Three separate live bugs
+in this repo trace to exactly that, and each stayed invisible for weeks:
+
+| what was skipped | what shipped |
+|---|---|
+| `55-post-seed-clean` was missing from this flow entirely | every client from that runbook inherited the DEMO's `siteUrl` (blackbird, kelly-mac) |
+| nothing set a client's own `siteUrl` before cutover | pre-cutover clients had **no canonical tag on any page** (heidi — the nightly health check failed from launch) |
+| script-created sections never got schema defaults | every Studio control blank; editors can't see what a section does |
+
+So the answer to "how do I make sure every step is followed" is **not** a
+tick-list, and not a "step N completed" flag — a flag is just one more thing
+that can be wrong. `79-signoff.js` asserts the OUTCOME each step is supposed to
+produce, read back from the dataset, this repo and GitHub. A step that was
+never run, half-run, run against the wrong project, or later undone by an
+editor all fail identically, because it never asks what happened — only what is
+true now.
+
+Run it last, and treat exit 1 as "not ready to hand over". Two gates total:
+`79-signoff` (was the plumbing done) and `68-verify-pages` (does the content
+match the source).
+
+It is also an **audit tool for existing clients** — run it against any slug to
+see what a client is missing today, not just at onboarding.
+
+Keep it honest: a gate that cries wolf gets ignored. The typography check
+originally demanded `headingFont` + `bodyFont` and flagged every established
+client, all of which legitimately use a preset `fontTheme` instead. If a check
+fires on a healthy site, fix the check.
 
 ## Page migration fidelity — `68-verify-pages.js`
 
