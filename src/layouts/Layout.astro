@@ -3,6 +3,7 @@ import Footer from '../components/Footer.astro';
 import Nav from '../components/Nav.astro';
 import DemoBanner from '../components/DemoBanner.astro';
 import '../styles/palette.css';
+import { applyAccentOverride } from '../lib/palette.js';
 import { getClient, urlFor } from '../lib/sanity.js';
 import { buildFontHead } from '../lib/fontHead.js';
 import { stegaClean } from '@sanity/client/stega';
@@ -137,10 +138,18 @@ const sameAs            = [cleanSocial?.instagram, cleanSocial?.facebook, cleanS
 // Palettes were already cleaned by cleanSettings above; keep the same alias.
 const palettesArr = (cleanSettings?.palettes ?? []) as Array<Record<string, string>>;
 const activePaletteSlug = cleanSettings?.defaultPalette || colorTheme || null;
-const activePalette =
+// Nav and Footer inline this palette via paletteToStyle(), so the accent
+// override has to be folded in here for the same reason it is for sections:
+// an inline --accent on the <header>/<footer> element beats the :root
+// !important for everything inside it. Without this the nav's hover states
+// and the footer's accents keep rendering the palette's own accent while the
+// rest of the site uses the client's.
+const activePalette = applyAccentOverride(
   (activePaletteSlug && palettesArr.find((p) => p?.slug === activePaletteSlug)) ||
-  palettesArr[0] ||
-  null;
+    palettesArr[0] ||
+    null,
+  cleanSettings?.accentColorOverride || null,
+);
 
 const themeColor = activePalette?.bg || '#f5f3ef';
 
