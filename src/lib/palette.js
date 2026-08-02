@@ -62,10 +62,29 @@ export function applyAccentOverride(palette, override) {
   return {
     ...palette,
     accent,
+    // accentDark drives hover states, step numbers and similar. Left alone it
+    // stays derived from the palette's ORIGINAL accent, so an overridden site
+    // renders e.g. purple buttons with blue-derived hovers.
+    accentDark: darken(accent, 0.8),
     // btnBg follows the accent unless the palette deliberately differs from
     // its own accent (a palette may use a distinct button colour by design).
     btnBg: palette.btnBg === palette.accent ? accent : palette.btnBg,
   }
+}
+
+// Scale each sRGB channel — the same result as Layout's
+// `color-mix(in srgb, <c> 80%, black)`, but returned as a hex so
+// contrastRatio() in applyBackgroundTone() can still parse it. Handles #rgb
+// and #rrggbb; anything else is returned untouched.
+function darken(hex, factor) {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex)
+  if (!m) return hex
+  let h = m[1]
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('')
+  const ch = [0, 2, 4].map((i) =>
+    Math.max(0, Math.min(255, Math.round(parseInt(h.slice(i, i + 2), 16) * factor))),
+  )
+  return '#' + ch.map((v) => v.toString(16).padStart(2, '0')).join('')
 }
 
 // Returns the site-wide palette. Palettes are site-wide only — no page or
