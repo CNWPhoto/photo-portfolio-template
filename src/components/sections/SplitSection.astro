@@ -194,11 +194,20 @@ const image = section?.image ?? null;
      viewport edge. Falls back to the shared 3rem padding on narrow
      viewports. Scoped to non-welcome text-align so the welcome/right-text
      override below keeps its own padding shape. */
+  /* Align to the 1100px content rail, but never at the cost of the measure.
+     The rail offset (100vw - 1100px)/2 grows at 0.5x the viewport while this
+     column is 45fr and grows at 0.45x — so left unchecked the padding outruns
+     the column and the TEXT GETS NARROWER as the window gets wider (measured
+     1440px -> 423px of text, 1920px -> 399px). The third term caps the padding
+     at whatever still leaves room for a full-width text block, so the measure
+     is monotonic: it grows to its max and stays there. Above that point the
+     text sits inboard of the rail — the readable line wins over the alignment.
+     100% here is the grid column's own width. */
   .isplit--image-right-full-bleed:not([data-text-align='right']) .isplit__content {
-    padding-left: max((100vw - 1100px) / 2, 3rem);
+    padding-left: max(3rem, min((100vw - 1100px) / 2, 100% - 600px - 3rem));
   }
   .isplit--image-left-full-bleed .isplit__content {
-    padding-right: max((100vw - 1100px) / 2, 3rem);
+    padding-right: max(3rem, min((100vw - 1100px) / 2, 100% - 600px - 3rem));
   }
   .isplit--image-left-full-bleed .isplit__text-wrap,
   .isplit--image-right-full-bleed .isplit__text-wrap {
