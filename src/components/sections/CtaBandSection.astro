@@ -52,6 +52,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     class="section ctaband ctaband--overlapping-images"
     data-section-type="ctaBandSection"
     data-spacing={section?.spacing || 'normal'}
+  data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
+  data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
     data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
     id={section?.sectionId || undefined}
     style={style}
@@ -84,6 +86,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     class:list={['section', 'ctaband', `ctaband--${layout}`, bgUrl ? 'ctaband--has-bg' : '', heightClass]}
     data-section-type="ctaBandSection"
     data-spacing={section?.spacing || 'normal'}
+    data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
+    data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
     data-parallax={parallax ? 'true' : 'false'}
     id={section?.sectionId || undefined}
     style={style}

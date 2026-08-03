@@ -23,6 +23,8 @@ const heightStyle = containerHeight ? `min-height:${containerHeight}px;` : '';
   class:list={['section', 'embed', `embed--${containerWidth}`]}
   data-section-type="htmlEmbedSection"
   data-spacing={section?.spacing || 'normal'}
+  data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
+  data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
   id={section?.sectionId || undefined}
   style={style}
 >

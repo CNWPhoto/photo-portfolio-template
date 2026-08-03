@@ -34,6 +34,9 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   class="faqs"
   data-section-type="faqSection"
   data-layout={layout}
+  data-spacing={section?.spacing || 'normal'}
+  data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
+  data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
   id={section?.sectionId || 'faqs'}
   style={style}
 >

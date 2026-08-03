@@ -86,6 +86,9 @@ const first = testimonials[0] ?? null;
   class:list={['tslider', `tslider--${layout}`]}
   data-section-type="testimonialsSection"
   data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
+  data-spacing={section?.spacing || 'normal'}
+  data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
+  data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
   id={section?.sectionId || 'testimonials'}
   style={style}
 >

@@ -28,6 +28,8 @@ const sectionStyle = heightPx ? `${style};--divider-h:${heightPx}px` : style;
   class:list={['section', 'divider', `divider--${dividerStyle}`, heightPx ? 'divider--fixed-h' : null]}
   data-section-type="dividerSection"
   data-spacing={heightPx ? undefined : (section?.spacing || 'compact')}
+  data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
+  data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
   id={section?.sectionId || undefined}
   style={sectionStyle}
 >
