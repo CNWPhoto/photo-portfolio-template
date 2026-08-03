@@ -93,6 +93,36 @@ export default {
       hidden: ({parent}) => parent?.layout !== 'carousel',
     },
     {
+      name: 'justified',
+      title: 'Justified rows',
+      type: 'boolean',
+      description:
+        'Keep each photo\u2019s real shape instead of cropping it to a square, and stretch every row to the full width \u2014 the layout most photography sites use. The column count above becomes a guide rather than a rule, so a row may hold more or fewer images depending on how wide they are.',
+      initialValue: false,
+      // Carousel is a single scrolling row, so rows can't be justified.
+      hidden: ({parent}) => parent?.layout === 'carousel',
+    },
+    {
+      name: 'rowHeight',
+      title: 'Row height',
+      type: 'string',
+      description:
+        'How tall each justified row runs. Short suits logos and badges; Tall suits full-bleed photography.',
+      options: {
+        list: [
+          {title: 'Short', value: 'short'},
+          {title: 'Medium', value: 'medium'},
+          {title: 'Tall', value: 'tall'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'medium',
+      // Only justified rows have a row height to set — grid crops to square
+      // cells sized by the column count, masonry flows at natural heights.
+      hidden: ({parent}) => !parent?.justified || parent?.layout === 'carousel',
+    },
+    {
       name: 'gap',
       title: 'Gap',
       type: 'string',

@@ -27,6 +27,22 @@ const layout = stegaClean(section?.layout) || 'grid-3';
 const gap = stegaClean(section?.gap) || 'normal';
 const carouselHeight = stegaClean(section?.carouselHeight) || 'standard';
 const lightbox = section?.lightbox !== false;
+// Justified rows: keep each photo's real shape and stretch every row to the
+// full width, instead of the square crop grid mode applies. Carousel is a
+// single scrolling row, so it can't be justified.
+const justified = !!section?.justified && stegaClean(section?.layout) !== 'carousel';
+const rowHeight = stegaClean(section?.rowHeight) || 'medium';
+
+// Aspect ratio per image, from the dimensions Sanity already gives us — so the
+// row maths happens at build time and needs no client JS.
+const aspectOf = (item: any) => {
+  if (item?._fallback) {
+    const [w, h] = String(item.ratio || '1/1').split('/').map(Number);
+    return h ? w / h : 1;
+  }
+  const d = item?.asset?.metadata?.dimensions;
+  return d?.width && d?.height ? d.width / d.height : 1;
+};
 const images = section?.images || [];
 const useFallback = images.length === 0;
 const itemList: any[] = useFallback ? PLACEHOLDER_RATIOS.map((ratio) => ({ _fallback: true, ratio })) : images;
@@ -64,6 +80,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     'gallery',
     `gallery--${layout}`,
     `gallery--gap-${gap}`,
+    justified && 'gallery--justified',
+    justified && `gallery--row-${rowHeight}`,
     isCarousel && `gallery--carousel-height-${carouselHeight}`,
   ]}
   data-section-type="galleryGridSection"
@@ -143,15 +161,15 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
               </div>
             ))
           : useFallback
-            ? PLACEHOLDER_RATIOS.map(() => (
-                <figure class="gallery__item">
+            ? PLACEHOLDER_RATIOS.map((r) => (
+                <figure class="gallery__item" style={justified ? `--ar:${aspectOf({_fallback: true, ratio: r}).toFixed(4)}` : undefined}>
                   <div class="gallery__item-inner">
                     <ImagePlaceholder class="gallery__img" />
                   </div>
                 </figure>
               ))
             : images.map((img: any, i: number) => (
-                <figure class="gallery__item">
+                <figure class="gallery__item" style={justified ? `--ar:${aspectOf(img).toFixed(4)}` : undefined}>
                   <div class="gallery__item-inner">
                     <SanityImage
                       image={img}
@@ -220,6 +238,48 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     min-width: 0;
     display: flex;
     flex-direction: column;
+  }
+
+  /* ══════════ Justified rows ══════════
+     Each photo keeps its real shape and every row stretches to the full width
+     — what most photography sites do, and the fix for grid mode cropping
+     everything to a square (which made logos and badges render as huge
+     squares on Heidi's About page).
+
+     Pure flexbox, no client JS: each item is given its aspect ratio as --ar at
+     build time from the dimensions Sanity already stores. flex-basis is that
+     ratio × the target row height, and flex-grow is the ratio, so wider images
+     take proportionally more of the leftover space and the row ends flush.
+
+     max-width caps how far an item can stretch, which is what stops a lone
+     image on the last row from ballooning to the full width. The last row
+     therefore ends short and left-aligned — the conventional look, and the
+     reason no trailing spacer elements are needed. */
+  .gallery--justified .gallery__grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .gallery--justified .gallery__item {
+    --ar: 1;
+    flex: var(--ar) 1 calc(var(--ar) * var(--gallery-row-h));
+    max-width: calc(var(--ar) * var(--gallery-row-h) * 1.6);
+    min-width: 0;
+  }
+  /* Grid mode's square crop is the thing being opted out of. */
+  .gallery--justified .gallery__item-inner { aspect-ratio: var(--ar); }
+
+  .gallery--row-short  { --gallery-row-h: 150px; }
+  .gallery--row-medium { --gallery-row-h: 260px; }
+  .gallery--row-tall   { --gallery-row-h: 380px; }
+
+  /* On a phone a justified row would shrink every image to a sliver, so it
+     falls back to a single column — same breakpoint the grid layouts use. */
+  @media (max-width: 560px) {
+    .gallery--justified .gallery__item {
+      flex: 1 1 100%;
+      max-width: 100%;
+    }
   }
 
   .gallery--gap-tight .gallery__grid { gap: 0.5rem; }
