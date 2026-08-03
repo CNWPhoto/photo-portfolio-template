@@ -1,3 +1,4 @@
+import {linkAnnotation} from './_shared/linkAnnotation'
 // Terms & Conditions singleton. Reachable at /terms-and-conditions on the
 // rendered site. Footer.astro auto-shows a link to this page when its body
 // has content, unless the editor has manually configured
@@ -47,12 +48,7 @@ export default {
               {title: 'Italic', value: 'em'},
             ],
             annotations: [
-              {
-                name: 'link',
-                type: 'object',
-                title: 'Link',
-                fields: [{name: 'href', type: 'url', title: 'URL'}],
-              },
+              linkAnnotation(),
             ],
           },
         },

@@ -1,3 +1,4 @@
+import {linkAnnotation} from '../_shared/linkAnnotation'
 import {sectionBaseFields} from '../_shared/sectionBase'
 import {sectionIcon} from '../../components/SectionIcons'
 
@@ -52,12 +53,7 @@ export default {
               {title: 'Italic', value: 'em'},
             ],
             annotations: [
-              {
-                name: 'link',
-                type: 'object',
-                title: 'Link',
-                fields: [{name: 'href', type: 'url', title: 'URL'}],
-              },
+              linkAnnotation(),
             ],
           },
         },

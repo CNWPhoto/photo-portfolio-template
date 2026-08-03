@@ -1,3 +1,4 @@
+import {linkAnnotation} from './linkAnnotation'
 // Shared rich text body field definition. Used anywhere we want a
 // multi-paragraph body with basic formatting (bold, italic, links).
 export const richTextBody = (overrides = {}) => ({
@@ -16,12 +17,7 @@ export const richTextBody = (overrides = {}) => ({
           {title: 'Italic', value: 'em'},
         ],
         annotations: [
-          {
-            name: 'link',
-            type: 'object',
-            title: 'Link',
-            fields: [{name: 'href', type: 'url', title: 'URL'}],
-          },
+          linkAnnotation(),
         ],
       },
     },

@@ -1,3 +1,4 @@
+import {linkAnnotation} from './_shared/linkAnnotation'
 export default {
   name: 'blogPage',
   title: 'Blog Page',
@@ -180,12 +181,7 @@ export default {
               {title: 'Italic', value: 'em'},
             ],
             annotations: [
-              {
-                name: 'link',
-                type: 'object',
-                title: 'Link',
-                fields: [{name: 'href', type: 'url', title: 'URL'}],
-              },
+              linkAnnotation(),
             ],
           },
         },

@@ -1,3 +1,4 @@
+import {linkAnnotation} from './_shared/linkAnnotation'
 import {imageSizeWarning, altTextWarning} from './_shared/imageValidation'
 
 export default {
@@ -89,18 +90,7 @@ export default {
               {title: 'Italic', value: 'em'},
             ],
             annotations: [
-              {
-                name: 'link',
-                type: 'object',
-                title: 'Link',
-                fields: [
-                  {
-                    name: 'href',
-                    type: 'url',
-                    title: 'URL',
-                  },
-                ],
-              },
+              linkAnnotation(),
             ],
           },
         },
