@@ -95,8 +95,15 @@ jobs:
             fi
           }
 
-          check_studio() { # $1=slug
-            local url="https://$1.sanity.studio/"
+          # Probes the EMBEDDED Studio at <site>/studio — the one clients
+          # actually use and the click-to-edit target. It rebuilds with every
+          # site deploy, so it can never drift from the schema; the hosted
+          # <slug>.sanity.studio only updates on a manual `sanity deploy` and
+          # had silently fallen weeks behind across the whole fleet
+          # (2026-08-02: editors saw real fields flagged "unknown field" with a
+          # Remove-field button next to their own content).
+          check_studio() { # $1=slug $2=site url
+            local url="$2/studio/"
             local code
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 5 --retry-all-errors "$url" || echo 000)
             # Unauthenticated requests 302 to the Sanity login — that IS a
@@ -118,9 +125,9 @@ jobs:
               http://localhost*|'')
                 echo "SKIP site   $slug (no deployed URL yet: '${url:-none}')" ;;
               *)
-                check_site "$slug" "$url" ;;
+                check_site "$slug" "$url"
+                check_studio "$slug" "$url" ;;
             esac
-            check_studio "$slug"
           done
 
           if [ -n "$FAILURES" ]; then
