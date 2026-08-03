@@ -22,7 +22,7 @@ export default {
     // verticalSideLabel is intentionally NOT included — this section uses
     // its own `eyebrow` field as the rotated label, so the shared field
     // would just duplicate and confuse editors.
-    ...sectionBaseFields(),
+    ...sectionBaseFields({spacing: false}),
     {
       name: 'showVerticalLabel',
       title: 'Show Vertical Label',
