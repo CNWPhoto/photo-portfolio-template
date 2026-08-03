@@ -53,19 +53,35 @@
   margin-left: 0.06em;
 }
 
-/* Per-section spacing applied via [data-spacing] attr on <section> */
-section[data-spacing='narrow'] {
-  padding-block: var(--section-pad-narrow);
+/* Per-section spacing applied via [data-spacing] on <section>.
+   Each step sets --pad-block, and padding-block reads it through --pad-top /
+   --pad-bottom so the "Fine-tune padding" override can replace ONE edge
+   without restating the other. Editors leaving the advanced block collapsed
+   get symmetric padding exactly as before. */
+section[data-spacing='narrow']   { --pad-block: var(--section-pad-narrow); }
+section[data-spacing='compact']  { --pad-block: var(--section-pad-compact); }
+section[data-spacing='normal']   { --pad-block: var(--section-pad-normal); }
+section[data-spacing='spacious'] { --pad-block: var(--section-pad-spacious); }
+
+section[data-spacing] {
+  padding-block:
+    var(--pad-top, var(--pad-block))
+    var(--pad-bottom, var(--pad-block));
 }
-section[data-spacing='compact'] {
-  padding-block: var(--section-pad-compact);
-}
-section[data-spacing='normal'] {
-  padding-block: var(--section-pad-normal);
-}
-section[data-spacing='spacious'] {
-  padding-block: var(--section-pad-spacious);
-}
+
+/* Advanced per-edge override — only emitted when the editor picks something
+   other than "Match padding". */
+section[data-space-top='none']     { --pad-top: 0; }
+section[data-space-top='narrow']   { --pad-top: var(--section-pad-narrow); }
+section[data-space-top='compact']  { --pad-top: var(--section-pad-compact); }
+section[data-space-top='normal']   { --pad-top: var(--section-pad-normal); }
+section[data-space-top='spacious'] { --pad-top: var(--section-pad-spacious); }
+
+section[data-space-bottom='none']     { --pad-bottom: 0; }
+section[data-space-bottom='narrow']   { --pad-bottom: var(--section-pad-narrow); }
+section[data-space-bottom='compact']  { --pad-bottom: var(--section-pad-compact); }
+section[data-space-bottom='normal']   { --pad-bottom: var(--section-pad-normal); }
+section[data-space-bottom='spacious'] { --pad-bottom: var(--section-pad-spacious); }
 
 /* ── Image placeholder (empty slots — see ImagePlaceholder.astro) ──
    Palette-colored tonal block with a faint image glyph. Replaces the old

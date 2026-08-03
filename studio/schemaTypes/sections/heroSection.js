@@ -19,7 +19,7 @@ export default {
     },
   },
   fields: [
-    ...sectionBaseFields(),
+    ...sectionBaseFields({spacing: false}),
     {
       name: 'variant',
       title: 'Variant',

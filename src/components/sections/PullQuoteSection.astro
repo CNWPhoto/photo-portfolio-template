@@ -19,6 +19,8 @@ const variant = section?.variant || 'centered';
   class:list={['section', 'quote', `quote--${variant}`]}
   data-section-type="pullQuoteSection"
   data-spacing={section?.spacing || 'normal'}
+  data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
+  data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
   id={section?.sectionId || undefined}
   style={style}
 >

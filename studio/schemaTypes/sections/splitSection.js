@@ -23,7 +23,7 @@ export default {
     // Split opts out of the shared vertical side label — the rail rarely
     // landed visually correctly across all four Split variants. Tracked
     // in docs/deferred-features.md for possible future rework.
-    ...sectionBaseFields(),
+    ...sectionBaseFields({spacing: false}),
     {
       name: 'imageLayout',
       title: 'Image Layout',

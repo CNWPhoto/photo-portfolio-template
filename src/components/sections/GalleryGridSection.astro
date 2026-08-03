@@ -68,6 +68,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   ]}
   data-section-type="galleryGridSection"
   data-spacing={section?.spacing || 'normal'}
+  data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
+  data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
   data-lightbox={!isCarousel && lightbox ? 'true' : 'false'}
   id={section?.sectionId || undefined}
   style={style}
