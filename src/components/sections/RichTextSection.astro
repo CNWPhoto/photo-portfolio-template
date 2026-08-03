@@ -95,13 +95,25 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     font-style: italic;
     color: var(--muted);
   }
-  .richtext__body :global(ul),
+  /* Restore list markers — the global `ul { list-style: none }` reset in
+     Layout.astro exists for nav lists and strips them from prose too. The blog
+     body already re-adds them the same way; section prose never did, so a
+     bulleted answer rendered as a stack of unmarked lines.
+     `li` also has to repeat the paragraph's font-size: without it the list
+     inherits the smaller base size and reads as a different font mid-answer. */
+  .richtext__body :global(ul) {
+    list-style: disc outside;
+    padding-left: 1.5rem;
+    margin: 0 0 1.25rem;
+  }
   .richtext__body :global(ol) {
+    list-style: decimal outside;
     padding-left: 1.5rem;
     margin: 0 0 1.25rem;
   }
   .richtext__body :global(li) {
-    line-height: 1.7;
+    font-size: 1.05rem;
+    line-height: 1.85;
     margin: 0.4rem 0;
   }
   .richtext__body :global(a) {
