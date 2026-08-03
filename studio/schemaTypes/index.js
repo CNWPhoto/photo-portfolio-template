@@ -38,6 +38,8 @@ import faqSection from './sections/faqSection'
 import featuredPortfolioSection from './sections/featuredPortfolioSection'
 import blogTeaserSection from './sections/blogTeaserSection'
 
+import {withSectionGroups} from './_shared/sectionGroups'
+
 export const schemaTypes = [
   // Shared object types
   palette,
@@ -61,23 +63,25 @@ export const schemaTypes = [
   privacyPolicyPage,
   page,
 
-  // Section catalog
-  heroSection,
-  splitSection,
-  fullBleedImageSection,
-  richTextSection,
-  pullQuoteSection,
-  threeColumnSection,
-  stepsSection,
-  galleryGridSection,
-  dividerSection,
-  ctaBandSection,
-  contactFormSection,
-  contactInfoSection,
-  testimonialsSection,
-  faqSection,
-  featuredPortfolioSection,
-  blogTeaserSection,
+  // Section catalog — wrapped so every section gets the same Style /
+  // Content / Settings tabs and the same field order, instead of each
+  // schema hand-declaring groups (which drifts the moment one is added).
+  withSectionGroups(heroSection),
+  withSectionGroups(splitSection),
+  withSectionGroups(fullBleedImageSection),
+  withSectionGroups(richTextSection),
+  withSectionGroups(pullQuoteSection),
+  withSectionGroups(threeColumnSection),
+  withSectionGroups(stepsSection),
+  withSectionGroups(galleryGridSection),
+  withSectionGroups(dividerSection),
+  withSectionGroups(ctaBandSection),
+  withSectionGroups(contactFormSection),
+  withSectionGroups(contactInfoSection),
+  withSectionGroups(testimonialsSection),
+  withSectionGroups(faqSection),
+  withSectionGroups(featuredPortfolioSection),
+  withSectionGroups(blogTeaserSection),
 
   // Collections
   testimonial,
