@@ -31,7 +31,9 @@ node studio/scripts/onboard/10-scrape.js \
 node studio/scripts/onboard/20-env.js \
   --slug=<slug> --project-id=<sanity-id> --title="<Display Name>"
 
-node studio/scripts/onboard/30-studio-deploy.js --slug=<slug>
+# 30-studio-deploy.js is NO LONGER part of onboarding — see "Where the Studio
+# lives" below. Clients edit at <site>/studio, which the site build produces.
+# Run 30 only if a client specifically wants a second, Sanity-hosted copy.
 node studio/scripts/onboard/40-cors.js --slug=<slug>
 node studio/scripts/onboard/50-donor-seed.js --slug=<slug> --donor=cnw-photo-demo
 
@@ -95,7 +97,7 @@ cd studio && npx dotenv -e .env.<slug>-backup -- \
 cd ..
 
 # ══ HUMAN CHECKPOINT 2 ════════════════════════════════════════════════
-#   Eyeball https://<slug>.sanity.studio/. Fix anything in Studio.
+#   Eyeball <site>/studio. Fix anything in Studio.
 #   Gather: CF API token, CF account id, Sanity Viewer read token,
 #   and a fresh preview secret:  openssl rand -hex 32
 
@@ -150,6 +152,38 @@ CF_API_TOKEN=… node studio/scripts/onboard/90-domain-cutover.js \
 # www-canonical-host pattern. Re-runnable; --skip-cf if the domain was
 # already attached in the dashboard.
 ```
+
+## Where the Studio lives
+
+**`<site>/studio` is the Studio.** It is built by the site build, so it
+redeploys with every push and can never fall behind the schema. It is also the
+click-to-edit target for Presentation, and the URL clients are given.
+
+`<slug>.sanity.studio` is a SEPARATE second copy that only updates when someone
+manually runs `sanity deploy`. It is no longer created for new clients.
+
+Why it was dropped (2026-08-02): every client's hosted copy had silently
+drifted weeks behind the schema while the health check stayed green, because
+the check was probing the hosted URL. Editors opened their Studio and saw real
+fields — `parallax`, `secondaryCtaText`, `spacingOverride` — flagged "Unknown
+field found", with a **Remove field** button sitting next to their own content.
+One wrong click would have deleted live copy.
+
+- The health check now probes `<site>/studio`.
+- `SANITY_STUDIO_URL` (click-to-edit) already points at `<site>/studio`.
+- The 12 pre-existing hosted Studios were redeployed and left in place as
+  dormant fallbacks. Don't send clients to them.
+
+Trade-off worth knowing: the embedded Studio is served by the client's own
+site, so if the site is down they can't edit. The hosted copy was independent
+infrastructure. That is the one thing given up, and it is why the existing
+hosted Studios were left alive rather than deleted.
+
+Handover: because the Studio ships inside the repo, a client leaving with the
+code gets site + CMS from a single deploy — they need only
+PUBLIC_SANITY_PROJECT_ID / _DATASET / _STUDIO_TITLE at build time, and a CORS
+entry for whatever origin they move to. `studio/` remains the schema source, so
+`sanity deploy` still works if they ever want a hosted copy back.
 
 ## Why a gate, not a checklist — `79-signoff.js`
 

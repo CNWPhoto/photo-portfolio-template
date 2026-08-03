@@ -266,6 +266,28 @@ function main() {
       missingDefaults ? `${missingDefaults} blank control(s) in Studio` : 'all filled',
     )
 
+    // ── the Studio the client will actually use ───────────────────────────
+    // <site>/studio is produced by the site build, so this also proves the
+    // deploy landed. The hosted <slug>.sanity.studio is legacy and no longer
+    // created — see "Where the Studio lives" in the runbook.
+    let studioCode = 0
+    try {
+      studioCode = Number(
+        execSync(
+          `curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${previewOrigin}/studio/"`,
+          {encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore']},
+        ).trim(),
+      )
+    } catch {
+      studioCode = 0
+    }
+    add(
+      'studio',
+      'embedded Studio reachable at <site>/studio',
+      [200, 301, 302, 307, 308].includes(studioCode),
+      `${previewOrigin}/studio/ returned ${studioCode || 'no response'}`,
+    )
+
     // ── enum integrity ────────────────────────────────────────────────────
     const badEnums = countBadEnums(docs, enums)
     add(

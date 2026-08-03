@@ -1,3 +1,17 @@
+// ⚠️  NO LONGER PART OF ONBOARDING (2026-08-02).
+//
+// Clients edit at <site>/studio, which the site build produces and every
+// deploy refreshes. This script deploys a SECOND, Sanity-hosted copy that
+// only updates when someone runs it by hand — and across the fleet that copy
+// silently fell weeks behind the schema, showing editors real fields flagged
+// "Unknown field found" with a Remove-field button beside their own content.
+//
+// Still works, and the 12 pre-existing hosted Studios were left alive as
+// dormant fallbacks (the embedded Studio is served BY the client's site, so
+// if the site is down they can't edit). Run this only if a client explicitly
+// wants that independent copy — and remember it needs redeploying after every
+// schema change, which is the whole reason it was dropped.
+//
 // 30-studio-deploy.js — deploy the hosted Studio, capture + pin the appId.
 //
 //   node studio/scripts/onboard/30-studio-deploy.js --slug=kelly-mac-studios

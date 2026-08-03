@@ -73,14 +73,39 @@ npm run deploy     # Deploy Studio to Sanity's hosted URL
 
 ## Local vs Hosted Studio — Two Studios, Different Purposes
 
-There are effectively **two Sanity Studios** running against the same dataset,
-and they have different jobs. Keeping them straight is the #1 source of
-confusion when editing content or debugging Presentation.
+**`<site>/studio` is the Studio clients use.** It is produced by the site build,
+so every deploy refreshes it and it can never fall behind the schema. It is also
+the Presentation click-to-edit target (`SANITY_STUDIO_URL`) and what the health
+check probes.
 
 | Studio | URL | Started by | Iframes | Purpose |
 |---|---|---|---|---|
+| **Embedded** | `<site>/studio` | every site deploy (automatic) | the site it is served from | **Client-facing content editing.** The canonical Studio. |
 | **Local** | `localhost:3333` | `cd studio && npm run dev` | whatever `studio/.env` says (usually `localhost:4321`) | Code development — test unpushed Astro changes in Presentation before deploying |
-| **Hosted** | `<project>.sanity.studio` | `cd studio && npm run deploy` | whatever `studio/.env` held at *deploy time* (baked in) | Client-facing content editing — points at the deployed Cloudflare site |
+| **Hosted** *(legacy)* | `<project>.sanity.studio` | `cd studio && npm run deploy` | whatever `studio/.env` held at *deploy time* (baked in) | A second, independent copy. No longer created for new clients — see below. |
+
+### Why the hosted Studio was dropped (2026-08-02)
+
+It only updates when someone runs `sanity deploy` by hand, so every client's
+copy silently drifted weeks behind the schema while the health check stayed
+green (the check was probing the hosted URL). Editors opened their Studio and
+saw real fields — `parallax`, `secondaryCtaText`, `spacingOverride` — flagged
+**"Unknown field found"** with a **Remove field** button next to their own
+content. One wrong click would have deleted live copy.
+
+The 12 existing hosted Studios were redeployed and left alive as dormant
+fallbacks; `30-studio-deploy.js` is no longer part of onboarding. Don't send
+clients to those URLs.
+
+**The one trade-off:** the embedded Studio is served BY the client's site, so if
+the site is down they cannot edit. The hosted copy was independent
+infrastructure. That is why the existing ones were kept rather than deleted.
+
+**Handover:** because the Studio ships inside the repo, a client leaving with the
+code gets site + CMS from one deploy — they need `PUBLIC_SANITY_PROJECT_ID`,
+`PUBLIC_SANITY_DATASET`, `PUBLIC_SANITY_STUDIO_TITLE` at build time and a CORS
+entry for their new origin. `studio/` remains the schema source, so
+`sanity deploy` still works if they ever want a hosted copy back.
 
 ### Key rules
 
@@ -103,7 +128,10 @@ These are **separate** deploy steps:
 - **Astro** deploys via GitHub Actions to Cloudflare Workers: pushing `main` deploys only the
   demo canary; clients deploy on `main → production` merges (full fan-out) or per-client
   `workflow_dispatch` with `only_client=<slug>`.
-- **Sanity Studio** is deployed manually per-client via `cd studio && npm run deploy`. Only re-run when Studio code/schema/config changes — not needed for content edits.
+- **Sanity Studio** needs no separate deploy: `<site>/studio` is rebuilt by the same
+  Astro deploy above, so a schema change reaches editors as soon as the site ships.
+  `cd studio && npm run deploy` (or `npm run deploy-all`) only refreshes the LEGACY
+  hosted copies, which are no longer given to clients.
 
 ## Architecture
 
