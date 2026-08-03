@@ -1,3 +1,4 @@
+import {linkAnnotation} from './_shared/linkAnnotation'
 // Footer settings — restructured per docs/page-builder-spec.md §1a.
 // The footer is independent of the main nav: free-form links[] (mirroring
 // navSettings.links shape, no dropdowns), an htmlEmbedSection reference for
@@ -190,12 +191,7 @@ export default {
                   {title: 'Italic', value: 'em'},
                 ],
                 annotations: [
-                  {
-                    name: 'link',
-                    type: 'object',
-                    title: 'Link',
-                    fields: [{name: 'href', type: 'url', title: 'URL'}],
-                  },
+                  linkAnnotation(),
                 ],
               },
             },
