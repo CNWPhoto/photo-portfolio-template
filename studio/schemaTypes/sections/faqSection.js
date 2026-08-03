@@ -17,7 +17,7 @@ export default {
     },
   },
   fields: [
-    ...sectionBaseFields({withVerticalSideLabel: true}),
+    ...sectionBaseFields({withVerticalSideLabel: true, spacing: false}),
     {
       name: 'heading',
       title: 'Heading',

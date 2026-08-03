@@ -17,7 +17,7 @@ export default {
     },
   },
   fields: [
-    ...sectionBaseFields(),
+    ...sectionBaseFields({spacing: false}),
     {
       name: 'manageLink',
       title: 'Manage testimonials',
