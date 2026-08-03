@@ -259,6 +259,12 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
+    /* Centres whatever space a row can't fill. A row that fills the width has
+       no leftover to distribute, so full galleries are untouched — this only
+       moves a short last row, or a gallery of two or three images that can't
+       reach the edges once max-width caps their growth. Left-aligned, those
+       sat against the left margin with a wide gap on the right. */
+    justify-content: center;
   }
   .gallery--justified .gallery__item {
     --ar: 1;
