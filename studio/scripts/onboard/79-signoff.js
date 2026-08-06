@@ -95,6 +95,41 @@ function collectEnums(fields, out) {
     if (Array.isArray(f?.fields)) collectEnums(f.fields, out)
   }
 }
+// Every field name a type declares, so anything else stored on it is a
+// mistake. Sanity accepts unknown fields silently — that is how `html` (the
+// schema wants `rawHtml`), `embedHeight` (`containerHeight`) and a stray
+// `linkType` on ctaLink all shipped live on Chaltron Photography. Each one
+// produced a valid-looking document, no error anywhere, and a feature that
+// simply didn't render: her booking form, both videos, and every CTA button.
+function collectFieldNames(fields, out) {
+  for (const f of fields || []) {
+    if (f?.name) out.add(f.name)
+    if (Array.isArray(f?.fields)) collectFieldNames(f.fields, out)
+    for (const m of f?.of || []) if (Array.isArray(m?.fields)) collectFieldNames(m.fields, out)
+  }
+}
+// Only types the schema actually declares are checked. Built-ins (image,
+// block, span, slug, reference) and sanity.* internals have no entry, so they
+// are skipped rather than reported as a wall of false positives.
+function countUnknownFields(node, known, bad = []) {
+  if (Array.isArray(node)) {
+    node.forEach((v) => countUnknownFields(v, known, bad))
+    return bad
+  }
+  if (!node || typeof node !== 'object') return bad
+  const fields = node._type ? known[node._type] : null
+  if (fields) {
+    for (const key of Object.keys(node)) {
+      if (key.startsWith('_')) continue
+      if (!fields.has(key)) bad.push(`${node._type}.${key}`)
+    }
+  }
+  for (const [k, v] of Object.entries(node)) {
+    if (!k.startsWith('_')) countUnknownFields(v, known, bad)
+  }
+  return bad
+}
+
 function countBadEnums(node, enums, bad = []) {
   if (Array.isArray(node)) {
     node.forEach((v) => countBadEnums(v, enums, bad))
@@ -207,7 +242,7 @@ function main() {
   return Promise.all([
     client.fetch(`*[!(_type match "sanity.*") && !(_type match "system.*")]`),
     import('../../schemaTypes/index.js'),
-  ]).then(([docs, mod]) => {
+  ]).then(async ([docs, mod]) => {
     const site = docs.find((d) => d._id === 'siteSettings') || {}
     const seo = docs.find((d) => d._id === 'seoSettings') || {}
 
@@ -291,6 +326,72 @@ function main() {
       'embedded Studio reachable at <site>/studio',
       [200, 301, 302, 307, 308].includes(studioCode),
       `${previewOrigin}/studio/ returned ${studioCode || 'no response'}`,
+    )
+
+    // ── donor assets ──────────────────────────────────────────────────────
+    // 50-donor-seed imports the demo's IMAGES along with its documents, and
+    // 55-post-seed-clean only deletes donor drafts. Chaltron Photography
+    // shipped with 46 of them: Pexels stock, the demo photographer's headshot,
+    // logo and office — 7 of them live on her /about/ page and blog.
+    //
+    // Matched against the donor project's actual asset filenames rather than a
+    // hand-kept phrase list, because every hand-kept list here has drifted:
+    // DONOR_MARKERS missed "Connor Walberg" (it held only the slug form) and
+    // every one of the /about/ page's donor headings.
+    let donorAssets = null
+    try {
+      const donorEnv = path.join(REPO, 'studio', '.env.cnw-photo-demo-backup')
+      const donorId = (fs.readFileSync(donorEnv, 'utf8').match(/^SANITY_STUDIO_PROJECT_ID=(.+)$/m) || [])[1]?.trim()
+      if (donorId && donorId !== client.config().projectId) {
+        donorAssets = new Set(
+          (await client
+            .withConfig({projectId: donorId, dataset: 'production'})
+            .fetch(`*[_type=="sanity.imageAsset"].originalFilename`))
+            .filter(Boolean)
+            .map((n) => n.toLowerCase()),
+        )
+      }
+    } catch {
+      donorAssets = null // donor project unreachable — reported as a warning
+    }
+    if (donorAssets) {
+      const mine = await client.fetch(
+        `*[_type=="sanity.imageAsset"]{originalFilename, "used": count(*[references(^._id)])}`,
+      )
+      const leaked = mine.filter((a) => donorAssets.has((a.originalFilename || '').toLowerCase()))
+      const live = leaked.filter((a) => a.used > 0)
+      add(
+        '55-post-seed-clean',
+        'no donor image assets left in the media library',
+        leaked.length === 0,
+        leaked.length
+          ? `${leaked.length} donor asset(s), ${live.length} still referenced by a page`
+          : 'clean',
+      )
+    } else {
+      add(
+        '55-post-seed-clean',
+        'no donor image assets left in the media library',
+        false,
+        'donor project unreachable — CHECK DID NOT RUN',
+        false,
+      )
+    }
+
+    // ── unknown fields ────────────────────────────────────────────────────
+    const known = {}
+    for (const t of types) {
+      if (!t?.name || !Array.isArray(t.fields)) continue
+      const set = new Set()
+      collectFieldNames(t.fields, set)
+      known[t.name] = set
+    }
+    const unknown = [...new Set(countUnknownFields(docs, known))].sort()
+    add(
+      'schema',
+      'no document stores a field the schema does not define',
+      unknown.length === 0,
+      unknown.length ? `${unknown.length}: ${unknown.slice(0, 6).join(', ')}${unknown.length > 6 ? ' …' : ''}` : 'clean',
     )
 
     // ── enum integrity ────────────────────────────────────────────────────
