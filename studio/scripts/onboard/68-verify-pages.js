@@ -98,7 +98,18 @@ const decode = (t) =>
     .replace(/&lsquo;|&ldquo;|&rdquo;/g, '"')
     .replace(/&mdash;/g, '—')
     .replace(/&[a-z]+;/gi, ' ')
-const text = (h) => decode(strip(h)).replace(/\s+/g, ' ').trim()
+// Page-builder themes (WPBakery, Divi) render the footer copyright INSIDE the
+// content wrapper rather than in a <footer>, so bodyOnly's tag stripping misses
+// it on the SOURCE while the new site's real <footer> is stripped correctly.
+// The whole line then counts as missing content: "© 2026 · Chaltron
+// Photography" scored her /booknow/ at 81% on a page that was complete.
+//
+// Drop the marker, the year, and the short studio-name run that follows —
+// stopping at sentence punctuation so a paragraph that merely mentions a year
+// is never swallowed.
+const dropCopyright = (t) =>
+  t.replace(/(?:©|&copy;|&#169;)\s*\d{4}\s*(?:[·•|,-]\s*)?[A-Za-z0-9 '&.-]{0,40}/gi, ' ')
+const text = (h) => decode(dropCopyright(strip(h))).replace(/\s+/g, ' ').trim()
 const key = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
 
 // A bare "Mozilla/5.0" is rejected with 406 by Bluehost/Newfold's WAF, which
