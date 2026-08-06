@@ -77,4 +77,26 @@ describe('resolveLink — ctaLink shape with type inference', () => {
   it('internal "home" slug maps to /', () => {
     expect(resolveLink({ type: 'internal', internal: { _type: 'page', slug: 'home' } })).toBe('/')
   })
+
+  // Regression: a script wrote both `type` and `linkType` onto ctaLink
+  // objects on Chaltron Photography. resolveLink detected shape by field
+  // presence, took the nav-link branch, looked for `internalRef` (which
+  // ctaLink doesn't have), and returned null — so every CTA band rendered
+  // its heading with no button and no error anywhere.
+  it('ignores a stray linkType on a ctaLink and uses the ctaLink shape', () => {
+    expect(
+      resolveLink({
+        _type: 'ctaLink',
+        type: 'internal',
+        linkType: 'internal',
+        internal: { _type: 'page', slug: 'booknow' },
+      }),
+    ).toBe('/booknow/')
+  })
+
+  it('still treats a real nav link as a nav link', () => {
+    expect(
+      resolveLink({ linkType: 'internal', internalRef: { _type: 'page', slug: 'about' } }),
+    ).toBe('/about/')
+  })
 })
