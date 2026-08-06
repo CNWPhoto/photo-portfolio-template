@@ -201,10 +201,16 @@ const first = testimonials[0] ?? null;
 </section>
 
 <style>
+  /* Spaced with padding via the shared [data-spacing] system, like every
+     other section — not outer margins.
+
+     The old `padding: 0 !important` plus 100px margins broke two things at
+     once. The background tone painted only as far as the content, so a
+     toned Testimonials section had its tint hugging the quote with no
+     breathing room. And this section emits data-spacing, so the Spacing
+     control appeared in Studio and did precisely nothing — the !important
+     beat it. Both were true on every site with this section. */
   .tslider {
-    padding: 0 !important;
-    margin-top: 100px;
-    margin-bottom: 100px;
     background: var(--bg);
     color: var(--text);
   }
@@ -218,7 +224,7 @@ const first = testimonials[0] ?? null;
     text-align: center;
   }
   .tslider__heading {
-    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    font-size: calc(clamp(1.85rem, 3.5vw, 2.85rem) * var(--heading-scale, 1));
     line-height: 1.2;
     color: var(--text);
     margin: 0;
