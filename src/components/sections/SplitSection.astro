@@ -5,6 +5,7 @@ import { paletteToStyle } from '../../lib/palette.js';
 import { resolveLink } from '../../lib/links.js';
 import { renderBody, isPortableText } from '../../lib/portableText.js';
 import { renderHeading } from '../../lib/heading.js';
+import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
   section: any;
@@ -25,6 +26,12 @@ const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
 const ctaText2 = section?.secondaryCtaText || '';
 const ctaHref2 = resolveLink(section?.secondaryCtaLink, [Astro.url.hostname]);
 
+// stegaClean so the equality checks in CSS attribute selectors survive
+// preview mode — an uncleaned value carries invisible markers and never
+// matches, so the control silently does nothing in Presentation only.
+const imageFit = stegaClean(section?.imageFit) || 'crop';
+const headingSize = stegaClean(section?.headingSize) || 'large';
+
 const bodyHTML = isPortableText(section?.body)
   ? renderBody(section.body, { className: 'isplit__body' })
   : '';
@@ -38,6 +45,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   class:list={['isplit', `isplit--${imageLayout}`]}
   data-section-type="splitSection"
   data-text-align={section?.textAlignment || 'left'}
+  data-image-fit={imageFit}
+  data-heading-size={headingSize}
   data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
   id={section?.sectionId || undefined}
   style={style}
@@ -345,6 +354,35 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     line-height: 1.12;
     letter-spacing: -0.02em;
     margin: 0 0 2rem;
+  }
+
+
+  /* ── Show whole image (opt-in) ──
+     The contained variants pin the image to a 400px-wide, 500px-tall well and
+     cover-crop into it. Correct for portraits; it guts a landscape frame. When
+     the editor asks for the whole image, even the columns so a wide photo has
+     room, and let the image keep its natural height instead of filling a fixed
+     box. Scoped entirely to the attribute, so every existing Split is
+     byte-identical. */
+  .isplit[data-image-fit='whole'].isplit--image-left,
+  .isplit[data-image-fit='whole'].isplit--image-right {
+    grid-template-columns: 1fr 1fr;
+  }
+  .isplit[data-image-fit='whole'] .isplit__image {
+    height: auto;
+    min-height: 0;
+    align-self: center;
+    padding: 2rem 0;
+  }
+  .isplit[data-image-fit='whole'] .isplit__image :global(.isplit__img) {
+    height: auto;
+    width: 100%;
+    object-fit: contain;
+  }
+
+  /* ~20% smaller, matching heroSection's control of the same name. */
+  .isplit[data-heading-size='standard'] .isplit__heading {
+    font-size: clamp(1.7rem, 3.3vw, 3rem);
   }
 
   .isplit__body-wrap :global(.isplit__body) {

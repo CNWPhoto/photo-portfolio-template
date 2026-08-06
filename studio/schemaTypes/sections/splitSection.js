@@ -83,6 +83,44 @@ export default {
       type: 'ctaLink',
       hidden: ({parent}) => !parent?.secondaryCtaText,
     },
+    {
+      // Split's image column is a fixed 400x500 portrait well with
+      // object-fit: cover, which is right for a person or a vertical
+      // portrait and wrong for anything landscape — Chaltron Photography's
+      // Wanderlust prints are wide lighthouse and aurora shots and lost
+      // most of their frame. Opt-in so every existing Split is untouched.
+      name: 'imageFit',
+      title: 'Image Fit',
+      type: 'string',
+      description:
+        'Crop to fill gives the tall editorial column — best for portraits and people. Show whole image keeps the full frame uncropped and evens the columns, which is what wide landscape photos and artwork need.',
+      options: {
+        list: [
+          {title: 'Crop to fill (default)', value: 'crop'},
+          {title: 'Show whole image', value: 'whole'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'crop',
+    },
+    {
+      // Mirrors heroSection's control. Split's heading runs up to 3.78rem,
+      // which swallows a long title like "Springtime at the Ludington North
+      // Breakwall Lighthouse 16APR26".
+      name: 'headingSize',
+      title: 'Heading Size',
+      type: 'string',
+      description:
+        'Large is the default editorial size. Pick Standard for longer headings or a more restrained look.',
+      options: {
+        list: [
+          {title: 'Large (default)', value: 'large'},
+          {title: 'Standard (~20% smaller)', value: 'standard'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'large',
+    },
     imageField({}),
     {
       name: 'textAlignment',

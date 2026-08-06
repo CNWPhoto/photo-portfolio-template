@@ -25,6 +25,7 @@ const LAYOUT_FIELDS = new Set([
   'variant',
   'layout',
   'imageLayout',
+  'imageFit',
   'galleryLayout',
   'textContainer',
   'cardPlacement',
