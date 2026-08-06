@@ -32,6 +32,10 @@ const lightbox = section?.lightbox !== false;
 // single scrolling row, so it can't be justified.
 const justified = !!section?.justified && stegaClean(section?.layout) !== 'carousel';
 const rowHeight = stegaClean(section?.rowHeight) || 'medium';
+// Grid mode crops every tile to a square. Fine for a photo wall, wrong for
+// artwork or graphics whose shape IS the content — and unlike justified
+// rows, a grid keeps its column count at any width instead of reflowing.
+const imageFit = stegaClean(section?.imageFit) || 'crop';
 
 // Aspect ratio per image, from the dimensions Sanity already gives us — so the
 // row maths happens at build time and needs no client JS.
@@ -85,6 +89,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     isCarousel && `gallery--carousel-height-${carouselHeight}`,
   ]}
   data-section-type="galleryGridSection"
+  data-image-fit={imageFit}
   data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
   data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
@@ -162,14 +167,14 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
             ))
           : useFallback
             ? PLACEHOLDER_RATIOS.map((r) => (
-                <figure class="gallery__item" style={justified ? `--ar:${aspectOf({_fallback: true, ratio: r}).toFixed(4)}` : undefined}>
+                <figure class="gallery__item" style={`--ar:${aspectOf({_fallback: true, ratio: r}).toFixed(4)}`}>
                   <div class="gallery__item-inner">
                     <ImagePlaceholder class="gallery__img" />
                   </div>
                 </figure>
               ))
             : images.map((img: any, i: number) => (
-                <figure class="gallery__item" style={justified ? `--ar:${aspectOf(img).toFixed(4)}` : undefined}>
+                <figure class="gallery__item" style={`--ar:${aspectOf(img).toFixed(4)}`}>
                   <div class="gallery__item-inner">
                     <SanityImage
                       image={img}
@@ -208,7 +213,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     margin: 0 0 0.85rem;
   }
   .gallery__heading {
-    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    font-size: calc(clamp(1.85rem, 3.5vw, 2.85rem) * var(--heading-scale, 1));
     line-height: 1.2;
     color: var(--text);
     margin: 0;
@@ -306,6 +311,10 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     aspect-ratio: 1 / 1;
   }
   .gallery--masonry .gallery__item-inner { aspect-ratio: auto; }
+  /* Show whole image: the tile takes the photo's own shape, so nothing is
+     cropped and the grid still guarantees its column count. Justified rows
+     already do this per row; this is the fixed-column equivalent. */
+  .gallery[data-image-fit='whole'] .gallery__item-inner { aspect-ratio: var(--ar, 1); }
 
   .gallery__item-inner :global(.gallery__img) {
     width: 100%;

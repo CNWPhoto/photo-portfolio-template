@@ -93,6 +93,29 @@ export default {
       hidden: ({parent}) => parent?.layout !== 'carousel',
     },
     {
+      // Grid mode crops every tile to a square, which is right for a photo
+      // wall and wrong when the image's shape IS the content — Chaltron
+      // Photography's three numbered process cards are 2.12:1 graphics.
+      // Justified rows keep the shape but reflow by width, so three cards
+      // became 2 + 1 on a narrower screen. A grid holds its column count at
+      // any width; this lets it do that without cropping.
+      name: 'imageFit',
+      title: 'Image Fit',
+      type: 'string',
+      description:
+        'Crop to squares gives the uniform photo-wall grid. Show whole image keeps each picture’s real shape — use it for artwork, graphics or anything where cropping loses the point. Ignored when Justified rows is on, which never crops.',
+      options: {
+        list: [
+          {title: 'Crop to squares (default)', value: 'crop'},
+          {title: 'Show whole image', value: 'whole'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'crop',
+      hidden: ({parent}) => parent?.layout === 'carousel' || parent?.layout === 'masonry',
+    },
+    {
       name: 'justified',
       title: 'Justified rows',
       type: 'boolean',
