@@ -65,6 +65,11 @@ function readEnvBackup() {
 const DONOR_MARKERS = [
   'cnw-photo-demo',
   'connor-walberg',
+  // Spaced form. The hyphenated marker above only matches slugs and URLs;
+  // the donor's homepagePage.pageTitle reads "Pet Photography - Connor
+  // Walberg", which lowercasing alone doesn't reconcile. Chaltron
+  // Photography shipped that as her live <title> and this check passed.
+  'connor walberg',
   'Denver Dog',
   'Pet Photographer Site',
   'Why Choose Our Studio',
