@@ -24,14 +24,20 @@ const heading = section?.heading || '';
 // Stega-clean control fields that drive class names and JS comparisons —
 // invisible preview markers would silently break `layout === 'carousel'`
 // and similar branches.
-const layout = stegaClean(section?.layout) || 'grid-3';
+// Justified is now a Layout choice. The old boolean is still honoured — it
+// exists in live data on two client sites — but it's hidden in Studio so
+// nothing new can set it. Reading both means no fleet-wide data rewrite was
+// needed to ship the cleaner model.
+const layoutRaw = stegaClean(section?.layout) || 'grid-3';
+// justified-rows has no grid of its own; fall back to grid-3 for the column
+// CSS it never uses.
+const layout = layoutRaw === 'justified-rows' ? 'grid-3' : layoutRaw;
 const gap = stegaClean(section?.gap) || 'normal';
 const carouselHeight = stegaClean(section?.carouselHeight) || 'standard';
 const lightbox = section?.lightbox !== false;
-// Justified rows: keep each photo's real shape and stretch every row to the
-// full width, instead of the square crop grid mode applies. Carousel is a
-// single scrolling row, so it can't be justified.
-const justified = !!section?.justified && stegaClean(section?.layout) !== 'carousel';
+const justified =
+  layoutRaw === 'justified-rows' ||
+  (!!section?.justified && layoutRaw !== 'carousel' && layoutRaw !== 'masonry');
 const rowHeight = stegaClean(section?.rowHeight) || 'medium';
 // Grid mode crops every tile to a square. Fine for a photo wall, wrong for
 // artwork or graphics whose shape IS the content — and unlike justified

@@ -69,6 +69,7 @@ export default {
           {title: '2 columns', value: 'grid-2'},
           {title: '3 columns', value: 'grid-3'},
           {title: '4 columns', value: 'grid-4'},
+          {title: 'Justified rows (full-width, any shape)', value: 'justified-rows'},
           {title: 'Masonry', value: 'masonry'},
           {title: 'Carousel (slider)', value: 'carousel'},
         ],
@@ -140,13 +141,22 @@ export default {
     },
     {
       name: 'justified',
-      title: 'Justified rows',
+      // Title says what it overrides. The description already explained that
+      // the column count becomes "a guide rather than a rule", and that still
+      // wasn't enough — a grid-4 gallery rendering 3 across reads as a broken
+      // column picker, not as this toggle doing its job.
+      title: 'Justified rows (legacy)',
       type: 'boolean',
       description:
-        'Keep each photo\u2019s real shape instead of cropping it to a square, and stretch every row to the full width \u2014 the layout most photography sites use. The column count above becomes a guide rather than a rule, so a row may hold more or fewer images depending on how wide they are.',
+        'Stretches every row to the full width and sizes each photo by its own shape \u2014 the layout most photography sites use. IMPORTANT: this ignores the column count above; rows hold however many images fit. To keep a fixed number of columns AND uncropped images, leave this off and set Image Fit to \u201cShow whole image\u201d.',
       initialValue: false,
-      // Carousel is a single scrolling row, so rows can't be justified.
-      hidden: ({parent}) => parent?.layout === 'carousel',
+      // DEPRECATED — superseded by the 'justified-rows' Layout option.
+      // Kept and still honoured so the galleries already using it keep
+      // working, but hidden so it can't be set on anything new: a boolean
+      // that silently overrode the column picker is what made a grid-4
+      // gallery render three across with no explanation.
+      hidden: true,
+      readOnly: true,
     },
     {
       name: 'rowHeight',
