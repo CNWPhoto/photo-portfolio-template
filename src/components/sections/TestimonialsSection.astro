@@ -7,11 +7,21 @@ import { stegaClean } from '@sanity/client/stega';
 interface Props {
   section: any;
   isFirst?: boolean;
+  ownsH1?: boolean;
   palette?: any;
 }
 
-const { section, palette } = Astro.props;
+const { section, palette, ownsH1 = false } = Astro.props;
 const style = paletteToStyle(palette);
+
+// The schema has offered a Heading on this section all along, but the
+// component never rendered it — so an editor could type "What Clients Are
+// Saying", publish, and see nothing. Worse, src/lib/headings.js lists
+// testimonialsSection in HEADING_SECTIONS, so a page whose first
+// heading-bearing section was this one was credited with owning the <h1>
+// while emitting no h1 at all.
+const heading = section?.heading || '';
+const HeadingTag = ownsH1 ? 'h1' : 'h2';
 
 // stegaClean on layout so equality checks survive preview-mode markers
 const layout = stegaClean(section?.layout) || 'image-slider';
@@ -92,6 +102,12 @@ const first = testimonials[0] ?? null;
   id={section?.sectionId || 'testimonials'}
   style={style}
 >
+  {heading && (
+    <div class="tslider__header">
+      <HeadingTag class="tslider__heading">{heading}</HeadingTag>
+    </div>
+  )}
+
   {layout === 'two-col-text' ? (
     <div class="tslider__inner tslider__inner--two-col">
       {testimonials.slice(0, 2).map((t, i) => (
@@ -191,6 +207,21 @@ const first = testimonials[0] ?? null;
     margin-bottom: 100px;
     background: var(--bg);
     color: var(--text);
+  }
+
+  /* Matches the heading treatment used by Gallery and Steps so a section
+     heading looks the same wherever an editor sets one. */
+  .tslider__header {
+    max-width: 1100px;
+    margin: 0 auto 2.5rem;
+    padding: 0 3rem;
+    text-align: center;
+  }
+  .tslider__heading {
+    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    line-height: 1.2;
+    color: var(--text);
+    margin: 0;
   }
 
   .tslider__inner {
