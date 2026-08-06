@@ -101,8 +101,20 @@ const decode = (t) =>
 const text = (h) => decode(strip(h)).replace(/\s+/g, ' ').trim()
 const key = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
 
+// A bare "Mozilla/5.0" is rejected with 406 by Bluehost/Newfold's WAF, which
+// fronts a large share of WordPress sites — Chaltron Photography's included.
+// Every source fetch failed, every text/image diff was skipped, and the run
+// still reported PASS. Send a complete browser UA and Accept header, matching
+// what 10-scrape.js already uses to fetch the same pages successfully.
+const BROWSER_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+}
+
 async function get(url) {
-  const res = await fetch(url, {headers: {'User-Agent': 'Mozilla/5.0'}})
+  const res = await fetch(url, {headers: BROWSER_HEADERS})
   if (!res.ok) throw new Error(`${res.status} ${url}`)
   return res.text()
 }
@@ -136,8 +148,21 @@ async function main() {
     }
     try {
       srcHtml = await get(SOURCE + srcPath)
-    } catch {
-      r.warns.push(`source ${srcPath} unreachable — text/image diff skipped`)
+    } catch (e) {
+      // A 404 means the page doesn't exist on the source — it's NEW, not
+      // broken. There is nothing to diff against and nothing wrong. Anything
+      // else (406 from a WAF, 5xx, DNS) means we could not check a page we
+      // were asked to check.
+      //
+      // That distinction matters: --source was passed explicitly, so skipping
+      // the diff and printing PASS reports "verified" for a page nothing was
+      // compared against. Strictly worse than no gate — and exactly what
+      // happened here, where all ten pages 406'd and the run passed clean.
+      if (/\b404\b/.test(e.message)) {
+        r.warns.push(`no source page at ${srcPath} — new page, nothing to diff`)
+      } else {
+        r.fails.push(`source ${srcPath} unreachable (${e.message}) — text/image diff NOT run`)
+      }
     }
 
     const liveText = text(liveHtml)
