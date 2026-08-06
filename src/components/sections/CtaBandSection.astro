@@ -208,6 +208,15 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     margin: 0;
     max-width: 560px;
   }
+  /* The 560px cap needs auto margins to sit under a centred heading and
+     button — without them the copy block pins to the left of the container
+     while everything around it centres, which reads as a broken section
+     rather than a deliberate measure. Scoped to the centred layout: the
+     split variant is deliberately left-aligned. */
+  .ctaband--centered .ctaband__body {
+    margin-left: auto;
+    margin-right: auto;
+  }
   .ctaband--split-text-left-cta-right .ctaband__body { max-width: none; }
 
   /* Two buttons sit side by side and wrap together on narrow screens. The
