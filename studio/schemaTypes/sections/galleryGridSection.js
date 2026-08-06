@@ -116,6 +116,29 @@ export default {
       hidden: ({parent}) => parent?.layout === 'carousel' || parent?.layout === 'masonry',
     },
     {
+      // Carousel slides are height-driven by default, so how many fit is
+      // whatever the images' aspect ratios allow — usually one and a bit.
+      // Picking a number makes each slide an equal fraction of the width so
+      // exactly that many show at once.
+      name: 'imagesPerView',
+      title: 'Images Per View',
+      type: 'string',
+      description:
+        'How many images the carousel shows at once. Automatic sizes each slide by its own shape. Picking a number fits exactly that many across, stepping down on smaller screens so they never become thumbnails.',
+      options: {
+        list: [
+          {title: 'Automatic (default)', value: 'auto'},
+          {title: '2 across', value: '2'},
+          {title: '3 across', value: '3'},
+          {title: '4 across', value: '4'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'auto',
+      hidden: ({parent}) => parent?.layout !== 'carousel',
+    },
+    {
       name: 'justified',
       title: 'Justified rows',
       type: 'boolean',

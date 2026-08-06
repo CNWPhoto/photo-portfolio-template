@@ -1,5 +1,6 @@
 ---
 import Footer from '../components/Footer.astro';
+import Lightbox from '../components/Lightbox.astro';
 import Nav from '../components/Nav.astro';
 import DemoBanner from '../components/DemoBanner.astro';
 import '../styles/palette.css';
@@ -397,6 +398,7 @@ const schemaJSON = schemaGraph.length
 		<Nav siteName={siteName} logoType={logoType} logoImage={logoImage} logoImageInverse={logoImageInverse} {logoLarge} navVariant={navVariant} navLinks={navLinks} {blogEnabled} {stickyNav} palette={activePalette} backgroundTone={navBackgroundTone} {heroOverlay} />
 		<slot />
 		<Footer {siteName} {blogEnabled} palette={activePalette} />
+		<Lightbox />
 		<script>
 			// Protect images from casual right-click saving
 			document.addEventListener('contextmenu', (e) => {

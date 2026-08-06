@@ -18,6 +18,10 @@ interface Props {
   displayWidth?: number;
   displayHeight?: number;
   quality?: number;
+  /** Anything else (data-* attributes, aria-*, etc.) is forwarded to the
+   *  <img>. Without this, a caller passing data-lb-src got no attribute and
+   *  no warning — the click-to-enlarge wiring silently did nothing. */
+  [key: string]: any;
 }
 
 const {
@@ -29,6 +33,7 @@ const {
   displayWidth,
   displayHeight,
   quality,
+  ...rest
 } = Astro.props;
 
 if (!image?.asset) return;
@@ -56,4 +61,5 @@ const alt = image.alt ?? '';
   decoding={loading === 'eager' ? 'sync' : 'async'}
   fetchpriority={loading === 'eager' ? 'high' : undefined}
   class={className}
+  {...rest}
 />

@@ -3,6 +3,7 @@ import SanityImage from '../SanityImage.astro';
 import ImagePlaceholder from '../ImagePlaceholder.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { stegaClean } from '@sanity/client/stega';
+import { buildSrc } from '../../lib/image';
 
 interface Props {
   section: any;
@@ -36,6 +37,10 @@ const rowHeight = stegaClean(section?.rowHeight) || 'medium';
 // artwork or graphics whose shape IS the content — and unlike justified
 // rows, a grid keeps its column count at any width instead of reflowing.
 const imageFit = stegaClean(section?.imageFit) || 'crop';
+// Carousel slides are height-driven by default (height: 100%, width: auto),
+// so how many fit is whatever the aspect ratios happen to allow. Picking a
+// number switches them to width-driven so exactly that many fill the row.
+const perView = stegaClean(section?.imagesPerView) || 'auto';
 
 // Aspect ratio per image, from the dimensions Sanity already gives us — so the
 // row maths happens at build time and needs no client JS.
@@ -90,10 +95,11 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   ]}
   data-section-type="galleryGridSection"
   data-image-fit={imageFit}
+  data-per-view={isCarousel ? perView : undefined}
   data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
   data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
-  data-lightbox={!isCarousel && lightbox ? 'true' : 'false'}
+  data-lightbox={lightbox ? 'true' : 'false'}
   id={section?.sectionId || undefined}
   style={style}
 >
@@ -111,7 +117,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
           class="gallery__carousel-track"
           data-gallery-carousel-track
           data-carousel-gap={carouselGapPx}
-          style={`gap: ${carouselGapPx}px`}
+          style={`gap: ${carouselGapPx}px; --carousel-gap: ${carouselGapPx}px`}
         >
           {useFallback
             ? PLACEHOLDER_RATIOS.map((ratio) => (
@@ -123,6 +129,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
                   sizes="60vw"
                   loading={i === 0 && isFirst ? 'eager' : 'lazy'}
                   class="gallery__carousel-img"
+                  data-lb-src={lightbox ? buildSrc(img, 2000, 85) : undefined}
+                  data-lb-caption={img?.caption || undefined}
                 />
               ))
           }
@@ -158,6 +166,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
                             sizes="(max-width:900px) 100vw, 33vw"
                             loading="lazy"
                             class="gallery__img"
+                            data-lb-src={lightbox ? buildSrc(item, 2000, 85) : undefined}
+                            data-lb-caption={item?.caption || undefined}
                           />
                         </div>
                         {item?.caption && <figcaption class="gallery__caption">{item.caption}</figcaption>}
@@ -181,6 +191,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
                       sizes="(max-width:900px) 100vw, 33vw"
                       loading={i === 0 && isFirst ? 'eager' : 'lazy'}
                       class="gallery__img"
+                      data-lb-src={lightbox ? buildSrc(img, 2000, 85) : undefined}
+                      data-lb-caption={img?.caption || undefined}
                     />
                   </div>
                   {img?.caption && <figcaption class="gallery__caption">{img.caption}</figcaption>}
@@ -306,6 +318,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   .gallery--masonry .gallery__item:last-child { margin-bottom: 0; }
 
   .gallery__item { margin: 0; }
+  [data-lightbox='true'] :global([data-lb-src]) { cursor: zoom-in; }
+
   .gallery__item-inner {
     overflow: hidden;
     aspect-ratio: 1 / 1;
@@ -396,6 +410,37 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     display: block;
     max-width: unset;
     object-fit: unset;
+  }
+
+
+  /* ── Images per view (carousel) ──
+     Default 'auto' leaves slides height-driven — each image as wide as its
+     own aspect ratio makes it. Choosing a number makes every slide an equal
+     fraction of the viewport instead, so exactly that many fill the width and
+     the track height follows the images rather than a fixed container. */
+  .gallery[data-per-view]:not([data-per-view='auto']) .gallery__carousel-viewport {
+    height: auto;
+  }
+  .gallery[data-per-view]:not([data-per-view='auto']) .gallery__carousel-track :global(.gallery__carousel-img) {
+    height: auto;
+    width: calc(
+      (100% - (var(--per-view, 3) - 1) * var(--carousel-gap, 16px)) / var(--per-view, 3)
+    );
+    object-fit: cover;
+    aspect-ratio: var(--per-view-ar, 3 / 2);
+  }
+  .gallery[data-per-view='2'] { --per-view: 2; }
+  .gallery[data-per-view='3'] { --per-view: 3; }
+  .gallery[data-per-view='4'] { --per-view: 4; }
+
+  /* Below the grid's own single-column breakpoint a four-up carousel is a row
+     of thumbnails, so step down rather than shrink further. */
+  @media (max-width: 900px) {
+    .gallery[data-per-view='3'],
+    .gallery[data-per-view='4'] { --per-view: 2; }
+  }
+  @media (max-width: 560px) {
+    .gallery[data-per-view]:not([data-per-view='auto']) { --per-view: 1; }
   }
 
   .gallery__carousel-arrow {

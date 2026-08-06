@@ -37,6 +37,7 @@ const LAYOUT_FIELDS = new Set([
   'columnWidths',
   'gridColumns',
   'galleryColumns',
+  'imagesPerView',
   'alignment',
   'textAlignment',
   'textPosition',
@@ -85,11 +86,9 @@ export function groupForField(name) {
   return 'content'
 }
 
-// Field order WITHIN the form: style first, then the copy, then settings —
-// so the flat view (and the Style tab) opens on "what kind of section is this"
-// rather than halfway down a list of toggles.
-// Matches the tab order above, so the flat field list and the tabs agree —
-// an editor who scrolls instead of clicking tabs meets the copy first too.
+// Field order WITHIN the form: content, then style, then settings — matching
+// the tab order above, so the flat field list and the tabs agree and an editor
+// who scrolls rather than clicking tabs meets the copy first too.
 const ORDER = {content: 0, layout: 1, settings: 2}
 
 // Inside Style, the variant picker comes first: "Image left / Image right" is
