@@ -322,8 +322,14 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     color: var(--muted);
   }
 
+  /* grid-3 holds its three columns all the way down to the single-column
+     breakpoint. Dropping to two mid-way reflows a 3-item row into 2 + 1,
+     which reads as a broken layout rather than a responsive one — most
+     visible when the three items are a numbered sequence (Chaltron
+     Photography's "1 Share Your Vision / 2 Create the Experience / 3 Return
+     to It Forever"). grid-4 still steps through 2, since four across is
+     genuinely too tight on a tablet. */
   @media (max-width: 900px) {
-    .gallery--grid-3 .gallery__grid,
     .gallery--grid-4 .gallery__grid {
       grid-template-columns: repeat(2, 1fr);
     }
