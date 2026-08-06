@@ -140,6 +140,26 @@ export default {
       hidden: ({parent}) => parent?.layout !== 'carousel',
     },
     {
+      // The gallery caps at 1400px like every other section, which is right
+      // for text but leaves photography boxed in on a wide screen. Full width
+      // runs the images edge to edge; the heading stays within the readable
+      // measure so it doesn't strand itself against the viewport edge.
+      name: 'contentWidth',
+      title: 'Width',
+      type: 'string',
+      description:
+        'Contained keeps the gallery within the page’s normal reading width. Full width runs the images edge to edge across the screen — strong for a photo wall, and the heading stays centred either way.',
+      options: {
+        list: [
+          {title: 'Contained (default)', value: 'contained'},
+          {title: 'Full screen width', value: 'full'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'contained',
+    },
+    {
       name: 'justified',
       // Title says what it overrides. The description already explained that
       // the column count becomes "a guide rather than a rule", and that still

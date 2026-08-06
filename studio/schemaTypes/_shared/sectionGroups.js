@@ -54,6 +54,7 @@ const LAYOUT_FIELDS = new Set([
   'mobileTextBelow',
   'headingSize',
   'maxWidth',
+  'contentWidth',
   'gap',
   'lightbox',
   'columnAlignment',
