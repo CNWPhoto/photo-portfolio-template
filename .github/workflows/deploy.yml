@@ -190,6 +190,9 @@ jobs:
       fail-fast: false
       matrix:
         client:
+          - slug: chaltron-photography
+            sanity_project_id: zuhc5okw
+            studio_url: https://chaltron-photography.sanity.studio
           - slug: heidi-adler-photography
             sanity_project_id: jb7hznkw
             studio_url: https://heidi-adler-photography.sanity.studio
@@ -341,6 +344,7 @@ jobs:
             heatherjl-photography) PID=7n71940p; STU=https://heatherjl-photography.sanity.studio;;
             everlight-education) PID=jj2etxl1; STU=https://everlight-education.sanity.studio;;
             heidi-adler-photography) PID=jb7hznkw; STU=https://heidi-adler-photography.sanity.studio;;
+            chaltron-photography) PID=zuhc5okw; STU=https://chaltron-photography.sanity.studio;;
             *) echo "::error::unknown client '${{ inputs.only_client }}'"; exit 1;;
           esac
           echo "pid=$PID" >> "$GITHUB_OUTPUT"
