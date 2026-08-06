@@ -64,6 +64,25 @@ export default {
       // with no label is inert. Ask for the label first.
       hidden: ({parent}) => !parent?.ctaText,
     },
+    {
+      // Mirrors ctaBandSection's pair. Added because migrated sites routinely
+      // run two buttons under a feature block — Chaltron Photography's homepage
+      // has "More Senior Portrait Photography" beside "Book Your Session" on
+      // all three. Without this the specific link wins and the booking link is
+      // lost, which is the CTA that actually converts.
+      name: 'secondaryCtaText',
+      title: 'Second Button Text',
+      type: 'string',
+      description:
+        'Optional. Adds a second button beside the first — e.g. "Book your session" next to "See the gallery". Leave blank for a single button.',
+      hidden: ({parent}) => !parent?.ctaText,
+    },
+    {
+      name: 'secondaryCtaLink',
+      title: 'Second Button Link',
+      type: 'ctaLink',
+      hidden: ({parent}) => !parent?.secondaryCtaText,
+    },
     imageField({}),
     {
       name: 'textAlignment',

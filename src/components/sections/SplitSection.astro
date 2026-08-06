@@ -22,6 +22,8 @@ const eyebrow = section?.eyebrow || '';
 const headingHTML = renderHeading(section?.heading || '');
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
+const ctaText2 = section?.secondaryCtaText || '';
+const ctaHref2 = resolveLink(section?.secondaryCtaLink, [Astro.url.hostname]);
 
 const bodyHTML = isPortableText(section?.body)
   ? renderBody(section.body, { className: 'isplit__body' })
@@ -46,9 +48,16 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
       {headingHTML && <HeadingTag class="isplit__heading" set:html={headingHTML} />}
       {bodyHTML && <div class="isplit__body-wrap reveal reveal-delay-2" set:html={bodyHTML} />}
       {ctaText && ctaHref && (
-        <a class="isplit__link reveal reveal-delay-4" href={ctaHref}>
-          {ctaText} <span class="isplit__link-arrow" aria-hidden="true">&rarr;</span>
-        </a>
+        <div class="isplit__links">
+          <a class="isplit__link reveal reveal-delay-4" href={ctaHref}>
+            {ctaText} <span class="isplit__link-arrow" aria-hidden="true">&rarr;</span>
+          </a>
+          {ctaText2 && ctaHref2 && (
+            <a class="isplit__link isplit__link--secondary reveal reveal-delay-4" href={ctaHref2}>
+              {ctaText2} <span class="isplit__link-arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          )}
+        </div>
       )}
     </div>
   </div>
@@ -351,6 +360,27 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
      is retained here as a layout concern. */
   .isplit--image-right-full-bleed .isplit__body-wrap :global(.isplit__body) { text-align: left; }
   .isplit--image-left-full-bleed .isplit__body-wrap :global(.isplit__body) { text-align: right; }
+
+  /* Wrapper so a second CTA sits beside the first and wraps on narrow
+     screens. The single-CTA case renders identically: one flex item, same
+     top margin — the margin moves to the wrapper so two links don't each
+     add their own. */
+  .isplit__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 2rem;
+    margin-top: 1.5rem;
+  }
+  .isplit__links .isplit__link { margin-top: 0; }
+
+  /* text-align can't position a flex item, so mirror the alignment rules
+     that target .isplit__link onto the wrapper. */
+  .isplit--image-right-full-bleed .isplit__links,
+  .isplit--image-left-full-bleed .isplit__links { justify-content: flex-end; }
+  .isplit--image-left .isplit__links,
+  .isplit--image-right .isplit__links { justify-content: flex-start; }
+  [data-text-align='center'] .isplit__links { justify-content: center; }
+  [data-text-align='right'] .isplit__links { justify-content: flex-end; }
 
   .isplit__link {
     display: block;
