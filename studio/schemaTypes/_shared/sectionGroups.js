@@ -35,6 +35,8 @@ const LAYOUT_FIELDS = new Set([
   'textContainer',
   'cardPlacement',
   'columnWidths',
+  'ctaStyle',
+  'columnRatio',
   'gridColumns',
   'galleryColumns',
   'imagesPerView',

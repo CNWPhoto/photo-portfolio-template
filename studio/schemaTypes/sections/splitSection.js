@@ -104,6 +104,51 @@ export default {
       },
       initialValue: 'crop',
     },
+    {
+      // The contained variants pin the image to a fixed 400px column, which
+      // suits a portrait beside a paragraph and nothing else. A wide landscape
+      // or a short caption both want a different balance, and until now the
+      // only way to get one was the full-bleed variant's fixed 55/45.
+      //
+      // Ratio and cropping are separate decisions, so this composes with
+      // Image Fit rather than replacing it. Default keeps today's exact
+      // layout so no existing Split moves.
+      name: 'columnRatio',
+      title: 'Column Balance',
+      type: 'string',
+      description:
+        'How the image and text divide the row. Default is the standard narrow image column. The others give the image or the text two thirds of the width — useful for wide photos, or for a long block of copy beside a small picture.',
+      options: {
+        list: [
+          {title: 'Default', value: 'auto'},
+          {title: 'Equal halves', value: '50-50'},
+          {title: 'Image two thirds', value: 'image-major'},
+          {title: 'Text two thirds', value: 'text-major'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'auto',
+    },
+    {
+      // Split has always rendered its CTA as an italic text link with an
+      // arrow. That reads well inside prose and disappears when the section
+      // is the page's main call to action.
+      name: 'ctaStyle',
+      title: 'Button Style',
+      type: 'string',
+      description:
+        'Text link is the understated inline style this section has always used. Button gives it the same solid button as the CTA Band — better when this section is the main thing you want clicked.',
+      options: {
+        list: [
+          {title: 'Text link (default)', value: 'link'},
+          {title: 'Button', value: 'button'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'link',
+      hidden: ({parent}) => !parent?.ctaText,
+    },
     headingSizeField(),
     imageField({}),
     {
