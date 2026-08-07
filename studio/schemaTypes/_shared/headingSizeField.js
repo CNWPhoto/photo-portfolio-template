@@ -11,20 +11,23 @@
 // client sites, so renaming them would mean a migration for a cosmetic win.
 // Editors see Small / Medium / Large; the stored values stay as they were.
 //
-// Three steps, not four: the default is already an editorial display size, and
-// anything larger overflows exactly the long headings this control exists to
-// rescue. Adding an XL later is one line here plus one in palette.css.
+// Four steps down from the default, none above it: Large is already an
+// editorial display size, and anything larger overflows exactly the long
+// headings this control exists to rescue. Extra Small was added after the
+// fact and cost one line here plus one in palette.css — which is the point
+// of expressing this as a scale rather than as per-section sizes.
 export const headingSizeField = () => ({
   name: 'headingSize',
   title: 'Heading Size',
   type: 'string',
   description:
-    'Scales this section’s heading. Large is the default editorial size — pick Medium or Small for longer headings or a more restrained look. All three still resize with the screen.',
+    'Scales this section’s heading. Large is the default editorial size — step down for longer headings or a more restrained look. All four still resize with the screen.',
   options: {
     list: [
       {title: 'Large (default)', value: 'large'},
       {title: 'Medium', value: 'standard'},
       {title: 'Small', value: 'small'},
+      {title: 'Extra Small', value: 'xsmall'},
     ],
     layout: 'radio',
     direction: 'horizontal',

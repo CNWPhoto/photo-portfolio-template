@@ -123,3 +123,4 @@ section[data-space-bottom='spacious'] { --pad-bottom: var(--section-pad-spacious
 [data-heading-size='large']    { --heading-scale: 1; }
 [data-heading-size='standard'] { --heading-scale: 0.8; }
 [data-heading-size='small']    { --heading-scale: 0.65; }
+[data-heading-size='xsmall']   { --heading-scale: 0.5; }
