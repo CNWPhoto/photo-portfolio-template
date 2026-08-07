@@ -492,10 +492,17 @@ const schemaJSON = schemaGraph.length
 	html {
 		--subheading-transform: uppercase;
 		--subheading-letter-spacing: 0.22em;
+		/* Multiplier, so a section can keep its OWN tracking rather than
+		   adopting a shared value — Split's eyebrow is 0.14em, not 0.22em,
+		   and swapping in the shared number would have widened it on every
+		   site. Wide tracking only reads right in uppercase, so sentence
+		   case collapses it to zero. */
+		--subheading-spacing-scale: 1;
 	}
 	html[data-subheading-case='none'] {
 		--subheading-transform: none;
 		--subheading-letter-spacing: 0;
+		--subheading-spacing-scale: 0;
 	}
 
 	/* ══════════════════════════════════════════════════
