@@ -82,6 +82,20 @@ export default {
       description:
         'Shown when a page is shared on Facebook, iMessage, LinkedIn and similar, unless that page has its own Social Share Image. Without one, shares of those pages appear as a blank card. Use a horizontal photo — ideal size 1200 × 630px.',
       options: {hotspot: true},
+      // The overlay writes an `alt` into this image, but a bare `type: 'image'`
+      // declares no such field — so every client's Studio showed
+      // "Field 'alt' does not exist on type 'image'" on a field they never
+      // touched. Declaring it silences that and gives the value somewhere
+      // legitimate to live.
+      fields: [
+        {
+          name: 'alt',
+          title: 'Alt text',
+          type: 'string',
+          description:
+            'Describes the image for screen readers and search engines.',
+        },
+      ],
     },
     {
       name: 'googleSiteVerification',
