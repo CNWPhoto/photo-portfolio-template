@@ -124,3 +124,22 @@ section[data-space-bottom='spacious'] { --pad-bottom: var(--section-pad-spacious
 [data-heading-size='standard'] { --heading-scale: 0.8; }
 [data-heading-size='small']    { --heading-scale: 0.65; }
 [data-heading-size='xsmall']   { --heading-scale: 0.5; }
+
+
+/* ── Inline images in rich text ──
+   Emitted by renderBody() for image blocks in a body field. Sized to the
+   text column so a photo lines up with the prose around it rather than
+   bursting out of it. */
+.pt-figure {
+  margin: 2rem 0;
+}
+.pt-figure img {
+  width: 100%;
+  height: auto;
+}
+.pt-figure__caption {
+  margin-top: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--text-muted, var(--muted));
+  text-align: center;
+}

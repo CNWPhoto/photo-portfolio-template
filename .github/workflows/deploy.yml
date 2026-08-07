@@ -124,6 +124,10 @@ jobs:
           SANITY_PREVIEW_SECRET: ${{ secrets.SANITY_PREVIEW_SECRET }}
           # Embedded Studio, matching every client job below.
           SANITY_STUDIO_URL: https://cnw-photo-demo.connor-213.workers.dev/studio
+          # Matches the client jobs, which derive this from the env-backup's
+          # SANITY_STUDIO_AI_ASSIST. The demo has no backup file, so it's set
+          # directly here.
+          PUBLIC_SANITY_AI_ASSIST: 'true'
 
       # Workers deploy (Astro 6 / @astrojs/cloudflare v13). Pattern proven
       # 2026-05-19. Secrets pushed in their own step with explicit --name;
@@ -264,6 +268,15 @@ jobs:
           export PUBLIC_SANITY_STUDIO_TITLE="$(grep -E '^SANITY_STUDIO_TITLE=' "$BACKUP" | cut -d= -f2- || true)"
           export SANITY_STUDIO_URL="$(grep -E '^SANITY_STUDIO_PREVIEW_URL=' "$BACKUP" | cut -d= -f2- | sed 's:/*$::')/studio"
           echo "Studio URL: ${SANITY_STUDIO_URL}"
+          # AI Assist. The embedded Studio (sanity.config.ts) reads
+          # PUBLIC_SANITY_AI_ASSIST; the legacy hosted Studio
+          # (studio/sanity.config.js) reads SANITY_STUDIO_AI_ASSIST. The
+          # env-backups only ever set the second one, and this build exported
+          # neither — so AI Assist was off in the Studio clients actually use,
+          # on every site, no matter what their backup said. Derive the public
+          # var from the same single key.
+          export PUBLIC_SANITY_AI_ASSIST="$(grep -E '^SANITY_STUDIO_AI_ASSIST=' "$BACKUP" | cut -d= -f2- || true)"
+          echo "AI Assist: ${PUBLIC_SANITY_AI_ASSIST:-false}"
           npm run build
 
       # Workers deploy — same proven pattern as the demo job, templated
@@ -378,6 +391,15 @@ jobs:
           export PUBLIC_SANITY_STUDIO_TITLE="$(grep -E '^SANITY_STUDIO_TITLE=' "$BACKUP" | cut -d= -f2- || true)"
           export SANITY_STUDIO_URL="$(grep -E '^SANITY_STUDIO_PREVIEW_URL=' "$BACKUP" | cut -d= -f2- | sed 's:/*$::')/studio"
           echo "Studio URL: ${SANITY_STUDIO_URL}"
+          # AI Assist. The embedded Studio (sanity.config.ts) reads
+          # PUBLIC_SANITY_AI_ASSIST; the legacy hosted Studio
+          # (studio/sanity.config.js) reads SANITY_STUDIO_AI_ASSIST. The
+          # env-backups only ever set the second one, and this build exported
+          # neither — so AI Assist was off in the Studio clients actually use,
+          # on every site, no matter what their backup said. Derive the public
+          # var from the same single key.
+          export PUBLIC_SANITY_AI_ASSIST="$(grep -E '^SANITY_STUDIO_AI_ASSIST=' "$BACKUP" | cut -d= -f2- || true)"
+          echo "AI Assist: ${PUBLIC_SANITY_AI_ASSIST:-false}"
           npm run build
 
       - name: Upload Worker secrets

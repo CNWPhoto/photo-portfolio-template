@@ -81,6 +81,20 @@ export default {
         'Upload your logo. Recommended size: 400 × 120px or similar horizontal format, 2× resolution for retina. PNG with transparent background preferred. Keep file size under 5MB.',
       hidden: ({document}) => document?.logoType !== 'image',
       validation: imageSizeWarning,
+      // The overlay writes an `alt` into this image, but a bare `type: 'image'`
+      // declares no such field — so every client's Studio showed
+      // "Field 'alt' does not exist on type 'image'" on a field they never
+      // touched. Declaring it silences that and gives the value somewhere
+      // legitimate to live.
+      fields: [
+        {
+          name: 'alt',
+          title: 'Alt text',
+          type: 'string',
+          description:
+            'Describes the image for screen readers and search engines.',
+        },
+      ],
     },
     {
       name: 'logoLarge',
@@ -107,6 +121,20 @@ export default {
       description:
         'Browser tab icon. Upload a square image (recommended: 512×512px PNG). Leave blank to use the default favicon.',
       options: {accept: 'image/png,image/svg+xml,image/x-icon,image/jpeg'},
+      // The overlay writes an `alt` into this image, but a bare `type: 'image'`
+      // declares no such field — so every client's Studio showed
+      // "Field 'alt' does not exist on type 'image'" on a field they never
+      // touched. Declaring it silences that and gives the value somewhere
+      // legitimate to live.
+      fields: [
+        {
+          name: 'alt',
+          title: 'Alt text',
+          type: 'string',
+          description:
+            'Describes the image for screen readers and search engines.',
+        },
+      ],
     },
     {
       name: 'palettes',

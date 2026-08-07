@@ -11,7 +11,17 @@ export const ctaLink = {
   // which editors otherwise only discover on the live site.
   validation: (Rule) =>
     Rule.custom((value, context) => {
-      const ctaText = context.parent?.ctaText
+      // Which label belongs to THIS link. The same object is used for both
+      // `ctaLink` and `secondaryCtaLink`, and reading `ctaText` unconditionally
+      // meant a section with a primary button and no second button warned that
+      // its SECOND link had no destination — a warning pointing at a field the
+      // editor never touched, on every such section. Seventeen of them on
+      // Chaltron Photography alone.
+      const fieldName = Array.isArray(context.path) ? context.path[context.path.length - 1] : null
+      const ctaText =
+        fieldName === 'secondaryCtaLink'
+          ? context.parent?.secondaryCtaText
+          : context.parent?.ctaText
       if (!ctaText) return true
       const type = value?.type
       const hasTarget = Boolean(value?.internal?._ref || value?.external || value?.anchor)

@@ -243,11 +243,16 @@ const headingSize = stegaClean(section?.headingSize) || 'large';
   }
 
   .gallery__eyebrow {
+    /* Site-wide Subheading Case. The toggle in Theme Settings has always
+       said it controls "hero subheadings (and any other section
+       subheadings)" — but only the hero read these variables, so switching
+       to Sentence case changed one section and left the rest uppercase.
+       Defaults resolve to the same 0.22em/uppercase this hard-coded. */
     font-family: var(--font-sans, var(--font-body));
     font-style: normal;
     font-size: 0.7rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
+    letter-spacing: calc(var(--subheading-spacing-scale, 1) * 0.22em);
+    text-transform: var(--subheading-transform, uppercase);
     color: var(--accent);
     margin: 0 0 0.85rem;
   }
