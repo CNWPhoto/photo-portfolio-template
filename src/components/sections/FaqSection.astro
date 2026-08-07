@@ -1,5 +1,6 @@
 ---
 import { paletteToStyle } from '../../lib/palette.js';
+import { stegaClean } from '@sanity/client/stega';
 import { renderBody, isPortableText } from '../../lib/portableText.js';
 import { renderHeading } from '../../lib/heading.js';
 
@@ -28,11 +29,14 @@ const faqs = (section?.faqs || []).map((f: any) => ({
 }));
 
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
 ---
 
 <section
   class="faqs"
   data-section-type="faqSection"
+  data-heading-size={headingSize}
   data-layout={layout}
   data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
@@ -100,7 +104,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   }
 
   .faqs__heading {
-    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    font-size: calc(clamp(1.85rem, 3.5vw, 2.85rem) * var(--heading-scale, 1));
     line-height: 1.18;
     color: var(--text);
     margin: 0 0 2.5rem;

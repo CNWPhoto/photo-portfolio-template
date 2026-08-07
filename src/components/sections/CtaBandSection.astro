@@ -1,5 +1,6 @@
 ---
 import SanityImage from '../SanityImage.astro';
+import { stegaClean } from '@sanity/client/stega';
 import ImagePlaceholder from '../ImagePlaceholder.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { renderHeading } from '../../lib/heading.js';
@@ -45,12 +46,15 @@ const parallax = !!section?.parallax && !!bgUrl;
 const isOverlapping = layout === 'overlapping-images';
 
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
 ---
 
 {isOverlapping ? (
   <section
     class="section ctaband ctaband--overlapping-images"
     data-section-type="ctaBandSection"
+    data-heading-size={headingSize}
     data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
   data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
@@ -196,7 +200,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   }
 
   .ctaband__heading {
-    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    font-size: calc(clamp(1.85rem, 3.5vw, 2.85rem) * var(--heading-scale, 1));
     line-height: 1.18;
     margin: 0 0 0.75rem;
   }

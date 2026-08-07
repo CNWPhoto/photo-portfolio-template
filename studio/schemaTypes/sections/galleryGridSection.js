@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 import {imageField, BULK_UPLOAD_TIP} from '../_shared/imageField'
 import {emptyImagesWarning} from '../_shared/imageValidation'
@@ -19,6 +20,7 @@ export default {
   },
   fields: [
     ...sectionBaseFields(),
+    headingSizeField(),
     {
       name: 'eyebrow',
       title: 'Eyebrow',
@@ -69,7 +71,7 @@ export default {
           {title: '2 columns', value: 'grid-2'},
           {title: '3 columns', value: 'grid-3'},
           {title: '4 columns', value: 'grid-4'},
-          {title: 'Justified rows (full-width, any shape)', value: 'justified-rows'},
+          {title: 'Justified rows (even rows, uncropped)', value: 'justified-rows'},
           {title: 'Masonry', value: 'masonry'},
           {title: 'Carousel (slider)', value: 'carousel'},
         ],

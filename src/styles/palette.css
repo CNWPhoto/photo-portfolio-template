@@ -106,3 +106,20 @@ section[data-space-bottom='spacious'] { --pad-bottom: var(--section-pad-spacious
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 4H3a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1zm-1 2v9.09l-3.3-3.3a1 1 0 0 0-1.4 0L12 15.09l-2.3-2.3a1 1 0 0 0-1.4 0L4 17.09V6h16zM8.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 4H3a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1zm-1 2v9.09l-3.3-3.3a1 1 0 0 0-1.4 0L12 15.09l-2.3-2.3a1 1 0 0 0-1.4 0L4 17.09V6h16zM8.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
+
+/* ── Heading scale ──────────────────────────────────────────────────────────
+   Each section declares its own heading clamp — Hero runs to 4.25rem, Contact
+   Info to 2.25rem — because those headings do different jobs. So the editor
+   control is a MULTIPLIER on whatever that section already uses, not a fixed
+   size: relationships between sections survive, and the clamp keeps doing the
+   responsive work at every step.
+
+   Components opt in with:
+     font-size: calc(clamp(...) * var(--heading-scale, 1));
+
+   Mapping lives here so adding a step (an XL, say) is one line rather than
+   fourteen. Value names are the stored schema values, which predate the
+   Small/Medium/Large labels editors see — see _shared/headingSizeField.js. */
+[data-heading-size='large']    { --heading-scale: 1; }
+[data-heading-size='standard'] { --heading-scale: 0.8; }
+[data-heading-size='small']    { --heading-scale: 0.65; }

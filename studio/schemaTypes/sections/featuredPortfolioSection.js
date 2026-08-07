@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 import {imageField} from '../_shared/imageField'
 
@@ -23,6 +24,7 @@ export default {
     // its own `eyebrow` field as the rotated label, so the shared field
     // would just duplicate and confuse editors.
     ...sectionBaseFields({spacing: false}),
+    headingSizeField(),
     {
       name: 'showVerticalLabel',
       title: 'Show Vertical Label',

@@ -349,7 +349,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   .isplit--image-left-full-bleed .isplit__eyebrow { text-align: right; }
 
   .isplit__heading {
-    font-size: clamp(2.1rem, 4.2vw, 3.78rem);
+    font-size: calc(clamp(2.1rem, 4.2vw, 3.78rem) * var(--heading-scale, 1));
     color: var(--text);
     line-height: 1.12;
     letter-spacing: -0.02em;
@@ -380,10 +380,6 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     object-fit: contain;
   }
 
-  /* ~20% smaller, matching heroSection's control of the same name. */
-  .isplit[data-heading-size='standard'] .isplit__heading {
-    font-size: clamp(1.7rem, 3.3vw, 3rem);
-  }
 
   .isplit__body-wrap :global(.isplit__body) {
     font-size: 1.0625rem;

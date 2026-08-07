@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 import {richTextBody} from '../_shared/richTextBody'
 
@@ -17,6 +18,7 @@ export default {
   },
   fields: [
     ...sectionBaseFields(),
+    headingSizeField(),
     {
       name: 'heading',
       title: 'Heading',

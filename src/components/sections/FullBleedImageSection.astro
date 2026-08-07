@@ -1,5 +1,6 @@
 ---
 import { paletteToStyle } from '../../lib/palette.js';
+import { stegaClean } from '@sanity/client/stega';
 import { renderHeading } from '../../lib/heading.js';
 import { resolveLink } from '../../lib/links.js';
 import { renderBody, isPortableText } from '../../lib/portableText.js';
@@ -37,12 +38,15 @@ const isImageOnly = textContainer === 'image-only';
 const cardPlacement = section?.cardPlacement === 'right' ? 'right' : 'left';
 
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
 ---
 
 {isImageOnly ? (
   <section
     class:list={['fbi-imgonly', `fbi-imgonly--${height}`]}
     data-section-type="fullBleedImageSection"
+    data-heading-size={headingSize}
     data-parallax={parallax ? 'true' : 'false'}
     id={section?.sectionId || undefined}
     style={style}
@@ -158,7 +162,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     margin-bottom: 1rem;
   }
   .fbi__heading {
-    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-size: calc(clamp(2rem, 3.5vw, 3rem) * var(--heading-scale, 1));
     color: var(--text);
     margin-bottom: 1.5rem;
     letter-spacing: -0.01em;

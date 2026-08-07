@@ -220,7 +220,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   }
 
   .hero__heading {
-    font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+    font-size: calc(clamp(2.5rem, 5.5vw, 4.25rem) * var(--heading-scale, 1));
     /* Long single words break gracefully instead of overflowing the
        overlay container. Doesn't affect normal copy — only kicks in for
        URL-like words or unusually long names. */
@@ -367,21 +367,10 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     padding: 3.5rem 4rem;
   }
   .hero--image-full[data-text-position='bottom-right'] .hero__heading--overlay {
-    font-size: clamp(2.875rem, 6.9vw, 5.75rem);
+    font-size: calc(clamp(2.875rem, 6.9vw, 5.75rem) * var(--heading-scale, 1));
     font-weight: var(--heading-weight, 600);
   }
 
-  /* ── Standard heading size (~20% smaller than Large default) ──
-     Two scales — the bigger bottom-overlay variant gets its own override
-     because its base size is also bigger. Other variants use the
-     baseline .hero__heading rule, so one override below covers all of
-     split, top-positioned overlay, and centered-text. */
-  .hero[data-heading-size='standard'] .hero__heading {
-    font-size: clamp(2rem, 4.4vw, 3.4rem);
-  }
-  .hero[data-heading-size='standard'].hero--image-full[data-text-position^='bottom'] .hero__heading--overlay {
-    font-size: clamp(2.3rem, 5.5vw, 4.6rem);
-  }
   .hero--image-full[data-text-position='bottom-left'] .hero__overlay-content {
     max-width: 670px;
     margin-right: auto;

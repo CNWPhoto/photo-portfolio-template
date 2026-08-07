@@ -90,11 +90,14 @@ const testimonials = raw.map((t: any) => {
 });
 
 const first = testimonials[0] ?? null;
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
 ---
 
 <section
   class:list={['tslider', `tslider--${layout}`]}
   data-section-type="testimonialsSection"
+  data-heading-size={headingSize}
   data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
   data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}

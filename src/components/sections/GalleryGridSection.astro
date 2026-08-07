@@ -88,6 +88,8 @@ const CAROUSEL_GAP_PX: Record<string, number> = { tight: 8, normal: 16, loose: 2
 const carouselGapPx = CAROUSEL_GAP_PX[gap] ?? CAROUSEL_GAP_PX.normal;
 
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
 ---
 
 <section
@@ -101,6 +103,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     isCarousel && `gallery--carousel-height-${carouselHeight}`,
   ]}
   data-section-type="galleryGridSection"
+  data-heading-size={headingSize}
   data-image-fit={imageFit}
   data-width={contentWidth}
   data-per-view={isCarousel ? perView : undefined}

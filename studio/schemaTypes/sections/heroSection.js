@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {imageField, BULK_UPLOAD_TIP} from '../_shared/imageField'
 import {emptyImagesWarning} from '../_shared/imageValidation'
 import {ctaLink} from '../_shared/ctaLink'
@@ -55,21 +56,7 @@ export default {
       rows: 2,
       description: 'The H1 for this hero. Use a line break (Enter) to split onto two lines.',
     },
-    {
-      name: 'headingSize',
-      title: 'Heading Size',
-      type: 'string',
-      description:
-        'Large is the default editorial size. Pick Standard for longer headings or a more restrained look.',
-      options: {
-        list: [
-          {title: 'Large (default)', value: 'large'},
-          {title: 'Standard (~20% smaller)', value: 'standard'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'large',
-    },
+    headingSizeField(),
     {
       name: 'subheading',
       title: 'Subheading',

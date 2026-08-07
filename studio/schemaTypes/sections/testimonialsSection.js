@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 import ManageTestimonialsLink from '../../components/ManageTestimonialsLink'
 
@@ -18,6 +19,7 @@ export default {
   },
   fields: [
     ...sectionBaseFields({spacing: false}),
+    headingSizeField(),
     {
       name: 'manageLink',
       title: 'Manage testimonials',

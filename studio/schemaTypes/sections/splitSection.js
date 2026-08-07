@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {imageField} from '../_shared/imageField'
 import {ctaLink} from '../_shared/ctaLink'
 import {richTextBody} from '../_shared/richTextBody'
@@ -103,24 +104,7 @@ export default {
       },
       initialValue: 'crop',
     },
-    {
-      // Mirrors heroSection's control. Split's heading runs up to 3.78rem,
-      // which swallows a long title like "Springtime at the Ludington North
-      // Breakwall Lighthouse 16APR26".
-      name: 'headingSize',
-      title: 'Heading Size',
-      type: 'string',
-      description:
-        'Large is the default editorial size. Pick Standard for longer headings or a more restrained look.',
-      options: {
-        list: [
-          {title: 'Large (default)', value: 'large'},
-          {title: 'Standard (~20% smaller)', value: 'standard'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'large',
-    },
+    headingSizeField(),
     imageField({}),
     {
       name: 'textAlignment',
