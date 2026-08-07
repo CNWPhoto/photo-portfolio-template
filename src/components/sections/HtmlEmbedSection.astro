@@ -35,6 +35,38 @@ const heightStyle = containerHeight ? `min-height:${containerHeight}px;` : '';
   </div>
 </section>
 
+<script>
+  // Astro's set:html goes in as innerHTML, and the HTML spec marks any
+  // <script> inserted that way as "already started" — the browser never runs
+  // it. So every script-based embed has been silently inert: the markup is
+  // present, nothing executes, and the section renders as an empty band with
+  // its normal padding. Chaltron Photography's Flodesk newsletter looked like
+  // a mysterious gap above the footer on nine pages.
+  //
+  // iframe embeds (her CloudSpot booking form) were unaffected, which is why
+  // this went unnoticed — the field's own description promises "scripts that
+  // will run on your live site".
+  //
+  // Re-creating each script element makes it run. Sequential, awaiting each
+  // external script, so a loader followed by an init call still executes in
+  // order.
+  (async () => {
+    const hosts = document.querySelectorAll('[data-section-type="htmlEmbedSection"] .embed__inner');
+    for (const host of hosts) {
+      for (const old of [...host.querySelectorAll('script')]) {
+        const s = document.createElement('script');
+        for (const { name, value } of [...old.attributes]) s.setAttribute(name, value);
+        s.textContent = old.textContent;
+        const done = s.src
+          ? new Promise((res) => { s.onload = res; s.onerror = res; })
+          : Promise.resolve();
+        old.replaceWith(s);
+        await done;
+      }
+    }
+  })();
+</script>
+
 <style>
   .embed {
     background: var(--bg);
