@@ -32,7 +32,20 @@ export default {
       title: 'Heading',
       type: 'string',
     },
-    richTextBody(),
+    richTextBody({images: true}),
+    {
+      // The <hr> is this section's first child and reads as a divider between
+      // the contact block and whatever precedes it. That's right when it
+      // follows body content and wrong when it follows another section that
+      // already ends in a rule, or when the contact block opens the page.
+      name: 'showTopBorder',
+      title: 'Top divider line',
+      type: 'boolean',
+      description:
+        'Shows a thin rule across the top of this section. Turn it off when the section above already ends in a line, or when this is the first thing on the page.',
+      initialValue: true,
+    },
+
     {
       name: 'mode',
       title: 'Mode',

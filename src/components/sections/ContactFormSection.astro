@@ -61,6 +61,10 @@ const showPlaceholderWarning = isPlaceholderKey && (Astro.locals.isPreview ?? fa
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
 
 const headingSize = stegaClean(section?.headingSize) || 'large';
+
+// undefined on every existing document, so the rule stays unless
+// an editor turns it off.
+const showTopBorder = section?.showTopBorder !== false;
 ---
 
 <section
@@ -73,7 +77,7 @@ const headingSize = stegaClean(section?.headingSize) || 'large';
   id={section?.sectionId || undefined}
   style={style}
 >
-  <hr />
+  {showTopBorder && <hr />}
   {showPlaceholderWarning && (
     <div class="contact__placeholder-warning" role="status">
       <strong>Heads-up (only you can see this):</strong> this contact form is using a

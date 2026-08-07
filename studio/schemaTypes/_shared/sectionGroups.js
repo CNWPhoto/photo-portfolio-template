@@ -45,6 +45,7 @@ const LAYOUT_FIELDS = new Set([
   'textPosition',
   'verticalAlignment',
   'backgroundTone',
+  'showTopBorder',
   'heightMode',
   'height',
   'centeredHeight',

@@ -21,7 +21,57 @@ export function renderLink(href, children) {
   return `<a href="${esc(safe)}"${attrs}>${children}</a>`;
 }
 
+
+// Sanity asset refs encode their pixel dimensions —
+// image-<hash>-2000x1500-jpg — so width/height can be set without
+// dereferencing the asset in GROQ. That matters here: the section
+// projection dereferences `image` and `images[]`, but not assets nested
+// inside a rich-text body, so an inline image would otherwise render with
+// no dimensions and shift the page as it loads.
+function dimsFromRef(ref) {
+  const m = /-(\d+)x(\d+)-[a-z]+$/i.exec(String(ref || ''));
+  if (!m) return null;
+  return { width: Number(m[1]), height: Number(m[2]) };
+}
+
+// Build the CDN URL straight from the asset ref rather than importing
+// buildSrc. lib/image imports the Sanity client, which imports the
+// Workers-only `cloudflare:workers` module — pulling that into this pure
+// renderer breaks it everywhere it isn't running on workerd, tests included.
+// The ref carries everything needed: image-<id>-<w>x<h>-<ext>.
+const PROJECT_ID = import.meta.env?.PUBLIC_SANITY_PROJECT_ID || 'hx5xgigp';
+const DATASET = import.meta.env?.PUBLIC_SANITY_DATASET || 'production';
+
+function cdnUrl(ref, width) {
+  const m = /^image-([a-f0-9]+)-(\d+x\d+)-([a-z]+)$/i.exec(String(ref || ''));
+  if (!m) return '';
+  const base = `https://cdn.sanity.io/images/${PROJECT_ID}/${DATASET}/${m[1]}-${m[2]}.${m[3]}`;
+  return `${base}?w=${width}&auto=format&q=80`;
+}
+
 const defaultComponents = {
+  // Inline images in a rich-text body. Without this the schema could offer
+  // an image block that rendered as nothing at all.
+  types: {
+    image: ({ value }) => {
+      if (!value?.asset) return '';
+      const src = cdnUrl(value.asset._ref, 1200);
+      if (!src) return '';
+      const d = dimsFromRef(value.asset._ref);
+      const dims = d ? ` width="${d.width}" height="${d.height}"` : '';
+      const caption = value.caption
+        ? `<figcaption class="pt-figure__caption">${esc(value.caption)}</figcaption>`
+        : '';
+      return (
+        `<figure class="pt-figure">` +
+        `<img src="${esc(src)}" srcset="${esc([400, 800, 1200, 1600].map((w) => `${cdnUrl(value.asset._ref, w)} ${w}w`).join(', '))}" ` +
+        `sizes="(max-width: 900px) 100vw, 760px" alt="${esc(value.alt || '')}" ` +
+        `loading="lazy" decoding="async"${dims} />` +
+        caption +
+        `</figure>`
+      );
+    },
+  },
   block: {
     normal: ({ children }) => `<p>${children}</p>`,
     h2: ({ children }) => `<h2>${children}</h2>`,
@@ -46,7 +96,11 @@ const defaultComponents = {
 };
 
 export function isPortableText(value) {
-  return Array.isArray(value) && value.length > 0 && value.some((b) => b && b._type === 'block');
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.some((b) => b && (b._type === 'block' || b._type === 'image'))
+  );
 }
 
 /**
