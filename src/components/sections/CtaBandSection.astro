@@ -48,6 +48,10 @@ const isOverlapping = layout === 'overlapping-images';
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
 
 const headingSize = stegaClean(section?.headingSize) || 'large';
+
+// undefined on every existing document, so the rule stays unless
+// an editor turns it off.
+const showTopBorder = section?.showTopBorder !== false;
 ---
 
 {isOverlapping ? (
@@ -62,7 +66,7 @@ const headingSize = stegaClean(section?.headingSize) || 'large';
     id={section?.sectionId || undefined}
     style={style}
   >
-    <hr />
+    {showTopBorder && <hr />}
     <div class="ctaband__oi-inner">
       <div class="ctaband__oi-images">
         <div class="ctaband__oi-back">

@@ -2,6 +2,7 @@ import {sectionBaseFields} from '../_shared/sectionBase'
 import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 import {richTextBody} from '../_shared/richTextBody'
+import {topBorderField} from '../_shared/topBorderField'
 
 // Two modes: built-in Web3Forms-backed form, or an embedded third-party
 // iframe form (Jotform, Typeform, Google Forms, Calendly).
@@ -33,18 +34,7 @@ export default {
       type: 'string',
     },
     richTextBody({images: true}),
-    {
-      // The <hr> is this section's first child and reads as a divider between
-      // the contact block and whatever precedes it. That's right when it
-      // follows body content and wrong when it follows another section that
-      // already ends in a rule, or when the contact block opens the page.
-      name: 'showTopBorder',
-      title: 'Top divider line',
-      type: 'boolean',
-      description:
-        'Shows a thin rule across the top of this section. Turn it off when the section above already ends in a line, or when this is the first thing on the page.',
-      initialValue: true,
-    },
+    topBorderField(),
 
     {
       name: 'mode',

@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {topBorderField} from '../_shared/topBorderField'
 import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 import {imageField} from '../_shared/imageField'
@@ -21,6 +22,7 @@ export default {
   },
   fields: [
     ...sectionBaseFields({spacing: false}),
+    topBorderField(),
     headingSizeField(),
     {
       name: 'eyebrow',

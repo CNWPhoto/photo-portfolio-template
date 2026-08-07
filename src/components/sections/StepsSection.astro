@@ -33,6 +33,10 @@ const stepsRendered = steps.map((step: any, i: number) => ({
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
 
 const headingSize = stegaClean(section?.headingSize) || 'large';
+
+// undefined on every existing document, so the rule stays unless
+// an editor turns it off.
+const showTopBorder = section?.showTopBorder !== false;
 ---
 
 <section
@@ -45,7 +49,7 @@ const headingSize = stegaClean(section?.headingSize) || 'large';
   id={section?.sectionId || 'how-it-works'}
   style={style}
 >
-  <hr />
+  {showTopBorder && <hr />}
   <div class="hcols__inner">
     <div class="hcols__header">
       {eyebrow && <p class="hcols__eyebrow">{eyebrow}</p>}
