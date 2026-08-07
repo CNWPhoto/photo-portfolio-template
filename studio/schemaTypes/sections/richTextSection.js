@@ -1,5 +1,6 @@
 import {linkAnnotation} from '../_shared/linkAnnotation'
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 
 // Standalone rich text body, no image. For about blurbs, policies,
@@ -18,6 +19,7 @@ export default {
   },
   fields: [
     ...sectionBaseFields(),
+    headingSizeField(),
     {
       name: 'eyebrow',
       title: 'Eyebrow',

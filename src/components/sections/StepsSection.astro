@@ -1,5 +1,6 @@
 ---
 import SanityImage from '../SanityImage.astro';
+import { stegaClean } from '@sanity/client/stega';
 import { paletteToStyle } from '../../lib/palette.js';
 import { resolveLink } from '../../lib/links.js';
 import { renderBody, isPortableText } from '../../lib/portableText.js';
@@ -30,18 +31,25 @@ const stepsRendered = steps.map((step: any, i: number) => ({
 }));
 
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
+
+// undefined on every existing document, so the rule stays unless
+// an editor turns it off.
+const showTopBorder = section?.showTopBorder !== false;
 ---
 
 <section
   class="hcols"
   data-section-type="stepsSection"
+  data-heading-size={headingSize}
   data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
   data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
   id={section?.sectionId || 'how-it-works'}
   style={style}
 >
-  <hr />
+  {showTopBorder && <hr />}
   <div class="hcols__inner">
     <div class="hcols__header">
       {eyebrow && <p class="hcols__eyebrow">{eyebrow}</p>}
@@ -102,7 +110,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   }
 
   .hcols__heading {
-    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-size: calc(clamp(2rem, 4vw, 3.25rem) * var(--heading-scale, 1));
     color: var(--text);
     margin: 0;
     letter-spacing: -0.01em;

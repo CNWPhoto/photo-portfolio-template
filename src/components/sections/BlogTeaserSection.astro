@@ -1,5 +1,6 @@
 ---
 import SanityImage from '../SanityImage.astro';
+import { stegaClean } from '@sanity/client/stega';
 import { paletteToStyle } from '../../lib/palette.js';
 import { resolveLink } from '../../lib/links.js';
 import { getClient } from '../../lib/sanity.js';
@@ -51,11 +52,14 @@ const dateFmt = (d: string | undefined) => {
 };
 
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
 ---
 
 <section
   class:list={['section', 'blogteaser']}
   data-section-type="blogTeaserSection"
+  data-heading-size={headingSize}
   data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
   data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
@@ -130,7 +134,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     margin: 0 0 0.85rem;
   }
   .blogteaser__heading {
-    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    font-size: calc(clamp(1.85rem, 3.5vw, 2.85rem) * var(--heading-scale, 1));
     line-height: 1.2;
     margin: 0;
   }

@@ -72,7 +72,14 @@ export function resolveLink(link, selfHostnames = null) {
   if (!link) return null
 
   // Nav-link shape: { linkType, url, internalRef }
-  if (link.linkType) {
+  //
+  // Guarded by `_type` so a ctaLink carrying a stray `linkType` can't be
+  // mistaken for a nav link. That happened on Chaltron Photography: a script
+  // wrote both `type` and `linkType` onto ctaLink objects, this branch won,
+  // it looked for `internalRef` (which ctaLink doesn't have), and every CTA
+  // band button vanished — heading rendered, button gone, no error anywhere.
+  // Shape detection by field presence is a guess; `_type` is the fact.
+  if (link.linkType && link._type !== 'ctaLink') {
     if (link.linkType === 'external') return stripSelfOrigin(link.url || null, selfHostnames)
     if (link.linkType === 'internal') {
       const path = pathForInternal(link.internalRef)

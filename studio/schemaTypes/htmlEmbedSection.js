@@ -41,6 +41,7 @@ export default {
           {title: 'Narrow (600px)', value: 'narrow'},
           {title: 'Default (760px)', value: 'default'},
           {title: 'Wide (1100px)', value: 'wide'},
+          {title: 'Page width (1400px — matches galleries)', value: 'page'},
           {title: 'Full width', value: 'full'},
         ],
         layout: 'radio',

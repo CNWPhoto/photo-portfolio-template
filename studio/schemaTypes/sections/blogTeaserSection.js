@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 
 // Blog teaser section. Pulls posts from the blog collection.
@@ -17,6 +18,7 @@ export default {
   },
   fields: [
     ...sectionBaseFields(),
+    headingSizeField(),
     // `layout` (grid-3 / horizontal-list / cards) was removed. horizontal-list
     // didn't fit the design, `cards` rendered identically to grid-3, and the
     // choice had no practical value. The section always renders as a 3-column

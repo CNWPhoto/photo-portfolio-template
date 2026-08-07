@@ -414,6 +414,19 @@ const year = new Date().getFullYear();
 		color: var(--muted);
 	}
 
+	/* Paragraphs in the note ran together — the reset zeroes p margins and
+	   nothing restored them here, so a blurb followed by phone and email read
+	   as one block. Editors tried inserting a blank line to separate them,
+	   which can't work: an empty block carries no text and is dropped before
+	   render. Space them properly so pressing Enter in Studio does the
+	   obvious thing. */
+	.footer__note :global(p) {
+		margin: 0 0 0.85rem;
+	}
+	.footer__note :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
 	.footer__note a {
 		color: var(--accent);
 		text-decoration: none;

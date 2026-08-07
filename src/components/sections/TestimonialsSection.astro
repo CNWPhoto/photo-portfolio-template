@@ -7,11 +7,21 @@ import { stegaClean } from '@sanity/client/stega';
 interface Props {
   section: any;
   isFirst?: boolean;
+  ownsH1?: boolean;
   palette?: any;
 }
 
-const { section, palette } = Astro.props;
+const { section, palette, ownsH1 = false } = Astro.props;
 const style = paletteToStyle(palette);
+
+// The schema has offered a Heading on this section all along, but the
+// component never rendered it — so an editor could type "What Clients Are
+// Saying", publish, and see nothing. Worse, src/lib/headings.js lists
+// testimonialsSection in HEADING_SECTIONS, so a page whose first
+// heading-bearing section was this one was credited with owning the <h1>
+// while emitting no h1 at all.
+const heading = section?.heading || '';
+const HeadingTag = ownsH1 ? 'h1' : 'h2';
 
 // stegaClean on layout so equality checks survive preview-mode markers
 const layout = stegaClean(section?.layout) || 'image-slider';
@@ -80,11 +90,14 @@ const testimonials = raw.map((t: any) => {
 });
 
 const first = testimonials[0] ?? null;
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
 ---
 
 <section
   class:list={['tslider', `tslider--${layout}`]}
   data-section-type="testimonialsSection"
+  data-heading-size={headingSize}
   data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
   data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
@@ -92,6 +105,12 @@ const first = testimonials[0] ?? null;
   id={section?.sectionId || 'testimonials'}
   style={style}
 >
+  {heading && (
+    <div class="tslider__header">
+      <HeadingTag class="tslider__heading">{heading}</HeadingTag>
+    </div>
+  )}
+
   {layout === 'two-col-text' ? (
     <div class="tslider__inner tslider__inner--two-col">
       {testimonials.slice(0, 2).map((t, i) => (
@@ -185,12 +204,33 @@ const first = testimonials[0] ?? null;
 </section>
 
 <style>
+  /* Spaced with padding via the shared [data-spacing] system, like every
+     other section — not outer margins.
+
+     The old `padding: 0 !important` plus 100px margins broke two things at
+     once. The background tone painted only as far as the content, so a
+     toned Testimonials section had its tint hugging the quote with no
+     breathing room. And this section emits data-spacing, so the Spacing
+     control appeared in Studio and did precisely nothing — the !important
+     beat it. Both were true on every site with this section. */
   .tslider {
-    padding: 0 !important;
-    margin-top: 100px;
-    margin-bottom: 100px;
     background: var(--bg);
     color: var(--text);
+  }
+
+  /* Matches the heading treatment used by Gallery and Steps so a section
+     heading looks the same wherever an editor sets one. */
+  .tslider__header {
+    max-width: 1100px;
+    margin: 0 auto 2.5rem;
+    padding: 0 3rem;
+    text-align: center;
+  }
+  .tslider__heading {
+    font-size: calc(clamp(1.85rem, 3.5vw, 2.85rem) * var(--heading-scale, 1));
+    line-height: 1.2;
+    color: var(--text);
+    margin: 0;
   }
 
   .tslider__inner {

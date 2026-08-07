@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { portableTextToString, isPortableText, renderLink } from '../src/lib/portableText.js'
+import { portableTextToString, isPortableText, renderLink, renderBody } from '../src/lib/portableText.js'
 
 const block = (...texts: string[]) => ({
   _type: 'block',
@@ -82,5 +82,43 @@ describe('renderLink', () => {
 
   it('neutralizes javascript: and other unsafe schemes', () => {
     expect(renderLink('javascript:alert(1)', 'x')).toContain('href="#"')
+  })
+})
+
+const inlineImage = {
+  _type: 'image',
+  _key: 'i1',
+  asset: { _ref: 'image-abc123def456abc123def456abc123def456abcd-2000x1500-jpg' },
+  alt: 'A test photo',
+  caption: 'Caption here',
+}
+
+describe('inline images in rich text', () => {
+  // The schema can offer an image block, but until the renderer handled the
+  // `image` type it produced nothing at all — the exact "control that does
+  // nothing" failure this codebase keeps hitting.
+  it('renders an image block as a figure', () => {
+    const html = renderBody([inlineImage])
+    expect(html).toContain('<figure')
+    expect(html).toContain('alt="A test photo"')
+    expect(html).toContain('Caption here')
+  })
+
+  it('sets width/height from the asset ref so the page does not shift', () => {
+    // Body images are not dereferenced by the section projection, so the
+    // dimensions have to come from the ref string itself.
+    const html = renderBody([inlineImage])
+    expect(html).toContain('width="2000"')
+    expect(html).toContain('height="1500"')
+  })
+
+  it('treats an image-only body as portable text', () => {
+    // The old guard required at least one `block`, so a body containing just
+    // an image rendered as an empty string.
+    expect(isPortableText([inlineImage])).toBe(true)
+  })
+
+  it('ignores an image with no asset rather than emitting a broken tag', () => {
+    expect(renderBody([{ _type: 'image', _key: 'x' }])).not.toContain('<img')
   })
 })

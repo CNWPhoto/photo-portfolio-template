@@ -287,7 +287,13 @@ async function main() {
     const hpSeo = {_type: 'seo'}
     if (ready(seo.defaultTitle)) hpSeo.seoTitle = seo.defaultTitle
     if (ready(seo.defaultDescription)) hpSeo.seoDescription = seo.defaultDescription
-    await set('homepagePage', {seo: hpSeo})
+    // pageTitle carries the same leak and is the FALLBACK the template
+    // composes <title> from when seo.seoTitle is unset — so overwriting only
+    // seo.seoTitle left "Pet Photography - Connor Walberg" live on Chaltron
+    // Photography's homepage. Set both.
+    const hpPatch = {seo: hpSeo}
+    if (ready(seo.defaultTitle)) hpPatch.pageTitle = seo.defaultTitle
+    await set('homepagePage', hpPatch)
     console.log('[overlay] homepage seo (cleared donor brand leak)')
   }
 

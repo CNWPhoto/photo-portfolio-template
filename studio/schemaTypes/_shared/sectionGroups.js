@@ -14,9 +14,14 @@
 // Anything unmatched falls to CONTENT deliberately: a stray field is visible
 // next to the copy rather than buried under Settings where nobody looks.
 
+// Content first, and it opens by default. The original order led with Style on
+// the reasoning that the variant picker changes what every other control
+// means — true, but it's a decision made once when the section is created.
+// After that, every visit is to change words. Opening on a wall of layout
+// radios put the thing editors actually came for behind a click, every time.
 export const SECTION_GROUPS = [
-  {name: 'layout', title: 'Style', default: true},
-  {name: 'content', title: 'Content'},
+  {name: 'content', title: 'Content', default: true},
+  {name: 'layout', title: 'Style'},
   {name: 'settings', title: 'Settings'},
 ]
 
@@ -25,17 +30,22 @@ const LAYOUT_FIELDS = new Set([
   'variant',
   'layout',
   'imageLayout',
+  'imageFit',
   'galleryLayout',
   'textContainer',
   'cardPlacement',
   'columnWidths',
+  'ctaStyle',
+  'columnRatio',
   'gridColumns',
   'galleryColumns',
+  'imagesPerView',
   'alignment',
   'textAlignment',
   'textPosition',
   'verticalAlignment',
   'backgroundTone',
+  'showTopBorder',
   'heightMode',
   'height',
   'centeredHeight',
@@ -47,6 +57,7 @@ const LAYOUT_FIELDS = new Set([
   'mobileTextBelow',
   'headingSize',
   'maxWidth',
+  'contentWidth',
   'gap',
   'lightbox',
   'columnAlignment',
@@ -79,10 +90,10 @@ export function groupForField(name) {
   return 'content'
 }
 
-// Field order WITHIN the form: style first, then the copy, then settings —
-// so the flat view (and the Style tab) opens on "what kind of section is this"
-// rather than halfway down a list of toggles.
-const ORDER = {layout: 0, content: 1, settings: 2}
+// Field order WITHIN the form: content, then style, then settings — matching
+// the tab order above, so the flat field list and the tabs agree and an editor
+// who scrolls rather than clicking tabs meets the copy first too.
+const ORDER = {content: 0, layout: 1, settings: 2}
 
 // Inside Style, the variant picker comes first: "Image left / Image right" is
 // the decision that changes what every other control means, and it arrives via

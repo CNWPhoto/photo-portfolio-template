@@ -5,6 +5,7 @@ import { paletteToStyle } from '../../lib/palette.js';
 import { resolveLink } from '../../lib/links.js';
 import { renderBody, isPortableText } from '../../lib/portableText.js';
 import { renderHeading } from '../../lib/heading.js';
+import { stegaClean } from '@sanity/client/stega';
 
 interface Props {
   section: any;
@@ -22,6 +23,16 @@ const eyebrow = section?.eyebrow || '';
 const headingHTML = renderHeading(section?.heading || '');
 const ctaText = section?.ctaText || '';
 const ctaHref = resolveLink(section?.ctaLink, [Astro.url.hostname]);
+const ctaText2 = section?.secondaryCtaText || '';
+const ctaHref2 = resolveLink(section?.secondaryCtaLink, [Astro.url.hostname]);
+
+// stegaClean so the equality checks in CSS attribute selectors survive
+// preview mode — an uncleaned value carries invisible markers and never
+// matches, so the control silently does nothing in Presentation only.
+const imageFit = stegaClean(section?.imageFit) || 'crop';
+const headingSize = stegaClean(section?.headingSize) || 'large';
+const columnRatio = stegaClean(section?.columnRatio) || 'auto';
+const ctaStyle = stegaClean(section?.ctaStyle) || 'link';
 
 const bodyHTML = isPortableText(section?.body)
   ? renderBody(section.body, { className: 'isplit__body' })
@@ -36,6 +47,10 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   class:list={['isplit', `isplit--${imageLayout}`]}
   data-section-type="splitSection"
   data-text-align={section?.textAlignment || 'left'}
+  data-image-fit={imageFit}
+  data-col-ratio={columnRatio}
+  data-cta-style={ctaStyle}
+  data-heading-size={headingSize}
   data-mobile-flip-order={section?.mobileFlipOrder ? 'true' : undefined}
   id={section?.sectionId || undefined}
   style={style}
@@ -46,9 +61,16 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
       {headingHTML && <HeadingTag class="isplit__heading" set:html={headingHTML} />}
       {bodyHTML && <div class="isplit__body-wrap reveal reveal-delay-2" set:html={bodyHTML} />}
       {ctaText && ctaHref && (
-        <a class="isplit__link reveal reveal-delay-4" href={ctaHref}>
-          {ctaText} <span class="isplit__link-arrow" aria-hidden="true">&rarr;</span>
-        </a>
+        <div class="isplit__links">
+          <a class:list={['isplit__link', 'reveal', 'reveal-delay-4', ctaStyle === 'button' && 'isplit__link--btn']} href={ctaHref}>
+            {ctaText}{ctaStyle !== 'button' && <span class="isplit__link-arrow" aria-hidden="true">&rarr;</span>}
+          </a>
+          {ctaText2 && ctaHref2 && (
+            <a class:list={['isplit__link', 'isplit__link--secondary', 'reveal', 'reveal-delay-4', ctaStyle === 'button' && 'isplit__link--btn']} href={ctaHref2}>
+              {ctaText2}{ctaStyle !== 'button' && <span class="isplit__link-arrow" aria-hidden="true">&rarr;</span>}
+            </a>
+          )}
+        </div>
       )}
     </div>
   </div>
@@ -331,12 +353,37 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   .isplit--image-left-full-bleed .isplit__eyebrow { text-align: right; }
 
   .isplit__heading {
-    font-size: clamp(2.1rem, 4.2vw, 3.78rem);
+    font-size: calc(clamp(2.1rem, 4.2vw, 3.78rem) * var(--heading-scale, 1));
     color: var(--text);
     line-height: 1.12;
     letter-spacing: -0.02em;
     margin: 0 0 2rem;
   }
+
+
+  /* ── Show whole image (opt-in) ──
+     The contained variants pin the image to a 400px-wide, 500px-tall well and
+     cover-crop into it. Correct for portraits; it guts a landscape frame. When
+     the editor asks for the whole image, even the columns so a wide photo has
+     room, and let the image keep its natural height instead of filling a fixed
+     box. Scoped entirely to the attribute, so every existing Split is
+     byte-identical. */
+  .isplit[data-image-fit='whole'].isplit--image-left,
+  .isplit[data-image-fit='whole'].isplit--image-right {
+    grid-template-columns: 1fr 1fr;
+  }
+  .isplit[data-image-fit='whole'] .isplit__image {
+    height: auto;
+    min-height: 0;
+    align-self: center;
+    padding: 2rem 0;
+  }
+  .isplit[data-image-fit='whole'] .isplit__image :global(.isplit__img) {
+    height: auto;
+    width: 100%;
+    object-fit: contain;
+  }
+
 
   .isplit__body-wrap :global(.isplit__body) {
     font-size: 1.0625rem;
@@ -351,6 +398,69 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
      is retained here as a layout concern. */
   .isplit--image-right-full-bleed .isplit__body-wrap :global(.isplit__body) { text-align: left; }
   .isplit--image-left-full-bleed .isplit__body-wrap :global(.isplit__body) { text-align: right; }
+
+  /* Wrapper so a second CTA sits beside the first and wraps on narrow
+     screens. The single-CTA case renders identically: one flex item, same
+     top margin — the margin moves to the wrapper so two links don't each
+     add their own. */
+
+  /* ── Column balance ──
+     Ratio and cropping are separate decisions, so this composes with
+     Image Fit. The column ORDER differs between image-left and image-right,
+     so each ratio needs both mappings — applying one blindly would put the
+     wide column on the wrong side half the time. */
+  .isplit[data-col-ratio='50-50'].isplit--image-left,
+  .isplit[data-col-ratio='50-50'].isplit--image-right { grid-template-columns: 1fr 1fr; }
+  .isplit[data-col-ratio='image-major'].isplit--image-left { grid-template-columns: 2fr 1fr; }
+  .isplit[data-col-ratio='image-major'].isplit--image-right { grid-template-columns: 1fr 2fr; }
+  .isplit[data-col-ratio='text-major'].isplit--image-left { grid-template-columns: 1fr 2fr; }
+  .isplit[data-col-ratio='text-major'].isplit--image-right { grid-template-columns: 2fr 1fr; }
+  /* Full-bleed variants carry their own 55/45; let the ratio win when set. */
+  .isplit[data-col-ratio='50-50'].isplit--image-left-full-bleed,
+  .isplit[data-col-ratio='50-50'].isplit--image-right-full-bleed { grid-template-columns: 1fr 1fr; }
+  .isplit[data-col-ratio='image-major'].isplit--image-left-full-bleed { grid-template-columns: 2fr 1fr; }
+  .isplit[data-col-ratio='image-major'].isplit--image-right-full-bleed { grid-template-columns: 1fr 2fr; }
+  .isplit[data-col-ratio='text-major'].isplit--image-left-full-bleed { grid-template-columns: 1fr 2fr; }
+  .isplit[data-col-ratio='text-major'].isplit--image-right-full-bleed { grid-template-columns: 2fr 1fr; }
+
+  /* ── Button style ──
+     Matches .ctaband__cta exactly so a Split button and a CTA Band button
+     read as the same component rather than two near-misses. */
+  .isplit__link--btn {
+    display: inline-block;
+    font-family: var(--font-sans, var(--font-body));
+    font-style: normal;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    padding: 1rem 2.25rem;
+    white-space: nowrap;
+  }
+  .isplit__link--btn.isplit__link--secondary {
+    background: transparent;
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+
+  .isplit__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 2rem;
+    margin-top: 1.5rem;
+  }
+  .isplit__links .isplit__link { margin-top: 0; }
+
+  /* text-align can't position a flex item, so mirror the alignment rules
+     that target .isplit__link onto the wrapper. */
+  .isplit--image-right-full-bleed .isplit__links,
+  .isplit--image-left-full-bleed .isplit__links { justify-content: flex-end; }
+  .isplit--image-left .isplit__links,
+  .isplit--image-right .isplit__links { justify-content: flex-start; }
+  [data-text-align='center'] .isplit__links { justify-content: center; }
+  [data-text-align='right'] .isplit__links { justify-content: flex-end; }
 
   .isplit__link {
     display: block;

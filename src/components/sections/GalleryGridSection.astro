@@ -3,6 +3,7 @@ import SanityImage from '../SanityImage.astro';
 import ImagePlaceholder from '../ImagePlaceholder.astro';
 import { paletteToStyle } from '../../lib/palette.js';
 import { stegaClean } from '@sanity/client/stega';
+import { buildSrc } from '../../lib/image';
 
 interface Props {
   section: any;
@@ -23,15 +24,30 @@ const heading = section?.heading || '';
 // Stega-clean control fields that drive class names and JS comparisons —
 // invisible preview markers would silently break `layout === 'carousel'`
 // and similar branches.
-const layout = stegaClean(section?.layout) || 'grid-3';
+// Justified is now a Layout choice. The old boolean is still honoured — it
+// exists in live data on two client sites — but it's hidden in Studio so
+// nothing new can set it. Reading both means no fleet-wide data rewrite was
+// needed to ship the cleaner model.
+const layoutRaw = stegaClean(section?.layout) || 'grid-3';
+// justified-rows has no grid of its own; fall back to grid-3 for the column
+// CSS it never uses.
+const layout = layoutRaw === 'justified-rows' ? 'grid-3' : layoutRaw;
 const gap = stegaClean(section?.gap) || 'normal';
 const carouselHeight = stegaClean(section?.carouselHeight) || 'standard';
 const lightbox = section?.lightbox !== false;
-// Justified rows: keep each photo's real shape and stretch every row to the
-// full width, instead of the square crop grid mode applies. Carousel is a
-// single scrolling row, so it can't be justified.
-const justified = !!section?.justified && stegaClean(section?.layout) !== 'carousel';
+const justified =
+  layoutRaw === 'justified-rows' ||
+  (!!section?.justified && layoutRaw !== 'carousel' && layoutRaw !== 'masonry');
 const rowHeight = stegaClean(section?.rowHeight) || 'medium';
+const contentWidth = stegaClean(section?.contentWidth) || 'contained';
+// Grid mode crops every tile to a square. Fine for a photo wall, wrong for
+// artwork or graphics whose shape IS the content — and unlike justified
+// rows, a grid keeps its column count at any width instead of reflowing.
+const imageFit = stegaClean(section?.imageFit) || 'crop';
+// Carousel slides are height-driven by default (height: 100%, width: auto),
+// so how many fit is whatever the aspect ratios happen to allow. Picking a
+// number switches them to width-driven so exactly that many fill the row.
+const perView = stegaClean(section?.imagesPerView) || 'auto';
 
 // Aspect ratio per image, from the dimensions Sanity already gives us — so the
 // row maths happens at build time and needs no client JS.
@@ -72,6 +88,8 @@ const CAROUSEL_GAP_PX: Record<string, number> = { tight: 8, normal: 16, loose: 2
 const carouselGapPx = CAROUSEL_GAP_PX[gap] ?? CAROUSEL_GAP_PX.normal;
 
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
 ---
 
 <section
@@ -85,10 +103,14 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     isCarousel && `gallery--carousel-height-${carouselHeight}`,
   ]}
   data-section-type="galleryGridSection"
+  data-heading-size={headingSize}
+  data-image-fit={imageFit}
+  data-width={contentWidth}
+  data-per-view={isCarousel ? perView : undefined}
   data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
   data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
-  data-lightbox={!isCarousel && lightbox ? 'true' : 'false'}
+  data-lightbox={lightbox ? 'true' : 'false'}
   id={section?.sectionId || undefined}
   style={style}
 >
@@ -106,7 +128,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
           class="gallery__carousel-track"
           data-gallery-carousel-track
           data-carousel-gap={carouselGapPx}
-          style={`gap: ${carouselGapPx}px`}
+          style={`gap: ${carouselGapPx}px; --carousel-gap: ${carouselGapPx}px`}
         >
           {useFallback
             ? PLACEHOLDER_RATIOS.map((ratio) => (
@@ -118,6 +140,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
                   sizes="60vw"
                   loading={i === 0 && isFirst ? 'eager' : 'lazy'}
                   class="gallery__carousel-img"
+                  data-lb-src={lightbox ? buildSrc(img, 2000, 85) : undefined}
+                  data-lb-caption={img?.caption || undefined}
                 />
               ))
           }
@@ -153,6 +177,8 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
                             sizes="(max-width:900px) 100vw, 33vw"
                             loading="lazy"
                             class="gallery__img"
+                            data-lb-src={lightbox ? buildSrc(item, 2000, 85) : undefined}
+                            data-lb-caption={item?.caption || undefined}
                           />
                         </div>
                         {item?.caption && <figcaption class="gallery__caption">{item.caption}</figcaption>}
@@ -162,20 +188,22 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
             ))
           : useFallback
             ? PLACEHOLDER_RATIOS.map((r) => (
-                <figure class="gallery__item" style={justified ? `--ar:${aspectOf({_fallback: true, ratio: r}).toFixed(4)}` : undefined}>
+                <figure class="gallery__item" style={`--ar:${aspectOf({_fallback: true, ratio: r}).toFixed(4)}`}>
                   <div class="gallery__item-inner">
                     <ImagePlaceholder class="gallery__img" />
                   </div>
                 </figure>
               ))
             : images.map((img: any, i: number) => (
-                <figure class="gallery__item" style={justified ? `--ar:${aspectOf(img).toFixed(4)}` : undefined}>
+                <figure class="gallery__item" style={`--ar:${aspectOf(img).toFixed(4)}`}>
                   <div class="gallery__item-inner">
                     <SanityImage
                       image={img}
                       sizes="(max-width:900px) 100vw, 33vw"
                       loading={i === 0 && isFirst ? 'eager' : 'lazy'}
                       class="gallery__img"
+                      data-lb-src={lightbox ? buildSrc(img, 2000, 85) : undefined}
+                      data-lb-caption={img?.caption || undefined}
                     />
                   </div>
                   {img?.caption && <figcaption class="gallery__caption">{img.caption}</figcaption>}
@@ -198,6 +226,22 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     padding-inline: 1.5rem;
   }
   .gallery__head { text-align: center; margin-bottom: 2.5rem; }
+
+  /* ── Full screen width ──
+     The 1400px cap suits text and boxes photography in on a wide monitor.
+     Full width drops the cap and the side padding so images run edge to
+     edge; the heading keeps the readable measure so it doesn't strand itself
+     against the viewport edge. Carousel already ran unconstrained. */
+  .gallery[data-width='full'] .gallery__inner {
+    max-width: none;
+    padding-inline: 0;
+  }
+  .gallery[data-width='full'] .gallery__head {
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
   .gallery__eyebrow {
     font-family: var(--font-sans, var(--font-body));
     font-style: normal;
@@ -208,7 +252,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     margin: 0 0 0.85rem;
   }
   .gallery__heading {
-    font-size: clamp(1.85rem, 3.5vw, 2.85rem);
+    font-size: calc(clamp(1.85rem, 3.5vw, 2.85rem) * var(--heading-scale, 1));
     line-height: 1.2;
     color: var(--text);
     margin: 0;
@@ -301,11 +345,17 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
   .gallery--masonry .gallery__item:last-child { margin-bottom: 0; }
 
   .gallery__item { margin: 0; }
+  [data-lightbox='true'] :global([data-lb-src]) { cursor: zoom-in; }
+
   .gallery__item-inner {
     overflow: hidden;
     aspect-ratio: 1 / 1;
   }
   .gallery--masonry .gallery__item-inner { aspect-ratio: auto; }
+  /* Show whole image: the tile takes the photo's own shape, so nothing is
+     cropped and the grid still guarantees its column count. Justified rows
+     already do this per row; this is the fixed-column equivalent. */
+  .gallery[data-image-fit='whole'] .gallery__item-inner { aspect-ratio: var(--ar, 1); }
 
   .gallery__item-inner :global(.gallery__img) {
     width: 100%;
@@ -322,8 +372,14 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     color: var(--muted);
   }
 
+  /* grid-3 holds its three columns all the way down to the single-column
+     breakpoint. Dropping to two mid-way reflows a 3-item row into 2 + 1,
+     which reads as a broken layout rather than a responsive one — most
+     visible when the three items are a numbered sequence (Chaltron
+     Photography's "1 Share Your Vision / 2 Create the Experience / 3 Return
+     to It Forever"). grid-4 still steps through 2, since four across is
+     genuinely too tight on a tablet. */
   @media (max-width: 900px) {
-    .gallery--grid-3 .gallery__grid,
     .gallery--grid-4 .gallery__grid {
       grid-template-columns: repeat(2, 1fr);
     }
@@ -381,6 +437,37 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     display: block;
     max-width: unset;
     object-fit: unset;
+  }
+
+
+  /* ── Images per view (carousel) ──
+     Default 'auto' leaves slides height-driven — each image as wide as its
+     own aspect ratio makes it. Choosing a number makes every slide an equal
+     fraction of the viewport instead, so exactly that many fill the width and
+     the track height follows the images rather than a fixed container. */
+  .gallery[data-per-view]:not([data-per-view='auto']) .gallery__carousel-viewport {
+    height: auto;
+  }
+  .gallery[data-per-view]:not([data-per-view='auto']) .gallery__carousel-track :global(.gallery__carousel-img) {
+    height: auto;
+    width: calc(
+      (100% - (var(--per-view, 3) - 1) * var(--carousel-gap, 16px)) / var(--per-view, 3)
+    );
+    object-fit: cover;
+    aspect-ratio: var(--per-view-ar, 3 / 2);
+  }
+  .gallery[data-per-view='2'] { --per-view: 2; }
+  .gallery[data-per-view='3'] { --per-view: 3; }
+  .gallery[data-per-view='4'] { --per-view: 4; }
+
+  /* Below the grid's own single-column breakpoint a four-up carousel is a row
+     of thumbnails, so step down rather than shrink further. */
+  @media (max-width: 900px) {
+    .gallery[data-per-view='3'],
+    .gallery[data-per-view='4'] { --per-view: 2; }
+  }
+  @media (max-width: 560px) {
+    .gallery[data-per-view]:not([data-per-view='auto']) { --per-view: 1; }
   }
 
   .gallery__carousel-arrow {

@@ -1,6 +1,8 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 import {richTextBody} from '../_shared/richTextBody'
+import {topBorderField} from '../_shared/topBorderField'
 
 // Two modes: built-in Web3Forms-backed form, or an embedded third-party
 // iframe form (Jotform, Typeform, Google Forms, Calendly).
@@ -20,6 +22,7 @@ export default {
   },
   fields: [
     ...sectionBaseFields({spacing: false}),
+    headingSizeField(),
     {
       name: 'eyebrow',
       title: 'Eyebrow',
@@ -30,7 +33,9 @@ export default {
       title: 'Heading',
       type: 'string',
     },
-    richTextBody(),
+    richTextBody({images: true}),
+    topBorderField(),
+
     {
       name: 'mode',
       title: 'Mode',

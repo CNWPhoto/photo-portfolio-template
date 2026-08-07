@@ -1,4 +1,5 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 import {imageField} from '../_shared/imageField'
 import {richTextBody} from '../_shared/richTextBody'
@@ -20,6 +21,7 @@ export default {
   },
   fields: [
     ...sectionBaseFields({withVerticalSideLabel: true}),
+    headingSizeField(),
     {
       name: 'eyebrow',
       title: 'Eyebrow',

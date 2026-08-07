@@ -1,5 +1,6 @@
 ---
 import { paletteToStyle } from '../../lib/palette.js';
+import { stegaClean } from '@sanity/client/stega';
 import { renderBody } from '../../lib/portableText.js';
 import { getClient } from '../../lib/sanity.js';
 
@@ -40,11 +41,14 @@ const socialLinks = [
 ].filter(Boolean) as { label: string; url: string }[];
 
 const HeadingTag = ownsH1 ? 'h1' : 'h2';
+
+const headingSize = stegaClean(section?.headingSize) || 'large';
 ---
 
 <section
   class:list={['section', 'cinfo', `cinfo--${layout}`]}
   data-section-type="contactInfoSection"
+  data-heading-size={headingSize}
   data-spacing={section?.spacing || 'normal'}
   data-space-top={section?.spacingOverride?.top && section.spacingOverride.top !== 'inherit' ? section.spacingOverride.top : undefined}
   data-space-bottom={section?.spacingOverride?.bottom && section.spacingOverride.bottom !== 'inherit' ? section.spacingOverride.bottom : undefined}
@@ -106,7 +110,7 @@ const HeadingTag = ownsH1 ? 'h1' : 'h2';
     border: 1px solid var(--border);
   }
   .cinfo__heading {
-    font-size: clamp(1.5rem, 2.75vw, 2.25rem);
+    font-size: calc(clamp(1.5rem, 2.75vw, 2.25rem) * var(--heading-scale, 1));
     margin: 0 0 1rem;
   }
   .cinfo__body-wrap :global(p) {

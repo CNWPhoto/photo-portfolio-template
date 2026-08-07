@@ -1,4 +1,6 @@
 import {sectionBaseFields} from '../_shared/sectionBase'
+import {topBorderField} from '../_shared/topBorderField'
+import {headingSizeField} from '../_shared/headingSizeField'
 import {sectionIcon} from '../../components/SectionIcons'
 import {imageField} from '../_shared/imageField'
 
@@ -18,6 +20,12 @@ export default {
   },
   fields: [
     ...sectionBaseFields(),
+    topBorderField({
+      // Only the Overlapping Images layout renders the rule; on the other
+      // layouts this would be a control with nothing to control.
+      hidden: ({parent}) => parent?.layout !== 'overlapping-images',
+    }),
+    headingSizeField(),
     {
       name: 'heading',
       title: 'Heading',

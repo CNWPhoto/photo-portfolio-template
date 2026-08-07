@@ -64,6 +64,32 @@ async function fetchText(u) {
   return r.text()
 }
 
+function decodeEntities(s) {
+  return String(s || '')
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;|&#039;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .trim()
+}
+
+// <meta property="og:x" content="…"> in either attribute order.
+function meta(html, prop) {
+  const pat = new RegExp(
+    `<meta[^>]+(?:property|name)=["']${prop}["'][^>]*content=["']([^"']*)["']`,
+    'i',
+  )
+  const alt = new RegExp(
+    `<meta[^>]+content=["']([^"']*)["'][^>]*(?:property|name)=["']${prop}["']`,
+    'i',
+  )
+  return decodeEntities((html.match(pat) || html.match(alt) || [])[1] || '')
+}
+
 async function harvestImageSitemap() {
   // Pixieset / Pic-Time / many photographer platforms publish a Google
   // image sitemap: every page <url> carries <image:loc> + <image:caption>
@@ -141,26 +167,134 @@ async function download(u, dest) {
   }
 }
 
-async function scrapePagesText() {
-  // Best-effort copy harvest: pull the homepage + common slugs, strip tags,
-  // dump the visible text for the human to mine into content.json.
-  const slugs = ['', 'about', 'about-me', 'info', 'pricing', 'investment',
-    'services', 'contact', 'portfolio', 'galleries']
-  const dump = {}
-  for (const s of slugs) {
-    const pageUrl = s ? `${origin}/${s}/` : `${origin}/`
-    const html = await fetchText(pageUrl)
-    if (!html) continue
-    const text = html
-      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-    if (text.length > 120) dump[s || 'home'] = text.slice(0, 4000)
+// Last-resort slug guesses. ONLY used when a site publishes neither a WP REST
+// pages endpoint nor a sitemap — i.e. almost never. This list used to be the
+// ONLY discovery mechanism, which is how a migration silently ships one page:
+// Chaltron Photography's nine pages are all named for what they rank for
+// (/family-photography-ludington/, /wanderlust/, /booknow/), so the guess list
+// matched the homepage and nothing else — 490 of 6,421 words, and the operator
+// sees a manifest that looks populated. 12-scrape-squarespace.js was written to
+// route around this rather than fix it, which left WordPress — the platform
+// these guesses were named for — on the broken path.
+const GUESS_SLUGS = ['', 'about', 'about-me', 'info', 'pricing', 'investment',
+  'services', 'contact', 'portfolio', 'galleries']
+
+async function harvestWpPages() {
+  // WordPress REST: authoritative page list AND Yoast's per-page SEO, which is
+  // more reliable than re-deriving it from <title>/og: tags in the markup.
+  const probe = await fetch(`${origin}/wp-json/wp/v2/pages?per_page=100&page=1`, {headers: UA})
+  if (!probe.ok) return null
+  const total = Number(probe.headers.get('x-wp-totalpages') || '1')
+  const items = []
+  for (let p = 1; p <= total; p++) {
+    const batch = await fetchJson(`${origin}/wp-json/wp/v2/pages?per_page=100&page=${p}`)
+    if (Array.isArray(batch)) items.push(...batch)
   }
-  return dump
+  if (!items.length) return null
+  return items
+    .filter((i) => i.status === undefined || i.status === 'publish')
+    .map((i) => ({
+      url: i.link,
+      yoastTitle: (i.yoast_head_json && i.yoast_head_json.title) || '',
+      yoastDesc: (i.yoast_head_json && i.yoast_head_json.description) || '',
+    }))
+}
+
+async function harvestSitemapPages() {
+  // Same index-aware walk as harvestImageSitemap, but collecting page <loc>s.
+  async function pull(u) {
+    const xml = await fetchText(u)
+    if (!xml) return []
+    if (/<sitemapindex/i.test(xml)) {
+      const children = [...xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)].map((m) => m[1])
+      const all = []
+      for (const c of children) all.push(...(await pull(c)))
+      return all
+    }
+    return [...xml.matchAll(/<url>[\s\S]*?<loc>\s*([^<]+?)\s*<\/loc>/gi)].map((m) => m[1].trim())
+  }
+  return pull(`${origin}/sitemap.xml`)
+}
+
+function pageTextFrom(html) {
+  // Drop chrome so each page's dump is what's UNIQUE to it. Nav and footer
+  // repeat on every page; leaving them in makes a thin page look substantial
+  // and buries the real copy the human has to mine.
+  return html
+    .replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<(nav|header|footer)\b[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#8217;|&rsquo;/g, '’')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+async function scrapePagesText() {
+  // Discover the REAL page list, then dump full copy for every one of them.
+  // Order matters: WP REST carries Yoast SEO, the sitemap is the cross-platform
+  // fallback, and guessing is the admission of defeat.
+  let discovered = []
+  let how = ''
+  const wp = await harvestWpPages()
+  if (wp && wp.length) {
+    discovered = wp
+    how = 'wp-rest'
+  } else {
+    const urls = await harvestSitemapPages()
+    if (urls.length) {
+      discovered = urls.map((u) => ({url: u}))
+      how = 'sitemap'
+    } else {
+      discovered = GUESS_SLUGS.map((s) => ({url: s ? `${origin}/${s}/` : `${origin}/`}))
+      how = 'guessed slugs'
+    }
+  }
+  // Same-origin, de-duped, and no feed/media URLs.
+  const seen = new Set()
+  discovered = discovered.filter((d) => {
+    if (!d.url || !d.url.startsWith(origin)) return false
+    if (/\.(xml|json|jpe?g|png|webp|pdf)$/i.test(d.url)) return false
+    const k = d.url.replace(/\/$/, '')
+    return !seen.has(k) && seen.add(k)
+  })
+  log('scrape', `pages: ${discovered.length} discovered via ${how}`)
+  if (how === 'guessed slugs') {
+    log('scrape', 'WARNING: no page list found — copy harvest is a guess, verify by hand')
+  }
+
+  const pages = {}
+  for (const d of discovered) {
+    const html = await fetchText(d.url)
+    if (!html) continue
+    const key = d.url.replace(origin, '').replace(/^\/|\/$/g, '') || 'home'
+    const titleTag = decodeEntities(
+      (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || '',
+    )
+    const text = pageTextFrom(html)
+    if (text.length < 40) continue
+    pages[key] = {
+      url: d.url,
+      title: d.yoastTitle || meta(html, 'og:title'),
+      titleTag: d.yoastTitle || titleTag,
+      description: d.yoastDesc || meta(html, 'og:description'),
+      // Structure the human needs to rebuild the page faithfully.
+      headings: [...html.matchAll(/<h([1-3])[^>]*>([\s\S]*?)<\/h\1>/gi)].map((m) => ({
+        level: Number(m[1]),
+        text: decodeEntities(m[2].replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim(),
+      })).filter((h) => h.text),
+      images: [...new Set(
+        [...html.matchAll(/<img[^>]+src="([^"]+)"/gi)].map((m) => m[1])
+          .filter((u) => /wp-content\/uploads|\/assets\/|images\//i.test(u)),
+      )],
+      // Generous cap: the old 4000-char limit truncated any real legal page —
+      // Chaltron's privacy policy alone is ~22k characters.
+      text: text.slice(0, 60000),
+    }
+    log('scrape', `page ${key}: ${text.length} chars, ${pages[key].images.length} img`)
+  }
+  return pages
 }
 
 async function main() {
@@ -231,9 +365,23 @@ async function main() {
   fs.writeFileSync(path.join(MANI, 'asset-alt.json'), JSON.stringify(assetAlt, null, 2))
 
   const textDump = await scrapePagesText()
+  // pages-text.json is the shape 67-page-seo.js consumes ({slug: {title,
+  // titleTag, description, text}}). Only 12-scrape-squarespace wrote it, so
+  // WordPress clients reached the SEO backfill with no input at all and
+  // silently got no meta descriptions.
+  fs.writeFileSync(
+    path.join(MANI, 'pages-text.json'),
+    JSON.stringify(textDump, null, 2),
+  )
+  // page-text.json keeps the older flat {slug: text} shape — REVIEW.md points
+  // the human at it for the copy pass.
   fs.writeFileSync(
     path.join(MANI, 'page-text.json'),
-    JSON.stringify(textDump, null, 2),
+    JSON.stringify(
+      Object.fromEntries(Object.entries(textDump).map(([k, v]) => [k, v.text])),
+      null,
+      2,
+    ),
   )
 
   // content.json SKELETON — structure only, raw values for human to refine.
