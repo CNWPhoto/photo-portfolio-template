@@ -603,6 +603,12 @@ const schemaJSON = schemaGraph.length
 	img {
 		display: block;
 		max-width: 100%;
+		/* Without height:auto, max-width shrinks the WIDTH while an explicit
+		   height attribute holds the height — the image stretches vertically.
+		   Every component image escaped this by setting its own height in CSS;
+		   inline body images, which carry width/height attributes for CLS and
+		   no component CSS, did not. */
+		height: auto;
 	}
 
 	a {
