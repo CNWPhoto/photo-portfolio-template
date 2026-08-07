@@ -79,6 +79,9 @@ const heightStyle = containerHeight ? `min-height:${containerHeight}px;` : '';
   .embed--narrow .embed__inner { max-width: 600px; }
   .embed--default .embed__inner { max-width: 760px; }
   .embed--wide .embed__inner { max-width: 1100px; }
+  /* Matches the gallery's contained width so an embed lines up with the
+     section above it instead of sitting in a narrower column. */
+  .embed--page .embed__inner { max-width: 1400px; }
   .embed--full .embed__inner { max-width: none; padding-inline: 0; }
 
   .embed__placeholder {
